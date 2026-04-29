@@ -1,0 +1,322 @@
+import { useEffect, useState, useCallback } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import DashboardMap from '../../components/map/DashboardMap'
+import AddressSearch from '../../components/map/AddressSearch'
+import Button from '../../components/ui/Button'
+import Spinner from '../../components/ui/Spinner'
+import Modal from '../../components/ui/Modal'
+import ToastContainer from '../../components/ui/Toast'
+import GeoPointsList from './GeoPointsList'
+import GeoPointForm from './GeoPointForm'
+import { useGeoStore } from '../../store/geoStore'
+import { geoProjectsApi, geoPointsApi } from '../../services'
+import { getCurrentPosition } from '../../hooks/useGeolocation'
+import type { GeoPoint } from '../../types'
+
+export default function DashboardPage() {
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const {
+    project, setProject,
+    points, setPoints, upsertPoint, removePoint,
+    selectedPointId, setSelectedPointId,
+    setMapCenter, setMapZoom,
+    addToast, isSaving, setIsSaving,
+  } = useGeoStore()
+
+  const [loading, setLoading] = useState(true)
+  const [pointFormOpen, setPointFormOpen] = useState(false)
+  const [deletePointTarget, setDeletePointTarget] = useState<string | null>(null)
+  const [locatingUser, setLocatingUser] = useState(false)
+
+  // Load project on mount
+  useEffect(() => {
+    async function load() {
+      if (id === undefined || id === 'new') {
+        const newProject = await geoProjectsApi.createProject()
+        setProject(newProject)
+        setPoints([])
+        navigate(`/project/${newProject.id}`, { replace: true })
+        setLoading(false)
+        return
+      }
+      const [proj, pts] = await Promise.all([
+        geoProjectsApi.fetchProject(id),
+        geoPointsApi.listPoints(id),
+      ])
+      if (!proj) { navigate('/'); return }
+      setProject(proj)
+      setPoints(pts)
+      if (pts.length > 0) {
+        setMapCenter([pts[0].latitude, pts[0].longitude])
+        setMapZoom(14)
+      }
+      setLoading(false)
+    }
+    load()
+    return () => { setProject(null); setPoints([]) }
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function handleSelectPoint(pointId: string) {
+    setSelectedPointId(pointId)
+    setPointFormOpen(true)
+    const pt = points.find((p) => p.id === pointId)
+    if (pt) setMapCenter([pt.latitude, pt.longitude])
+  }
+
+  const handleMapClick = useCallback(
+    async (lat: number, lng: number) => {
+      if (!project) return
+
+      if (selectedPointId) {
+        // Optimistic update — marker moves immediately
+        const current = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
+        if (current) upsertPoint({ ...current, latitude: lat, longitude: lng })
+        const updated = await geoPointsApi.savePoint(selectedPointId, { latitude: lat, longitude: lng })
+        upsertPoint(updated)
+      } else {
+        const newPoint = await geoPointsApi.createPoint({
+          geoProjectId: project.id,
+          latitude: lat,
+          longitude: lng,
+          order: useGeoStore.getState().points.length,
+        })
+        upsertPoint(newPoint)
+        const updatedIds = [...project.geoPointIds, newPoint.id]
+        useGeoStore.getState().updateProjectField('geoPointIds', updatedIds)
+        await geoProjectsApi.saveProject(project.id, { ...project, geoPointIds: updatedIds })
+        setSelectedPointId(newPoint.id)
+        setPointFormOpen(true)
+      }
+    },
+    [project, selectedPointId, upsertPoint, setSelectedPointId],
+  )
+
+  async function handleAddPoint() {
+    if (!project) return
+    const center = useGeoStore.getState().mapCenter
+    const currentPoints = useGeoStore.getState().points
+    const newPoint = await geoPointsApi.createPoint({
+      geoProjectId: project.id,
+      latitude: center[0],
+      longitude: center[1],
+      order: currentPoints.length,
+    })
+    upsertPoint(newPoint)
+    const updatedIds = [...project.geoPointIds, newPoint.id]
+    useGeoStore.getState().updateProjectField('geoPointIds', updatedIds)
+    await geoProjectsApi.saveProject(project.id, { ...project, geoPointIds: updatedIds })
+    setSelectedPointId(newPoint.id)
+    setPointFormOpen(true)
+  }
+
+  async function handlePointChange(updates: Partial<GeoPoint>) {
+    if (!selectedPointId) return
+    const current = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
+    if (!current) return
+
+    // Optimistic update — circle/marker updates instantly
+    upsertPoint({ ...current, ...updates })
+
+    // Sync map center when lat/lng edited manually
+    if (updates.latitude !== undefined || updates.longitude !== undefined) {
+      setMapCenter([
+        updates.latitude ?? current.latitude,
+        updates.longitude ?? current.longitude,
+      ])
+    }
+
+    // Persist in background (non-blocking for slider responsiveness)
+    geoPointsApi.savePoint(selectedPointId, updates).then((saved) => upsertPoint(saved))
+  }
+
+  async function handleToggleActive(pointId: string) {
+    const pt = points.find((p) => p.id === pointId)
+    if (!pt) return
+    upsertPoint({ ...pt, active: !pt.active })
+    const updated = await geoPointsApi.savePoint(pointId, { active: !pt.active })
+    upsertPoint(updated)
+  }
+
+  async function confirmDeletePoint() {
+    if (!deletePointTarget || !project) return
+    await geoPointsApi.removePoint(deletePointTarget)
+    removePoint(deletePointTarget)
+    const updatedIds = project.geoPointIds.filter((pid) => pid !== deletePointTarget)
+    useGeoStore.getState().updateProjectField('geoPointIds', updatedIds)
+    await geoProjectsApi.saveProject(project.id, { ...project, geoPointIds: updatedIds })
+    setDeletePointTarget(null)
+    if (selectedPointId === deletePointTarget) {
+      setSelectedPointId(null)
+      setPointFormOpen(false)
+    }
+    addToast('Punto eliminado', 'success')
+  }
+
+  async function handleSave() {
+    if (!project) return
+    setIsSaving(true)
+    try {
+      await geoProjectsApi.saveProject(project.id, project)
+      const currentPoints = useGeoStore.getState().points
+      for (const pt of currentPoints) {
+        await geoPointsApi.savePoint(pt.id, pt)
+      }
+      addToast('Proyecto guardado correctamente', 'success')
+    } catch {
+      addToast('Error al guardar el proyecto', 'error')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  async function handleMyLocation() {
+    setLocatingUser(true)
+    try {
+      const pos = await getCurrentPosition()
+      setMapCenter([pos.coords.latitude, pos.coords.longitude])
+      setMapZoom(16)
+    } catch {
+      addToast('No se pudo obtener tu ubicación', 'error')
+    } finally {
+      setLocatingUser(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="h-screen bg-gray-950 flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    )
+  }
+
+  const selectedPoint = points.find((p) => p.id === selectedPointId) ?? null
+
+  return (
+    <div className="h-screen bg-gray-950 flex flex-col overflow-hidden">
+      {/* Top bar */}
+      <header className="flex-shrink-0 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm z-50">
+        <div className="flex items-center h-14 px-4 gap-3">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-100 transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Volver
+          </button>
+
+          <div className="w-px h-5 bg-gray-700" />
+
+          <span className="text-sm font-medium text-gray-300 flex-1 truncate">
+            {project?.title ?? 'Nombre de proyecto geolocalizado'}
+          </span>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(`/project/${project?.id}/preview`)}
+            >
+              Previsualizar
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              loading={isSaving}
+              onClick={handleSave}
+            >
+              Guardar proyecto GPS
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main content: left panel + map + right panel */}
+      <div className="flex-1 flex overflow-hidden min-h-0">
+        {/* Left sidebar: points list */}
+        <aside className="w-64 flex-shrink-0 border-r border-gray-800 bg-gray-900 flex flex-col overflow-hidden">
+          <GeoPointsList
+            points={points}
+            selectedId={selectedPointId}
+            onSelect={handleSelectPoint}
+            onAdd={handleAddPoint}
+            onToggleActive={handleToggleActive}
+          />
+        </aside>
+
+        {/* Map area */}
+        <div className="flex-1 relative overflow-hidden min-h-0">
+          {/* Address search bar */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-lg px-4">
+            <AddressSearch onSelect={(lat, lng) => { setMapCenter([lat, lng]); setMapZoom(15) }} />
+          </div>
+
+          {/* My location button */}
+          <button
+            onClick={handleMyLocation}
+            disabled={locatingUser}
+            className="absolute bottom-8 left-4 z-[1000] bg-gray-900/95 border border-gray-700
+                       rounded-lg p-2.5 shadow-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+            title="Mi ubicación"
+          >
+            {locatingUser ? (
+              <Spinner size="sm" />
+            ) : (
+              <svg className="h-5 w-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            )}
+          </button>
+
+          {points.length === 0 && (
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[1000]
+                           bg-gray-900/90 border border-gray-700 rounded-lg px-4 py-2 text-sm text-gray-400">
+              Haz clic en el mapa para agregar el primer punto
+            </div>
+          )}
+
+          <DashboardMap
+            points={points}
+            selectedPointId={selectedPointId}
+            onMapClick={handleMapClick}
+            onMarkerClick={handleSelectPoint}
+          />
+        </div>
+
+        {/* Right panel: point form only */}
+        {pointFormOpen && selectedPoint && (
+          <aside className="w-72 flex-shrink-0 border-l border-gray-800 bg-gray-900 flex flex-col overflow-hidden">
+            <GeoPointForm
+              point={selectedPoint}
+              onChange={handlePointChange}
+              onDelete={() => setDeletePointTarget(selectedPoint.id)}
+              onClose={() => { setSelectedPointId(null); setPointFormOpen(false) }}
+              onSave={() => {
+                addToast('Punto guardado', 'success')
+                setSelectedPointId(null)
+                setPointFormOpen(false)
+              }}
+            />
+          </aside>
+        )}
+      </div>
+
+      <Modal
+        open={!!deletePointTarget}
+        title="Eliminar punto"
+        description="¿Eliminar este punto GPS? Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        onConfirm={confirmDeletePoint}
+        onCancel={() => setDeletePointTarget(null)}
+        danger
+      />
+      <ToastContainer />
+    </div>
+  )
+}

@@ -28,6 +28,7 @@ export default function DashboardPage() {
   const [pointFormOpen, setPointFormOpen] = useState(false)
   const [deletePointTarget, setDeletePointTarget] = useState<string | null>(null)
   const [locatingUser, setLocatingUser] = useState(false)
+  const [listDrawerOpen, setListDrawerOpen] = useState(false)
 
   // Load project on mount
   useEffect(() => {
@@ -69,7 +70,6 @@ export default function DashboardPage() {
       if (!project) return
 
       if (selectedPointId) {
-        // Optimistic update — marker moves immediately
         const current = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
         if (current) upsertPoint({ ...current, latitude: lat, longitude: lng })
         const updated = await geoPointsApi.savePoint(selectedPointId, { latitude: lat, longitude: lng })
@@ -115,10 +115,8 @@ export default function DashboardPage() {
     const current = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
     if (!current) return
 
-    // Optimistic update — circle/marker updates instantly
     upsertPoint({ ...current, ...updates })
 
-    // Sync map center when lat/lng edited manually
     if (updates.latitude !== undefined || updates.longitude !== undefined) {
       setMapCenter([
         updates.latitude ?? current.latitude,
@@ -126,7 +124,6 @@ export default function DashboardPage() {
       ])
     }
 
-    // Persist in background (non-blocking for slider responsiveness)
     geoPointsApi.savePoint(selectedPointId, updates).then((saved) => upsertPoint(saved))
   }
 
@@ -195,29 +192,31 @@ export default function DashboardPage() {
 
   return (
     <div className="h-screen bg-gray-950 flex flex-col overflow-hidden">
-      {/* Top bar */}
+
+      {/* ── Top bar ── */}
       <header className="flex-shrink-0 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm z-50">
-        <div className="flex items-center h-14 px-4 gap-3">
+        <div className="flex items-center h-14 px-3 sm:px-4 gap-2 sm:gap-3">
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-100 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-100 transition-colors flex-shrink-0"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Volver
+            <span className="hidden sm:inline">Volver</span>
           </button>
 
-          <div className="w-px h-5 bg-gray-700" />
+          <div className="hidden sm:block w-px h-5 bg-gray-700" />
 
-          <span className="text-sm font-medium text-gray-300 flex-1 truncate">
-            {project?.title ?? 'Nombre de proyecto geolocalizado'}
+          <span className="text-sm font-medium text-gray-300 flex-1 truncate min-w-0">
+            {project?.title ?? 'Proyecto geolocalizado'}
           </span>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             <Button
               variant="ghost"
               size="sm"
+              className="hidden sm:inline-flex"
               onClick={() => navigate(`/project/${project?.id}/preview`)}
             >
               Previsualizar
@@ -228,16 +227,18 @@ export default function DashboardPage() {
               loading={isSaving}
               onClick={handleSave}
             >
-              Guardar proyecto GPS
+              <span className="hidden sm:inline">Guardar proyecto GPS</span>
+              <span className="sm:hidden">Guardar</span>
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Main content: left panel + map + right panel */}
+      {/* ── Main content ── */}
       <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* Left sidebar: points list */}
-        <aside className="w-64 flex-shrink-0 border-r border-gray-800 bg-gray-900 flex flex-col overflow-hidden">
+
+        {/* Left sidebar: desktop only */}
+        <aside className="hidden lg:flex w-64 flex-shrink-0 border-r border-gray-800 bg-gray-900 flex-col overflow-hidden">
           <GeoPointsList
             points={points}
             selectedId={selectedPointId}
@@ -249,8 +250,9 @@ export default function DashboardPage() {
 
         {/* Map area */}
         <div className="flex-1 relative overflow-hidden min-h-0">
+
           {/* Address search bar */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-lg px-4">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-[calc(100%-1rem)] sm:w-full sm:max-w-lg sm:px-4">
             <AddressSearch onSelect={(lat, lng) => { setMapCenter([lat, lng]); setMapZoom(15) }} />
           </div>
 
@@ -274,9 +276,20 @@ export default function DashboardPage() {
             )}
           </button>
 
+          {/* Mobile: open list drawer */}
+          <button
+            className="lg:hidden absolute bottom-8 right-4 z-[1000] bg-gray-900/95 border border-gray-700
+                       rounded-lg px-3 py-2 text-sm font-medium text-gray-300 shadow-lg
+                       hover:bg-gray-800 transition-colors"
+            onClick={() => setListDrawerOpen(true)}
+          >
+            Lista · {points.length}
+          </button>
+
           {points.length === 0 && (
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[1000]
-                           bg-gray-900/90 border border-gray-700 rounded-lg px-4 py-2 text-sm text-gray-400">
+            <div className="absolute bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-[1000]
+                           bg-gray-900/90 border border-gray-700 rounded-lg px-4 py-2
+                           text-sm text-gray-400 whitespace-nowrap">
               Haz clic en el mapa para agregar el primer punto
             </div>
           )}
@@ -289,9 +302,9 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Right panel: point form only */}
+        {/* Right panel: desktop only */}
         {pointFormOpen && selectedPoint && (
-          <aside className="w-72 flex-shrink-0 border-l border-gray-800 bg-gray-900 flex flex-col overflow-hidden">
+          <aside className="hidden lg:flex w-72 flex-shrink-0 border-l border-gray-800 bg-gray-900 flex-col overflow-hidden">
             <GeoPointForm
               point={selectedPoint}
               onChange={handlePointChange}
@@ -306,6 +319,64 @@ export default function DashboardPage() {
           </aside>
         )}
       </div>
+
+      {/* ── Mobile: list bottom sheet ── */}
+      {listDrawerOpen && (
+        <div className="lg:hidden fixed inset-0 z-[3000]">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setListDrawerOpen(false)}
+          />
+          <div className="absolute inset-x-0 bottom-0 h-[70vh] bg-gray-900 rounded-t-2xl
+                         border-t border-gray-800 flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 flex-shrink-0">
+              <span className="text-sm font-semibold text-gray-100">
+                Puntos GPS{' '}
+                <span className="text-gray-500 font-normal">({points.length})</span>
+              </span>
+              <button
+                onClick={() => setListDrawerOpen(false)}
+                className="text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <GeoPointsList
+              points={points}
+              selectedId={selectedPointId}
+              onSelect={(id) => { handleSelectPoint(id); setListDrawerOpen(false) }}
+              onAdd={() => { handleAddPoint(); setListDrawerOpen(false) }}
+              onToggleActive={handleToggleActive}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Mobile: point form bottom sheet ── */}
+      {pointFormOpen && selectedPoint && (
+        <div className="lg:hidden fixed inset-0 z-[3000]">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => { setSelectedPointId(null); setPointFormOpen(false) }}
+          />
+          <div className="absolute inset-x-0 bottom-0 h-[88vh] bg-gray-900 rounded-t-2xl
+                         border-t border-gray-800 flex flex-col overflow-hidden">
+            <GeoPointForm
+              point={selectedPoint}
+              onChange={handlePointChange}
+              onDelete={() => setDeletePointTarget(selectedPoint.id)}
+              onClose={() => { setSelectedPointId(null); setPointFormOpen(false) }}
+              onSave={() => {
+                addToast('Punto guardado', 'success')
+                setSelectedPointId(null)
+                setPointFormOpen(false)
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       <Modal
         open={!!deletePointTarget}

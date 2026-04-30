@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
 import Modal from '../../components/ui/Modal'
 import ToastContainer from '../../components/ui/Toast'
+import ProjectCard from './ProjectCard'
 import { useGeoStore } from '../../store/geoStore'
 
 export default function HomePage() {
@@ -35,18 +36,8 @@ export default function HomePage() {
     addToast('Proyecto eliminado', 'success')
   }
 
-  const statusBadge = (status: GeoProject['status']) => {
-    const map = {
-      draft: 'bg-gray-700 text-gray-300',
-      active: 'bg-green-900/60 text-green-300 border border-green-800',
-      inactive: 'bg-red-900/60 text-red-300 border border-red-800',
-    }
-    const label = { draft: 'Borrador', active: 'Activo', inactive: 'Inactivo' }
-    return (
-      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${map[status]}`}>
-        {label[status]}
-      </span>
-    )
+  function handleUpdate(updated: GeoProject) {
+    setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
   }
 
   return (
@@ -101,78 +92,12 @@ export default function HomePage() {
             </p>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {projects.map((project) => (
-                <div
+                <ProjectCard
                   key={project.id}
-                  className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden
-                             hover:border-gray-700 transition-colors group"
-                >
-                  {/* Cover image */}
-                  <div className="h-36 bg-gray-800 relative overflow-hidden">
-                    {project.coverImage ? (
-                      <img
-                        src={project.coverImage}
-                        alt={project.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <svg className="h-10 w-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                        </svg>
-                      </div>
-                    )}
-                    <div className="absolute top-2 right-2">{statusBadge(project.status)}</div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-100 truncate">{project.title}</h3>
-                    {project.subtitle && (
-                      <p className="text-sm text-gray-400 truncate mt-0.5">{project.subtitle}</p>
-                    )}
-                    <p className="text-xs text-gray-600 mt-2">
-                      {project.geoPointIds.length} punto{project.geoPointIds.length !== 1 ? 's' : ''} ·{' '}
-                      {new Date(project.updatedAt).toLocaleDateString('es', {
-                        day: 'numeric', month: 'short', year: 'numeric',
-                      })}
-                    </p>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="px-4 pb-4 flex gap-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => navigate(`/project/${project.id}`)}
-                    >
-                      Editar
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => window.open(`/public/${project.id}`, '_blank')}
-                      title="Abrir vista pública"
-                    >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDeleteTarget(project.id)}
-                      title="Eliminar proyecto"
-                    >
-                      <svg className="h-4 w-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </Button>
-                  </div>
-                </div>
+                  project={project}
+                  onDelete={setDeleteTarget}
+                  onUpdate={handleUpdate}
+                />
               ))}
             </div>
           </div>

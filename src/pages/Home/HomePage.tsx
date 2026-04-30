@@ -1,20 +1,27 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { geoProjectsApi } from '../../services'
 import type { GeoProject } from '../../types'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
-import Modal from '../../components/ui/Modal'
 import ToastContainer from '../../components/ui/Toast'
 import ProjectCard from './ProjectCard'
 import { useGeoStore } from '../../store/geoStore'
 
+type SortOrder = 'newest' | 'oldest' | 'name-asc' | 'name-desc'
+
+const STATUS_SEARCH: Record<GeoProject['status'], string> = {
+  draft: 'borrador', active: 'publicado', inactive: 'inactivo',
+}
+
 export default function HomePage() {
   const navigate = useNavigate()
   const { addToast } = useGeoStore()
+
   const [projects, setProjects] = useState<GeoProject[]>([])
-  const [loading, setLoading] = useState(true)
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [loading,  setLoading]  = useState(true)
+  const [query,    setQuery]    = useState('')
+  const [sortBy,   setSortBy]   = useState<SortOrder>('newest')
 
   useEffect(() => {
     geoProjectsApi.listProjects().then((list) => {
@@ -28,21 +35,50 @@ export default function HomePage() {
     navigate(`/project/${project.id}`)
   }
 
-  async function handleDelete() {
-    if (!deleteTarget) return
-    await geoProjectsApi.removeProject(deleteTarget)
-    setProjects((prev) => prev.filter((p) => p.id !== deleteTarget))
-    setDeleteTarget(null)
-    addToast('Proyecto eliminado', 'success')
+  // Optimistic delete — card disappears immediately; restored on API failure
+  function handleDelete(id: string) {
+    const snapshot = projects.find((p) => p.id === id)
+    setProjects((prev) => prev.filter((p) => p.id !== id))
+    geoProjectsApi.removeProject(id)
+      .then(() => addToast('Proyecto eliminado', 'success'))
+      .catch(() => {
+        if (snapshot) setProjects((prev) => [snapshot, ...prev])
+        addToast('Error al eliminar el proyecto', 'error')
+      })
   }
 
   function handleUpdate(updated: GeoProject) {
     setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
   }
 
+  // Filtered + sorted list — recomputed only when inputs change
+  const visibleProjects = useMemo(() => {
+    const q = query.trim().toLowerCase()
+
+    const filtered = q
+      ? projects.filter((p) =>
+          p.title.toLowerCase().includes(q) ||
+          (p.description ?? '').toLowerCase().includes(q) ||
+          (STATUS_SEARCH[p.status] ?? '').includes(q),
+        )
+      : projects
+
+    return [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'oldest':    return a.updatedAt.localeCompare(b.updatedAt)
+        case 'name-asc':  return a.title.localeCompare(b.title, 'es')
+        case 'name-desc': return b.title.localeCompare(a.title, 'es')
+        default:          return b.updatedAt.localeCompare(a.updatedAt)
+      }
+    })
+  }, [projects, query, sortBy])
+
+  const isSearching = query.trim().length > 0
+
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
-      {/* Header */}
+
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -68,12 +104,16 @@ export default function HomePage() {
         </div>
       </header>
 
+      {/* ── Main ───────────────────────────────────────────────────────────── */}
       <main className="max-w-5xl mx-auto px-6 py-10">
+
         {loading ? (
           <div className="flex justify-center py-20">
             <Spinner size="lg" />
           </div>
+
         ) : projects.length === 0 ? (
+          /* Empty state — zero projects in backend */
           <div className="text-center py-24">
             <div className="w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <svg className="h-8 w-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,34 +125,110 @@ export default function HomePage() {
             <p className="text-gray-500 mb-6">Crea tu primer proyecto GPS para comenzar.</p>
             <Button onClick={handleNew}>Crear proyecto GPS</Button>
           </div>
+
         ) : (
           <div>
-            <p className="text-sm text-gray-500 mb-6">
-              {projects.length} proyecto{projects.length !== 1 ? 's' : ''}
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {projects.map((project) => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  onDelete={setDeleteTarget}
-                  onUpdate={handleUpdate}
+
+            {/* ── Search + Sort bar ─────────────────────────────────────────── */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-5">
+
+              {/* Search input */}
+              <div className="relative flex-1">
+                <svg
+                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Buscar proyectos..."
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg
+                             pl-9 pr-9 py-2 text-sm text-gray-100 placeholder-gray-500
+                             hover:border-gray-600
+                             focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+                             transition-colors"
                 />
-              ))}
+                {query && (
+                  <button
+                    onClick={() => setQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2
+                               text-gray-500 hover:text-gray-300 transition-colors"
+                    title="Limpiar búsqueda"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                        d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Sort select */}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOrder)}
+                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2
+                           text-sm text-gray-300
+                           hover:border-gray-600
+                           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+                           transition-colors sm:w-44 cursor-pointer"
+              >
+                <option value="newest">Más recientes</option>
+                <option value="oldest">Más antiguos</option>
+                <option value="name-asc">Nombre A–Z</option>
+                <option value="name-desc">Nombre Z–A</option>
+              </select>
             </div>
+
+            {/* ── Count ─────────────────────────────────────────────────────── */}
+            <p className="text-sm text-gray-500 mb-4">
+              {isSearching
+                ? `${visibleProjects.length} de ${projects.length} proyecto${projects.length !== 1 ? 's' : ''}`
+                : `${projects.length} proyecto${projects.length !== 1 ? 's' : ''}`}
+            </p>
+
+            {/* ── No results from search ────────────────────────────────────── */}
+            {visibleProjects.length === 0 ? (
+              <div className="text-center py-16">
+                <svg className="h-12 w-12 text-gray-700 mx-auto mb-3"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <p className="text-gray-400 font-medium">No se encontraron proyectos</p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Ningún proyecto coincide con "{query.trim()}"
+                </p>
+                <button
+                  onClick={() => setQuery('')}
+                  className="mt-4 text-sm text-brand-400 hover:text-brand-300 transition-colors"
+                >
+                  Limpiar búsqueda
+                </button>
+              </div>
+
+            ) : (
+              /* ── Grid ───────────────────────────────────────────────────── */
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {visibleProjects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onDelete={handleDelete}
+                    onUpdate={handleUpdate}
+                  />
+                ))}
+              </div>
+            )}
+
           </div>
         )}
       </main>
 
-      <Modal
-        open={!!deleteTarget}
-        title="Eliminar proyecto"
-        description="Esta acción no se puede deshacer. Se eliminarán el proyecto y todos sus puntos GPS."
-        confirmLabel="Eliminar"
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteTarget(null)}
-        danger
-      />
       <ToastContainer />
     </div>
   )

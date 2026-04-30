@@ -1,13 +1,7 @@
 {
   "routes": [
-    {
-      "src": "/public/([^/]+)",
-      "dest": "/api/public/$1"
-    },
+    { "src": "/public/([^/]+)", "dest": "/api/og?id=$1" },
     { "handle": "filesystem" },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }

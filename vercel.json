@@ -1,11 +1,13 @@
 {
-  "functions": {
-    "api/public/[id].js": {
-      "includeFiles": "dist/index.html"
+  "routes": [
+    {
+      "src": "/public/([^/]+)",
+      "dest": "/api/public/$1"
+    },
+    { "handle": "filesystem" },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
-  },
-  "rewrites": [
-    { "source": "/public/:id", "destination": "/api/public/:id" },
-    { "source": "/(.*)",        "destination": "/index.html"    }
   ]
 }

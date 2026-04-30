@@ -140,12 +140,18 @@ export default function PublicPage() {
   const [flyToKey, setFlyToKey] = useState<string | null>(null)
   const [flyToTarget, setFlyToTarget] = useState<FlyTarget | null>(null)
   const flyToCounterRef = useRef(0)
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   useGeolocation(true)
 
   // Keep pointsRef in sync so the route effect can read current points
   // without being listed as a dependency (points don't change after load)
   useEffect(() => { pointsRef.current = points }, [points])
+
+  useEffect(() => {
+    if (!selectedPointId) return
+    cardRefs.current[selectedPointId]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [selectedPointId])
 
   useEffect(() => {
     if (!id) {
@@ -454,21 +460,22 @@ export default function PublicPage() {
         ) : (
           <div className="space-y-2 pb-2">
             {points.map((pt) => (
-              <PublicPointCard
-                key={pt.id}
-                point={pt}
-                distance={distances[pt.id] ?? null}
-                isSelected={pt.id === selectedPointId}
-                onSelect={() => handlePointClick(pt)}
-                onActivate={() => handleActivate(pt)}
-                routeStatus={pt.id === selectedPointId ? routeStatus : undefined}
-                walkingDistanceMeters={
-                  pt.id === selectedPointId && routeResult ? routeResult.distanceMeters : undefined
-                }
-                walkingDurationSeconds={
-                  pt.id === selectedPointId && routeResult ? routeResult.durationSeconds : undefined
-                }
-              />
+              <div key={pt.id} ref={(el) => { cardRefs.current[pt.id] = el }}>
+                <PublicPointCard
+                  point={pt}
+                  distance={distances[pt.id] ?? null}
+                  isSelected={pt.id === selectedPointId}
+                  onSelect={() => handlePointClick(pt)}
+                  onActivate={() => handleActivate(pt)}
+                  routeStatus={pt.id === selectedPointId ? routeStatus : undefined}
+                  walkingDistanceMeters={
+                    pt.id === selectedPointId && routeResult ? routeResult.distanceMeters : undefined
+                  }
+                  walkingDurationSeconds={
+                    pt.id === selectedPointId && routeResult ? routeResult.durationSeconds : undefined
+                  }
+                />
+              </div>
             ))}
           </div>
         )}

@@ -416,15 +416,16 @@ export default function PublicPage() {
         <button
           onClick={handleMyLocation}
           disabled={!userLocation}
-          className="absolute bottom-4 right-4 z-[400] bg-white rounded-full p-3 shadow-lg
-                     hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="absolute bottom-4 right-4 z-[400]
+                     w-11 h-11 flex items-center justify-center
+                     bg-white rounded-full border border-gray-200/60 shadow-md
+                     hover:bg-gray-50 active:scale-95 active:shadow-sm
+                     transition-all duration-150
+                     disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
           title="Mi ubicación"
         >
-          <svg className="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+          <svg className="h-5 w-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2 L4 22 L12 17.5 L20 22 Z" />
           </svg>
         </button>
       </div>

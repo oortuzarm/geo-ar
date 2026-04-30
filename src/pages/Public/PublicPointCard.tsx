@@ -6,12 +6,12 @@ export type RouteStatus = 'idle' | 'loading' | 'ok' | 'error' | 'no-location'
 
 interface PublicPointCardProps {
   point: GeoPoint
-  distance: number | null
+  distance: number | null          // Haversine fallback (used when ORS unavailable)
   isSelected: boolean
   onSelect: () => void
   onActivate: () => void
   routeStatus?: RouteStatus
-  walkingDistanceMeters?: number
+  walkingDistanceMeters?: number   // ORS walking distance to center
   walkingDurationSeconds?: number
 }
 
@@ -25,13 +25,20 @@ export default function PublicPointCard({
   walkingDistanceMeters,
   walkingDurationSeconds,
 }: PublicPointCardProps) {
-  const withinRadius = distance !== null && distance <= point.activationRadius
-  const distanceText =
-    distance === null
-      ? 'Ubicación no disponible'
-      : withinRadius
-      ? `Dentro del radio (${formatDistance(distance)})`
-      : `Fuera del radio · ${formatDistance(distance)} de distancia`
+  // Use ORS distance when available; fall back to Haversine
+  const effectiveDistance =
+    routeStatus === 'ok' && walkingDistanceMeters !== undefined
+      ? walkingDistanceMeters
+      : distance
+
+  const withinRadius =
+    effectiveDistance !== null && effectiveDistance <= point.activationRadius
+
+  // How far the user still needs to walk to reach the activation perimeter
+  const distanceToActivation =
+    effectiveDistance !== null
+      ? Math.max(0, effectiveDistance - point.activationRadius)
+      : null
 
   return (
     <div
@@ -51,22 +58,8 @@ export default function PublicPointCard({
       )}
 
       <div className="p-3">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-gray-100 text-sm">{point.name}</h3>
-          {/* Distance badge */}
-          <span
-            className={[
-              'flex-shrink-0 text-xs font-medium px-2 py-0.5 rounded-full',
-              distance === null
-                ? 'bg-gray-800 text-gray-500'
-                : withinRadius
-                ? 'bg-green-900/60 text-green-300 border border-green-800'
-                : 'bg-gray-800 text-gray-400',
-            ].join(' ')}
-          >
-            {distance === null ? '—' : formatDistance(distance)}
-          </span>
-        </div>
+        {/* Name row — no distance badge */}
+        <h3 className="font-semibold text-gray-100 text-sm">{point.name}</h3>
 
         {point.description && (
           <p className="text-xs text-gray-400 mt-1 line-clamp-2">{point.description}</p>
@@ -84,42 +77,36 @@ export default function PublicPointCard({
           </div>
         )}
 
-        <p className={[
-          'text-xs mt-2',
-          withinRadius ? 'text-green-400' : 'text-gray-500',
-        ].join(' ')}>
-          {distanceText}
-        </p>
-
-        {/* Walking route info — only shown when card is selected */}
-        {isSelected && routeStatus && routeStatus !== 'idle' && (
-          <div className="mt-2 flex items-center gap-1.5">
-            {routeStatus === 'loading' && (
-              <span className="text-xs text-gray-500 flex items-center gap-1">
-                <span className="w-3 h-3 border border-gray-500 border-t-transparent rounded-full animate-spin" />
-                Calculando ruta…
-              </span>
-            )}
-            {routeStatus === 'ok' && walkingDistanceMeters !== undefined && (
-              <span className="text-xs text-blue-400 font-medium flex items-center gap-1">
-                🚶 {formatDistance(walkingDistanceMeters)}
-                {walkingDurationSeconds !== undefined && (
-                  <span className="text-gray-500">· {formatDuration(walkingDurationSeconds)}</span>
-                )}
-              </span>
-            )}
-            {routeStatus === 'error' && (
-              <span className="text-xs text-gray-500">No se pudo calcular la ruta.</span>
-            )}
-            {routeStatus === 'no-location' && (
-              <span className="text-xs text-gray-500">Activa tu ubicación para ver la ruta.</span>
-            )}
-          </div>
-        )}
-
-        {/* Activation button */}
+        {/* ── Distance to activation + button (selected card only) ── */}
         {isSelected && (
-          <div className="mt-3">
+          <div className="mt-3 space-y-2">
+
+            {/* Route status messages */}
+            {routeStatus === 'loading' && (
+              <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                <span className="w-3 h-3 border border-gray-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                Calculando ruta…
+              </p>
+            )}
+
+            {routeStatus === 'ok' && !withinRadius && distanceToActivation !== null && (
+              <p className="text-xs text-yellow-400 font-medium">
+                🚶 Te faltan {formatDistance(distanceToActivation)} para activar la experiencia
+                {walkingDurationSeconds !== undefined && (
+                  <span className="text-gray-500 font-normal">
+                    {' '}· {formatDuration(walkingDurationSeconds)}
+                  </span>
+                )}
+              </p>
+            )}
+
+            {routeStatus === 'no-location' && (
+              <p className="text-xs text-gray-500">
+                Activa tu ubicación para ver cuánto te falta.
+              </p>
+            )}
+
+            {/* Activation button */}
             {withinRadius ? (
               <button
                 onClick={(e) => { e.stopPropagation(); onActivate() }}
@@ -129,21 +116,15 @@ export default function PublicPointCard({
                 Ir a experiencia AR
               </button>
             ) : (
-              <div className="space-y-2">
-                <button
-                  disabled
-                  className="w-full bg-gray-700 text-gray-500 font-semibold py-2.5 px-4 rounded-lg
-                             text-sm cursor-not-allowed"
-                >
-                  Ir a experiencia AR
-                </button>
-                <p className="text-xs text-gray-500 text-center">
-                  {distance === null
-                    ? 'Activa la ubicación para acceder a esta experiencia.'
-                    : 'Acércate al punto indicado para activar esta experiencia.'}
-                </p>
-              </div>
+              <button
+                disabled
+                className="w-full bg-gray-700 text-gray-500 font-semibold py-2.5 px-4
+                           rounded-lg text-sm cursor-not-allowed"
+              >
+                Ir a experiencia AR
+              </button>
             )}
+
           </div>
         )}
       </div>

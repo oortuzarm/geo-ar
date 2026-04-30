@@ -1,5 +1,8 @@
 import { formatDistance } from '../../features/geolocation/haversine'
+import { formatDuration } from '../../features/routing/orsClient'
 import type { GeoPoint } from '../../types'
+
+export type RouteStatus = 'idle' | 'loading' | 'ok' | 'error' | 'no-location'
 
 interface PublicPointCardProps {
   point: GeoPoint
@@ -7,6 +10,9 @@ interface PublicPointCardProps {
   isSelected: boolean
   onSelect: () => void
   onActivate: () => void
+  routeStatus?: RouteStatus
+  walkingDistanceMeters?: number
+  walkingDurationSeconds?: number
 }
 
 export default function PublicPointCard({
@@ -15,6 +21,9 @@ export default function PublicPointCard({
   isSelected,
   onSelect,
   onActivate,
+  routeStatus,
+  walkingDistanceMeters,
+  walkingDurationSeconds,
 }: PublicPointCardProps) {
   const withinRadius = distance !== null && distance <= point.activationRadius
   const distanceText =
@@ -81,6 +90,32 @@ export default function PublicPointCard({
         ].join(' ')}>
           {distanceText}
         </p>
+
+        {/* Walking route info — only shown when card is selected */}
+        {isSelected && routeStatus && routeStatus !== 'idle' && (
+          <div className="mt-2 flex items-center gap-1.5">
+            {routeStatus === 'loading' && (
+              <span className="text-xs text-gray-500 flex items-center gap-1">
+                <span className="w-3 h-3 border border-gray-500 border-t-transparent rounded-full animate-spin" />
+                Calculando ruta…
+              </span>
+            )}
+            {routeStatus === 'ok' && walkingDistanceMeters !== undefined && (
+              <span className="text-xs text-blue-400 font-medium flex items-center gap-1">
+                🚶 {formatDistance(walkingDistanceMeters)}
+                {walkingDurationSeconds !== undefined && (
+                  <span className="text-gray-500">· {formatDuration(walkingDurationSeconds)}</span>
+                )}
+              </span>
+            )}
+            {routeStatus === 'error' && (
+              <span className="text-xs text-gray-500">No se pudo calcular la ruta.</span>
+            )}
+            {routeStatus === 'no-location' && (
+              <span className="text-xs text-gray-500">Activa tu ubicación para ver la ruta.</span>
+            )}
+          </div>
+        )}
 
         {/* Activation button */}
         {isSelected && (

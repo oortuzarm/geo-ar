@@ -5,11 +5,20 @@ import L from 'leaflet'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
 import { haversineDistance } from '../../features/geolocation/haversine'
+import { fetchWalkingRoute } from '../../features/routing/orsClient'
+import type { RouteResult } from '../../features/routing/orsClient'
+import type { RouteStatus } from './PublicPointCard'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { useGeoStore } from '../../store/geoStore'
+import RoutePolyline from '../../components/map/RoutePolyline'
 import PublicPointCard from './PublicPointCard'
 import Spinner from '../../components/ui/Spinner'
 import type { GeoProject, GeoPoint } from '../../types'
+
+/** Minimum distance in meters the user must move before recalculating the route */
+const ROUTE_RECALC_THRESHOLD_M = 15
+/** Debounce delay in ms for movement-triggered recalculations */
+const ROUTE_MOVEMENT_DEBOUNCE_MS = 2_000
 
 type LoadError = 'not-found' | 'not-published' | 'fetch-error' | 'timeout' | null
 
@@ -115,7 +124,23 @@ export default function PublicPage() {
   const [distances, setDistances] = useState<Record<string, number>>({})
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // ── Route state ────────────────────────────────────────────────────────────
+  const [routeResult, setRouteResult] = useState<RouteResult | null>(null)
+  const [routeStatus, setRouteStatus] = useState<RouteStatus>('idle')
+  // pointId for which a route has been requested (avoids duplicate fetches)
+  const routeForPointRef = useRef<string | null>(null)
+  // Last user position at which the route was calculated (movement threshold)
+  const lastRoutePositionRef = useRef<{ lat: number; lng: number } | null>(null)
+  // Debounce timer for movement-triggered recalculations
+  const routeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Stable ref to points so the route effect doesn't need it as a dependency
+  const pointsRef = useRef<GeoPoint[]>([])
+
   useGeolocation(true)
+
+  // Keep pointsRef in sync so the route effect can read current points
+  // without being listed as a dependency (points don't change after load)
+  useEffect(() => { pointsRef.current = points }, [points])
 
   useEffect(() => {
     if (!id) {
@@ -194,6 +219,87 @@ export default function PublicPage() {
     setDistances(newDist)
   }, [userLocation, points])
 
+  // ── Route calculation ──────────────────────────────────────────────────────
+  useEffect(() => {
+    // No point selected → clear route
+    if (!selectedPointId) {
+      setRouteResult(null)
+      setRouteStatus('idle')
+      routeForPointRef.current = null
+      lastRoutePositionRef.current = null
+      if (routeTimerRef.current) clearTimeout(routeTimerRef.current)
+      return
+    }
+
+    // No user location yet
+    if (!userLocation) {
+      if (routeForPointRef.current !== selectedPointId) {
+        setRouteStatus('no-location')
+        setRouteResult(null)
+        routeForPointRef.current = selectedPointId
+      }
+      return
+    }
+
+    const isNewPoint = routeForPointRef.current !== selectedPointId
+
+    if (!isNewPoint) {
+      // Same point — only recalculate if user moved enough
+      const last = lastRoutePositionRef.current
+      if (last) {
+        const moved = haversineDistance(
+          last.lat, last.lng,
+          userLocation.latitude, userLocation.longitude,
+        )
+        if (moved < ROUTE_RECALC_THRESHOLD_M) return
+      }
+      // Fell through: either no previous position, or moved enough
+    }
+
+    // Mark which point we're fetching for
+    routeForPointRef.current = selectedPointId
+
+    let cancelled = false
+
+    const run = async () => {
+      const target = pointsRef.current.find((p) => p.id === selectedPointId)
+      if (!target || cancelled) return
+
+      setRouteStatus('loading')
+      try {
+        const result = await fetchWalkingRoute(
+          userLocation.latitude, userLocation.longitude,
+          target.latitude, target.longitude,
+        )
+        if (!cancelled) {
+          setRouteResult(result)
+          setRouteStatus('ok')
+          lastRoutePositionRef.current = { lat: userLocation.latitude, lng: userLocation.longitude }
+        }
+      } catch {
+        if (!cancelled) {
+          setRouteStatus('error')
+          // Keep existing route result if any (graceful degradation)
+        }
+      }
+    }
+
+    if (isNewPoint) {
+      // Point changed → run immediately
+      if (routeTimerRef.current) clearTimeout(routeTimerRef.current)
+      run()
+    } else {
+      // Movement update → debounce to avoid hammering the API
+      if (routeTimerRef.current) clearTimeout(routeTimerRef.current)
+      routeTimerRef.current = setTimeout(run, ROUTE_MOVEMENT_DEBOUNCE_MS)
+    }
+
+    return () => {
+      cancelled = true
+      if (routeTimerRef.current) clearTimeout(routeTimerRef.current)
+    }
+  }, [selectedPointId, userLocation]) // eslint-disable-line react-hooks/exhaustive-deps
+
   function handleActivate(point: GeoPoint) {
     const dist = distances[point.id] ?? Infinity
     if (dist <= point.activationRadius) {
@@ -263,12 +369,19 @@ export default function PublicPage() {
               pathOptions={{
                 color: pt.id === selectedPointId ? '#0ea5e9' : '#ef4444',
                 fillColor: pt.id === selectedPointId ? '#0ea5e9' : '#ef4444',
-                fillOpacity: 0.1,
-                weight: 2,
+                fillOpacity: pt.id === selectedPointId ? 0.15 : 0.08,
+                weight: pt.id === selectedPointId ? 3 : 2,
               }}
               eventHandlers={{ click: () => setSelectedPointId(pt.id) }}
             />
           ))}
+          {routeResult && userLocation && (
+            <RoutePolyline
+              latLngs={routeResult.latLngs}
+              userLat={userLocation.latitude}
+              userLng={userLocation.longitude}
+            />
+          )}
         </MapContainer>
 
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400]
@@ -308,6 +421,13 @@ export default function PublicPage() {
                 isSelected={pt.id === selectedPointId}
                 onSelect={() => setSelectedPointId(pt.id)}
                 onActivate={() => handleActivate(pt)}
+                routeStatus={pt.id === selectedPointId ? routeStatus : undefined}
+                walkingDistanceMeters={
+                  pt.id === selectedPointId && routeResult ? routeResult.distanceMeters : undefined
+                }
+                walkingDurationSeconds={
+                  pt.id === selectedPointId && routeResult ? routeResult.durationSeconds : undefined
+                }
               />
             ))}
           </div>

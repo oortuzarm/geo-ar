@@ -69,11 +69,16 @@ export default function DashboardPage() {
     return () => window.removeEventListener('beforeunload', handler)
   }, [hasUnsavedChanges])
 
+  function focusPoint(pt: GeoPoint) {
+    setMapCenter([pt.latitude, pt.longitude])
+    setMapZoom(17)
+  }
+
   function handleSelectPoint(pointId: string) {
     setSelectedPointId(pointId)
     setPointFormOpen(true)
     const pt = points.find((p) => p.id === pointId)
-    if (pt) setMapCenter([pt.latitude, pt.longitude])
+    if (pt) focusPoint(pt)
   }
 
   const handleMapClick = useCallback(
@@ -119,6 +124,7 @@ export default function DashboardPage() {
     const updatedIds = [...project.geoPointIds, newPoint.id]
     useGeoStore.getState().updateProjectField('geoPointIds', updatedIds)
     await geoProjectsApi.saveProject(project.id, { ...project, geoPointIds: updatedIds })
+    focusPoint(newPoint)
     setSelectedPointId(newPoint.id)
     setPointFormOpen(true)
   }

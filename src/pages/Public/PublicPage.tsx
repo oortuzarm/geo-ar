@@ -15,6 +15,7 @@ import MapController from '../../components/map/MapController'
 import type { FlyTarget } from '../../components/map/MapController'
 import PublicPointCard from './PublicPointCard'
 import Spinner from '../../components/ui/Spinner'
+import ToastContainer from '../../components/ui/Toast'
 import type { GeoProject, GeoPoint } from '../../types'
 
 /** Minimum distance in meters the user must move before recalculating the route */
@@ -114,7 +115,7 @@ function ErrorScreen({ error, id }: { error: LoadError; id?: string }) {
 
 export default function PublicPage() {
   const { id } = useParams<{ id: string }>()
-  const { userLocation, locationStatus } = useGeoStore()
+  const { userLocation, locationStatus, addToast } = useGeoStore()
   const [project, setProject] = useState<GeoProject | null>(null)
   const [points, setPoints] = useState<GeoPoint[]>([])
   const [loading, setLoading] = useState(true)
@@ -330,6 +331,27 @@ export default function PublicPage() {
     setFlyToTarget({ lat: userLocation.latitude, lng: userLocation.longitude, zoom: 17 })
   }
 
+  async function handleShare() {
+    const url = window.location.href
+    const title = project?.title ?? 'Experiencia GeoAR'
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text: 'Mira esta experiencia geolocalizada', url })
+      } catch (err) {
+        if (err instanceof Error && err.name !== 'AbortError') {
+          addToast('No pudimos compartir el link.', 'error')
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url)
+        addToast('Link copiado', 'success')
+      } catch {
+        addToast('No pudimos compartir el link.', 'error')
+      }
+    }
+  }
+
   function handleActivate(point: GeoPoint) {
     const dist = distances[point.id] ?? Infinity
     if (dist <= point.activationRadius) {
@@ -451,6 +473,17 @@ export default function PublicPage() {
               <p className="text-sm text-gray-400 mt-0.5">{project.subtitle}</p>
             )}
           </div>
+          <button
+            onClick={handleShare}
+            className="flex-shrink-0 p-2 rounded-lg text-gray-400 hover:text-gray-100
+                       hover:bg-gray-800 active:scale-95 transition-all duration-150"
+            title="Compartir"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+          </button>
         </div>
 
         {points.length === 0 ? (
@@ -480,6 +513,7 @@ export default function PublicPage() {
           </div>
         )}
       </div>
+      <ToastContainer />
     </div>
   )
 }

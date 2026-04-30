@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { MapContainer, TileLayer, Circle, Marker, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Circle, Marker } from 'react-leaflet'
 import L from 'leaflet'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
@@ -12,7 +12,7 @@ import { useGeolocation } from '../../hooks/useGeolocation'
 import { useGeoStore } from '../../store/geoStore'
 import RoutePolyline from '../../components/map/RoutePolyline'
 import MapController from '../../components/map/MapController'
-import type { FitTarget } from '../../components/map/MapController'
+import type { FlyTarget } from '../../components/map/MapController'
 import PublicPointCard from './PublicPointCard'
 import Spinner from '../../components/ui/Spinner'
 import type { GeoProject, GeoPoint } from '../../types'
@@ -27,9 +27,6 @@ type LoadError = 'not-found' | 'not-published' | 'fetch-error' | 'timeout' | nul
 const LOAD_TIMEOUT_MS = 10_000
 
 function UserLocationMarker({ lat, lng }: { lat: number; lng: number }) {
-  const map = useMap()
-  useEffect(() => { map.panTo([lat, lng], { animate: true }) }, [lat, lng, map])
-
   const icon = L.divIcon({
     className: '',
     html: `<div style="
@@ -138,13 +135,11 @@ export default function PublicPage() {
   // Stable ref to points so the route effect doesn't need it as a dependency
   const pointsRef = useRef<GeoPoint[]>([])
 
-  // ── Map fitBounds control ──────────────────────────────────────────────────
-  // Changing fitKey triggers ONE fitBounds call in MapController.
-  // We only change it when a new point is selected and its route arrives.
-  const [fitKey, setFitKey] = useState<string | null>(null)
-  const [fitTarget, setFitTarget] = useState<FitTarget | null>(null)
-  // True after the user manually drags/zooms; reset on new point selection.
-  const userInteractedRef = useRef(false)
+  // ── flyTo control ─────────────────────────────────────────────────────────
+  // Changing flyToKey triggers ONE flyTo call in MapController.
+  const [flyToKey, setFlyToKey] = useState<string | null>(null)
+  const [flyToTarget, setFlyToTarget] = useState<FlyTarget | null>(null)
+  const flyToCounterRef = useRef(0)
 
   useGeolocation(true)
 
@@ -269,9 +264,6 @@ export default function PublicPage() {
     // Mark which point we're fetching for
     routeForPointRef.current = selectedPointId
 
-    // New point selected → reset interaction flag so fitBounds can run again
-    if (isNewPoint) userInteractedRef.current = false
-
     // Capture these at schedule-time so the async closure uses correct values
     const snapLat = userLocation.latitude
     const snapLng = userLocation.longitude
@@ -293,12 +285,6 @@ export default function PublicPage() {
           setRouteResult(result)
           setRouteStatus('ok')
           lastRoutePositionRef.current = { lat: snapLat, lng: snapLng }
-
-          // Only fitBounds on new-point selection AND user hasn't interacted manually
-          if (isNewPoint && !userInteractedRef.current) {
-            setFitKey(snapPointId)
-            setFitTarget({ latLngs: result.latLngs, userLat: snapLat, userLng: snapLng })
-          }
         }
       } catch {
         if (!cancelled) {
@@ -323,6 +309,20 @@ export default function PublicPage() {
       if (routeTimerRef.current) clearTimeout(routeTimerRef.current)
     }
   }, [selectedPointId, userLocation]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function handlePointClick(pt: GeoPoint) {
+    setSelectedPointId(pt.id)
+    flyToCounterRef.current += 1
+    setFlyToKey(`point-${pt.id}-${flyToCounterRef.current}`)
+    setFlyToTarget({ lat: pt.latitude, lng: pt.longitude, zoom: 17 })
+  }
+
+  function handleMyLocation() {
+    if (!userLocation) return
+    flyToCounterRef.current += 1
+    setFlyToKey(`user-${flyToCounterRef.current}`)
+    setFlyToTarget({ lat: userLocation.latitude, lng: userLocation.longitude, zoom: 17 })
+  }
 
   function handleActivate(point: GeoPoint) {
     const dist = distances[point.id] ?? Infinity
@@ -379,9 +379,8 @@ export default function PublicPage() {
       <div className="flex-1 relative">
         <MapContainer center={mapCenter} zoom={15} className="w-full h-full">
           <MapController
-            fitKey={fitKey}
-            fitTarget={fitTarget}
-            onInteract={() => { userInteractedRef.current = true }}
+            flyKey={flyToKey}
+            flyTarget={flyToTarget}
           />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -401,7 +400,7 @@ export default function PublicPage() {
                 fillOpacity: pt.id === selectedPointId ? 0.15 : 0.08,
                 weight: pt.id === selectedPointId ? 3 : 2,
               }}
-              eventHandlers={{ click: () => setSelectedPointId(pt.id) }}
+              eventHandlers={{ click: () => handlePointClick(pt) }}
             />
           ))}
           {routeResult && (
@@ -413,6 +412,21 @@ export default function PublicPage() {
                        bg-gray-900/95 border border-gray-700 rounded-full px-4 py-1.5 shadow-lg">
           {locationBadge()}
         </div>
+
+        <button
+          onClick={handleMyLocation}
+          disabled={!userLocation}
+          className="absolute bottom-4 right-4 z-[400] bg-white rounded-full p-3 shadow-lg
+                     hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          title="Mi ubicación"
+        >
+          <svg className="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+          </svg>
+        </button>
       </div>
 
       <div className="flex-shrink-0 bg-gray-950 border-t border-gray-800 px-4 pt-3 pb-4 max-h-[55vh] overflow-y-auto">

@@ -40,19 +40,57 @@ function setMeta(attr: 'property' | 'name', key: string, value: string) {
   el.setAttribute('content', value)
 }
 
-function updatePageMeta(title: string, description: string, imageUrl: string | null, pageUrl: string) {
+interface OgImage { url: string; type: string }
+
+/**
+ * Resolves coverImage to a public absolute URL suitable for OG tags.
+ * base64 data URIs are rejected — crawlers can't fetch them.
+ * Falls back to the static /og-image.svg served from public/.
+ */
+function resolveOgImage(coverImage: string | undefined): OgImage {
+  const fallback: OgImage = {
+    url: `${window.location.origin}/og-image.svg`,
+    type: 'image/svg+xml',
+  }
+  if (!coverImage) return fallback
+  // base64 data URI — not usable as OG image URL
+  if (coverImage.startsWith('data:')) return fallback
+  // Relative path from the same origin (e.g. Rails Active Storage public URL)
+  if (coverImage.startsWith('/')) {
+    const ext = coverImage.split('.').pop()?.toLowerCase() ?? ''
+    return {
+      url: `${window.location.origin}${coverImage}`,
+      type: ext === 'png' ? 'image/png' : ext === 'svg' ? 'image/svg+xml' : ext === 'webp' ? 'image/webp' : 'image/jpeg',
+    }
+  }
+  // Absolute HTTP/HTTPS URL
+  if (coverImage.startsWith('http://') || coverImage.startsWith('https://')) {
+    const ext = coverImage.split('?')[0].split('.').pop()?.toLowerCase() ?? ''
+    return {
+      url: coverImage,
+      type: ext === 'png' ? 'image/png' : ext === 'svg' ? 'image/svg+xml' : ext === 'webp' ? 'image/webp' : 'image/jpeg',
+    }
+  }
+  return fallback
+}
+
+function updatePageMeta(title: string, description: string, image: OgImage, pageUrl: string) {
   document.title = title
 
   setMeta('property', 'og:title', title)
   setMeta('property', 'og:description', description)
   setMeta('property', 'og:url', pageUrl)
   setMeta('property', 'og:type', 'website')
-  if (imageUrl) setMeta('property', 'og:image', imageUrl)
+  setMeta('property', 'og:image', image.url)
+  setMeta('property', 'og:image:secure_url', image.url.replace(/^http:\/\//, 'https://'))
+  setMeta('property', 'og:image:type', image.type)
+  setMeta('property', 'og:image:width', '1200')
+  setMeta('property', 'og:image:height', '630')
 
-  setMeta('name', 'twitter:card', imageUrl ? 'summary_large_image' : 'summary')
+  setMeta('name', 'twitter:card', 'summary_large_image')
   setMeta('name', 'twitter:title', title)
   setMeta('name', 'twitter:description', description)
-  if (imageUrl) setMeta('name', 'twitter:image', imageUrl)
+  setMeta('name', 'twitter:image', image.url)
 }
 
 function resetPageMeta() {
@@ -234,8 +272,7 @@ export default function PublicPage() {
           console.warn('[PublicPage] El proyecto no tiene puntos activos.')
         }
 
-        // coverImage is often base64 — only use as OG image if it's a real URL
-        const ogImage = proj.coverImage?.startsWith('http') ? proj.coverImage : null
+        const ogImage = resolveOgImage(proj.coverImage)
         const ogDesc = `Experiencia geolocalizada${proj.subtitle ? `: ${proj.subtitle}` : ' en GeoAR'}`
         updatePageMeta(proj.title, ogDesc, ogImage, window.location.href)
 

@@ -47,7 +47,16 @@ export default async function handler(req, res) {
   }
 
   // ── 3. Build and inject meta tags ───────────────────────────────────────────
-  const pageUrl    = `${origin}/public/${id}`
+  // Reconstruct the canonical /public/:id URL, preserving any extra query params
+  // (e.g. ?v=2000 cache-busters) that arrived via the original request.
+  // req.query always contains `id` from the vercel.json rewrite; every other key
+  // comes from the original requester and should be kept in og:url so WhatsApp
+  // sees a distinct URL when the param changes.
+  const extraParams = Object.entries(req.query)
+    .filter(([k]) => k !== 'id')
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(Array.isArray(v) ? v[0] : v)}`)
+    .join('&')
+  const pageUrl    = `${origin}/public/${id}${extraParams ? `?${extraParams}` : ''}`
   const coverImage = project?.coverImage ?? project?.cover_image
   const title      = project?.title ?? 'Experiencia GeoAR'
   const desc       = project?.subtitle
@@ -64,7 +73,7 @@ export default async function handler(req, res) {
 
   res
     .setHeader('Content-Type', 'text/html; charset=utf-8')
-    .setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300')
+    .setHeader('Cache-Control', 'no-store, max-age=0')
     .status(200)
     .end(html)
 }

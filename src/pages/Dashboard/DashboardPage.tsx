@@ -29,6 +29,8 @@ export default function DashboardPage() {
   const [deletePointTarget, setDeletePointTarget] = useState<string | null>(null)
   const [locatingUser, setLocatingUser] = useState(false)
   const [listDrawerOpen, setListDrawerOpen] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [isPublishing, setIsPublishing] = useState(false)
 
   // Load project on mount
   useEffect(() => {
@@ -58,6 +60,15 @@ export default function DashboardPage() {
     return () => { setProject(null); setPoints([]) }
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Warn on accidental navigation when there are unsaved content changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) { e.preventDefault(); e.returnValue = '' }
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [hasUnsavedChanges])
+
   function handleSelectPoint(pointId: string) {
     setSelectedPointId(pointId)
     setPointFormOpen(true)
@@ -69,6 +80,7 @@ export default function DashboardPage() {
     async (lat: number, lng: number) => {
       if (!project) return
 
+      setHasUnsavedChanges(true)
       if (selectedPointId) {
         const current = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
         if (current) upsertPoint({ ...current, latitude: lat, longitude: lng })
@@ -94,6 +106,7 @@ export default function DashboardPage() {
 
   async function handleAddPoint() {
     if (!project) return
+    setHasUnsavedChanges(true)
     const center = useGeoStore.getState().mapCenter
     const currentPoints = useGeoStore.getState().points
     const newPoint = await geoPointsApi.createPoint({
@@ -114,6 +127,7 @@ export default function DashboardPage() {
     if (!selectedPointId) return
     const current = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
     if (!current) return
+    setHasUnsavedChanges(true)
 
     upsertPoint({ ...current, ...updates })
 
@@ -154,16 +168,38 @@ export default function DashboardPage() {
     if (!project) return
     setIsSaving(true)
     try {
-      await geoProjectsApi.saveProject(project.id, project)
+      // Exclude status — publication is a separate immediate action via handleToggleStatus
+      const { status: _status, ...contentFields } = project
+      await geoProjectsApi.saveProject(project.id, contentFields)
       const currentPoints = useGeoStore.getState().points
       for (const pt of currentPoints) {
         await geoPointsApi.savePoint(pt.id, pt)
       }
+      setHasUnsavedChanges(false)
       addToast('Proyecto guardado correctamente', 'success')
     } catch {
       addToast('Error al guardar el proyecto', 'error')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  async function handleToggleStatus() {
+    if (!project || isPublishing) return
+    const nextStatus = project.status === 'active' ? 'draft' : 'active'
+    setIsPublishing(true)
+    // Optimistic update
+    useGeoStore.getState().updateProjectField('status', nextStatus)
+    try {
+      const updated = await geoProjectsApi.saveProject(project.id, { status: nextStatus })
+      useGeoStore.getState().setProject({ ...useGeoStore.getState().project!, status: updated.status })
+      addToast(nextStatus === 'active' ? 'Proyecto publicado' : 'Proyecto despublicado', 'success')
+    } catch {
+      // Rollback on error
+      useGeoStore.getState().updateProjectField('status', project.status)
+      addToast('Error al cambiar el estado del proyecto', 'error')
+    } finally {
+      setIsPublishing(false)
     }
   }
 
@@ -222,26 +258,35 @@ export default function DashboardPage() {
               Previsualizar
             </Button>
 
-            {/* Publish toggle — changes local state only; saved with "Guardar proyecto" */}
+            {/* Publish toggle — saves immediately to backend */}
             {project && (
               <button
-                onClick={() => {
-                  const next = project.status === 'active' ? 'draft' : 'active'
-                  useGeoStore.getState().updateProjectField('status', next)
-                }}
+                onClick={handleToggleStatus}
+                disabled={isPublishing}
                 className={`hidden sm:flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-medium
-                            border transition-colors flex-shrink-0 ${
+                            border transition-colors flex-shrink-0 disabled:opacity-60 disabled:cursor-wait ${
                   project.status === 'active'
                     ? 'bg-green-900/40 border-green-700 text-green-300 hover:bg-red-900/30 hover:border-red-700 hover:text-red-300'
                     : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-green-900/30 hover:border-green-700 hover:text-green-300'
                 }`}
-                title={project.status === 'active' ? 'Clic para marcar como borrador' : 'Clic para marcar como publicado'}
+                title={project.status === 'active' ? 'Despublicar' : 'Publicar'}
               >
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                  project.status === 'active' ? 'bg-green-400' : 'bg-gray-500'
-                }`} />
+                {isPublishing ? (
+                  <span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                    project.status === 'active' ? 'bg-green-400' : 'bg-gray-500'
+                  }`} />
+                )}
                 {project.status === 'active' ? 'Publicado' : 'Borrador'}
               </button>
+            )}
+
+            {/* Unsaved content indicator */}
+            {hasUnsavedChanges && (
+              <span className="hidden sm:inline text-xs text-yellow-400 flex-shrink-0">
+                Sin guardar
+              </span>
             )}
 
             <Button
@@ -249,9 +294,12 @@ export default function DashboardPage() {
               size="sm"
               loading={isSaving}
               onClick={handleSave}
+              className={hasUnsavedChanges ? 'ring-2 ring-yellow-500/50' : ''}
             >
               <span className="hidden sm:inline">Guardar proyecto</span>
-              <span className="sm:hidden">Guardar</span>
+              <span className="sm:hidden">
+                {hasUnsavedChanges ? '● Guardar' : 'Guardar'}
+              </span>
             </Button>
           </div>
         </div>

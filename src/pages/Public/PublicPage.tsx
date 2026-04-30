@@ -42,7 +42,7 @@ function ErrorScreen({ error, id }: { error: LoadError; id?: string }) {
     },
     'not-published': {
       title: 'Proyecto no publicado',
-      body: 'Este proyecto existe, pero aún no ha sido publicado. El creador debe publicarlo desde el editor antes de compartir este enlace.',
+      body: 'Este proyecto existe, pero aún no ha sido publicado. Si eres el creador, puedes activarlo desde el editor.',
     },
     'fetch-error': {
       title: 'Error al cargar',

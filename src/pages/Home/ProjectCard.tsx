@@ -108,7 +108,7 @@ function DropdownMenu({ status, onEdit, onViewPublic, onEditCover, onToggleStatu
 
       {/* Destructive */}
       <button
-        className={`${base} text-red-400 hover:bg-red-950/40 hover:text-red-300`}
+        className={`${base} text-red-400 hover:bg-red-500/10 hover:text-red-300`}
         onClick={run(onDelete)}
       >
         <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,6 +143,14 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
     document.addEventListener('mousedown', onDown)
     return () => document.removeEventListener('mousedown', onDown)
   }, [menuOpen])
+
+  function handleDeleteClick() {
+    const confirmed = window.confirm(
+      '¿Estás seguro de eliminar este proyecto? Esta acción no se puede deshacer.',
+    )
+    if (!confirmed) return
+    onDelete(project.id)
+  }
 
   async function handleToggleStatus() {
     const next = project.status === 'active' ? 'draft' : 'active'
@@ -259,7 +267,7 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
             onViewPublic={() => window.open(`/public/${project.id}`, '_blank')}
             onEditCover={() => coverRef.current?.click()}
             onToggleStatus={handleToggleStatus}
-            onDelete={() => onDelete(project.id)}
+            onDelete={handleDeleteClick}
             onClose={() => setMenuOpen(false)}
           />
         )}

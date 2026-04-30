@@ -11,6 +11,8 @@ import type { RouteStatus } from './PublicPointCard'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { useGeoStore } from '../../store/geoStore'
 import RoutePolyline from '../../components/map/RoutePolyline'
+import MapController from '../../components/map/MapController'
+import type { FitTarget } from '../../components/map/MapController'
 import PublicPointCard from './PublicPointCard'
 import Spinner from '../../components/ui/Spinner'
 import type { GeoProject, GeoPoint } from '../../types'
@@ -136,6 +138,14 @@ export default function PublicPage() {
   // Stable ref to points so the route effect doesn't need it as a dependency
   const pointsRef = useRef<GeoPoint[]>([])
 
+  // ── Map fitBounds control ──────────────────────────────────────────────────
+  // Changing fitKey triggers ONE fitBounds call in MapController.
+  // We only change it when a new point is selected and its route arrives.
+  const [fitKey, setFitKey] = useState<string | null>(null)
+  const [fitTarget, setFitTarget] = useState<FitTarget | null>(null)
+  // True after the user manually drags/zooms; reset on new point selection.
+  const userInteractedRef = useRef(false)
+
   useGeolocation(true)
 
   // Keep pointsRef in sync so the route effect can read current points
@@ -259,22 +269,36 @@ export default function PublicPage() {
     // Mark which point we're fetching for
     routeForPointRef.current = selectedPointId
 
+    // New point selected → reset interaction flag so fitBounds can run again
+    if (isNewPoint) userInteractedRef.current = false
+
+    // Capture these at schedule-time so the async closure uses correct values
+    const snapLat = userLocation.latitude
+    const snapLng = userLocation.longitude
+    const snapPointId = selectedPointId
+
     let cancelled = false
 
     const run = async () => {
-      const target = pointsRef.current.find((p) => p.id === selectedPointId)
+      const target = pointsRef.current.find((p) => p.id === snapPointId)
       if (!target || cancelled) return
 
       setRouteStatus('loading')
       try {
         const result = await fetchWalkingRoute(
-          userLocation.latitude, userLocation.longitude,
+          snapLat, snapLng,
           target.latitude, target.longitude,
         )
         if (!cancelled) {
           setRouteResult(result)
           setRouteStatus('ok')
-          lastRoutePositionRef.current = { lat: userLocation.latitude, lng: userLocation.longitude }
+          lastRoutePositionRef.current = { lat: snapLat, lng: snapLng }
+
+          // Only fitBounds on new-point selection AND user hasn't interacted manually
+          if (isNewPoint && !userInteractedRef.current) {
+            setFitKey(snapPointId)
+            setFitTarget({ latLngs: result.latLngs, userLat: snapLat, userLng: snapLng })
+          }
         }
       } catch {
         if (!cancelled) {
@@ -354,6 +378,11 @@ export default function PublicPage() {
     <div className="h-screen bg-gray-950 flex flex-col overflow-hidden">
       <div className="flex-1 relative">
         <MapContainer center={mapCenter} zoom={15} className="w-full h-full">
+          <MapController
+            fitKey={fitKey}
+            fitTarget={fitTarget}
+            onInteract={() => { userInteractedRef.current = true }}
+          />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -375,12 +404,8 @@ export default function PublicPage() {
               eventHandlers={{ click: () => setSelectedPointId(pt.id) }}
             />
           ))}
-          {routeResult && userLocation && (
-            <RoutePolyline
-              latLngs={routeResult.latLngs}
-              userLat={userLocation.latitude}
-              userLng={userLocation.longitude}
-            />
+          {routeResult && (
+            <RoutePolyline latLngs={routeResult.latLngs} />
           )}
         </MapContainer>
 

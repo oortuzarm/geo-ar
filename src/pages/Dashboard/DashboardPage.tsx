@@ -129,7 +129,7 @@ export default function DashboardPage() {
     setPointFormOpen(true)
   }
 
-  async function handlePointChange(updates: Partial<GeoPoint>) {
+  function handlePointChange(updates: Partial<GeoPoint>) {
     if (!selectedPointId) return
     const current = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
     if (!current) return
@@ -143,8 +143,6 @@ export default function DashboardPage() {
         updates.longitude ?? current.longitude,
       ])
     }
-
-    geoPointsApi.savePoint(selectedPointId, updates).then((saved) => upsertPoint(saved))
   }
 
   async function handleToggleActive(pointId: string) {
@@ -383,6 +381,7 @@ export default function DashboardPage() {
         {pointFormOpen && selectedPoint && (
           <aside className="hidden lg:flex w-72 flex-shrink-0 border-l border-gray-800 bg-gray-900 flex-col overflow-hidden">
             <GeoPointForm
+              key={selectedPointId ?? ''}
               point={selectedPoint}
               onChange={handlePointChange}
               onDelete={() => setDeletePointTarget(selectedPoint.id)}
@@ -441,6 +440,7 @@ export default function DashboardPage() {
           <div className="absolute inset-x-0 bottom-0 h-[88vh] bg-gray-900 rounded-t-2xl
                          border-t border-gray-800 flex flex-col overflow-hidden">
             <GeoPointForm
+              key={selectedPointId ?? ''}
               point={selectedPoint}
               onChange={handlePointChange}
               onDelete={() => setDeletePointTarget(selectedPoint.id)}

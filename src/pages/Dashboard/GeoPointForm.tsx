@@ -18,6 +18,31 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
   const fileRef = useRef<HTMLInputElement>(null)
   const [showTooltip, setShowTooltip] = useState(false)
 
+  // ── Local state for text fields ───────────────────────────────────────────
+  // Decoupled from the parent store so every keystroke doesn't trigger a
+  // full re-render of DashboardPage + Leaflet map. Parent is notified on
+  // blur (lightweight) and on explicit save/close (flush all).
+  // The component is mounted with key={selectedPointId} in the parent, so
+  // useState initializers run fresh whenever a different point is selected.
+  const [name,         setName]         = useState(point.name)
+  const [lookiarUrl,   setLookiarUrl]   = useState(point.lookiarUrl)
+  const [description,  setDescription]  = useState(point.description ?? '')
+  const [instructions, setInstructions] = useState(point.instructions ?? '')
+
+  // Push all local text state to the parent store in one shot.
+  // Called before closing or saving to ensure nothing is lost.
+  function flush() {
+    onChange({
+      name,
+      lookiarUrl,
+      description:  description  || undefined,
+      instructions: instructions || undefined,
+    })
+  }
+
+  function handleSaveClick()  { flush(); onSave()  }
+  function handleCloseClick() { flush(); onClose() }
+
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -30,7 +55,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
         <h2 className="text-sm font-semibold text-gray-100 truncate flex-1 mr-2">
-          {point.name || 'Punto GPS'}
+          {name || 'Punto GPS'}
         </h2>
         <div className="flex items-center gap-2">
           <button
@@ -43,7 +68,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </button>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-300 transition-colors">
+          <button onClick={handleCloseClick} className="text-gray-500 hover:text-gray-300 transition-colors">
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -52,22 +77,26 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+
+        {/* Text fields — local state, committed to parent on blur */}
         <Input
           label="Nombre del punto*"
           placeholder="Ej: Entrada principal"
-          value={point.name}
-          onChange={(e) => onChange({ name: e.target.value })}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onBlur={() => onChange({ name })}
         />
 
         <Input
           label="URL de Lookiar*"
           placeholder="https://www.lookiar.com/models/..."
-          value={point.lookiarUrl}
-          onChange={(e) => onChange({ lookiarUrl: e.target.value })}
+          value={lookiarUrl}
+          onChange={(e) => setLookiarUrl(e.target.value)}
+          onBlur={() => onChange({ lookiarUrl })}
           hint="Acepta /models/, /scene/ y cualquier URL válida de Lookiar"
         />
 
-        {/* Coordinates */}
+        {/* Coordinates — committed immediately for live map updates */}
         <div className="grid grid-cols-2 gap-3">
           <Input
             label="Latitud*"
@@ -93,7 +122,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           />
         </div>
 
-        {/* Activation radius */}
+        {/* Activation radius — committed immediately for live circle update */}
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-1">
             <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
@@ -164,21 +193,24 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           <input ref={fileRef} type="file" accept=".jpg,.jpeg,.png" className="hidden" onChange={handleImageUpload} />
         </div>
 
+        {/* Text areas — local state, committed on blur */}
         <Textarea
           label="Descripción"
           placeholder="Qué verá el usuario en esta experiencia"
-          value={point.description ?? ''}
-          onChange={(e) => onChange({ description: e.target.value })}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          onBlur={() => onChange({ description: description || undefined })}
         />
 
         <Textarea
           label="Cómo llegar"
           placeholder="Instrucciones para el usuario sobre cómo llegar al punto"
-          value={point.instructions ?? ''}
-          onChange={(e) => onChange({ instructions: e.target.value || undefined })}
+          value={instructions}
+          onChange={(e) => setInstructions(e.target.value)}
+          onBlur={() => onChange({ instructions: instructions || undefined })}
         />
 
-        {/* Active toggle */}
+        {/* Active toggle — committed immediately */}
         <div className="flex items-center justify-between py-2 border-t border-gray-800">
           <span className="text-sm text-gray-300">Punto activo</span>
           <button
@@ -199,7 +231,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
       </div>
 
       <div className="px-4 pb-4">
-        <Button variant="primary" size="sm" className="w-full" onClick={onSave}>
+        <Button variant="primary" size="sm" className="w-full" onClick={handleSaveClick}>
           Guardar
         </Button>
       </div>

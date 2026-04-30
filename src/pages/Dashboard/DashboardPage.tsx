@@ -221,13 +221,36 @@ export default function DashboardPage() {
             >
               Previsualizar
             </Button>
+
+            {/* Publish toggle — changes local state only; saved with "Guardar proyecto" */}
+            {project && (
+              <button
+                onClick={() => {
+                  const next = project.status === 'active' ? 'draft' : 'active'
+                  useGeoStore.getState().updateProjectField('status', next)
+                }}
+                className={`hidden sm:flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-medium
+                            border transition-colors flex-shrink-0 ${
+                  project.status === 'active'
+                    ? 'bg-green-900/40 border-green-700 text-green-300 hover:bg-red-900/30 hover:border-red-700 hover:text-red-300'
+                    : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-green-900/30 hover:border-green-700 hover:text-green-300'
+                }`}
+                title={project.status === 'active' ? 'Clic para marcar como borrador' : 'Clic para marcar como publicado'}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                  project.status === 'active' ? 'bg-green-400' : 'bg-gray-500'
+                }`} />
+                {project.status === 'active' ? 'Publicado' : 'Borrador'}
+              </button>
+            )}
+
             <Button
               variant="primary"
               size="sm"
               loading={isSaving}
               onClick={handleSave}
             >
-              <span className="hidden sm:inline">Guardar proyecto GPS</span>
+              <span className="hidden sm:inline">Guardar proyecto</span>
               <span className="sm:hidden">Guardar</span>
             </Button>
           </div>

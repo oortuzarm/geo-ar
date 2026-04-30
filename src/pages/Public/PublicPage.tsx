@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Circle, Marker, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { geoProjectsApi, geoPointsApi } from '../../services'
@@ -33,6 +33,8 @@ function UserLocationMarker({ lat, lng }: { lat: number; lng: number }) {
 }
 
 function ErrorScreen({ error, id }: { error: LoadError; id?: string }) {
+  const navigate = useNavigate()
+
   const messages: Record<NonNullable<LoadError>, { title: string; body: string }> = {
     'not-found': {
       title: 'Proyecto no disponible',
@@ -40,7 +42,7 @@ function ErrorScreen({ error, id }: { error: LoadError; id?: string }) {
     },
     'not-published': {
       title: 'Proyecto no publicado',
-      body: 'Este proyecto existe pero aún no ha sido publicado. El creador debe activarlo antes de compartirlo.',
+      body: 'Este proyecto existe, pero aún no ha sido publicado. El creador debe publicarlo desde el editor antes de compartir este enlace.',
     },
     'fetch-error': {
       title: 'Error al cargar',
@@ -55,26 +57,48 @@ function ErrorScreen({ error, id }: { error: LoadError; id?: string }) {
   const msg = error ? messages[error] : null
   if (!msg) return null
 
+  const isNotPublished = error === 'not-published'
+
   return (
     <div className="h-screen bg-gray-950 flex items-center justify-center p-6">
       <div className="max-w-sm w-full bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center">
-        <div className="w-12 h-12 bg-red-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="h-6 w-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${
+          isNotPublished ? 'bg-yellow-900/40' : 'bg-red-900/40'
+        }`}>
+          {isNotPublished ? (
+            <svg className="h-6 w-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+            </svg>
+          ) : (
+            <svg className="h-6 w-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          )}
         </div>
         <h2 className="text-base font-semibold text-gray-100 mb-2">{msg.title}</h2>
         <p className="text-sm text-gray-400 leading-relaxed">{msg.body}</p>
         {id && (
           <p className="mt-4 text-xs text-gray-600 font-mono break-all">id: {id}</p>
         )}
-        <button
-          className="mt-5 text-sm text-brand-400 hover:text-brand-300 transition-colors"
-          onClick={() => window.location.reload()}
-        >
-          Reintentar
-        </button>
+        <div className="mt-5 flex flex-col items-center gap-3">
+          {isNotPublished && id && (
+            <button
+              className="w-full py-2 px-4 bg-brand-600 hover:bg-brand-500 text-white text-sm
+                         font-medium rounded-lg transition-colors"
+              onClick={() => navigate(`/project/${id}`)}
+            >
+              Ir al editor
+            </button>
+          )}
+          <button
+            className="text-sm text-brand-400 hover:text-brand-300 transition-colors"
+            onClick={() => window.location.reload()}
+          >
+            Reintentar
+          </button>
+        </div>
       </div>
     </div>
   )

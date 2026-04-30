@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { geoProjectsApi } from '../../services'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
+import { uploadImage } from '../../lib/uploadImage'
 import type { GeoProject } from '../../types'
 
 const MAX_NAME_LENGTH = 60
@@ -76,32 +77,17 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
-
-    if (file.size > 5 * 1024 * 1024) {
-      setCoverError('La imagen supera los 5 MB')
-      return
-    }
     setCoverError(null)
     setUploadingCover(true)
-
-    const reader = new FileReader()
-    reader.onload = async () => {
-      try {
-        const updated = await geoProjectsApi.saveProject(project.id, {
-          coverImage: reader.result as string,
-        })
-        onUpdate(updated)
-      } catch {
-        setCoverError('Error al guardar la imagen')
-      } finally {
-        setUploadingCover(false)
-      }
-    }
-    reader.onerror = () => {
-      setCoverError('Error al leer el archivo')
+    try {
+      const url = await uploadImage(file)
+      const updated = await geoProjectsApi.saveProject(project.id, { coverImage: url })
+      onUpdate(updated)
+    } catch (err) {
+      setCoverError(err instanceof Error ? err.message : 'Error al guardar la imagen')
+    } finally {
       setUploadingCover(false)
     }
-    reader.readAsDataURL(file)
   }
 
   return (
@@ -109,7 +95,15 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
 
       {/* Cover image */}
       <div className="h-36 bg-gray-800 relative overflow-hidden group/cover">
-        {project.coverImage ? (
+        {project.coverImage?.startsWith('data:') ? (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-1 px-4 text-center">
+            <svg className="h-5 w-5 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+            <p className="text-xs text-yellow-400 leading-tight">Subí una nueva imagen<br/>para previews sociales</p>
+          </div>
+        ) : project.coverImage ? (
           <img src={project.coverImage} alt={project.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

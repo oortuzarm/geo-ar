@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { Input, Textarea } from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
 import { useGeoStore } from '../../store/geoStore'
+import { uploadImage } from '../../lib/uploadImage'
 import type { GeoProject } from '../../types'
 
 interface ProjectInfoPanelProps {
@@ -13,15 +14,23 @@ export default function ProjectInfoPanel({ onClose, onSave }: ProjectInfoPanelPr
   const { project, updateProjectField, addToast } = useGeoStore()
   const fileRef = useRef<HTMLInputElement>(null)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
 
   if (!project) return null
 
-  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => updateProjectField('coverImage', reader.result as string)
-    reader.readAsDataURL(file)
+    e.target.value = ''
+    setUploading(true)
+    try {
+      const url = await uploadImage(file)
+      updateProjectField('coverImage', url)
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : 'Error al subir imagen', 'error')
+    } finally {
+      setUploading(false)
+    }
   }
 
   function handleField<K extends keyof GeoProject>(key: K, value: GeoProject[K]) {
@@ -77,9 +86,32 @@ export default function ProjectInfoPanel({ onClose, onSave }: ProjectInfoPanelPr
           <div
             className="border-2 border-dashed border-gray-700 rounded-lg p-4 text-center
                        hover:border-gray-600 transition-colors cursor-pointer"
-            onClick={() => fileRef.current?.click()}
+            onClick={() => !uploading && fileRef.current?.click()}
           >
-            {project.coverImage ? (
+            {uploading ? (
+              <div className="flex flex-col items-center gap-2 py-4">
+                <svg className="h-5 w-5 text-brand-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+                <p className="text-xs text-gray-400">Subiendo imagen…</p>
+              </div>
+            ) : project.coverImage?.startsWith('data:') ? (
+              <div className="flex flex-col items-center gap-2 py-3">
+                <svg className="h-6 w-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                <p className="text-xs text-yellow-400 font-medium">Imagen guardada como base64</p>
+                <p className="text-xs text-gray-500">Subí una nueva imagen para que aparezca en previews sociales</p>
+                <button
+                  className="mt-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1 rounded transition-colors"
+                  onClick={(e) => { e.stopPropagation(); fileRef.current?.click() }}
+                >
+                  Reemplazar imagen
+                </button>
+              </div>
+            ) : project.coverImage ? (
               <div className="relative">
                 <img src={project.coverImage} alt="Cover" className="w-full h-32 object-cover rounded" />
                 <button
@@ -97,11 +129,11 @@ export default function ProjectInfoPanel({ onClose, onSave }: ProjectInfoPanelPr
                 <button className="mt-2 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1 rounded transition-colors">
                   Examinar
                 </button>
-                <p className="text-xs text-gray-600 mt-1">Archivo: .JPG .PNG · Máx 256 KB</p>
+                <p className="text-xs text-gray-600 mt-1">Archivo: .JPG .PNG .WEBP · Máx 4 MB</p>
               </>
             )}
           </div>
-          <input ref={fileRef} type="file" accept=".jpg,.jpeg,.png" className="hidden" onChange={handleImageUpload} />
+          <input ref={fileRef} type="file" accept=".jpg,.jpeg,.png,.webp" className="hidden" onChange={handleImageUpload} />
         </div>
 
         <Textarea

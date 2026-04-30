@@ -1,5 +1,11 @@
 {
+  "functions": {
+    "api/public/[id].js": {
+      "includeFiles": "dist/index.html"
+    }
+  },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/public/:id", "destination": "/api/public/:id" },
+    { "source": "/(.*)",        "destination": "/index.html"    }
   ]
 }

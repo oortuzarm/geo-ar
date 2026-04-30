@@ -4,7 +4,10 @@ import { RemoteGeoRepository } from './RemoteGeoRepository'
 
 const API_URL = import.meta.env.VITE_API_URL as string | undefined
 
-if (import.meta.env.PROD && !import.meta.env.VITE_API_URL) {
+console.log('[GeoAR] VITE_API_URL:', API_URL)
+console.log('[GeoAR] PROD:', import.meta.env.PROD)
+
+if (import.meta.env.PROD && !API_URL) {
   throw new Error('Missing VITE_API_URL in production')
 }
 

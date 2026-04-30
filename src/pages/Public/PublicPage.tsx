@@ -20,6 +20,44 @@ import type { GeoProject, GeoPoint } from '../../types'
 
 /** Minimum distance in meters the user must move before recalculating the route */
 const ROUTE_RECALC_THRESHOLD_M = 15
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NOTE: Dynamic meta tags work for Web Share API previews inside the browser.
+// WhatsApp, Telegram, iMessage and other crawlers read the HTML *before*
+// JavaScript runs, so they won't see these tags in a plain SPA.
+// For full OG support, serve /public/:id with pre-rendered meta tags via a
+// Vercel Edge Function, a serverless function, or SSR on the Rails backend.
+// ─────────────────────────────────────────────────────────────────────────────
+const ORIGINAL_TITLE = document.title
+
+function setMeta(attr: 'property' | 'name', key: string, value: string) {
+  let el = document.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`)
+  if (!el) {
+    el = document.createElement('meta')
+    el.setAttribute(attr, key)
+    document.head.appendChild(el)
+  }
+  el.setAttribute('content', value)
+}
+
+function updatePageMeta(title: string, description: string, imageUrl: string | null, pageUrl: string) {
+  document.title = title
+
+  setMeta('property', 'og:title', title)
+  setMeta('property', 'og:description', description)
+  setMeta('property', 'og:url', pageUrl)
+  setMeta('property', 'og:type', 'website')
+  if (imageUrl) setMeta('property', 'og:image', imageUrl)
+
+  setMeta('name', 'twitter:card', imageUrl ? 'summary_large_image' : 'summary')
+  setMeta('name', 'twitter:title', title)
+  setMeta('name', 'twitter:description', description)
+  if (imageUrl) setMeta('name', 'twitter:image', imageUrl)
+}
+
+function resetPageMeta() {
+  document.title = ORIGINAL_TITLE
+}
 /** Debounce delay in ms for movement-triggered recalculations */
 const ROUTE_MOVEMENT_DEBOUNCE_MS = 2_000
 
@@ -196,6 +234,11 @@ export default function PublicPage() {
           console.warn('[PublicPage] El proyecto no tiene puntos activos.')
         }
 
+        // coverImage is often base64 — only use as OG image if it's a real URL
+        const ogImage = proj.coverImage?.startsWith('http') ? proj.coverImage : null
+        const ogDesc = `Experiencia geolocalizada${proj.subtitle ? `: ${proj.subtitle}` : ' en GeoAR'}`
+        updatePageMeta(proj.title, ogDesc, ogImage, window.location.href)
+
         setProject(proj)
         setPoints(activePoints)
         if (activePoints.length > 0) setSelectedPointId(activePoints[0].id)
@@ -216,6 +259,7 @@ export default function PublicPage() {
 
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      resetPageMeta()
     }
   }, [id])
 
@@ -334,9 +378,10 @@ export default function PublicPage() {
   async function handleShare() {
     const url = window.location.href
     const title = project?.title ?? 'Experiencia GeoAR'
+    const text = `Mira esta experiencia geolocalizada: ${title}`
     if (navigator.share) {
       try {
-        await navigator.share({ title, text: 'Mira esta experiencia geolocalizada', url })
+        await navigator.share({ title, text, url })
       } catch (err) {
         if (err instanceof Error && err.name !== 'AbortError') {
           addToast('No pudimos compartir el link.', 'error')

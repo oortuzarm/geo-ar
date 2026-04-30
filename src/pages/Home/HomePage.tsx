@@ -4,6 +4,7 @@ import { geoProjectsApi } from '../../services'
 import type { GeoProject } from '../../types'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
+import Modal from '../../components/ui/Modal'
 import ToastContainer from '../../components/ui/Toast'
 import ProjectCard from './ProjectCard'
 import { useGeoStore } from '../../store/geoStore'
@@ -13,6 +14,7 @@ export default function HomePage() {
   const { addToast } = useGeoStore()
   const [projects, setProjects] = useState<GeoProject[]>([])
   const [loading, setLoading] = useState(true)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   useEffect(() => {
     geoProjectsApi.listProjects().then((list) => {
@@ -26,16 +28,12 @@ export default function HomePage() {
     navigate(`/project/${project.id}`)
   }
 
-  function handleDelete(id: string) {
-    // Optimistic: remove immediately, restore on failure
-    const snapshot = projects.find((p) => p.id === id)
-    setProjects((prev) => prev.filter((p) => p.id !== id))
-    geoProjectsApi.removeProject(id)
-      .then(() => addToast('Proyecto eliminado', 'success'))
-      .catch(() => {
-        if (snapshot) setProjects((prev) => [snapshot, ...prev])
-        addToast('Error al eliminar el proyecto', 'error')
-      })
+  async function handleDelete() {
+    if (!deleteTarget) return
+    await geoProjectsApi.removeProject(deleteTarget)
+    setProjects((prev) => prev.filter((p) => p.id !== deleteTarget))
+    setDeleteTarget(null)
+    addToast('Proyecto eliminado', 'success')
   }
 
   function handleUpdate(updated: GeoProject) {
@@ -97,7 +95,7 @@ export default function HomePage() {
                 <ProjectCard
                   key={project.id}
                   project={project}
-                  onDelete={handleDelete}
+                  onDelete={setDeleteTarget}
                   onUpdate={handleUpdate}
                 />
               ))}
@@ -106,6 +104,15 @@ export default function HomePage() {
         )}
       </main>
 
+      <Modal
+        open={!!deleteTarget}
+        title="Eliminar proyecto"
+        description="Esta acción no se puede deshacer. Se eliminarán el proyecto y todos sus puntos GPS."
+        confirmLabel="Eliminar"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+        danger
+      />
       <ToastContainer />
     </div>
   )

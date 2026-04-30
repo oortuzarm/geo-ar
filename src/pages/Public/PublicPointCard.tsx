@@ -10,6 +10,7 @@ interface PublicPointCardProps {
   isSelected: boolean
   onSelect: () => void
   onActivate: () => void
+  onExit?: () => void
   routeStatus?: RouteStatus
   walkingDistanceMeters?: number   // ORS walking distance to center
   walkingDurationSeconds?: number
@@ -21,6 +22,7 @@ export default function PublicPointCard({
   isSelected,
   onSelect,
   onActivate,
+  onExit,
   routeStatus,
   walkingDistanceMeters,
   walkingDurationSeconds,
@@ -58,8 +60,20 @@ export default function PublicPointCard({
       )}
 
       <div className="p-3">
-        {/* Name row — no distance badge */}
-        <h3 className="font-semibold text-gray-100 text-sm">{point.name}</h3>
+        {/* Name row */}
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-semibold text-gray-100 text-sm leading-snug">{point.name}</h3>
+          {isSelected && onExit && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onExit() }}
+              className="flex-shrink-0 bg-red-600 hover:bg-red-500 active:scale-95
+                         text-white text-xs font-semibold px-3 py-1.5 rounded-lg
+                         transition-all duration-150"
+            >
+              Salir
+            </button>
+          )}
+        </div>
 
         {point.description && (
           <p className="text-xs text-gray-400 mt-1 line-clamp-2">{point.description}</p>

@@ -398,6 +398,21 @@ export default function PublicPage() {
     }
   }, [selectedPointId, userLocation]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  function handleExitSelectedPoint() {
+    setSelectedPointId(null)
+    // Route state is cleared by the route effect when selectedPointId becomes null.
+    // Fly to user location if available; otherwise zoom out to show all points.
+    flyToCounterRef.current += 1
+    setFlyToKey(`exit-${flyToCounterRef.current}`)
+    if (userLocation) {
+      setFlyToTarget({ lat: userLocation.latitude, lng: userLocation.longitude, zoom: 14 })
+    } else if (points.length > 0) {
+      const avgLat = points.reduce((s, p) => s + p.latitude, 0) / points.length
+      const avgLng = points.reduce((s, p) => s + p.longitude, 0) / points.length
+      setFlyToTarget({ lat: avgLat, lng: avgLng, zoom: 13 })
+    }
+  }
+
   function handlePointClick(pt: GeoPoint) {
     setSelectedPointId(pt.id)
     flyToCounterRef.current += 1
@@ -582,6 +597,7 @@ export default function PublicPage() {
                   isSelected={pt.id === selectedPointId}
                   onSelect={() => handlePointClick(pt)}
                   onActivate={() => handleActivate(pt)}
+                  onExit={pt.id === selectedPointId ? handleExitSelectedPoint : undefined}
                   routeStatus={pt.id === selectedPointId ? routeStatus : undefined}
                   walkingDistanceMeters={
                     pt.id === selectedPointId && routeResult ? routeResult.distanceMeters : undefined

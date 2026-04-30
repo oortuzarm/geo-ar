@@ -459,7 +459,7 @@ export default function PublicPage() {
                 point={pt}
                 distance={distances[pt.id] ?? null}
                 isSelected={pt.id === selectedPointId}
-                onSelect={() => setSelectedPointId(pt.id)}
+                onSelect={() => handlePointClick(pt)}
                 onActivate={() => handleActivate(pt)}
                 routeStatus={pt.id === selectedPointId ? routeStatus : undefined}
                 walkingDistanceMeters={

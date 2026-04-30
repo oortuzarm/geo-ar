@@ -273,7 +273,8 @@ export default function PublicPage() {
         }
 
         const ogImage = resolveOgImage(proj.coverImage)
-        const ogDesc = `Experiencia geolocalizada${proj.subtitle ? `: ${proj.subtitle}` : ' en GeoAR'}`
+        const ogDesc = proj.shareText?.trim()
+          || `Experiencia geolocalizada${proj.subtitle ? `: ${proj.subtitle}` : ' en GeoAR'}`
         updatePageMeta(proj.title, ogDesc, ogImage, window.location.href)
 
         setProject(proj)
@@ -430,7 +431,8 @@ export default function PublicPage() {
   async function handleShare() {
     const url = window.location.href
     const title = project?.title ?? 'Experiencia GeoAR'
-    const text = `Mira esta experiencia geolocalizada: ${title}`
+    const text = project?.shareText?.trim()
+      || `Mira esta experiencia geolocalizada: ${title}`
     if (navigator.share) {
       try {
         await navigator.share({ title, text, url })

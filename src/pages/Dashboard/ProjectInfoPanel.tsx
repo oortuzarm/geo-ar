@@ -10,6 +10,8 @@ interface ProjectInfoPanelProps {
   onSave: () => Promise<void>
 }
 
+const SHARE_TEXT_MAX = 120
+
 export default function ProjectInfoPanel({ onClose, onSave }: ProjectInfoPanelProps) {
   const { project, updateProjectField, addToast } = useGeoStore()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -73,6 +75,42 @@ export default function ProjectInfoPanel({ onClose, onSave }: ProjectInfoPanelPr
           value={project.subtitle ?? ''}
           onChange={(e) => handleField('subtitle', e.target.value)}
         />
+
+        {/* Share text */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Texto para compartir
+          </label>
+          <p className="text-xs text-gray-500 -mt-0.5">
+            Este mensaje aparece cuando compartís el link del proyecto.
+          </p>
+          <div className="relative">
+            <textarea
+              rows={2}
+              maxLength={SHARE_TEXT_MAX}
+              placeholder="Mira esta experiencia geolocalizada"
+              value={project.shareText ?? ''}
+              onChange={(e) => handleField('shareText', e.target.value || undefined)}
+              className="w-full bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-md
+                         px-3 py-2 pb-6 text-sm text-gray-100 placeholder-gray-500 resize-none
+                         focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+                         transition-colors"
+            />
+            <span
+              className={[
+                'absolute bottom-2 right-2.5 text-xs tabular-nums pointer-events-none select-none',
+                (project.shareText?.length ?? 0) >= SHARE_TEXT_MAX
+                  ? 'text-red-400'
+                  : (project.shareText?.length ?? 0) >= SHARE_TEXT_MAX * 0.85
+                  ? 'text-amber-500'
+                  : 'text-gray-600',
+              ].join(' ')}
+            >
+              {project.shareText?.length ?? 0}/{SHARE_TEXT_MAX}
+            </span>
+          </div>
+        </div>
+
         <Input
           label="Cómo llegar"
           placeholder="Instrucciones para el usuario"

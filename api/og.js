@@ -59,9 +59,10 @@ export default async function handler(req, res) {
   const pageUrl    = `${origin}/public/${id}${extraParams ? `?${extraParams}` : ''}`
   const coverImage = project?.coverImage ?? project?.cover_image
   const title      = project?.title ?? 'Experiencia GeoAR'
-  const desc       = project?.subtitle
-    ? `Experiencia geolocalizada: ${project.subtitle}`
-    : 'Experiencia geolocalizada en GeoAR'
+  const desc       = project?.shareText?.trim()
+    || (project?.subtitle
+      ? `Experiencia geolocalizada: ${project.subtitle}`
+      : 'Experiencia geolocalizada en GeoAR')
   const ogImage    = resolveOgImage(coverImage, origin)
 
   const metaBlock = project ? buildMetaTags({ title, desc, pageUrl, ogImage }) : ''

@@ -1,44 +1,34 @@
 /**
  * Capa de servicio para GeoPoints.
  *
- * HOY: usa IndexedDB (local).
- * FUTURO: reemplazar cada función con un fetch() al endpoint de Lookiar:
- *   POST   /geo_projects/:id/geo_points
- *   PUT    /geo_points/:id
- *   DELETE /geo_points/:id
- *   GET    /geo_projects/:id/public  → incluye los puntos activos
+ * Delega en el repositorio activo, elegido por VITE_API_URL:
+ *   - VITE_API_URL definida → RemoteGeoRepository (HTTP API)
+ *   - VITE_API_URL ausente  → LocalGeoRepository  (IndexedDB)
  *
- * Los componentes NUNCA importan directamente la capa de storage.
+ * Endpoints remotos esperados:
+ *   GET    /api/geo-projects/:id/geo-points
+ *   POST   /api/geo-projects/:id/geo-points
+ *   PUT    /api/geo-points/:id
+ *   DELETE /api/geo-points/:id
  */
 
 import type { GeoPoint } from '../types'
-import * as local from '../features/storage/pointsStore'
+import { repository } from '../repositories'
 
-export async function listPoints(geoProjectId: string): Promise<GeoPoint[]> {
-  // FUTURE: return fetch(`/api/geo_projects/${geoProjectId}/geo_points`).then(r => r.json())
-  return local.getPointsByProject(geoProjectId)
+export function listPoints(geoProjectId: string): Promise<GeoPoint[]> {
+  return repository.listPoints(geoProjectId)
 }
 
-export async function fetchPoint(id: string): Promise<GeoPoint | undefined> {
-  // FUTURE: return fetch(`/api/geo_points/${id}`).then(r => r.json())
-  return local.getPoint(id)
-}
-
-export async function createPoint(
+export function createPoint(
   data: Partial<GeoPoint> & { geoProjectId: string },
 ): Promise<GeoPoint> {
-  // FUTURE: return fetch(`/api/geo_projects/${data.geoProjectId}/geo_points`, {
-  //   method: 'POST', body: JSON.stringify(data)
-  // }).then(r => r.json())
-  return local.createPoint(data)
+  return repository.createPoint(data)
 }
 
-export async function savePoint(id: string, updates: Partial<GeoPoint>): Promise<GeoPoint> {
-  // FUTURE: return fetch(`/api/geo_points/${id}`, { method:'PUT', body: JSON.stringify(updates) }).then(r=>r.json())
-  return local.updatePoint(id, updates)
+export function savePoint(id: string, updates: Partial<GeoPoint>): Promise<GeoPoint> {
+  return repository.savePoint(id, updates)
 }
 
-export async function removePoint(id: string): Promise<void> {
-  // FUTURE: return fetch(`/api/geo_points/${id}`, { method:'DELETE' })
-  return local.deletePoint(id)
+export function removePoint(id: string): Promise<void> {
+  return repository.removePoint(id)
 }

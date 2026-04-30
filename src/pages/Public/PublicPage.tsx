@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { MapContainer, TileLayer, Circle, Marker, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { geoProjectsApi, geoPointsApi } from '../../services'
+import { ApiError } from '../../lib/apiFetch'
 import { haversineDistance } from '../../features/geolocation/haversine'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { useGeoStore } from '../../store/geoStore'
@@ -10,7 +11,10 @@ import PublicPointCard from './PublicPointCard'
 import Spinner from '../../components/ui/Spinner'
 import type { GeoProject, GeoPoint } from '../../types'
 
-// Syncs map when user location changes
+type LoadError = 'not-found' | 'not-published' | 'fetch-error' | 'timeout' | null
+
+const LOAD_TIMEOUT_MS = 10_000
+
 function UserLocationMarker({ lat, lng }: { lat: number; lng: number }) {
   const map = useMap()
   useEffect(() => { map.panTo([lat, lng], { animate: true }) }, [lat, lng, map])
@@ -28,35 +32,132 @@ function UserLocationMarker({ lat, lng }: { lat: number; lng: number }) {
   return <Marker position={[lat, lng]} icon={icon} />
 }
 
+function ErrorScreen({ error, id }: { error: LoadError; id?: string }) {
+  const messages: Record<NonNullable<LoadError>, { title: string; body: string }> = {
+    'not-found': {
+      title: 'Proyecto no disponible',
+      body: 'Este proyecto no existe o el enlace es incorrecto.',
+    },
+    'not-published': {
+      title: 'Proyecto no publicado',
+      body: 'Este proyecto existe pero aún no ha sido publicado. El creador debe activarlo antes de compartirlo.',
+    },
+    'fetch-error': {
+      title: 'Error al cargar',
+      body: 'Hubo un problema al intentar cargar el proyecto. Intenta recargar la página.',
+    },
+    'timeout': {
+      title: 'No se pudo cargar la experiencia',
+      body: 'La carga tardó demasiado. Revisa tu conexión y que el proyecto esté publicado correctamente.',
+    },
+  }
+
+  const msg = error ? messages[error] : null
+  if (!msg) return null
+
+  return (
+    <div className="h-screen bg-gray-950 flex items-center justify-center p-6">
+      <div className="max-w-sm w-full bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center">
+        <div className="w-12 h-12 bg-red-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="h-6 w-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h2 className="text-base font-semibold text-gray-100 mb-2">{msg.title}</h2>
+        <p className="text-sm text-gray-400 leading-relaxed">{msg.body}</p>
+        {id && (
+          <p className="mt-4 text-xs text-gray-600 font-mono break-all">id: {id}</p>
+        )}
+        <button
+          className="mt-5 text-sm text-brand-400 hover:text-brand-300 transition-colors"
+          onClick={() => window.location.reload()}
+        >
+          Reintentar
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function PublicPage() {
   const { id } = useParams<{ id: string }>()
   const { userLocation, locationStatus } = useGeoStore()
   const [project, setProject] = useState<GeoProject | null>(null)
   const [points, setPoints] = useState<GeoPoint[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<LoadError>(null)
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null)
   const [distances, setDistances] = useState<Record<string, number>>({})
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Start watching GPS
   useGeolocation(true)
 
-  // Load project
   useEffect(() => {
-    if (!id) return
-    Promise.all([
-      geoProjectsApi.fetchProject(id),
-      geoPointsApi.listPoints(id),
-    ]).then(([proj, pts]) => {
-      if (!proj) return
-      setProject(proj)
-      const activePoints = pts.filter((p) => p.active)
-      setPoints(activePoints)
-      if (activePoints.length > 0) setSelectedPointId(activePoints[0].id)
+    if (!id) {
+      console.error('[PublicPage] No hay id en la URL')
+      setLoadError('not-found')
       setLoading(false)
-    })
+      return
+    }
+
+    // Safety timeout — no infinite spinner
+    timeoutRef.current = setTimeout(() => {
+      console.error(
+        `[PublicPage] Timeout de ${LOAD_TIMEOUT_MS}ms al cargar proyecto id="${id}".`,
+        'Posible causa: proyecto creado en otro navegador/dispositivo (IndexedDB es local).',
+      )
+      setLoadError('timeout')
+      setLoading(false)
+    }, LOAD_TIMEOUT_MS)
+
+    Promise.all([
+      geoProjectsApi.fetchPublicProject(id),
+      geoPointsApi.listPoints(id),
+    ])
+      .then(([proj, pts]) => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current)
+
+        if (!proj) {
+          console.error(`[PublicPage] Proyecto id="${id}" no encontrado.`)
+          setLoadError('not-found')
+          setLoading(false)
+          return
+        }
+
+        const activePoints = pts.filter((p) => p.active)
+        console.info(
+          `[PublicPage] Proyecto cargado: "${proj.title}"`,
+          `| Puntos totales: ${pts.length}`,
+          `| Puntos activos: ${activePoints.length}`,
+        )
+        if (activePoints.length === 0) {
+          console.warn('[PublicPage] El proyecto no tiene puntos activos.')
+        }
+
+        setProject(proj)
+        setPoints(activePoints)
+        if (activePoints.length > 0) setSelectedPointId(activePoints[0].id)
+        setLoading(false)
+      })
+      .catch((err) => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current)
+        console.error('[PublicPage] Error al cargar el proyecto:', err)
+
+        if (err instanceof ApiError) {
+          if (err.status === 404) { setLoadError('not-found'); setLoading(false); return }
+          if (err.status === 403) { setLoadError('not-published'); setLoading(false); return }
+        }
+
+        setLoadError('fetch-error')
+        setLoading(false)
+      })
+
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
   }, [id])
 
-  // Recalculate distances when user location updates
   useEffect(() => {
     if (!userLocation) return
     const newDist: Record<string, number> = {}
@@ -78,18 +179,19 @@ export default function PublicPage() {
 
   if (loading) {
     return (
-      <div className="h-screen bg-gray-950 flex items-center justify-center">
+      <div className="h-screen bg-gray-950 flex flex-col items-center justify-center gap-3">
         <Spinner size="lg" />
+        <p className="text-xs text-gray-500">Cargando experiencia…</p>
       </div>
     )
   }
 
+  if (loadError) {
+    return <ErrorScreen error={loadError} id={id} />
+  }
+
   if (!project) {
-    return (
-      <div className="h-screen bg-gray-950 flex items-center justify-center">
-        <p className="text-gray-400">Proyecto no encontrado.</p>
-      </div>
-    )
+    return <ErrorScreen error="not-found" id={id} />
   }
 
   const mapCenter: [number, number] =
@@ -102,7 +204,7 @@ export default function PublicPage() {
   const locationBadge = () => {
     if (locationStatus === 'requesting') return (
       <span className="flex items-center gap-1 text-xs text-yellow-400">
-        <span className="animate-pulse-slow">●</span> Obteniendo ubicación...
+        <span className="animate-pulse">●</span> Obteniendo ubicación…
       </span>
     )
     if (locationStatus === 'denied' || locationStatus === 'unavailable') return (
@@ -120,7 +222,6 @@ export default function PublicPage() {
 
   return (
     <div className="h-screen bg-gray-950 flex flex-col overflow-hidden">
-      {/* Map fills the screen */}
       <div className="flex-1 relative">
         <MapContainer center={mapCenter} zoom={15} className="w-full h-full">
           <TileLayer
@@ -146,16 +247,13 @@ export default function PublicPage() {
           ))}
         </MapContainer>
 
-        {/* Location status overlay */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400]
                        bg-gray-900/95 border border-gray-700 rounded-full px-4 py-1.5 shadow-lg">
           {locationBadge()}
         </div>
       </div>
 
-      {/* Bottom panel */}
-      <div className="flex-shrink-0 bg-gray-950 border-t border-gray-800 px-4 pt-3 pb-safe max-h-[55vh] overflow-y-auto">
-        {/* Project header */}
+      <div className="flex-shrink-0 bg-gray-950 border-t border-gray-800 px-4 pt-3 pb-4 max-h-[55vh] overflow-y-auto">
         <div className="flex items-start gap-3 mb-3">
           {project.coverImage && (
             <img
@@ -172,19 +270,24 @@ export default function PublicPage() {
           </div>
         </div>
 
-        {/* Points list */}
-        <div className="space-y-2 pb-4">
-          {points.map((pt) => (
-            <PublicPointCard
-              key={pt.id}
-              point={pt}
-              distance={distances[pt.id] ?? null}
-              isSelected={pt.id === selectedPointId}
-              onSelect={() => setSelectedPointId(pt.id)}
-              onActivate={() => handleActivate(pt)}
-            />
-          ))}
-        </div>
+        {points.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-4">
+            Este proyecto no tiene puntos activos aún.
+          </p>
+        ) : (
+          <div className="space-y-2 pb-2">
+            {points.map((pt) => (
+              <PublicPointCard
+                key={pt.id}
+                point={pt}
+                distance={distances[pt.id] ?? null}
+                isSelected={pt.id === selectedPointId}
+                onSelect={() => setSelectedPointId(pt.id)}
+                onActivate={() => handleActivate(pt)}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

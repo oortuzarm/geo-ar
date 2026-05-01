@@ -5,6 +5,7 @@ import type { GeoProject } from '../../types'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
 import ToastContainer from '../../components/ui/Toast'
+import Modal from '../../components/ui/Modal'
 import ProjectCard from './ProjectCard'
 import { useGeoStore } from '../../store/geoStore'
 
@@ -18,10 +19,11 @@ export default function HomePage() {
   const navigate = useNavigate()
   const { addToast } = useGeoStore()
 
-  const [projects, setProjects] = useState<GeoProject[]>([])
-  const [loading,  setLoading]  = useState(true)
-  const [query,    setQuery]    = useState('')
-  const [sortBy,   setSortBy]   = useState<SortOrder>('newest')
+  const [projects,        setProjects]        = useState<GeoProject[]>([])
+  const [loading,         setLoading]         = useState(true)
+  const [query,           setQuery]           = useState('')
+  const [sortBy,          setSortBy]          = useState<SortOrder>('newest')
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null)
 
   useEffect(() => {
     geoProjectsApi.listProjects().then((list) => {
@@ -35,8 +37,15 @@ export default function HomePage() {
     navigate(`/project/${project.id}`)
   }
 
-  // Optimistic delete — card disappears immediately; restored on API failure
   function handleDelete(id: string) {
+    setProjectToDelete(id)
+  }
+
+  // Optimistic delete — card disappears immediately; restored on API failure
+  function confirmDelete() {
+    const id = projectToDelete
+    if (!id) return
+    setProjectToDelete(null)
     const snapshot = projects.find((p) => p.id === id)
     setProjects((prev) => prev.filter((p) => p.id !== id))
     geoProjectsApi.removeProject(id)
@@ -229,6 +238,16 @@ export default function HomePage() {
         )}
       </main>
 
+      <Modal
+        open={projectToDelete !== null}
+        title="¿Eliminar proyecto?"
+        description="Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        onConfirm={confirmDelete}
+        onCancel={() => setProjectToDelete(null)}
+        danger
+      />
       <ToastContainer />
     </div>
   )

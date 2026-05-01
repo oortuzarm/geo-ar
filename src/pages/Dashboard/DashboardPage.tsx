@@ -87,10 +87,18 @@ export default function DashboardPage() {
 
       setHasUnsavedChanges(true)
       if (selectedPointId) {
-        const current = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
-        if (current) upsertPoint({ ...current, latitude: lat, longitude: lng })
-        const updated = await geoPointsApi.savePoint(selectedPointId, { latitude: lat, longitude: lng })
-        upsertPoint(updated)
+        // Atomic update — only lat/lng change, radius and all other fields are preserved
+        updatePointCoords(selectedPointId, lat, lng)
+        // Save the full current point (includes the updated radius) so the backend
+        // doesn't return stale data that would overwrite local changes
+        const toSave = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
+        if (toSave) {
+          try {
+            await geoPointsApi.savePoint(selectedPointId, toSave)
+          } catch {
+            addToast('No se pudo guardar la nueva posición', 'error')
+          }
+        }
       } else {
         const newPoint = await geoPointsApi.createPoint({
           geoProjectId: project.id,
@@ -106,7 +114,7 @@ export default function DashboardPage() {
         setPointFormOpen(true)
       }
     },
-    [project, selectedPointId, upsertPoint, setSelectedPointId],
+    [project, selectedPointId, updatePointCoords, upsertPoint, setSelectedPointId, addToast],
   )
 
   async function handleAddPoint() {

@@ -43,7 +43,6 @@ export default function DashboardMap({
   onMarkerDragEnd,
 }: DashboardMapProps) {
   const { mapCenter, mapZoom } = useGeoStore()
-  const selectedPoint = points.find((p) => p.id === selectedPointId)
 
   return (
     <MapContainer
@@ -68,21 +67,6 @@ export default function DashboardMap({
           onDragEnd={onMarkerDragEnd}
         />
       ))}
-
-      {/* Activation radius circle for selected point */}
-      {selectedPoint && (
-        <Circle
-          center={[selectedPoint.latitude, selectedPoint.longitude]}
-          radius={selectedPoint.activationRadius}
-          pathOptions={{
-            color: '#0ea5e9',
-            fillColor: '#0ea5e9',
-            fillOpacity: 0.1,
-            weight: 2,
-            dashArray: '6 4',
-          }}
-        />
-      )}
 
       {/* Faded circles for all other active points */}
       {points

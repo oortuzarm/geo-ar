@@ -129,6 +129,25 @@ export default function DashboardPage() {
     setPointFormOpen(true)
   }
 
+  async function handleAddressSelect(lat: number, lng: number) {
+    if (!project) return
+    setMapCenter([lat, lng])
+    setMapZoom(17)
+    setHasUnsavedChanges(true)
+    const newPoint = await geoPointsApi.createPoint({
+      geoProjectId: project.id,
+      latitude: lat,
+      longitude: lng,
+      order: useGeoStore.getState().points.length,
+    })
+    upsertPoint(newPoint)
+    const updatedIds = [...project.geoPointIds, newPoint.id]
+    useGeoStore.getState().updateProjectField('geoPointIds', updatedIds)
+    await geoProjectsApi.saveProject(project.id, { ...project, geoPointIds: updatedIds })
+    setSelectedPointId(newPoint.id)
+    setPointFormOpen(true)
+  }
+
   function handlePointChange(updates: Partial<GeoPoint>) {
     if (!selectedPointId) return
     const current = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
@@ -328,7 +347,7 @@ export default function DashboardPage() {
 
           {/* Address search bar */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-[calc(100%-1rem)] sm:w-full sm:max-w-lg sm:px-4">
-            <AddressSearch onSelect={(lat, lng) => { setMapCenter([lat, lng]); setMapZoom(15) }} />
+            <AddressSearch onSelect={handleAddressSelect} />
           </div>
 
           {/* My location button */}

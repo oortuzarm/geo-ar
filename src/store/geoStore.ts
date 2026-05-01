@@ -17,6 +17,7 @@ interface GeoStore {
   points: GeoPoint[]
   setPoints: (points: GeoPoint[]) => void
   upsertPoint: (point: GeoPoint) => void
+  updatePointCoords: (id: string, lat: number, lng: number) => void
   removePoint: (id: string) => void
 
   // Selected point in the editor
@@ -62,6 +63,12 @@ export const useGeoStore = create<GeoStore>((set) => ({
       }
       return { points: [...state.points, point] }
     }),
+  updatePointCoords: (id, lat, lng) =>
+    set((state) => ({
+      points: state.points.map((p) =>
+        p.id === id ? { ...p, latitude: lat, longitude: lng } : p
+      ),
+    })),
   removePoint: (id) =>
     set((state) => ({ points: state.points.filter((p) => p.id !== id) })),
 

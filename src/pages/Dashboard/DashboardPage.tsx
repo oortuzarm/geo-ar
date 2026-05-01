@@ -18,7 +18,7 @@ export default function DashboardPage() {
   const navigate = useNavigate()
   const {
     project, setProject,
-    points, setPoints, upsertPoint, removePoint,
+    points, setPoints, upsertPoint, updatePointCoords, removePoint,
     selectedPointId, setSelectedPointId,
     setMapCenter, setMapZoom,
     addToast, isSaving, setIsSaving,
@@ -148,14 +148,25 @@ export default function DashboardPage() {
     setPointFormOpen(true)
   }
 
-  function handleMarkerDragEnd(id: string, lat: number, lng: number) {
-    const current = useGeoStore.getState().points.find((p) => p.id === id)
-    if (!current) return
+  async function handleMarkerDragEnd(id: string, lat: number, lng: number) {
+    // Atomic update inside Zustand's set callback — reads the very latest state,
+    // so no other field (radius, name, url…) can be accidentally overwritten
+    updatePointCoords(id, lat, lng)
     setHasUnsavedChanges(true)
-    upsertPoint({ ...current, latitude: lat, longitude: lng })
+
     if (selectedPointId !== id) {
       setSelectedPointId(id)
       setPointFormOpen(true)
+    }
+
+    // Autosave: persist coordinates immediately so reload keeps the new position
+    const saved = useGeoStore.getState().points.find((p) => p.id === id)
+    if (saved) {
+      try {
+        await geoPointsApi.savePoint(id, saved)
+      } catch {
+        addToast('No se pudo guardar la nueva posición', 'error')
+      }
     }
   }
 

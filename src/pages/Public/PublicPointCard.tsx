@@ -127,7 +127,7 @@ export default function PublicPointCard({
                 className="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold
                            py-2.5 px-4 rounded-lg text-sm transition-colors"
               >
-                Ir a experiencia AR
+                {point.buttonText || 'Ir a experiencia'}
               </button>
             ) : (
               <button
@@ -135,7 +135,7 @@ export default function PublicPointCard({
                 className="w-full bg-gray-700 text-gray-500 font-semibold py-2.5 px-4
                            rounded-lg text-sm cursor-not-allowed"
               >
-                Ir a experiencia AR
+                {point.buttonText || 'Ir a experiencia'}
               </button>
             )}
 

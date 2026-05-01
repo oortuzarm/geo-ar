@@ -28,6 +28,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
   const [lookiarUrl,   setLookiarUrl]   = useState(point.lookiarUrl)
   const [description,  setDescription]  = useState(point.description ?? '')
   const [instructions, setInstructions] = useState(point.instructions ?? '')
+  const [buttonText,   setButtonText]   = useState(point.buttonText ?? '')
 
   // Push all local text state to the parent store in one shot.
   // Called before closing or saving to ensure nothing is lost.
@@ -37,6 +38,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
       lookiarUrl,
       description:  description  || undefined,
       instructions: instructions || undefined,
+      buttonText:   buttonText   || undefined,
     })
   }
 
@@ -208,6 +210,15 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
           onBlur={() => onChange({ instructions: instructions || undefined })}
+        />
+
+        <Input
+          label="Texto del botón"
+          placeholder="Ej: Ir a experiencia"
+          value={buttonText}
+          onChange={(e) => setButtonText(e.target.value)}
+          onBlur={() => onChange({ buttonText: buttonText || undefined })}
+          hint='Si se deja vacío, se usa "Ir a experiencia"'
         />
 
         {/* Active toggle — committed immediately */}

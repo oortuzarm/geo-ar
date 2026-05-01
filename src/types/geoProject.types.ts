@@ -23,6 +23,7 @@ export interface GeoPoint {
   image?: string
   description?: string
   instructions?: string
+  buttonText?: string
   active: boolean
   order: number
 }

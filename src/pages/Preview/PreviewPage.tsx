@@ -254,14 +254,6 @@ export default function PreviewPage() {
             </div>
           </div>
 
-          <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-4 text-sm text-gray-400">
-            <p className="font-medium text-gray-300 mb-1">Nota sobre el anclaje AR</p>
-            <p>
-              La geolocalización valida el acceso y define el punto inicial. Una vez iniciada la
-              experiencia, el tracking local de la cámara de Lookiar mantiene el modelo anclado
-              en el espacio independientemente del GPS.
-            </p>
-          </div>
         </div>
       </div>
     </div>

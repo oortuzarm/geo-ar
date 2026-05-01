@@ -221,24 +221,6 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           hint='Si se deja vacío, se usa "Ir a experiencia"'
         />
 
-        {/* Active toggle — committed immediately */}
-        <div className="flex items-center justify-between py-2 border-t border-gray-800">
-          <span className="text-sm text-gray-300">Punto activo</span>
-          <button
-            onClick={() => onChange({ active: !point.active })}
-            className={[
-              'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-              point.active ? 'bg-brand-600' : 'bg-gray-700',
-            ].join(' ')}
-          >
-            <span
-              className={[
-                'inline-block h-4 w-4 rounded-full bg-white shadow transition-transform',
-                point.active ? 'translate-x-6' : 'translate-x-1',
-              ].join(' ')}
-            />
-          </button>
-        </div>
       </div>
 
       <div className="px-4 pb-4">

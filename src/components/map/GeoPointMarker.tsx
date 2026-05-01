@@ -26,16 +26,24 @@ interface GeoPointMarkerProps {
   point: GeoPoint
   selected: boolean
   onClick: (id: string) => void
+  onDragEnd: (id: string, lat: number, lng: number) => void
 }
 
-export default function GeoPointMarker({ point, selected, onClick }: GeoPointMarkerProps) {
+export default function GeoPointMarker({ point, selected, onClick, onDragEnd }: GeoPointMarkerProps) {
   const icon = createIcon(selected, point.active)
 
   return (
     <Marker
       position={[point.latitude, point.longitude]}
       icon={icon}
-      eventHandlers={{ click: () => onClick(point.id) }}
+      draggable
+      eventHandlers={{
+        click: () => onClick(point.id),
+        dragend: (e) => {
+          const { lat, lng } = (e.target as L.Marker).getLatLng()
+          onDragEnd(point.id, lat, lng)
+        },
+      }}
     >
       <Popup>
         <div className="text-sm">

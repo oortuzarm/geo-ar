@@ -148,6 +148,17 @@ export default function DashboardPage() {
     setPointFormOpen(true)
   }
 
+  function handleMarkerDragEnd(id: string, lat: number, lng: number) {
+    const current = useGeoStore.getState().points.find((p) => p.id === id)
+    if (!current) return
+    setHasUnsavedChanges(true)
+    upsertPoint({ ...current, latitude: lat, longitude: lng })
+    if (selectedPointId !== id) {
+      setSelectedPointId(id)
+      setPointFormOpen(true)
+    }
+  }
+
   function handlePointChange(updates: Partial<GeoPoint>) {
     if (!selectedPointId) return
     const current = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
@@ -393,6 +404,7 @@ export default function DashboardPage() {
             selectedPointId={selectedPointId}
             onMapClick={handleMapClick}
             onMarkerClick={handleSelectPoint}
+            onMarkerDragEnd={handleMarkerDragEnd}
           />
         </div>
 

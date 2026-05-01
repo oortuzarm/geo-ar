@@ -32,6 +32,7 @@ interface DashboardMapProps {
   selectedPointId: string | null
   onMapClick: (lat: number, lng: number) => void
   onMarkerClick: (id: string) => void
+  onMarkerDragEnd: (id: string, lat: number, lng: number) => void
 }
 
 export default function DashboardMap({
@@ -39,6 +40,7 @@ export default function DashboardMap({
   selectedPointId,
   onMapClick,
   onMarkerClick,
+  onMarkerDragEnd,
 }: DashboardMapProps) {
   const { mapCenter, mapZoom } = useGeoStore()
   const selectedPoint = points.find((p) => p.id === selectedPointId)
@@ -63,6 +65,7 @@ export default function DashboardMap({
           point={point}
           selected={point.id === selectedPointId}
           onClick={onMarkerClick}
+          onDragEnd={onMarkerDragEnd}
         />
       ))}
 

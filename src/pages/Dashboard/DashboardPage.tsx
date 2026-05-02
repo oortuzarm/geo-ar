@@ -220,6 +220,56 @@ export default function DashboardPage() {
     upsertPoint(updated)
   }
 
+  async function handleBulkDeactivate(ids: string[]) {
+    // Optimistic: flip active flag in store
+    for (const id of ids) {
+      const pt = useGeoStore.getState().points.find((p) => p.id === id)
+      if (pt && pt.active) upsertPoint({ ...pt, active: false })
+    }
+    try {
+      await Promise.all(ids.map((id) => geoPointsApi.savePoint(id, { active: false })))
+      addToast(
+        `${ids.length} punto${ids.length !== 1 ? 's' : ''} desactivado${ids.length !== 1 ? 's' : ''}`,
+        'success',
+      )
+    } catch {
+      addToast('Error al desactivar los puntos', 'error')
+    }
+  }
+
+  async function handleBulkDelete(ids: string[]) {
+    if (!project) return
+    const idsSet = new Set(ids)
+
+    // Optimistic: remove from store immediately
+    for (const id of ids) removePoint(id)
+
+    // Clear editor panel if the active point was among deleted
+    if (selectedPointId && idsSet.has(selectedPointId)) {
+      setSelectedPointId(null)
+      setPointFormOpen(false)
+    }
+
+    // Update geoPointIds in store
+    const freshProject = useGeoStore.getState().project!
+    const updatedIds = freshProject.geoPointIds.filter((pid) => !idsSet.has(pid))
+    useGeoStore.getState().updateProjectField('geoPointIds', updatedIds)
+
+    try {
+      await Promise.all(ids.map((id) => geoPointsApi.removePoint(id)))
+      await geoProjectsApi.saveProject(freshProject.id, {
+        ...useGeoStore.getState().project!,
+        geoPointIds: updatedIds,
+      })
+      addToast(
+        `${ids.length} punto${ids.length !== 1 ? 's' : ''} eliminado${ids.length !== 1 ? 's' : ''}`,
+        'success',
+      )
+    } catch {
+      addToast('Error al eliminar los puntos', 'error')
+    }
+  }
+
   async function confirmDeletePoint() {
     if (!deletePointTarget || !project) return
     await geoPointsApi.removePoint(deletePointTarget)
@@ -387,6 +437,8 @@ export default function DashboardPage() {
             onSelect={handleSelectPoint}
             onAdd={handleAddPoint}
             onToggleActive={handleToggleActive}
+            onBulkDeactivate={handleBulkDeactivate}
+            onBulkDelete={handleBulkDelete}
           />
         </aside>
 
@@ -502,6 +554,8 @@ export default function DashboardPage() {
               onSelect={(id) => { handleSelectPoint(id); setListDrawerOpen(false) }}
               onAdd={() => { handleAddPoint(); setListDrawerOpen(false) }}
               onToggleActive={handleToggleActive}
+              onBulkDeactivate={handleBulkDeactivate}
+              onBulkDelete={handleBulkDelete}
             />
           </div>
         </div>

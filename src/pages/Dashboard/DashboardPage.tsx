@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import DashboardMap from '../../components/map/DashboardMap'
-import AddressSearch from '../../components/map/AddressSearch'
+import POISearch from '../../components/map/POISearch'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
 import Modal from '../../components/ui/Modal'
@@ -11,7 +11,7 @@ import GeoPointForm from './GeoPointForm'
 import { useGeoStore } from '../../store/geoStore'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { getCurrentPosition } from '../../hooks/useGeolocation'
-import type { GeoPoint } from '../../types'
+import type { GeoPoint, MapBounds, PoiSearchResult } from '../../types'
 
 export default function DashboardPage() {
   const { id } = useParams<{ id: string }>()
@@ -31,6 +31,8 @@ export default function DashboardPage() {
   const [listDrawerOpen, setListDrawerOpen] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
+  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
+  const [poiResults, setPoiResults] = useState<PoiSearchResult[]>([])
 
   // Load project on mount
   useEffect(() => {
@@ -137,23 +139,32 @@ export default function DashboardPage() {
     setPointFormOpen(true)
   }
 
-  async function handleAddressSelect(lat: number, lng: number) {
-    if (!project) return
-    setMapCenter([lat, lng])
-    setMapZoom(17)
+  async function createPointAt(lat: number, lng: number, name?: string): Promise<GeoPoint> {
+    if (!project) throw new Error('no project')
     setHasUnsavedChanges(true)
+    const currentProject = useGeoStore.getState().project!
     const newPoint = await geoPointsApi.createPoint({
-      geoProjectId: project.id,
+      geoProjectId: currentProject.id,
       latitude: lat,
       longitude: lng,
+      name: name ?? '',
       order: useGeoStore.getState().points.length,
     })
     upsertPoint(newPoint)
-    const updatedIds = [...project.geoPointIds, newPoint.id]
+    const updatedIds = [...currentProject.geoPointIds, newPoint.id]
     useGeoStore.getState().updateProjectField('geoPointIds', updatedIds)
-    await geoProjectsApi.saveProject(project.id, { ...project, geoPointIds: updatedIds })
-    setSelectedPointId(newPoint.id)
-    setPointFormOpen(true)
+    await geoProjectsApi.saveProject(currentProject.id, { ...currentProject, geoPointIds: updatedIds })
+    return newPoint
+  }
+
+  async function handlePoiCreatePoint(result: PoiSearchResult) {
+    await createPointAt(result.lat, result.lng, result.name)
+    setMapCenter([result.lat, result.lng])
+  }
+
+  function handlePoiFlyTo(lat: number, lng: number) {
+    setMapCenter([lat, lng])
+    setMapZoom(17)
   }
 
   async function handleMarkerDragEnd(id: string, lat: number, lng: number) {
@@ -375,9 +386,15 @@ export default function DashboardPage() {
         {/* Map area */}
         <div className="flex-1 relative overflow-hidden min-h-0">
 
-          {/* Address search bar */}
+          {/* POI / address search bar */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-[calc(100%-1rem)] sm:w-full sm:max-w-lg sm:px-4">
-            <AddressSearch onSelect={handleAddressSelect} />
+            <POISearch
+              mapBounds={mapBounds}
+              existingPoints={points}
+              onFlyTo={handlePoiFlyTo}
+              onCreatePoint={handlePoiCreatePoint}
+              onResultsChange={setPoiResults}
+            />
           </div>
 
           {/* My location button */}
@@ -424,6 +441,8 @@ export default function DashboardPage() {
             onMapClick={handleMapClick}
             onMarkerClick={handleSelectPoint}
             onMarkerDragEnd={handleMarkerDragEnd}
+            poiResults={poiResults}
+            onBoundsChange={setMapBounds}
           />
         </div>
 

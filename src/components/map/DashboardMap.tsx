@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
-import { MapContainer, TileLayer, Circle, useMapEvents, useMap } from 'react-leaflet'
+import { useEffect, useRef } from 'react'
+import { MapContainer, TileLayer, Circle, CircleMarker, Popup, useMapEvents, useMap } from 'react-leaflet'
 import { useGeoStore } from '../../store/geoStore'
 import GeoPointMarker from './GeoPointMarker'
-import type { GeoPoint } from '../../types'
+import type { GeoPoint, PoiSearchResult, MapBounds } from '../../types'
 
 // Syncs map view when mapCenter state changes
 function MapController() {
@@ -27,12 +27,47 @@ function ClickHandler({ onMapClick }: ClickHandlerProps) {
   return null
 }
 
+interface BoundsTrackerProps {
+  onBoundsChange: (bounds: MapBounds) => void
+}
+
+function BoundsTracker({ onBoundsChange }: BoundsTrackerProps) {
+  const onBoundsChangeRef = useRef(onBoundsChange)
+  onBoundsChangeRef.current = onBoundsChange
+
+  const map = useMapEvents({
+    moveend() {
+      const b = map.getBounds()
+      onBoundsChangeRef.current({
+        north: b.getNorth(),
+        south: b.getSouth(),
+        east: b.getEast(),
+        west: b.getWest(),
+      })
+    },
+  })
+
+  useEffect(() => {
+    const b = map.getBounds()
+    onBoundsChangeRef.current({
+      north: b.getNorth(),
+      south: b.getSouth(),
+      east: b.getEast(),
+      west: b.getWest(),
+    })
+  }, [map])
+
+  return null
+}
+
 interface DashboardMapProps {
   points: GeoPoint[]
   selectedPointId: string | null
   onMapClick: (lat: number, lng: number) => void
   onMarkerClick: (id: string) => void
   onMarkerDragEnd: (id: string, lat: number, lng: number) => void
+  poiResults?: PoiSearchResult[]
+  onBoundsChange?: (bounds: MapBounds) => void
 }
 
 export default function DashboardMap({
@@ -41,6 +76,8 @@ export default function DashboardMap({
   onMapClick,
   onMarkerClick,
   onMarkerDragEnd,
+  poiResults = [],
+  onBoundsChange,
 }: DashboardMapProps) {
   const { mapCenter, mapZoom } = useGeoStore()
 
@@ -57,6 +94,7 @@ export default function DashboardMap({
       />
       <MapController />
       <ClickHandler onMapClick={onMapClick} />
+      {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} />}
 
       {points.map((point) => (
         <GeoPointMarker
@@ -85,6 +123,33 @@ export default function DashboardMap({
             }}
           />
         ))}
+
+      {/* POI search result markers */}
+      {poiResults.map((poi) => (
+        <CircleMarker
+          key={poi.id}
+          center={[poi.lat, poi.lng]}
+          radius={8}
+          pathOptions={{
+            color: '#f59e0b',
+            fillColor: '#f59e0b',
+            fillOpacity: 0.85,
+            weight: 2,
+          }}
+        >
+          <Popup>
+            <div className="text-sm">
+              <p className="font-semibold text-gray-100">{poi.name}</p>
+              {poi.displayName !== poi.name && (
+                <p className="text-gray-400 text-xs mt-1 max-w-[200px]">{poi.displayName}</p>
+              )}
+              {poi.category && (
+                <p className="text-gray-500 text-xs mt-1 capitalize">{poi.category}</p>
+              )}
+            </div>
+          </Popup>
+        </CircleMarker>
+      ))}
     </MapContainer>
   )
 }

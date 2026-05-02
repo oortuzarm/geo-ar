@@ -38,6 +38,23 @@ export type NominatimResult = {
 
 export type LocationStatus = 'idle' | 'requesting' | 'active' | 'denied' | 'unavailable'
 
+export type MapBounds = {
+  north: number
+  south: number
+  east: number
+  west: number
+}
+
+export type PoiSearchResult = {
+  id: string
+  name: string
+  displayName: string
+  lat: number
+  lng: number
+  category?: string
+  source: 'overpass' | 'nominatim'
+}
+
 export type UserLocation = {
   latitude: number
   longitude: number

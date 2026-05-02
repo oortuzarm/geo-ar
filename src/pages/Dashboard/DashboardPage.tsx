@@ -73,7 +73,7 @@ export default function DashboardPage() {
 
   function focusPoint(pt: GeoPoint) {
     setMapCenter([pt.latitude, pt.longitude])
-    setMapZoom(17)
+    // Never change zoom when selecting a pin — user's zoom level is their preference
   }
 
   function handleSelectPoint(pointId: string) {

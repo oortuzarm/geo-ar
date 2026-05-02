@@ -8,8 +8,18 @@ import type { GeoPoint, PoiSearchResult, MapBounds } from '../../types'
 function MapController() {
   const { mapCenter, mapZoom } = useGeoStore()
   const map = useMap()
+  const prevZoomRef = useRef(mapZoom)
+
   useEffect(() => {
-    map.setView(mapCenter, mapZoom, { animate: true })
+    const zoomChanged = prevZoomRef.current !== mapZoom
+    prevZoomRef.current = mapZoom
+    if (zoomChanged) {
+      // Explicit zoom request (address search, "My location", initial load) — apply it
+      map.setView(mapCenter, mapZoom, { animate: true })
+    } else {
+      // Only center changed (pin selected, POI fly-to without zoom) — pan only
+      map.panTo(mapCenter, { animate: true })
+    }
   }, [map, mapCenter, mapZoom])
   return null
 }

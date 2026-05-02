@@ -29,11 +29,14 @@ function ClickHandler({ onMapClick }: ClickHandlerProps) {
 
 interface BoundsTrackerProps {
   onBoundsChange: (bounds: MapBounds) => void
+  onZoomChange?: (zoom: number) => void
 }
 
-function BoundsTracker({ onBoundsChange }: BoundsTrackerProps) {
+function BoundsTracker({ onBoundsChange, onZoomChange }: BoundsTrackerProps) {
   const onBoundsChangeRef = useRef(onBoundsChange)
   onBoundsChangeRef.current = onBoundsChange
+  const onZoomChangeRef = useRef(onZoomChange)
+  onZoomChangeRef.current = onZoomChange
 
   const map = useMapEvents({
     moveend() {
@@ -45,8 +48,12 @@ function BoundsTracker({ onBoundsChange }: BoundsTrackerProps) {
         west: b.getWest(),
       })
     },
+    zoomend() {
+      onZoomChangeRef.current?.(map.getZoom())
+    },
   })
 
+  // Report initial bounds and zoom so the store is accurate from the start
   useEffect(() => {
     const b = map.getBounds()
     onBoundsChangeRef.current({
@@ -55,6 +62,7 @@ function BoundsTracker({ onBoundsChange }: BoundsTrackerProps) {
       east: b.getEast(),
       west: b.getWest(),
     })
+    onZoomChangeRef.current?.(map.getZoom())
   }, [map])
 
   return null
@@ -68,6 +76,7 @@ interface DashboardMapProps {
   onMarkerDragEnd: (id: string, lat: number, lng: number) => void
   poiResults?: PoiSearchResult[]
   onBoundsChange?: (bounds: MapBounds) => void
+  onZoomChange?: (zoom: number) => void
   onPoiCreate?: (result: PoiSearchResult) => void
 }
 
@@ -79,6 +88,7 @@ export default function DashboardMap({
   onMarkerDragEnd,
   poiResults = [],
   onBoundsChange,
+  onZoomChange,
   onPoiCreate,
 }: DashboardMapProps) {
   const { mapCenter, mapZoom } = useGeoStore()
@@ -96,7 +106,7 @@ export default function DashboardMap({
       />
       <MapController />
       <ClickHandler onMapClick={onMapClick} />
-      {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} />}
+      {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} onZoomChange={onZoomChange} />}
 
       {points.map((point) => (
         <GeoPointMarker

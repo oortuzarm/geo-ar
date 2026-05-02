@@ -87,36 +87,29 @@ export default function DashboardPage() {
     async (lat: number, lng: number) => {
       if (!project) return
 
-      setHasUnsavedChanges(true)
       if (selectedPointId) {
-        // Atomic update — only lat/lng change, radius and all other fields are preserved
-        updatePointCoords(selectedPointId, lat, lng)
-        // Save the full current point (includes the updated radius) so the backend
-        // doesn't return stale data that would overwrite local changes
-        const toSave = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
-        if (toSave) {
-          try {
-            await geoPointsApi.savePoint(selectedPointId, toSave)
-          } catch {
-            addToast('No se pudo guardar la nueva posición', 'error')
-          }
-        }
-      } else {
-        const newPoint = await geoPointsApi.createPoint({
-          geoProjectId: project.id,
-          latitude: lat,
-          longitude: lng,
-          order: useGeoStore.getState().points.length,
-        })
-        upsertPoint(newPoint)
-        const updatedIds = [...project.geoPointIds, newPoint.id]
-        useGeoStore.getState().updateProjectField('geoPointIds', updatedIds)
-        await geoProjectsApi.saveProject(project.id, { ...project, geoPointIds: updatedIds })
-        setSelectedPointId(newPoint.id)
-        setPointFormOpen(true)
+        // Click on empty map → deselect. Drag is the only way to move a pin.
+        setSelectedPointId(null)
+        setPointFormOpen(false)
+        return
       }
+
+      // No point selected → create a new one at the clicked location
+      setHasUnsavedChanges(true)
+      const newPoint = await geoPointsApi.createPoint({
+        geoProjectId: project.id,
+        latitude: lat,
+        longitude: lng,
+        order: useGeoStore.getState().points.length,
+      })
+      upsertPoint(newPoint)
+      const updatedIds = [...project.geoPointIds, newPoint.id]
+      useGeoStore.getState().updateProjectField('geoPointIds', updatedIds)
+      await geoProjectsApi.saveProject(project.id, { ...project, geoPointIds: updatedIds })
+      setSelectedPointId(newPoint.id)
+      setPointFormOpen(true)
     },
-    [project, selectedPointId, updatePointCoords, upsertPoint, setSelectedPointId, addToast],
+    [project, selectedPointId, upsertPoint, setSelectedPointId, addToast],
   )
 
   async function handleAddPoint() {

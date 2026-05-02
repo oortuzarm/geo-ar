@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, Circle, CircleMarker, Popup, useMapEvents, useMap } from 'react-leaflet'
+import type L from 'leaflet'
 import { useGeoStore } from '../../store/geoStore'
 import { haversineDistance } from '../../features/geolocation/haversine'
 import GeoPointMarker from './GeoPointMarker'
@@ -8,8 +9,16 @@ import type { GeoPoint, PoiSearchResult, MapBounds } from '../../types'
 function MapController() {
   const { mapCenter, mapZoom } = useGeoStore()
   const map = useMap()
+  const prevZoomRef = useRef(mapZoom)
+
   useEffect(() => {
-    map.setView(mapCenter, mapZoom, { animate: true })
+    const zoomChanged = prevZoomRef.current !== mapZoom
+    prevZoomRef.current = mapZoom
+    if (zoomChanged) {
+      map.setView(mapCenter, mapZoom, { animate: true })
+    } else {
+      map.panTo(mapCenter, { animate: true })
+    }
   }, [map, mapCenter, mapZoom])
   return null
 }
@@ -60,6 +69,14 @@ function BoundsTracker({ onBoundsChange }: BoundsTrackerProps) {
   return null
 }
 
+function MapInstanceExposer({ onMapReady }: { onMapReady: (map: L.Map) => void }) {
+  const map = useMap()
+  const onMapReadyRef = useRef(onMapReady)
+  onMapReadyRef.current = onMapReady
+  useEffect(() => { onMapReadyRef.current(map) }, [map])
+  return null
+}
+
 interface DashboardMapProps {
   points: GeoPoint[]
   selectedPointId: string | null
@@ -69,6 +86,7 @@ interface DashboardMapProps {
   poiResults?: PoiSearchResult[]
   onBoundsChange?: (bounds: MapBounds) => void
   onPoiCreate?: (result: PoiSearchResult) => void
+  onMapReady?: (map: L.Map) => void
 }
 
 export default function DashboardMap({
@@ -80,6 +98,7 @@ export default function DashboardMap({
   poiResults = [],
   onBoundsChange,
   onPoiCreate,
+  onMapReady,
 }: DashboardMapProps) {
   const { mapCenter, mapZoom } = useGeoStore()
 
@@ -97,6 +116,7 @@ export default function DashboardMap({
       <MapController />
       <ClickHandler onMapClick={onMapClick} />
       {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} />}
+      {onMapReady && <MapInstanceExposer onMapReady={onMapReady} />}
 
       {points.map((point) => (
         <GeoPointMarker

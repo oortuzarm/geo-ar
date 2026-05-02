@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import type L from 'leaflet'
 import { useNavigate, useParams } from 'react-router-dom'
 import DashboardMap from '../../components/map/DashboardMap'
 import POISearch from '../../components/map/POISearch'
@@ -33,6 +34,7 @@ export default function DashboardPage() {
   const [isPublishing, setIsPublishing] = useState(false)
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [poiResults, setPoiResults] = useState<PoiSearchResult[]>([])
+  const mapRef = useRef<L.Map | null>(null)
 
   // Load project on mount
   useEffect(() => {
@@ -72,8 +74,12 @@ export default function DashboardPage() {
   }, [hasUnsavedChanges])
 
   function focusPoint(pt: GeoPoint) {
+    const currentZoom = mapRef.current?.getZoom() ?? 99
+    const targetZoom = Math.max(currentZoom, 16)
     setMapCenter([pt.latitude, pt.longitude])
-    setMapZoom(17)
+    if (targetZoom > currentZoom) {
+      setMapZoom(targetZoom)
+    }
   }
 
   function handleSelectPoint(pointId: string) {
@@ -512,6 +518,7 @@ export default function DashboardPage() {
             poiResults={poiResults}
             onBoundsChange={setMapBounds}
             onPoiCreate={handlePoiCreateFromPopup}
+            onMapReady={(map) => { mapRef.current = map }}
           />
         </div>
 

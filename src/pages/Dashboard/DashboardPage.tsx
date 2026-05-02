@@ -162,6 +162,13 @@ export default function DashboardPage() {
     setMapCenter([result.lat, result.lng])
   }
 
+  // Called from the popup button on an amber POI marker — creates the point and
+  // removes the marker immediately so the map doesn't stay cluttered.
+  async function handlePoiCreateFromPopup(result: PoiSearchResult) {
+    setPoiResults((prev) => prev.filter((r) => r.id !== result.id))
+    await createPointAt(result.lat, result.lng, result.name)
+  }
+
   function handlePoiFlyTo(lat: number, lng: number) {
     setMapCenter([lat, lng])
     setMapZoom(17)
@@ -443,6 +450,7 @@ export default function DashboardPage() {
             onMarkerDragEnd={handleMarkerDragEnd}
             poiResults={poiResults}
             onBoundsChange={setMapBounds}
+            onPoiCreate={handlePoiCreateFromPopup}
           />
         </div>
 

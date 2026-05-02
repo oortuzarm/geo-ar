@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, Circle, CircleMarker, Popup, useMapEvents, useMap } from 'react-leaflet'
 import { useGeoStore } from '../../store/geoStore'
+import { haversineDistance } from '../../features/geolocation/haversine'
 import GeoPointMarker from './GeoPointMarker'
 import type { GeoPoint, PoiSearchResult, MapBounds } from '../../types'
 
-// Syncs map view when mapCenter state changes
 function MapController() {
   const { mapCenter, mapZoom } = useGeoStore()
   const map = useMap()
@@ -68,6 +68,7 @@ interface DashboardMapProps {
   onMarkerDragEnd: (id: string, lat: number, lng: number) => void
   poiResults?: PoiSearchResult[]
   onBoundsChange?: (bounds: MapBounds) => void
+  onPoiCreate?: (result: PoiSearchResult) => void
 }
 
 export default function DashboardMap({
@@ -78,6 +79,7 @@ export default function DashboardMap({
   onMarkerDragEnd,
   poiResults = [],
   onBoundsChange,
+  onPoiCreate,
 }: DashboardMapProps) {
   const { mapCenter, mapZoom } = useGeoStore()
 
@@ -125,31 +127,53 @@ export default function DashboardMap({
         ))}
 
       {/* POI search result markers */}
-      {poiResults.map((poi) => (
-        <CircleMarker
-          key={poi.id}
-          center={[poi.lat, poi.lng]}
-          radius={8}
-          pathOptions={{
-            color: '#f59e0b',
-            fillColor: '#f59e0b',
-            fillOpacity: 0.85,
-            weight: 2,
-          }}
-        >
-          <Popup>
-            <div className="text-sm">
-              <p className="font-semibold text-gray-100">{poi.name}</p>
-              {poi.displayName !== poi.name && (
-                <p className="text-gray-400 text-xs mt-1 max-w-[200px]">{poi.displayName}</p>
-              )}
-              {poi.category && (
-                <p className="text-gray-500 text-xs mt-1 capitalize">{poi.category}</p>
-              )}
-            </div>
-          </Popup>
-        </CircleMarker>
-      ))}
+      {poiResults.map((poi) => {
+        const alreadyCreated = points.some(
+          (p) => haversineDistance(p.latitude, p.longitude, poi.lat, poi.lng) < 10,
+        )
+        return (
+          <CircleMarker
+            key={poi.id}
+            center={[poi.lat, poi.lng]}
+            radius={8}
+            pathOptions={{
+              color: '#f59e0b',
+              fillColor: '#f59e0b',
+              fillOpacity: 0.85,
+              weight: 2,
+            }}
+          >
+            <Popup>
+              <div className="text-sm min-w-[180px]">
+                <p className="font-semibold">{poi.name}</p>
+                {poi.displayName !== poi.name && (
+                  <p className="text-xs text-gray-500 mt-0.5 leading-snug max-w-[220px]">
+                    {poi.displayName}
+                  </p>
+                )}
+                {poi.category && (
+                  <p className="text-xs text-gray-400 mt-0.5 capitalize">{poi.category}</p>
+                )}
+                <div className="mt-2 pt-2 border-t border-gray-200">
+                  {alreadyCreated ? (
+                    <span className="text-xs text-gray-400">✓ Ya creado como punto GPS</span>
+                  ) : onPoiCreate ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onPoiCreate(poi)
+                      }}
+                      className="text-xs font-medium text-sky-600 hover:text-sky-500 transition-colors"
+                    >
+                      + Crear punto GPS
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </Popup>
+          </CircleMarker>
+        )
+      })}
     </MapContainer>
   )
 }

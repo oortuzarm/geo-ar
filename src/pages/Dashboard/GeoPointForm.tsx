@@ -90,12 +90,12 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
         />
 
         <Input
-          label="URL de Lookiar*"
+          label="URL del contenido*"
           placeholder="https://www.lookiar.com/models/..."
           value={lookiarUrl}
           onChange={(e) => setLookiarUrl(e.target.value)}
           onBlur={() => onChange({ lookiarUrl })}
-          hint="Acepta /models/, /scene/ y cualquier URL válida de Lookiar"
+          hint="Agrega cualquier enlace: experiencias, promociones o contenido digital."
         />
 
         {/* Coordinates — committed immediately for live map updates */}

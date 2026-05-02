@@ -21,11 +21,12 @@ export default function GeoPointsList({
   onBulkDelete,
   onBulkDeactivate,
 }: GeoPointsListProps) {
+  const [selectionMode, setSelectionMode] = useState(false)
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set())
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [isWorking, setIsWorking] = useState(false)
 
-  // Keep checkedIds in sync if points are removed externally (e.g. per-point delete)
+  // Keep checkedIds clean when points are removed externally (per-point delete from form)
   useEffect(() => {
     setCheckedIds((prev) => {
       const validIds = new Set(points.map((p) => p.id))
@@ -37,6 +38,15 @@ export default function GeoPointsList({
   const checkedCount = checkedIds.size
   const allChecked = points.length > 0 && checkedCount === points.length
   const someChecked = checkedCount > 0 && !allChecked
+
+  function enterSelectionMode() {
+    setSelectionMode(true)
+  }
+
+  function exitSelectionMode() {
+    setSelectionMode(false)
+    setCheckedIds(new Set())
+  }
 
   function toggleOne(id: string, e: React.MouseEvent) {
     e.stopPropagation()
@@ -50,18 +60,16 @@ export default function GeoPointsList({
 
   function toggleAll(e: React.MouseEvent) {
     e.stopPropagation()
-    setCheckedIds(
-      allChecked ? new Set() : new Set(points.map((p) => p.id)),
-    )
+    setCheckedIds(allChecked ? new Set() : new Set(points.map((p) => p.id)))
   }
 
   async function handleBulkDeactivate() {
     setIsWorking(true)
     try {
       await onBulkDeactivate(Array.from(checkedIds))
-      setCheckedIds(new Set())
     } finally {
       setIsWorking(false)
+      exitSelectionMode()
     }
   }
 
@@ -69,10 +77,10 @@ export default function GeoPointsList({
     setIsWorking(true)
     try {
       await onBulkDelete(Array.from(checkedIds))
-      setCheckedIds(new Set())
     } finally {
       setIsWorking(false)
       setConfirmDelete(false)
+      exitSelectionMode()
     }
   }
 
@@ -80,30 +88,32 @@ export default function GeoPointsList({
     <div className="flex flex-col h-full">
 
       {/* ── Header ── */}
-      <div className="px-3 py-3 border-b border-gray-800 flex items-center gap-2.5">
-        {/* Select-all checkbox */}
-        <button
-          onClick={toggleAll}
-          className={[
-            'flex-shrink-0 h-4 w-4 rounded border flex items-center justify-center transition-colors',
-            allChecked
-              ? 'bg-brand-600 border-brand-600'
-              : 'border-gray-600 hover:border-brand-500',
-          ].join(' ')}
-          aria-label={allChecked ? 'Deseleccionar todos' : 'Seleccionar todos'}
-        >
-          {allChecked && (
-            <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z" />
-            </svg>
-          )}
-          {someChecked && (
-            <div className="h-1.5 w-1.5 rounded-sm bg-brand-400" />
-          )}
-        </button>
+      <div className="px-3 py-3 border-b border-gray-800 flex items-center gap-2.5 min-h-[48px]">
 
-        <h2 className="flex-1 text-sm font-semibold">
-          {checkedCount > 0 ? (
+        {/* Select-all checkbox — only in selection mode */}
+        {selectionMode && (
+          <button
+            onClick={toggleAll}
+            className={[
+              'flex-shrink-0 h-4 w-4 rounded border flex items-center justify-center transition-colors',
+              allChecked
+                ? 'bg-brand-600 border-brand-600'
+                : 'border-gray-600 hover:border-brand-500',
+            ].join(' ')}
+            aria-label={allChecked ? 'Deseleccionar todos' : 'Seleccionar todos'}
+          >
+            {allChecked && (
+              <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z" />
+              </svg>
+            )}
+            {someChecked && <div className="h-1.5 w-1.5 rounded-sm bg-brand-400" />}
+          </button>
+        )}
+
+        {/* Title */}
+        <h2 className="flex-1 text-sm font-semibold min-w-0">
+          {selectionMode && checkedCount > 0 ? (
             <span className="text-brand-400">
               {checkedCount} seleccionado{checkedCount !== 1 ? 's' : ''}
             </span>
@@ -114,10 +124,32 @@ export default function GeoPointsList({
             </span>
           )}
         </h2>
+
+        {/* Right action: "Seleccionar" or "✕" */}
+        {points.length > 0 && (
+          selectionMode ? (
+            <button
+              onClick={exitSelectionMode}
+              className="flex-shrink-0 text-xs text-gray-400 hover:text-gray-100 transition-colors px-1 py-0.5"
+              aria-label="Salir del modo selección"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          ) : (
+            <button
+              onClick={enterSelectionMode}
+              className="flex-shrink-0 text-xs text-gray-400 hover:text-brand-400 transition-colors"
+            >
+              Seleccionar
+            </button>
+          )
+        )}
       </div>
 
-      {/* ── Bulk action bar ── */}
-      {checkedCount > 0 && (
+      {/* ── Bulk action bar — only in selection mode with ≥1 checked ── */}
+      {selectionMode && checkedCount > 0 && (
         <div className="flex items-center gap-3 px-3 py-2 bg-gray-800/70 border-b border-gray-800">
           <button
             onClick={handleBulkDeactivate}
@@ -125,7 +157,6 @@ export default function GeoPointsList({
             className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-gray-100
                        disabled:opacity-40 disabled:cursor-wait transition-colors"
           >
-            {/* Slash-circle icon */}
             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="10" strokeWidth="2" />
               <path strokeLinecap="round" strokeWidth="2" d="M4.93 4.93l14.14 14.14" />
@@ -162,21 +193,20 @@ export default function GeoPointsList({
           <ul className="py-1">
             {points.map((point) => {
               const checked = checkedIds.has(point.id)
-              const isSelected = selectedId === point.id && checkedCount === 0
+              const isEditing = selectedId === point.id && !selectionMode
               return (
                 <li key={point.id}>
                   <div
                     className={[
                       'flex items-center gap-2.5 px-3 py-2.5 cursor-pointer transition-colors border-l-2',
-                      isSelected
+                      isEditing
                         ? 'bg-brand-900/40 border-brand-500'
                         : checked
                           ? 'bg-brand-900/20 border-brand-700'
                           : 'hover:bg-gray-800/60 border-transparent',
                     ].join(' ')}
                     onClick={() => {
-                      if (checkedCount > 0) {
-                        // In selection mode: row click toggles the checkbox
+                      if (selectionMode) {
                         setCheckedIds((prev) => {
                           const next = new Set(prev)
                           if (next.has(point.id)) next.delete(point.id)
@@ -188,23 +218,25 @@ export default function GeoPointsList({
                       }
                     }}
                   >
-                    {/* Per-row checkbox */}
-                    <button
-                      onClick={(e) => toggleOne(point.id, e)}
-                      className={[
-                        'flex-shrink-0 h-4 w-4 rounded border flex items-center justify-center transition-colors',
-                        checked
-                          ? 'bg-brand-600 border-brand-600'
-                          : 'border-gray-600 hover:border-brand-500',
-                      ].join(' ')}
-                      aria-label={checked ? 'Deseleccionar' : 'Seleccionar'}
-                    >
-                      {checked && (
-                        <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 16 16">
-                          <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z" />
-                        </svg>
-                      )}
-                    </button>
+                    {/* Checkbox — only in selection mode */}
+                    {selectionMode && (
+                      <button
+                        onClick={(e) => toggleOne(point.id, e)}
+                        className={[
+                          'flex-shrink-0 h-4 w-4 rounded border flex items-center justify-center transition-colors',
+                          checked
+                            ? 'bg-brand-600 border-brand-600'
+                            : 'border-gray-600 hover:border-brand-500',
+                        ].join(' ')}
+                        aria-label={checked ? 'Deseleccionar' : 'Seleccionar'}
+                      >
+                        {checked && (
+                          <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z" />
+                          </svg>
+                        )}
+                      </button>
+                    )}
 
                     {/* Status dot */}
                     <div
@@ -230,22 +262,24 @@ export default function GeoPointsList({
                       </p>
                     </div>
 
-                    {/* Individual active toggle — always available */}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onToggleActive(point.id) }}
-                      className={[
-                        'relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors',
-                        point.active ? 'bg-brand-600' : 'bg-gray-700',
-                      ].join(' ')}
-                      title={point.active ? 'Desactivar' : 'Activar'}
-                    >
-                      <span
+                    {/* Individual active toggle — always available, hidden in selection mode to reduce noise */}
+                    {!selectionMode && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onToggleActive(point.id) }}
                         className={[
-                          'inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform',
-                          point.active ? 'translate-x-4' : 'translate-x-1',
+                          'relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors',
+                          point.active ? 'bg-brand-600' : 'bg-gray-700',
                         ].join(' ')}
-                      />
-                    </button>
+                        title={point.active ? 'Desactivar' : 'Activar'}
+                      >
+                        <span
+                          className={[
+                            'inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform',
+                            point.active ? 'translate-x-4' : 'translate-x-1',
+                          ].join(' ')}
+                        />
+                      </button>
+                    )}
                   </div>
                 </li>
               )
@@ -255,21 +289,23 @@ export default function GeoPointsList({
       </div>
 
       {/* ── Footer ── */}
-      <div className="p-3 border-t border-gray-800">
-        <button
-          onClick={onAdd}
-          className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-md
-                     border border-dashed border-gray-700 text-sm text-gray-400
-                     hover:border-brand-600 hover:text-brand-400 transition-colors"
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Agregar punto al mapa
-        </button>
-      </div>
+      {!selectionMode && (
+        <div className="p-3 border-t border-gray-800">
+          <button
+            onClick={onAdd}
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-md
+                       border border-dashed border-gray-700 text-sm text-gray-400
+                       hover:border-brand-600 hover:text-brand-400 transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Agregar punto al mapa
+          </button>
+        </div>
+      )}
 
-      {/* ── Bulk delete confirmation ── */}
+      {/* ── Bulk delete confirmation modal ── */}
       <Modal
         open={confirmDelete}
         title={`Eliminar ${checkedCount} punto${checkedCount !== 1 ? 's' : ''} GPS`}

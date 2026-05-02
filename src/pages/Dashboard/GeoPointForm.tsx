@@ -91,7 +91,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
 
         <Input
           label="URL del contenido*"
-          placeholder="Pega tu enlace (ej: https://tusitio.com)"
+          placeholder="Ej: https://tusitio.com"
           value={lookiarUrl}
           onChange={(e) => setLookiarUrl(e.target.value)}
           onBlur={() => onChange({ lookiarUrl })}

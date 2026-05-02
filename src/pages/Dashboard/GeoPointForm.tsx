@@ -196,13 +196,22 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
         </div>
 
         {/* Text areas — local state, committed on blur */}
-        <Textarea
-          label="Descripción"
-          placeholder="Qué verá el usuario en esta experiencia"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          onBlur={() => onChange({ description: description || undefined })}
-        />
+        <div>
+          <Textarea
+            label="Descripción"
+            placeholder="Qué verá el usuario en esta experiencia"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            onBlur={() => onChange({ description: description || undefined })}
+            maxLength={300}
+          />
+          <p className={[
+            'text-xs text-right mt-1 tabular-nums',
+            description.length >= 280 ? 'text-yellow-500' : 'text-gray-600',
+          ].join(' ')}>
+            {description.length}/300
+          </p>
+        </div>
 
         <Textarea
           label="Cómo llegar"

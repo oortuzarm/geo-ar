@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { formatDistance } from '../../features/geolocation/haversine'
 import { formatDuration } from '../../features/routing/orsClient'
 import type { GeoPoint } from '../../types'
@@ -16,6 +17,8 @@ interface PublicPointCardProps {
   walkingDurationSeconds?: number
 }
 
+const DESCRIPTION_LIMIT = 140
+
 export default function PublicPointCard({
   point,
   distance,
@@ -27,6 +30,9 @@ export default function PublicPointCard({
   walkingDistanceMeters,
   walkingDurationSeconds,
 }: PublicPointCardProps) {
+  const [descExpanded, setDescExpanded] = useState(false)
+  const isLongDesc = (point.description?.length ?? 0) > DESCRIPTION_LIMIT
+
   // Use ORS distance when available; fall back to Haversine
   const effectiveDistance =
     routeStatus === 'ok' && walkingDistanceMeters !== undefined
@@ -76,7 +82,32 @@ export default function PublicPointCard({
         </div>
 
         {point.description && (
-          <p className="text-xs text-gray-400 mt-1 line-clamp-2">{point.description}</p>
+          <div className="mt-1">
+            <p className="text-xs text-gray-400 leading-relaxed">
+              {descExpanded || !isLongDesc
+                ? point.description
+                : point.description.slice(0, DESCRIPTION_LIMIT)}
+              {isLongDesc && !descExpanded && (
+                <>
+                  {'... '}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDescExpanded(true) }}
+                    className="text-brand-400 hover:text-brand-300 font-medium transition-colors"
+                  >
+                    Ver más
+                  </button>
+                </>
+              )}
+            </p>
+            {isLongDesc && descExpanded && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setDescExpanded(false) }}
+                className="text-xs text-brand-400 hover:text-brand-300 font-medium mt-1 transition-colors"
+              >
+                Ver menos
+              </button>
+            )}
+          </div>
         )}
 
         {point.instructions && (

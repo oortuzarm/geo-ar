@@ -131,7 +131,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
               Radio de activación
             </span>
             <button
-              className="text-gray-500 hover:text-gray-300 relative"
+              className="relative inline-flex items-center text-gray-500 hover:text-gray-300"
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
             >
@@ -140,7 +140,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               {showTooltip && (
-                <div className="absolute left-0 top-6 z-50 w-[260px] max-w-[calc(100vw-32px)] break-words bg-gray-800 border border-gray-700 text-xs text-gray-300 p-3 rounded-lg shadow-xl pointer-events-none">
+                <div className="absolute left-0 top-full mt-2 z-50 w-64 max-w-xs break-words bg-gray-800 border border-gray-700 text-xs text-gray-300 p-3 rounded-lg shadow-xl pointer-events-none">
                   {RADIUS_TOOLTIP}
                 </div>
               )}

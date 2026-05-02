@@ -203,13 +203,13 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             onBlur={() => onChange({ description: description || undefined })}
-            maxLength={300}
+            maxLength={250}
           />
           <p className={[
             'text-xs text-right mt-1 tabular-nums',
-            description.length >= 280 ? 'text-yellow-500' : 'text-gray-600',
+            description.length >= 230 ? 'text-yellow-500' : 'text-gray-600',
           ].join(' ')}>
-            {description.length}/300
+            {description.length} / 250
           </p>
         </div>
 

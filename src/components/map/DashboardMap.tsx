@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import L from 'leaflet'
 import { MapContainer, TileLayer, Circle, CircleMarker, Popup, useMapEvents, useMap } from 'react-leaflet'
 import { useGeoStore } from '../../store/geoStore'
 import { haversineDistance } from '../../features/geolocation/haversine'
@@ -9,28 +8,9 @@ import type { GeoPoint, PoiSearchResult, MapBounds } from '../../types'
 function MapController() {
   const { mapCenter, mapZoom } = useGeoStore()
   const map = useMap()
-  const prevZoomRef = useRef(mapZoom)
-
   useEffect(() => {
-    const zoomChanged = prevZoomRef.current !== mapZoom
-    prevZoomRef.current = mapZoom
-    if (zoomChanged) {
-      // Explicit zoom request (address search, "My location", initial load) — apply it
-      map.setView(mapCenter, mapZoom, { animate: true })
-    } else {
-      // Only center changed (pin selected, POI fly-to without zoom) — pan only
-      map.panTo(mapCenter, { animate: true })
-    }
+    map.setView(mapCenter, mapZoom, { animate: true })
   }, [map, mapCenter, mapZoom])
-  return null
-}
-
-// Exposes the Leaflet map instance to the parent via callback on mount
-function MapInstanceExposer({ onMapReady }: { onMapReady: (map: L.Map) => void }) {
-  const map = useMap()
-  const onMapReadyRef = useRef(onMapReady)
-  onMapReadyRef.current = onMapReady
-  useEffect(() => { onMapReadyRef.current(map) }, [map])
   return null
 }
 
@@ -88,7 +68,6 @@ interface DashboardMapProps {
   onMarkerDragEnd: (id: string, lat: number, lng: number) => void
   poiResults?: PoiSearchResult[]
   onBoundsChange?: (bounds: MapBounds) => void
-  onMapReady?: (map: L.Map) => void
   onPoiCreate?: (result: PoiSearchResult) => void
 }
 
@@ -100,7 +79,6 @@ export default function DashboardMap({
   onMarkerDragEnd,
   poiResults = [],
   onBoundsChange,
-  onMapReady,
   onPoiCreate,
 }: DashboardMapProps) {
   const { mapCenter, mapZoom } = useGeoStore()
@@ -118,7 +96,6 @@ export default function DashboardMap({
       />
       <MapController />
       <ClickHandler onMapClick={onMapClick} />
-      {onMapReady && <MapInstanceExposer onMapReady={onMapReady} />}
       {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} />}
 
       {points.map((point) => (

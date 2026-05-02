@@ -1,5 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
-import type L from 'leaflet'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import DashboardMap from '../../components/map/DashboardMap'
 import POISearch from '../../components/map/POISearch'
@@ -25,7 +24,6 @@ export default function DashboardPage() {
     addToast, isSaving, setIsSaving,
   } = useGeoStore()
 
-  const mapRef = useRef<L.Map | null>(null)
   const [loading, setLoading] = useState(true)
   const [pointFormOpen, setPointFormOpen] = useState(false)
   const [deletePointTarget, setDeletePointTarget] = useState<string | null>(null)
@@ -74,12 +72,8 @@ export default function DashboardPage() {
   }, [hasUnsavedChanges])
 
   function focusPoint(pt: GeoPoint) {
-    const currentZoom = mapRef.current?.getZoom() ?? useGeoStore.getState().mapZoom
     setMapCenter([pt.latitude, pt.longitude])
-    if (currentZoom < 15) {
-      setMapZoom(16)
-    }
-    // >= 15: MapController uses panTo — zoom stays unchanged
+    setMapZoom(17)
   }
 
   function handleSelectPoint(pointId: string) {
@@ -517,7 +511,6 @@ export default function DashboardPage() {
             onMarkerDragEnd={handleMarkerDragEnd}
             poiResults={poiResults}
             onBoundsChange={setMapBounds}
-            onMapReady={(map) => { mapRef.current = map }}
             onPoiCreate={handlePoiCreateFromPopup}
           />
         </div>

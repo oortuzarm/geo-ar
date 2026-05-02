@@ -103,18 +103,24 @@ export default function GeoPointMarker({ point, selected, onClick, onDragEnd }: 
         </Popup>
       </Marker>
 
-      {/* Circle lives here so it can be updated imperatively during drag */}
-      {selected && (
+      {/* Circle is always mounted for active points so circleRef is populated during drag */}
+      {point.active && (
         <Circle
           ref={circleRef}
           center={[point.latitude, point.longitude]}
           radius={point.activationRadius}
-          pathOptions={{
+          pathOptions={selected ? {
             color: '#0ea5e9',
             fillColor: '#0ea5e9',
             fillOpacity: 0.1,
             weight: 2,
             dashArray: '6 4',
+          } : {
+            color: '#ef4444',
+            fillColor: '#ef4444',
+            fillOpacity: 0.04,
+            weight: 1,
+            dashArray: '4 4',
           }}
         />
       )}

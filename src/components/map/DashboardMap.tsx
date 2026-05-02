@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { MapContainer, TileLayer, Circle, CircleMarker, Popup, useMapEvents, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, CircleMarker, Popup, useMapEvents, useMap } from 'react-leaflet'
 import { useGeoStore } from '../../store/geoStore'
 import { haversineDistance } from '../../features/geolocation/haversine'
 import GeoPointMarker from './GeoPointMarker'
@@ -107,24 +107,6 @@ export default function DashboardMap({
           onDragEnd={onMarkerDragEnd}
         />
       ))}
-
-      {/* Faded circles for all other active points */}
-      {points
-        .filter((p) => p.id !== selectedPointId && p.active)
-        .map((p) => (
-          <Circle
-            key={`circle-${p.id}`}
-            center={[p.latitude, p.longitude]}
-            radius={p.activationRadius}
-            pathOptions={{
-              color: '#ef4444',
-              fillColor: '#ef4444',
-              fillOpacity: 0.04,
-              weight: 1,
-              dashArray: '4 4',
-            }}
-          />
-        ))}
 
       {/* POI search result markers */}
       {poiResults.map((poi) => {

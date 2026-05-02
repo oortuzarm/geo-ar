@@ -220,8 +220,23 @@ export default function DashboardPage() {
     upsertPoint(updated)
   }
 
+  async function handleBulkActivate(ids: string[]) {
+    for (const id of ids) {
+      const pt = useGeoStore.getState().points.find((p) => p.id === id)
+      if (pt && !pt.active) upsertPoint({ ...pt, active: true })
+    }
+    try {
+      await Promise.all(ids.map((id) => geoPointsApi.savePoint(id, { active: true })))
+      addToast(
+        `${ids.length} punto${ids.length !== 1 ? 's' : ''} activado${ids.length !== 1 ? 's' : ''}`,
+        'success',
+      )
+    } catch {
+      addToast('Error al activar los puntos', 'error')
+    }
+  }
+
   async function handleBulkDeactivate(ids: string[]) {
-    // Optimistic: flip active flag in store
     for (const id of ids) {
       const pt = useGeoStore.getState().points.find((p) => p.id === id)
       if (pt && pt.active) upsertPoint({ ...pt, active: false })
@@ -437,6 +452,7 @@ export default function DashboardPage() {
             onSelect={handleSelectPoint}
             onAdd={handleAddPoint}
             onToggleActive={handleToggleActive}
+            onBulkActivate={handleBulkActivate}
             onBulkDeactivate={handleBulkDeactivate}
             onBulkDelete={handleBulkDelete}
           />
@@ -554,6 +570,7 @@ export default function DashboardPage() {
               onSelect={(id) => { handleSelectPoint(id); setListDrawerOpen(false) }}
               onAdd={() => { handleAddPoint(); setListDrawerOpen(false) }}
               onToggleActive={handleToggleActive}
+              onBulkActivate={handleBulkActivate}
               onBulkDeactivate={handleBulkDeactivate}
               onBulkDelete={handleBulkDelete}
             />

@@ -9,6 +9,7 @@ interface GeoPointsListProps {
   onAdd: () => void
   onToggleActive: (id: string) => void
   onBulkDelete: (ids: string[]) => Promise<void>
+  onBulkActivate: (ids: string[]) => Promise<void>
   onBulkDeactivate: (ids: string[]) => Promise<void>
 }
 
@@ -19,6 +20,7 @@ export default function GeoPointsList({
   onAdd,
   onToggleActive,
   onBulkDelete,
+  onBulkActivate,
   onBulkDeactivate,
 }: GeoPointsListProps) {
   const [selectionMode, setSelectionMode] = useState(false)
@@ -38,6 +40,12 @@ export default function GeoPointsList({
   const checkedCount = checkedIds.size
   const allChecked = points.length > 0 && checkedCount === points.length
   const someChecked = checkedCount > 0 && !allChecked
+
+  // Derive activation states of the current selection
+  const selectedPoints = points.filter((p) => checkedIds.has(p.id))
+  const allActive = selectedPoints.length > 0 && selectedPoints.every((p) => p.active)
+  const allInactive = selectedPoints.length > 0 && selectedPoints.every((p) => !p.active)
+  // mixed = neither allActive nor allInactive (implicit — used to decide which buttons to show)
 
   function enterSelectionMode() {
     setSelectionMode(true)
@@ -61,6 +69,16 @@ export default function GeoPointsList({
   function toggleAll(e: React.MouseEvent) {
     e.stopPropagation()
     setCheckedIds(allChecked ? new Set() : new Set(points.map((p) => p.id)))
+  }
+
+  async function handleBulkActivate() {
+    setIsWorking(true)
+    try {
+      await onBulkActivate(Array.from(checkedIds))
+    } finally {
+      setIsWorking(false)
+      exitSelectionMode()
+    }
   }
 
   async function handleBulkDeactivate() {
@@ -151,21 +169,47 @@ export default function GeoPointsList({
       {/* ── Bulk action bar — only in selection mode with ≥1 checked ── */}
       {selectionMode && checkedCount > 0 && (
         <div className="flex items-center gap-3 px-3 py-2 bg-gray-800/70 border-b border-gray-800">
-          <button
-            onClick={handleBulkDeactivate}
-            disabled={isWorking}
-            className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-gray-100
-                       disabled:opacity-40 disabled:cursor-wait transition-colors"
-          >
-            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" strokeWidth="2" />
-              <path strokeLinecap="round" strokeWidth="2" d="M4.93 4.93l14.14 14.14" />
-            </svg>
-            Desactivar
-          </button>
+
+          {/* Activar — shown when all inactive OR mixed */}
+          {!allActive && (
+            <button
+              onClick={handleBulkActivate}
+              disabled={isWorking}
+              className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-gray-100
+                         disabled:opacity-40 disabled:cursor-wait transition-colors"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Activar
+            </button>
+          )}
+
+          {/* Separator between Activar and Desactivar (only when both are shown) */}
+          {!allActive && !allInactive && (
+            <span className="text-gray-700 select-none">·</span>
+          )}
+
+          {/* Desactivar — shown when all active OR mixed */}
+          {!allInactive && (
+            <button
+              onClick={handleBulkDeactivate}
+              disabled={isWorking}
+              className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-gray-100
+                         disabled:opacity-40 disabled:cursor-wait transition-colors"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" strokeWidth="2" />
+                <path strokeLinecap="round" strokeWidth="2" d="M4.93 4.93l14.14 14.14" />
+              </svg>
+              Desactivar
+            </button>
+          )}
 
           <span className="text-gray-700 select-none">·</span>
 
+          {/* Eliminar — always shown */}
           <button
             onClick={() => setConfirmDelete(true)}
             disabled={isWorking}

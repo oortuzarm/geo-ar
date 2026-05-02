@@ -72,12 +72,8 @@ export default function DashboardPage() {
   }, [hasUnsavedChanges])
 
   function focusPoint(pt: GeoPoint) {
-    const currentZoom = useGeoStore.getState().mapZoom
     setMapCenter([pt.latitude, pt.longitude])
-    if (currentZoom < 15) {
-      setMapZoom(16)
-    }
-    // Already close: just pan, keep the user's zoom level
+    setMapZoom(17)
   }
 
   function handleSelectPoint(pointId: string) {
@@ -515,7 +511,6 @@ export default function DashboardPage() {
             onMarkerDragEnd={handleMarkerDragEnd}
             poiResults={poiResults}
             onBoundsChange={setMapBounds}
-            onZoomChange={setMapZoom}
             onPoiCreate={handlePoiCreateFromPopup}
           />
         </div>

@@ -140,8 +140,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               {showTooltip && (
-                <div className="absolute left-6 top-0 z-50 w-64 bg-gray-800 border border-gray-700
-                               text-xs text-gray-300 p-3 rounded-lg shadow-xl pointer-events-none">
+                <div className="absolute right-0 top-6 z-50 w-64 max-w-xs break-words bg-gray-800 border border-gray-700 text-xs text-gray-300 p-3 rounded-lg shadow-xl pointer-events-none">
                   {RADIUS_TOOLTIP}
                 </div>
               )}

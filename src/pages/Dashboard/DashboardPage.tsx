@@ -1,5 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
-import type L from 'leaflet'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import DashboardMap from '../../components/map/DashboardMap'
 import POISearch from '../../components/map/POISearch'
@@ -34,7 +33,6 @@ export default function DashboardPage() {
   const [isPublishing, setIsPublishing] = useState(false)
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [poiResults, setPoiResults] = useState<PoiSearchResult[]>([])
-  const mapRef = useRef<L.Map | null>(null)
 
   // Load project on mount
   useEffect(() => {
@@ -73,16 +71,9 @@ export default function DashboardPage() {
     return () => window.removeEventListener('beforeunload', handler)
   }, [hasUnsavedChanges])
 
-  const FOCUS_ZOOM = 16
   function focusPoint(pt: GeoPoint) {
-    const map = mapRef.current
-    if (!map) return
-    const currentZoom = map.getZoom()
-    if (currentZoom < FOCUS_ZOOM) {
-      map.flyTo([pt.latitude, pt.longitude], FOCUS_ZOOM)
-    } else {
-      map.panTo([pt.latitude, pt.longitude])
-    }
+    setMapCenter([pt.latitude, pt.longitude])
+    setMapZoom(17)
   }
 
   function handleSelectPoint(pointId: string) {
@@ -172,13 +163,8 @@ export default function DashboardPage() {
   }
 
   function handlePoiFlyTo(lat: number, lng: number) {
-    const map = mapRef.current
-    if (map) {
-      map.flyTo([lat, lng], Math.max(map.getZoom(), FOCUS_ZOOM))
-    } else {
-      setMapCenter([lat, lng])
-      setMapZoom(FOCUS_ZOOM)
-    }
+    setMapCenter([lat, lng])
+    setMapZoom(17)
   }
 
   async function handleMarkerDragEnd(id: string, lat: number, lng: number) {
@@ -526,7 +512,6 @@ export default function DashboardPage() {
             poiResults={poiResults}
             onBoundsChange={setMapBounds}
             onPoiCreate={handlePoiCreateFromPopup}
-            onMapReady={(map) => { mapRef.current = map }}
           />
         </div>
 

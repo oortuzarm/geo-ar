@@ -295,32 +295,59 @@ export default function DashboardPage() {
   }
 
   async function handleSave() {
-    if (!project) return
+    // Belt-and-suspenders re-entry guard (isSaving disables the button in the UI)
+    if (!project || isSaving) return
     setIsSaving(true)
+    console.time('[Save] SAVE_PROJECT_TOTAL')
+
+    // Overall 8-second deadline for the entire save operation
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
+    const overallTimeout = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(
+        () => reject(new ApiError(408, 'Save timeout')),
+        8_000,
+      )
+    })
+
     try {
-      // Exclude status — publication is a separate immediate action via handleToggleStatus
-      const { status: _status, ...contentFields } = project
-      await geoProjectsApi.saveProject(project.id, contentFields)
-      const currentPoints = useGeoStore.getState().points
-      for (const pt of currentPoints) {
-        await geoPointsApi.savePoint(pt.id, pt)
-      }
+      await Promise.race([
+        (async () => {
+          const { status: _status, ...contentFields } = project
+
+          console.time('[Save] saveProject')
+          await geoProjectsApi.saveProject(project.id, contentFields)
+          console.timeEnd('[Save] saveProject')
+
+          const currentPoints = useGeoStore.getState().points
+          console.log(`[Save] Guardando ${currentPoints.length} punto(s) en paralelo`)
+
+          if (currentPoints.length > 0) {
+            console.time('[Save] savePoints (parallel)')
+            await Promise.all(currentPoints.map((pt) => geoPointsApi.savePoint(pt.id, pt)))
+            console.timeEnd('[Save] savePoints (parallel)')
+          }
+        })(),
+        overallTimeout,
+      ])
+
       setHasUnsavedChanges(false)
       addToast('Proyecto guardado correctamente', 'success')
     } catch (err) {
       if (err instanceof ApiError) {
-        console.error('[handleSave] ApiError', err.status, err.message)
+        console.error('[Save] ApiError', err.status, err.message)
         const detail = err.status === 408
-          ? 'Tiempo de espera agotado. Intenta nuevamente.'
+          ? 'El guardado está demorando más de lo esperado. Revisa tu conexión e intenta nuevamente.'
           : err.status >= 500
           ? `Error del servidor (${err.status}). Intenta nuevamente.`
           : `Error al guardar (${err.status}): ${err.message}`
         addToast(detail, 'error')
       } else {
-        console.error('[handleSave] Error inesperado:', err)
+        console.error('[Save] Error inesperado:', err)
         addToast('Error al guardar el proyecto', 'error')
       }
     } finally {
+      if (timeoutId) clearTimeout(timeoutId)
+      console.timeEnd('[Save] SAVE_PROJECT_TOTAL')
       setIsSaving(false)
     }
   }

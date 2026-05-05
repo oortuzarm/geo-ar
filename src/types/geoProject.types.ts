@@ -12,6 +12,16 @@ export interface GeoProject {
   geoPointIds: string[]
 }
 
+export interface GeoPointAvailability {
+  scheduleEnabled?: boolean
+  scheduleDays?: string[]     // ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+  scheduleStartTime?: string  // 'HH:MM'
+  scheduleEndTime?: string    // 'HH:MM'
+  quotaEnabled?: boolean
+  quotaLimit?: number
+  quotaUsed?: number          // reserved for future backend tracking
+}
+
 export interface GeoPoint {
   id: string
   geoProjectId: string
@@ -26,6 +36,7 @@ export interface GeoPoint {
   buttonText?: string
   active: boolean
   order: number
+  availability?: GeoPointAvailability
 }
 
 export type NominatimResult = {

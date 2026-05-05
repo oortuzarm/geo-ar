@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Input, Textarea } from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
-import type { GeoPoint } from '../../types'
+import type { GeoPoint, GeoPointAvailability } from '../../types'
 
 interface GeoPointFormProps {
   point: GeoPoint
@@ -13,6 +13,154 @@ interface GeoPointFormProps {
 
 const RADIUS_TOOLTIP =
   'El radio de activación define la distancia máxima desde el punto geolocalizado dentro de la cual esta experiencia puede activarse. Si el usuario está fuera de este radio, la experiencia no se mostrará.'
+
+const WEEK_DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+
+function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={[
+        'relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors',
+        enabled ? 'bg-brand-600' : 'bg-gray-700',
+      ].join(' ')}
+    >
+      <span className={[
+        'inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform',
+        enabled ? 'translate-x-4' : 'translate-x-1',
+      ].join(' ')} />
+    </button>
+  )
+}
+
+function AvailabilityRules({
+  availability,
+  onChange,
+}: {
+  availability: GeoPointAvailability | undefined
+  onChange: (updates: Partial<GeoPointAvailability>) => void
+}) {
+  const scheduleEnabled = availability?.scheduleEnabled ?? false
+  const scheduleDays    = availability?.scheduleDays ?? []
+  const startTime       = availability?.scheduleStartTime ?? ''
+  const endTime         = availability?.scheduleEndTime ?? ''
+  const quotaEnabled    = availability?.quotaEnabled ?? false
+  const quotaLimit      = availability?.quotaLimit ?? 1
+
+  function toggleDay(day: string) {
+    const next = scheduleDays.includes(day)
+      ? scheduleDays.filter((d) => d !== day)
+      : [...scheduleDays, day]
+    onChange({ scheduleDays: next })
+  }
+
+  return (
+    <div className="space-y-2">
+      <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+        Reglas de disponibilidad
+      </span>
+
+      {/* ── Schedule rule ── */}
+      <div className="bg-gray-800/50 border border-gray-800 rounded-lg p-3 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-300">Disponible por horario</span>
+          <Toggle
+            enabled={scheduleEnabled}
+            onToggle={() => onChange({ scheduleEnabled: !scheduleEnabled })}
+          />
+        </div>
+
+        {scheduleEnabled && (
+          <>
+            <div className="flex flex-wrap gap-1.5">
+              {WEEK_DAYS.map((day) => (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => toggleDay(day)}
+                  className={[
+                    'px-2 py-1 rounded text-xs font-medium transition-colors',
+                    scheduleDays.includes(day)
+                      ? 'bg-brand-600 text-white'
+                      : 'bg-gray-700 text-gray-400 hover:bg-gray-600',
+                  ].join(' ')}
+                >
+                  {day}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Desde</label>
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => onChange({ scheduleStartTime: e.target.value })}
+                  className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm
+                             text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500
+                             focus:border-transparent transition-colors"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Hasta</label>
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => onChange({ scheduleEndTime: e.target.value })}
+                  className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm
+                             text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500
+                             focus:border-transparent transition-colors"
+                />
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-500">
+              La experiencia solo estará disponible durante los días y horarios seleccionados.
+            </p>
+          </>
+        )}
+      </div>
+
+      {/* ── Quota rule ── */}
+      <div className="bg-gray-800/50 border border-gray-800 rounded-lg p-3 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-300">Disponible por cupos</span>
+          <Toggle
+            enabled={quotaEnabled}
+            onToggle={() => onChange({ quotaEnabled: !quotaEnabled })}
+          />
+        </div>
+
+        {quotaEnabled && (
+          <>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                Cupos disponibles
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={quotaLimit}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value)
+                  if (!isNaN(val) && val >= 1) onChange({ quotaLimit: val })
+                }}
+                className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm
+                           text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500
+                           focus:border-transparent transition-colors w-full"
+              />
+            </div>
+            <p className="text-xs text-gray-500">
+              La experiencia se desactivará cuando se alcance el límite de accesos definidos.
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function GeoPointForm({ point, onChange, onDelete, onClose, onSave }: GeoPointFormProps) {
   const fileRef = useRef<HTMLInputElement>(null)
@@ -96,6 +244,12 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           onChange={(e) => setLookiarUrl(e.target.value)}
           onBlur={() => onChange({ lookiarUrl })}
           hint="Agrega cualquier enlace: experiencias, promociones o contenido digital."
+        />
+
+        {/* ── Availability rules ─────────────────────────────────────────── */}
+        <AvailabilityRules
+          availability={point.availability}
+          onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
         />
 
         {/* Coordinates — committed immediately for live map updates */}

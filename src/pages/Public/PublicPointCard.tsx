@@ -1,7 +1,41 @@
 import { useState } from 'react'
 import { formatDistance } from '../../features/geolocation/haversine'
 import { formatDuration } from '../../features/routing/orsClient'
-import type { GeoPoint } from '../../types'
+import type { GeoPoint, GeoPointAvailability } from '../../types'
+
+const WEEK_DAYS_INDEX = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+
+function checkAvailability(availability: GeoPointAvailability | undefined): { available: boolean; reason?: string } {
+  if (!availability) return { available: true }
+
+  if (availability.scheduleEnabled) {
+    const now = new Date()
+    const todayLabel = WEEK_DAYS_INDEX[now.getDay()]
+    const days = availability.scheduleDays ?? []
+
+    if (days.length > 0 && !days.includes(todayLabel)) {
+      return { available: false, reason: 'Disponible en el horario configurado.' }
+    }
+
+    if (availability.scheduleStartTime && availability.scheduleEndTime) {
+      const hh = String(now.getHours()).padStart(2, '0')
+      const mm = String(now.getMinutes()).padStart(2, '0')
+      const current = `${hh}:${mm}`
+      if (current < availability.scheduleStartTime || current > availability.scheduleEndTime) {
+        return { available: false, reason: 'Disponible en el horario configurado.' }
+      }
+    }
+  }
+
+  if (availability.quotaEnabled && availability.quotaLimit !== undefined) {
+    const used = availability.quotaUsed ?? 0
+    if (used >= availability.quotaLimit) {
+      return { available: false, reason: 'Cupos agotados.' }
+    }
+  }
+
+  return { available: true }
+}
 
 export type RouteStatus = 'idle' | 'loading' | 'ok' | 'error' | 'no-location'
 
@@ -47,6 +81,9 @@ export default function PublicPointCard({
     effectiveDistance !== null
       ? Math.max(0, effectiveDistance - point.activationRadius)
       : null
+
+  const availabilityCheck = checkAvailability(point.availability)
+  const canActivate = withinRadius && availabilityCheck.available
 
   return (
     <div
@@ -151,8 +188,15 @@ export default function PublicPointCard({
               </p>
             )}
 
+            {/* Availability rule message (within radius but rules block activation) */}
+            {withinRadius && !availabilityCheck.available && availabilityCheck.reason && (
+              <p className="text-xs text-yellow-400 font-medium">
+                {availabilityCheck.reason}
+              </p>
+            )}
+
             {/* Activation button */}
-            {withinRadius ? (
+            {canActivate ? (
               <button
                 onClick={(e) => { e.stopPropagation(); onActivate() }}
                 className="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold

@@ -67,19 +67,22 @@ export default function PublicPointCard({
   const [descExpanded, setDescExpanded] = useState(false)
   const isLongDesc = (point.description?.length ?? 0) > DESCRIPTION_LIMIT
 
-  // Use ORS distance when available; fall back to Haversine
-  const effectiveDistance =
+  // Radius check always uses straight-line Haversine — ORS route distance is
+  // inherently longer (it follows streets) and would disable the button for
+  // users who are physically inside the activation zone.
+  const withinRadius = distance !== null && distance <= point.activationRadius
+
+  // For display purposes only: show ORS walking distance when available,
+  // so the "Te faltan X metros" message reflects the real walking route.
+  const displayDistance =
     routeStatus === 'ok' && walkingDistanceMeters !== undefined
       ? walkingDistanceMeters
       : distance
 
-  const withinRadius =
-    effectiveDistance !== null && effectiveDistance <= point.activationRadius
-
   // How far the user still needs to walk to reach the activation perimeter
   const distanceToActivation =
-    effectiveDistance !== null
-      ? Math.max(0, effectiveDistance - point.activationRadius)
+    displayDistance !== null
+      ? Math.max(0, displayDistance - point.activationRadius)
       : null
 
   const availabilityCheck = checkAvailability(point.availability)

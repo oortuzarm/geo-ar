@@ -10,6 +10,7 @@ import GeoPointsList from './GeoPointsList'
 import GeoPointForm from './GeoPointForm'
 import { useGeoStore } from '../../store/geoStore'
 import { geoProjectsApi, geoPointsApi } from '../../services'
+import { ApiError } from '../../lib/apiFetch'
 import { getCurrentPosition } from '../../hooks/useGeolocation'
 import type { GeoPoint, MapBounds, PoiSearchResult } from '../../types'
 
@@ -306,8 +307,19 @@ export default function DashboardPage() {
       }
       setHasUnsavedChanges(false)
       addToast('Proyecto guardado correctamente', 'success')
-    } catch {
-      addToast('Error al guardar el proyecto', 'error')
+    } catch (err) {
+      if (err instanceof ApiError) {
+        console.error('[handleSave] ApiError', err.status, err.message)
+        const detail = err.status === 408
+          ? 'Tiempo de espera agotado. Intenta nuevamente.'
+          : err.status >= 500
+          ? `Error del servidor (${err.status}). Intenta nuevamente.`
+          : `Error al guardar (${err.status}): ${err.message}`
+        addToast(detail, 'error')
+      } else {
+        console.error('[handleSave] Error inesperado:', err)
+        addToast('Error al guardar el proyecto', 'error')
+      }
     } finally {
       setIsSaving(false)
     }

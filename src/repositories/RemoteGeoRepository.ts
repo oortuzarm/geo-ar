@@ -53,9 +53,11 @@ export class RemoteGeoRepository implements IGeoRepository {
   }
 
   saveProject(id: string, updates: Partial<GeoProject>): Promise<GeoProject> {
+    const hasImage = typeof updates.coverImage === 'string' && updates.coverImage.startsWith('data:')
     return apiFetch<GeoProject>(this.url(`/api/geo_projects/${id}`), {
       method: 'PUT',
       body: JSON.stringify(updates),
+      timeout: hasImage ? 30_000 : 15_000,
     })
   }
 
@@ -88,9 +90,12 @@ export class RemoteGeoRepository implements IGeoRepository {
   }
 
   savePoint(id: string, updates: Partial<GeoPoint>): Promise<GeoPoint> {
+    // Images are base64 strings that can be several hundred KB; allow extra time.
+    const hasImage = typeof updates.image === 'string' && updates.image.startsWith('data:')
     return apiFetch<GeoPoint>(this.url(`/api/geo_points/${id}`), {
       method: 'PUT',
       body: JSON.stringify(updates),
+      timeout: hasImage ? 30_000 : 15_000,
     })
   }
 

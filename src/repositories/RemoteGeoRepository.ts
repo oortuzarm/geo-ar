@@ -61,6 +61,17 @@ export class RemoteGeoRepository implements IGeoRepository {
     })
   }
 
+  syncProject(id: string, project: Partial<GeoProject>, points: GeoPoint[]): Promise<GeoProject> {
+    const hasImage =
+      (typeof project.coverImage === 'string' && project.coverImage.startsWith('data:')) ||
+      points.some((p) => typeof p.image === 'string' && p.image.startsWith('data:'))
+    return apiFetch<GeoProject>(this.url(`/api/geo_projects/${id}/sync`), {
+      method: 'PATCH',
+      body: JSON.stringify({ ...project, geoPoints: points }),
+      timeout: hasImage ? 45_000 : 20_000,
+    })
+  }
+
   async removeProject(id: string): Promise<void> {
     await apiFetch<void>(this.url(`/api/geo_projects/${id}`), { method: 'DELETE' })
   }

@@ -295,17 +295,15 @@ export default function DashboardPage() {
   }
 
   async function handleSave() {
-    // Belt-and-suspenders re-entry guard (isSaving disables the button in the UI)
     if (!project || isSaving) return
     setIsSaving(true)
     console.time('[Save] SAVE_PROJECT_TOTAL')
 
-    // Overall 8-second deadline for the entire save operation
     let timeoutId: ReturnType<typeof setTimeout> | null = null
     const overallTimeout = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(
         () => reject(new ApiError(408, 'Save timeout')),
-        8_000,
+        12_000,
       )
     })
 
@@ -313,19 +311,12 @@ export default function DashboardPage() {
       await Promise.race([
         (async () => {
           const { status: _status, ...contentFields } = project
-
-          console.time('[Save] saveProject')
-          await geoProjectsApi.saveProject(project.id, contentFields)
-          console.timeEnd('[Save] saveProject')
-
           const currentPoints = useGeoStore.getState().points
-          console.log(`[Save] Guardando ${currentPoints.length} punto(s) en paralelo`)
 
-          if (currentPoints.length > 0) {
-            console.time('[Save] savePoints (parallel)')
-            await Promise.all(currentPoints.map((pt) => geoPointsApi.savePoint(pt.id, pt)))
-            console.timeEnd('[Save] savePoints (parallel)')
-          }
+          console.log(`[Save] SAVE_PROJECT_BULK_REQUEST — puntos enviados: ${currentPoints.length}`)
+          console.time('[Save] syncProject')
+          await geoProjectsApi.syncProject(project.id, contentFields, currentPoints)
+          console.timeEnd('[Save] syncProject')
         })(),
         overallTimeout,
       ])

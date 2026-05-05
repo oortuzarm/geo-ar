@@ -16,4 +16,10 @@ export class LocalGeoRepository implements IGeoRepository {
   createPoint(data: Partial<GeoPoint> & { geoProjectId: string }) { return pointsStore.createPoint(data) }
   savePoint(id: string, updates: Partial<GeoPoint>) { return pointsStore.updatePoint(id, updates) }
   removePoint(id: string) { return pointsStore.deletePoint(id) }
+
+  async syncProject(id: string, project: Partial<GeoProject>, points: GeoPoint[]): Promise<GeoProject> {
+    const updated = await projectsStore.updateProject(id, project)
+    await Promise.all(points.map((pt) => pointsStore.updatePoint(pt.id, pt)))
+    return updated
+  }
 }

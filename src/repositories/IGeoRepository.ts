@@ -6,6 +6,7 @@ export interface IGeoRepository {
   fetchProject(id: string): Promise<GeoProject | undefined>
   createProject(data: Partial<GeoProject>): Promise<GeoProject>
   saveProject(id: string, updates: Partial<GeoProject>): Promise<GeoProject>
+  syncProject(id: string, project: Partial<GeoProject>, points: GeoPoint[]): Promise<GeoProject>
   removeProject(id: string): Promise<void>
 
   // Public (no auth — only published projects)

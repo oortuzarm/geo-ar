@@ -14,7 +14,7 @@
  *   GET    /api/public/geo-projects/:id  ← sin autenticación
  */
 
-import type { GeoProject } from '../types'
+import type { GeoProject, GeoPoint } from '../types'
 import { repository } from '../repositories'
 
 export function listProjects(): Promise<GeoProject[]> {
@@ -35,6 +35,10 @@ export function createProject(data: Partial<GeoProject> = {}): Promise<GeoProjec
 
 export function saveProject(id: string, updates: Partial<GeoProject>): Promise<GeoProject> {
   return repository.saveProject(id, updates)
+}
+
+export function syncProject(id: string, project: Partial<GeoProject>, points: GeoPoint[]): Promise<GeoProject> {
+  return repository.syncProject(id, project, points)
 }
 
 export function removeProject(id: string): Promise<void> {

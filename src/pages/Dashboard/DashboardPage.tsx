@@ -9,6 +9,7 @@ import ToastContainer from '../../components/ui/Toast'
 import GeoPointsList from './GeoPointsList'
 import GeoPointForm from './GeoPointForm'
 import PreviewQRModal from './PreviewQRModal'
+import ProjectInfoPanel from './ProjectInfoPanel'
 import { useGeoStore } from '../../store/geoStore'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
@@ -41,6 +42,8 @@ export default function DashboardPage() {
   const lastSavedImagesRef = useRef<{ coverImage?: string; points: Record<string, string | undefined> } | null>(null)
   const [isPublishing, setIsPublishing] = useState(false)
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
+  const [leftTab, setLeftTab] = useState<'points' | 'project'>('points')
+  const [projectInfoDrawerOpen, setProjectInfoDrawerOpen] = useState(false)
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [poiResults, setPoiResults] = useState<PoiSearchResult[]>([])
 
@@ -325,9 +328,10 @@ export default function DashboardPage() {
       const snapshot = lastSavedImagesRef.current
 
       // Strip coverImage if unchanged since last save (JSON.stringify omits undefined → backend preserves column).
+      // When the user explicitly clears the image (undefined), send null so the backend sets the column to NULL.
       const coverImageChanged = contentFields.coverImage !== snapshot?.coverImage
       const projectPayload = coverImageChanged
-        ? contentFields
+        ? { ...contentFields, coverImage: contentFields.coverImage ?? null as unknown as string }
         : { ...contentFields, coverImage: undefined }
 
       // Strip each point's image if unchanged since last save.
@@ -509,16 +513,46 @@ export default function DashboardPage() {
 
         {/* Left sidebar: desktop only */}
         <aside className="hidden lg:flex w-64 flex-shrink-0 border-r border-gray-800 bg-gray-900 flex-col overflow-hidden">
-          <GeoPointsList
-            points={points}
-            selectedId={selectedPointId}
-            onSelect={handleSelectPoint}
-            onAdd={handleAddPoint}
-            onToggleActive={handleToggleActive}
-            onBulkActivate={handleBulkActivate}
-            onBulkDeactivate={handleBulkDeactivate}
-            onBulkDelete={handleBulkDelete}
-          />
+          {/* Tab headers */}
+          <div className="flex flex-shrink-0 border-b border-gray-800">
+            <button
+              onClick={() => setLeftTab('points')}
+              className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+                leftTab === 'points'
+                  ? 'text-gray-100 border-b-2 border-brand-500 -mb-px'
+                  : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              Puntos GPS
+            </button>
+            <button
+              onClick={() => setLeftTab('project')}
+              className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+                leftTab === 'project'
+                  ? 'text-gray-100 border-b-2 border-brand-500 -mb-px'
+                  : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              Proyecto
+            </button>
+          </div>
+          {leftTab === 'points' ? (
+            <GeoPointsList
+              points={points}
+              selectedId={selectedPointId}
+              onSelect={handleSelectPoint}
+              onAdd={handleAddPoint}
+              onToggleActive={handleToggleActive}
+              onBulkActivate={handleBulkActivate}
+              onBulkDeactivate={handleBulkDeactivate}
+              onBulkDelete={handleBulkDelete}
+            />
+          ) : (
+            <ProjectInfoPanel
+              onClose={() => setLeftTab('points')}
+              onSave={handleSave}
+            />
+          )}
         </aside>
 
         {/* Map area */}
@@ -555,15 +589,23 @@ export default function DashboardPage() {
             )}
           </button>
 
-          {/* Mobile: open list drawer */}
-          <button
-            className="lg:hidden absolute bottom-8 right-4 z-[1000] bg-gray-900/95 border border-gray-700
-                       rounded-lg px-3 py-2 text-sm font-medium text-gray-300 shadow-lg
-                       hover:bg-gray-800 transition-colors"
-            onClick={() => setListDrawerOpen(true)}
-          >
-            Lista · {points.length}
-          </button>
+          {/* Mobile: Info + List buttons */}
+          <div className="lg:hidden absolute bottom-8 right-4 z-[1000] flex gap-2">
+            <button
+              className="bg-gray-900/95 border border-gray-700 rounded-lg px-3 py-2
+                         text-sm font-medium text-gray-300 shadow-lg hover:bg-gray-800 transition-colors"
+              onClick={() => setProjectInfoDrawerOpen(true)}
+            >
+              Info
+            </button>
+            <button
+              className="bg-gray-900/95 border border-gray-700 rounded-lg px-3 py-2
+                         text-sm font-medium text-gray-300 shadow-lg hover:bg-gray-800 transition-colors"
+              onClick={() => setListDrawerOpen(true)}
+            >
+              Lista · {points.length}
+            </button>
+          </div>
 
           {points.length === 0 && (
             <div className="absolute bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-[1000]
@@ -636,6 +678,23 @@ export default function DashboardPage() {
               onBulkActivate={handleBulkActivate}
               onBulkDeactivate={handleBulkDeactivate}
               onBulkDelete={handleBulkDelete}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Mobile: project info bottom sheet ── */}
+      {projectInfoDrawerOpen && (
+        <div className="lg:hidden fixed inset-0 z-[3000]">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setProjectInfoDrawerOpen(false)}
+          />
+          <div className="absolute inset-x-0 bottom-0 h-[88vh] bg-gray-900 rounded-t-2xl
+                         border-t border-gray-800 flex flex-col overflow-hidden">
+            <ProjectInfoPanel
+              onClose={() => setProjectInfoDrawerOpen(false)}
+              onSave={handleSave}
             />
           </div>
         </div>

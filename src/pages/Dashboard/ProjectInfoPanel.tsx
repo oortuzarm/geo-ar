@@ -181,21 +181,6 @@ export default function ProjectInfoPanel({ onClose, onSave }: ProjectInfoPanelPr
           onChange={(e) => handleField('description', e.target.value)}
           rows={4}
         />
-
-        {/* Status */}
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">Estado</span>
-          <select
-            value={project.status}
-            onChange={(e) => handleField('status', e.target.value as GeoProject['status'])}
-            className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm text-gray-100
-                       focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="draft">Borrador</option>
-            <option value="active">Activo</option>
-            <option value="inactive">Inactivo</option>
-          </select>
-        </div>
       </div>
 
       {/* Save button */}

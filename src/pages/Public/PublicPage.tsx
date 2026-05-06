@@ -758,7 +758,7 @@ export default function PublicPage() {
             </div>
 
             {/* Mini summary (always visible, 40px) */}
-            <div className="flex items-center gap-3 px-4 pb-3">
+            <div className="flex items-start gap-3 px-4 pb-3">
               {/* Mini cover — project identity; hidden when a point is selected */}
               {project.coverImage && !selectedPoint && (
                 <img
@@ -769,7 +769,7 @@ export default function PublicPage() {
                 />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-100 truncate leading-snug">
+                <p className="text-sm font-semibold text-gray-100 line-clamp-2 leading-snug">
                   {selectedPoint ? selectedPoint.name : project.title}
                 </p>
                 <p className="text-xs text-gray-400 leading-snug mt-0.5">
@@ -780,7 +780,7 @@ export default function PublicPage() {
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); void handleShare() }}
-                className="flex-shrink-0 w-8 h-8 flex items-center justify-center
+                className="flex-shrink-0 mt-0.5 w-8 h-8 flex items-center justify-center
                            rounded-full text-gray-400 hover:text-gray-200
                            hover:bg-gray-800/80 active:scale-90 transition-all duration-150"
                 title="Compartir"

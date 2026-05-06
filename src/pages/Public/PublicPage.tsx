@@ -197,8 +197,8 @@ type SheetState = 'peek' | 'mid' | 'expanded'
 // peek: 8rem content + safe-area so the handle clears the iPhone home indicator.
 // env(safe-area-inset-bottom, 0px) evaluates to ~34px on Face ID iPhones, 0 elsewhere.
 const SHEET_TRANSLATE: Record<SheetState, string> = {
-  peek:     'translateY(calc(90vh - 8rem - env(safe-area-inset-bottom, 0px)))',
-  mid:      'translateY(35vh)',
+  peek:     'translateY(calc(90dvh - 8rem - env(safe-area-inset-bottom, 0px)))',
+  mid:      'translateY(35dvh)',
   expanded: 'translateY(0px)',
 }
 
@@ -662,7 +662,7 @@ export default function PublicPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="h-screen bg-gray-950 overflow-hidden relative md:flex md:flex-col">
+    <div className="bg-gray-950 overflow-hidden relative md:flex md:flex-col" style={{ height: '100dvh' }}>
 
       {/* ── MAP ─────────────────────────────────────────────────────────────
           Mobile: absolute inset-0 → fills full viewport behind the sheet.
@@ -733,7 +733,7 @@ export default function PublicPage() {
       <div
         className="md:hidden absolute inset-x-0 bottom-0 z-[1000]"
         style={{
-          height: '90vh',
+          height: '90dvh',
           transform: SHEET_TRANSLATE[sheetState],
           transition: 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
           willChange: 'transform',
@@ -786,7 +786,7 @@ export default function PublicPage() {
 
           {/* Scrollable content */}
           <div
-            className="flex-1 overflow-y-auto overscroll-contain"
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
             style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
           >
             {/* Project cover + header */}
@@ -809,7 +809,7 @@ export default function PublicPage() {
             {/* Points — padding-bottom clears Safari bottom bar + home indicator */}
             <div
               className="space-y-2 px-4"
-              style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
+              style={{ paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}
             >
               {renderPoints(mobileCardRefs)}
             </div>

@@ -200,7 +200,7 @@ type SheetState = 'peek' | 'mid' | 'expanded'
 const SHEET_HEIGHT: Record<SheetState, string> = {
   peek:     'calc(8rem + env(safe-area-inset-bottom, 0px))',
   mid:      '45dvh',
-  expanded: '90dvh',
+  expanded: '80dvh',
 }
 
 export default function PublicPage() {

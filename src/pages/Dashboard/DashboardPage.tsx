@@ -35,6 +35,9 @@ export default function DashboardPage() {
   const isSavingRef   = useRef(false)
   // True when a save was requested while one was already in progress.
   const pendingSaveRef = useRef(false)
+  // Tracks which base64 images were included in the last successful save.
+  // Used to skip re-sending unchanged images and keep payloads small.
+  const lastSavedImagesRef = useRef<{ coverImage?: string; points: Record<string, string | undefined> } | null>(null)
   const [isPublishing, setIsPublishing] = useState(false)
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [poiResults, setPoiResults] = useState<PoiSearchResult[]>([])
@@ -317,11 +320,39 @@ export default function DashboardPage() {
     try {
       const currentPoints = useGeoStore.getState().points
       const { status: _status, ...contentFields } = currentProject
+      const snapshot = lastSavedImagesRef.current
 
-      console.log(`[Save] SAVE_PROJECT_BULK_REQUEST — puntos enviados: ${currentPoints.length}`)
+      // Strip coverImage if unchanged since last save (JSON.stringify omits undefined → backend preserves column).
+      const coverImageChanged = contentFields.coverImage !== snapshot?.coverImage
+      const projectPayload = coverImageChanged
+        ? contentFields
+        : { ...contentFields, coverImage: undefined }
+
+      // Strip each point's image if unchanged since last save.
+      let imagesSkipped = 0
+      const pointsPayload = currentPoints.map((pt) => {
+        const pointImageChanged = pt.image !== snapshot?.points[pt.id]
+        if (!pointImageChanged && pt.image) imagesSkipped++
+        return pointImageChanged ? pt : { ...pt, image: undefined }
+      })
+
+      const payloadJson = JSON.stringify({ ...projectPayload, geoPoints: pointsPayload })
+      const payloadKb   = (payloadJson.length / 1024).toFixed(1)
+      const imagesInPayload = (coverImageChanged && projectPayload.coverImage ? 1 : 0)
+        + pointsPayload.filter((p) => p.image?.startsWith('data:')).length
+      console.log(
+        `[Save] payload=${payloadKb} KB | puntos=${currentPoints.length} | imágenes en payload=${imagesInPayload} | imágenes omitidas=${imagesSkipped}`,
+      )
+
       console.time('[Save] syncProject')
-      await geoProjectsApi.syncProject(currentProject.id, contentFields, currentPoints)
+      await geoProjectsApi.syncProject(currentProject.id, projectPayload, pointsPayload)
       console.timeEnd('[Save] syncProject')
+
+      // Record which images were sent so future saves can skip unchanged ones.
+      lastSavedImagesRef.current = {
+        coverImage: currentProject.coverImage,
+        points: Object.fromEntries(currentPoints.map((p) => [p.id, p.image])),
+      }
 
       setHasUnsavedChanges(false)
       addToast('Proyecto guardado correctamente', 'success')

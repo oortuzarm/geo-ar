@@ -482,20 +482,39 @@ export default function PublicPage() {
 
     setActivatingPointId(point.id)
     try {
-      const result = await geoPointsApi.requestPointAccess(
+      const raw = await geoPointsApi.requestPointAccess(
         id!,
         point.id,
         userLocation.latitude,
         userLocation.longitude,
       )
-      console.log('[Access] ✓ Respuesta exitosa:', result)
+      // Log the full response to surface unexpected field names.
+      console.log('[Access] ✓ Respuesta completa del backend:', JSON.stringify(raw))
 
-      if (win) {
-        win.location.href = result.url
+      // Normalise: backend returns { url } but check common alternatives.
+      const r = raw as Record<string, unknown>
+      const resolvedUrl =
+        (typeof r.url          === 'string' && r.url)          ||
+        (typeof r.redirect_url === 'string' && r.redirect_url) ||
+        (typeof r.target_url   === 'string' && r.target_url)   ||
+        (typeof r.contentUrl   === 'string' && r.contentUrl)   ||
+        (typeof r.content_url  === 'string' && r.content_url)  ||
+        ''
+
+      console.log('[Access] URL resuelta:', resolvedUrl || '(vacía)')
+
+      if (!resolvedUrl || !resolvedUrl.startsWith('http')) {
+        win?.close()
+        const msg = 'No se encontró una URL válida para esta experiencia.'
+        console.warn('[Access] URL inválida o vacía — no se redirige. Campo "url" recibido:', r.url)
+        setAccessError({ pointId: point.id, message: msg })
+        addToast(msg, 'error')
+      } else if (win) {
+        win.location.href = resolvedUrl
       } else {
         // Popup blocked: show a tappable fallback link in the card.
         console.warn('[Access] Popup bloqueado por el navegador — mostrando link de fallback')
-        setAccessError({ pointId: point.id, message: 'Tap para abrir la experiencia', fallbackUrl: result.url })
+        setAccessError({ pointId: point.id, message: 'Tap para abrir la experiencia', fallbackUrl: resolvedUrl })
       }
     } catch (err) {
       win?.close()

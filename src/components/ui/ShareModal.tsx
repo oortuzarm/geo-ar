@@ -70,6 +70,7 @@ export default function ShareModal({ url, title, isOpen, onClose }: ShareModalPr
       label: 'Mail',
       href: `mailto:?subject=${encodedSubject}&body=${encodedBody}`,
       bg: 'bg-gray-600',
+      mailto: true,
       icon: (
         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
@@ -103,20 +104,31 @@ export default function ShareModal({ url, title, isOpen, onClose }: ShareModalPr
 
         {/* Social icons — large circles, no labels */}
         <div className="flex items-center justify-around px-6 pt-7 pb-5">
-          {socials.map((s) => (
-            <a
-              key={s.label}
-              href={s.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={s.label}
-              className={`w-14 h-14 rounded-full flex items-center justify-center
-                          text-white transition-opacity hover:opacity-80 active:scale-95
-                          transition-transform ${s.bg}`}
-            >
-              {s.icon}
-            </a>
-          ))}
+          {socials.map((s) =>
+            s.mailto ? (
+              <button
+                key={s.label}
+                title={s.label}
+                onClick={() => { window.location.href = s.href }}
+                className={`w-14 h-14 rounded-full flex items-center justify-center
+                            text-white hover:opacity-80 active:scale-95 transition-all ${s.bg}`}
+              >
+                {s.icon}
+              </button>
+            ) : (
+              <a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={s.label}
+                className={`w-14 h-14 rounded-full flex items-center justify-center
+                            text-white hover:opacity-80 active:scale-95 transition-all ${s.bg}`}
+              >
+                {s.icon}
+              </a>
+            )
+          )}
         </div>
 
         {/* URL + Copy */}

@@ -179,18 +179,27 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
   const [description, setDescription] = useState(point.description ?? '')
   const [buttonText,  setButtonText]  = useState(point.buttonText ?? '')
 
-  // ── Auto-address via reverse geocoding ───────────────────────────────────
-  const [address,        setAddress]        = useState<string | null>(null)
+  // ── Address: auto-geocoded + optional manual override ────────────────────
+  // addressCustom: what's in the input (persisted via point.instructions)
+  // addressAuto:   live reverse-geocoded string (never persisted directly)
+  // addressEditedRef: true when user has manually typed; suppresses auto-fill
+  const [addressCustom,  setAddressCustom]  = useState(point.instructions ?? '')
+  const [addressAuto,    setAddressAuto]    = useState<string | null>(null)
   const [addressLoading, setAddressLoading] = useState(false)
-  const geoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const addressEditedRef = useRef(!!point.instructions)
+  const geoTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (geoTimerRef.current) clearTimeout(geoTimerRef.current)
     setAddressLoading(true)
     geoTimerRef.current = setTimeout(() => {
       reverseGeocode(point.latitude, point.longitude)
-        .then(setAddress)
-        .catch(() => setAddress(null))
+        .then((addr) => {
+          setAddressAuto(addr)
+          // Only auto-fill the input when the user hasn't manually edited
+          if (!addressEditedRef.current) setAddressCustom(addr)
+        })
+        .catch(() => setAddressAuto(null))
         .finally(() => setAddressLoading(false))
     }, 800)
     return () => { if (geoTimerRef.current) clearTimeout(geoTimerRef.current) }
@@ -202,8 +211,9 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
     onChange({
       name,
       lookiarUrl,
-      description: description || undefined,
-      buttonText:  buttonText  || undefined,
+      description:  description    || undefined,
+      instructions: addressCustom  || undefined,
+      buttonText:   buttonText     || undefined,
     })
   }
 
@@ -393,28 +403,33 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           </p>
         </div>
 
-        {/* Auto-address preview — read-only, derived from coordinates */}
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Dirección del punto
-          </span>
-          <div className="flex items-center gap-2 min-h-[2rem]">
-            <svg className="h-3.5 w-3.5 text-gray-500 flex-shrink-0" fill="none"
-              stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            {addressLoading ? (
-              <span className="text-xs text-gray-500 italic">Obteniendo dirección…</span>
-            ) : address ? (
-              <span className="text-xs text-gray-300">{address}</span>
-            ) : (
-              <span className="text-xs text-gray-600 italic">Dirección no disponible</span>
-            )}
+        {/* Address: auto-filled from reverse geocoding, editable manually */}
+        {addressLoading && !addressCustom ? (
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              Dirección del punto
+            </span>
+            <div className="h-9 bg-gray-800/50 border border-gray-700 rounded-md animate-pulse" />
           </div>
-        </div>
+        ) : (
+          <Input
+            label="Dirección del punto"
+            placeholder={addressAuto ?? 'Ej: Entrada principal'}
+            value={addressCustom}
+            onChange={(e) => {
+              const val = e.target.value
+              // Empty → reset to auto-fill mode so next geocode will refill
+              addressEditedRef.current = val.length > 0
+              setAddressCustom(val)
+            }}
+            onBlur={() => onChange({ instructions: addressCustom || undefined })}
+            hint={
+              addressAuto && addressCustom && addressCustom !== addressAuto
+                ? `Auto: ${addressAuto}`
+                : undefined
+            }
+          />
+        )}
 
         <Input
           label="Texto del botón"

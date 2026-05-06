@@ -676,7 +676,7 @@ export default function PublicPage() {
           walkingDurationSeconds={
             pt.id === selectedPointId && routeResult ? routeResult.durationSeconds : undefined
           }
-          address={addresses[pt.id]}
+          address={pt.instructions ?? addresses[pt.id]}
         />
       </div>
     ))

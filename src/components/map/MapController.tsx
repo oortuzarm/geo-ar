@@ -39,12 +39,12 @@ export default function MapController({ flyKey, flyTarget }: MapControllerProps)
     if (panOffsetPx > 0) {
       // Point-selection case: don't zoom out if already close enough.
       const targetZoom = Math.max(map.getZoom(), zoom)
-      // Project the target LatLng into pixel space at targetZoom, shift it
-      // upward by panOffsetPx (= half the sheet height), then unproject back.
-      // flyTo then centers on that shifted position, landing the real point
-      // at the vertical center of the visible map area above the sheet.
+      // In Leaflet's world-pixel space, Y increases southward.
+      // We want the real point to appear panOffsetPx px ABOVE the map center.
+      // So the flyTo target must be panOffsetPx px SOUTH of the real point (add Y).
+      // flyTo centers that southern target → real point lands above center, clear of the sheet.
       const px = map.project([lat, lng], targetZoom)
-      const shifted = px.subtract(L.point(0, panOffsetPx))
+      const shifted = px.add(L.point(0, panOffsetPx))
       const adjustedLatLng = map.unproject(shifted, targetZoom)
       map.flyTo(adjustedLatLng, targetZoom, { animate: true, duration: 0.8 })
     } else {

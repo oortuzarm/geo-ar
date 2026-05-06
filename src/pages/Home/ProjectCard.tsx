@@ -6,6 +6,7 @@ import Spinner from '../../components/ui/Spinner'
 import { uploadImage } from '../../lib/uploadImage'
 import { fetchProjectAnalytics } from '../../lib/analytics'
 import type { ProjectAnalytics } from '../../lib/analytics'
+import MetricsModal from './MetricsModal'
 import type { GeoProject } from '../../types'
 
 const MAX_NAME_LENGTH = 60
@@ -42,6 +43,7 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
   const [coverError, setCoverError] = useState<string | null>(null)
   const [togglingStatus, setTogglingStatus] = useState(false)
   const [analytics, setAnalytics] = useState<ProjectAnalytics | null>(null)
+  const [metricsOpen, setMetricsOpen] = useState(false)
 
   useEffect(() => {
     fetchProjectAnalytics(project.id)
@@ -226,8 +228,8 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
         )}
       </div>
 
-      {/* Actions */}
-      <div className="px-4 pb-4 flex gap-2">
+      {/* Actions — row 1: primary actions */}
+      <div className="px-4 pb-1 flex gap-2">
         <Button
           variant="secondary"
           size="sm"
@@ -237,7 +239,24 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
           Editar
         </Button>
 
-        {/* Publish / unpublish — persists immediately */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex-1 text-gray-400 hover:text-brand-300"
+          onClick={() => setMetricsOpen(true)}
+          title="Ver métricas"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          Métricas
+        </Button>
+      </div>
+
+      {/* Actions — row 2: icon-only secondary actions */}
+      <div className="px-4 pb-4 flex gap-1 pt-1">
+        {/* Publish / unpublish */}
         <Button
           variant="ghost"
           size="sm"
@@ -272,6 +291,7 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
               d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>
         </Button>
+
         <Button
           variant="ghost"
           size="sm"
@@ -284,6 +304,13 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
           </svg>
         </Button>
       </div>
+
+      <MetricsModal
+        projectId={project.id}
+        projectTitle={project.title}
+        isOpen={metricsOpen}
+        onClose={() => setMetricsOpen(false)}
+      />
     </div>
   )
 }

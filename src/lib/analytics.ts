@@ -71,6 +71,18 @@ export interface ProjectAnalytics {
   conversion: number
 }
 
+export interface PointAnalytics {
+  pointId: string
+  pointName: string
+  radiusEntries: number
+  clicks: number
+  conversion: number
+}
+
 export function fetchProjectAnalytics(projectId: string): Promise<ProjectAnalytics> {
   return apiFetch<ProjectAnalytics>(`${API_BASE}/api/geo_projects/${projectId}/analytics`)
+}
+
+export function fetchProjectAnalyticsByPoint(projectId: string): Promise<PointAnalytics[]> {
+  return apiFetch<PointAnalytics[]>(`${API_BASE}/api/geo_projects/${projectId}/analytics_by_point`)
 }

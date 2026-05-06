@@ -334,12 +334,17 @@ export default function DashboardPage() {
         ? { ...contentFields, coverImage: contentFields.coverImage ?? null as unknown as string }
         : { ...contentFields, coverImage: undefined }
 
-      // Strip each point's image if unchanged since last save.
+      // Build point payloads, omitting the image key when it hasn't changed so the
+      // backend's upsert_all won't overwrite an existing stored image with null.
+      // When the image WAS changed (including removed), send the new value explicitly —
+      // null for "removed" so the backend receives the key and clears the column.
       let imagesSkipped = 0
       const pointsPayload = currentPoints.map((pt) => {
         const pointImageChanged = pt.image !== snapshot?.points[pt.id]
         if (!pointImageChanged && pt.image) imagesSkipped++
-        return pointImageChanged ? pt : { ...pt, image: undefined }
+        return pointImageChanged
+          ? { ...pt, image: pt.image ?? (null as unknown as string) }
+          : { ...pt, image: undefined }
       })
 
       const payloadJson = JSON.stringify({ ...projectPayload, geoPoints: pointsPayload })

@@ -165,6 +165,7 @@ function AvailabilityRules({
 export default function GeoPointForm({ point, onChange, onDelete, onClose, onSave }: GeoPointFormProps) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [showTooltip, setShowTooltip] = useState(false)
+  const [imageError, setImageError] = useState<string | null>(null)
 
   // ── Local state for text fields ───────────────────────────────────────────
   // Decoupled from the parent store so every keystroke doesn't trigger a
@@ -196,6 +197,12 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    e.target.value = ''
+    setImageError(null)
+    if (file.size > 256 * 1024) {
+      setImageError('La imagen supera los 256 KB. Comprimila antes de subirla.')
+      return
+    }
     const reader = new FileReader()
     reader.onload = () => onChange({ image: reader.result as string })
     reader.readAsDataURL(file)
@@ -336,7 +343,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
                 <img src={point.image} alt="Point" className="w-full h-24 object-cover rounded" />
                 <button
                   className="absolute top-1 right-1 bg-black/60 text-white rounded p-0.5 text-xs"
-                  onClick={(e) => { e.stopPropagation(); onChange({ image: undefined }) }}
+                  onClick={(e) => { e.stopPropagation(); setImageError(null); onChange({ image: undefined }) }}
                 >✕</button>
               </div>
             ) : (
@@ -346,6 +353,9 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
               </>
             )}
           </div>
+          {imageError && (
+            <p className="text-xs text-red-400">{imageError}</p>
+          )}
           <input ref={fileRef} type="file" accept=".jpg,.jpeg,.png" className="hidden" onChange={handleImageUpload} />
         </div>
 

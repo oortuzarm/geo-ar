@@ -1,11 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { geoProjectsApi } from '../../services'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
 import { uploadImage } from '../../lib/uploadImage'
-import { fetchProjectAnalytics } from '../../lib/analytics'
-import type { ProjectAnalytics } from '../../lib/analytics'
 import MetricsModal from './MetricsModal'
 import type { GeoProject } from '../../types'
 
@@ -42,14 +40,7 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
   const [uploadingCover, setUploadingCover] = useState(false)
   const [coverError, setCoverError] = useState<string | null>(null)
   const [togglingStatus, setTogglingStatus] = useState(false)
-  const [analytics, setAnalytics] = useState<ProjectAnalytics | null>(null)
   const [metricsOpen, setMetricsOpen] = useState(false)
-
-  useEffect(() => {
-    fetchProjectAnalytics(project.id)
-      .then(setAnalytics)
-      .catch(() => { /* non-critical — silently skip if endpoint not available */ })
-  }, [project.id])
 
   async function saveName() {
     const trimmed = draftName.trim().slice(0, MAX_NAME_LENGTH)
@@ -213,19 +204,12 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
         {project.subtitle && (
           <p className="text-sm text-gray-400 truncate mt-0.5">{project.subtitle}</p>
         )}
-        <p className="text-xs text-gray-600 mt-2">
+        <p className="text-xs text-gray-600 mt-2 mb-0.5">
           {project.geoPointIds.length} punto{project.geoPointIds.length !== 1 ? 's' : ''} ·{' '}
           {new Date(project.updatedAt).toLocaleDateString('es', {
             day: 'numeric', month: 'short', year: 'numeric',
           })}
         </p>
-        {analytics !== null && (
-          <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 flex-wrap">
-            <span>📍 {analytics.radiusEntries} entradas</span>
-            <span>🖱 {analytics.clicks} clics</span>
-            <span>↗ {analytics.conversion}% conversión</span>
-          </div>
-        )}
       </div>
 
       {/* Actions — row 1: primary actions */}

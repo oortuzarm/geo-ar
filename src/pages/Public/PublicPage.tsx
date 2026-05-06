@@ -6,6 +6,7 @@ import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
 
 import { haversineDistance } from '../../features/geolocation/haversine'
+import { reverseGeocode } from '../../features/geolocation/geocoding'
 import { trackRadiusEnter, trackPointClick } from '../../lib/analytics'
 import { fetchWalkingRoute } from '../../features/routing/orsClient'
 import type { RouteResult } from '../../features/routing/orsClient'
@@ -212,6 +213,7 @@ export default function PublicPage() {
   const [loadError, setLoadError] = useState<LoadError>(null)
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null)
   const [distances, setDistances] = useState<Record<string, number>>({})
+  const [addresses, setAddresses] = useState<Record<string, string>>({})
   const [activatingPointId, setActivatingPointId] = useState<string | null>(null)
   const [accessError, setAccessError] = useState<{
     pointId: string
@@ -246,6 +248,24 @@ export default function PublicPage() {
   useGeolocation(true)
 
   useEffect(() => { pointsRef.current = points }, [points])
+
+  // Reverse-geocode each point's address when the point list changes.
+  // Requests are staggered 300ms apart to respect Nominatim's rate limit.
+  useEffect(() => {
+    if (points.length === 0) return
+    let cancelled = false
+    points.forEach((pt, i) => {
+      setTimeout(() => {
+        if (cancelled) return
+        reverseGeocode(pt.latitude, pt.longitude)
+          .then((addr) => {
+            if (!cancelled) setAddresses((prev) => ({ ...prev, [pt.id]: addr }))
+          })
+          .catch(() => {/* silently skip; card will show nothing */})
+      }, i * 300)
+    })
+    return () => { cancelled = true }
+  }, [points])
 
   useEffect(() => {
     if (!selectedPointId) return
@@ -656,6 +676,7 @@ export default function PublicPage() {
           walkingDurationSeconds={
             pt.id === selectedPointId && routeResult ? routeResult.durationSeconds : undefined
           }
+          address={addresses[pt.id]}
         />
       </div>
     ))

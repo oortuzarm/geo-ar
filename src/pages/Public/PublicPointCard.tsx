@@ -232,6 +232,8 @@ interface PublicPointCardProps {
   isActivating?: boolean
   accessMessage?: string
   accessFallbackUrl?: string
+  /** Auto-resolved address from reverse geocoding; falls back to point.instructions for legacy data */
+  address?: string
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -239,7 +241,7 @@ interface PublicPointCardProps {
 export default function PublicPointCard({
   point, distance, isSelected, onSelect, onActivate, onExit,
   routeStatus, walkingDistanceMeters, walkingDurationSeconds,
-  isActivating, accessMessage, accessFallbackUrl,
+  isActivating, accessMessage, accessFallbackUrl, address,
 }: PublicPointCardProps) {
   const [descExpanded, setDescExpanded] = useState(false)
   const isLongDesc = (point.description?.length ?? 0) > DESCRIPTION_LIMIT
@@ -353,8 +355,8 @@ export default function PublicPointCard({
           </div>
         )}
 
-        {/* Instructions */}
-        {point.instructions && (
+        {/* Address — auto-resolved via reverse geocoding; falls back to legacy instructions */}
+        {(address ?? point.instructions) && (
           <div className="mt-2 flex items-start gap-1.5">
             <svg className="h-3.5 w-3.5 text-gray-500 flex-shrink-0 mt-0.5"
               fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -363,7 +365,7 @@ export default function PublicPointCard({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <p className="text-xs text-gray-500 line-clamp-2">{point.instructions}</p>
+            <p className="text-xs text-gray-500 line-clamp-2">{address ?? point.instructions}</p>
           </div>
         )}
 

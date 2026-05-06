@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Input, Textarea } from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
 import type { GeoPoint, GeoPointAvailability } from '../../types'
+import { reverseGeocode } from '../../features/geolocation/geocoding'
 
 interface GeoPointFormProps {
   point: GeoPoint
@@ -173,11 +174,27 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
   // blur (lightweight) and on explicit save/close (flush all).
   // The component is mounted with key={selectedPointId} in the parent, so
   // useState initializers run fresh whenever a different point is selected.
-  const [name,         setName]         = useState(point.name)
-  const [lookiarUrl,   setLookiarUrl]   = useState(point.lookiarUrl ?? '')
-  const [description,  setDescription]  = useState(point.description ?? '')
-  const [instructions, setInstructions] = useState(point.instructions ?? '')
-  const [buttonText,   setButtonText]   = useState(point.buttonText ?? '')
+  const [name,        setName]        = useState(point.name)
+  const [lookiarUrl,  setLookiarUrl]  = useState(point.lookiarUrl ?? '')
+  const [description, setDescription] = useState(point.description ?? '')
+  const [buttonText,  setButtonText]  = useState(point.buttonText ?? '')
+
+  // ── Auto-address via reverse geocoding ───────────────────────────────────
+  const [address,        setAddress]        = useState<string | null>(null)
+  const [addressLoading, setAddressLoading] = useState(false)
+  const geoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (geoTimerRef.current) clearTimeout(geoTimerRef.current)
+    setAddressLoading(true)
+    geoTimerRef.current = setTimeout(() => {
+      reverseGeocode(point.latitude, point.longitude)
+        .then(setAddress)
+        .catch(() => setAddress(null))
+        .finally(() => setAddressLoading(false))
+    }, 800)
+    return () => { if (geoTimerRef.current) clearTimeout(geoTimerRef.current) }
+  }, [point.latitude, point.longitude])
 
   // Push all local text state to the parent store in one shot.
   // Called before closing or saving to ensure nothing is lost.
@@ -185,9 +202,8 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
     onChange({
       name,
       lookiarUrl,
-      description:  description  || undefined,
-      instructions: instructions || undefined,
-      buttonText:   buttonText   || undefined,
+      description: description || undefined,
+      buttonText:  buttonText  || undefined,
     })
   }
 
@@ -377,13 +393,28 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           </p>
         </div>
 
-        <Textarea
-          label="Cómo llegar"
-          placeholder="Instrucciones para el usuario sobre cómo llegar al punto"
-          value={instructions}
-          onChange={(e) => setInstructions(e.target.value)}
-          onBlur={() => onChange({ instructions: instructions || undefined })}
-        />
+        {/* Auto-address preview — read-only, derived from coordinates */}
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Dirección del punto
+          </span>
+          <div className="flex items-center gap-2 min-h-[2rem]">
+            <svg className="h-3.5 w-3.5 text-gray-500 flex-shrink-0" fill="none"
+              stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {addressLoading ? (
+              <span className="text-xs text-gray-500 italic">Obteniendo dirección…</span>
+            ) : address ? (
+              <span className="text-xs text-gray-300">{address}</span>
+            ) : (
+              <span className="text-xs text-gray-600 italic">Dirección no disponible</span>
+            )}
+          </div>
+        </div>
 
         <Input
           label="Texto del botón"

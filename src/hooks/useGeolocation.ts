@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useGeoStore } from '../store/geoStore'
+import type { LocationStatus, UserLocation } from '../types'
 
 export function useGeolocation(active = true) {
   const { setUserLocation } = useGeoStore()
@@ -18,15 +19,17 @@ export function useGeolocation(active = true) {
       (pos) => {
         setUserLocation(
           {
-            latitude: pos.coords.latitude,
+            latitude:  pos.coords.latitude,
             longitude: pos.coords.longitude,
-            accuracy: pos.coords.accuracy,
+            accuracy:  pos.coords.accuracy,
           },
           'active',
         )
       },
-      () => {
-        setUserLocation(null, 'denied')
+      (err) => {
+        // code 1 = PERMISSION_DENIED; 2 = POSITION_UNAVAILABLE; 3 = TIMEOUT
+        const status: LocationStatus = err.code === 1 ? 'denied' : 'unavailable'
+        setUserLocation(null, status)
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
     )
@@ -37,6 +40,38 @@ export function useGeolocation(active = true) {
       }
     }
   }, [active, setUserLocation])
+}
+
+/**
+ * Imperatively request the user's location once.
+ * Safe to call after denial — may re-trigger the browser prompt on some platforms.
+ * On PERMISSION_DENIED sets status to 'denied'; on other errors sets 'unavailable'.
+ */
+export function requestLocation(
+  setUserLocation: (loc: UserLocation | null, status: LocationStatus) => void,
+): void {
+  if (!navigator.geolocation) {
+    setUserLocation(null, 'unavailable')
+    return
+  }
+  setUserLocation(null, 'requesting')
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      setUserLocation(
+        {
+          latitude:  pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy:  pos.coords.accuracy,
+        },
+        'active',
+      )
+    },
+    (err) => {
+      const status: LocationStatus = err.code === 1 ? 'denied' : 'unavailable'
+      setUserLocation(null, status)
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+  )
 }
 
 export function getCurrentPosition(): Promise<GeolocationPosition> {

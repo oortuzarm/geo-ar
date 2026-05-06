@@ -11,7 +11,7 @@ import { trackRadiusEnter, trackPointClick } from '../../lib/analytics'
 import { fetchWalkingRoute } from '../../features/routing/orsClient'
 import type { RouteResult } from '../../features/routing/orsClient'
 import type { RouteStatus } from './PublicPointCard'
-import { useGeolocation } from '../../hooks/useGeolocation'
+import { useGeolocation, requestLocation } from '../../hooks/useGeolocation'
 import { useGeoStore } from '../../store/geoStore'
 import RoutePolyline from '../../components/map/RoutePolyline'
 import MapController from '../../components/map/MapController'
@@ -19,7 +19,7 @@ import type { FlyTarget } from '../../components/map/MapController'
 import PublicPointCard from './PublicPointCard'
 import Spinner from '../../components/ui/Spinner'
 import ToastContainer from '../../components/ui/Toast'
-import type { GeoProject, GeoPoint } from '../../types'
+import type { GeoProject, GeoPoint, LocationStatus } from '../../types'
 
 /** Minimum distance in meters the user must move before recalculating the route */
 const ROUTE_RECALC_THRESHOLD_M = 15
@@ -192,6 +192,110 @@ function ErrorScreen({ error, id }: { error: LoadError; id?: string }) {
   )
 }
 
+// ── Location badge ────────────────────────────────────────────────────────────
+
+function LocationBadge({ status, onClick }: { status: LocationStatus; onClick: () => void }) {
+  const isActive = status === 'active'
+
+  const colorClass =
+    status === 'active'     ? 'text-green-400 border-gray-700' :
+    status === 'requesting' ? 'text-yellow-400 border-gray-700' :
+    status === 'denied'     ? 'text-red-400 border-red-900/40' :
+                              'text-amber-400 border-amber-900/40'
+
+  const label =
+    status === 'active'      ? 'Ubicación activa' :
+    status === 'requesting'  ? 'Obteniendo ubicación…' :
+    status === 'denied'      ? 'Ubicación bloqueada' :
+    status === 'unavailable' ? 'GPS no disponible' :
+                               'Activar ubicación'
+
+  return (
+    <button
+      onClick={isActive ? undefined : onClick}
+      disabled={isActive}
+      className={[
+        'flex items-center gap-1.5 text-xs px-3.5 py-1.5 rounded-full',
+        'bg-gray-900/95 border shadow-lg transition-all duration-150',
+        colorClass,
+        isActive ? 'cursor-default' : 'cursor-pointer active:scale-95 hover:brightness-110',
+      ].join(' ')}
+    >
+      {status === 'requesting' ? (
+        <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse flex-shrink-0" />
+      ) : status === 'active' ? (
+        <span className="w-1.5 h-1.5 rounded-full bg-current flex-shrink-0" />
+      ) : (
+        <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      )}
+      <span>{label}</span>
+    </button>
+  )
+}
+
+// ── Location permission sheet ─────────────────────────────────────────────────
+
+function LocationSheet({
+  mode, onRetry, onClose,
+}: {
+  mode: 'auto' | 'denied'
+  onRetry: () => void
+  onClose: () => void
+}) {
+  return (
+    <div
+      className="absolute inset-0 z-[2000] flex flex-col justify-end md:hidden"
+    >
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-gray-950 border-t border-gray-800 rounded-t-[24px]
+                      px-5 pt-5 shadow-2xl"
+        style={{ paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom))' }}
+      >
+        <div className="flex justify-center mb-4">
+          <div className="w-8 h-1 rounded-full bg-gray-700" />
+        </div>
+        <div className="w-12 h-12 rounded-full bg-amber-900/30 flex items-center
+                        justify-center mx-auto mb-3">
+          <svg className="w-6 h-6 text-amber-400" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+        </div>
+        <h2 className="text-base font-semibold text-gray-100 text-center mb-2">
+          {mode === 'auto' ? 'Activa tu ubicación' : 'Permite el acceso a tu ubicación'}
+        </h2>
+        <p className="text-sm text-gray-400 text-center leading-relaxed mb-4">
+          {mode === 'auto'
+            ? 'Necesitamos acceso a tu ubicación para desbloquear experiencias cercanas.'
+            : 'Para activar experiencias cercanas necesitas habilitar el permiso de ubicación en tu navegador.'}
+        </p>
+        {mode === 'denied' && (
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 mb-4
+                          space-y-2 text-xs text-gray-500">
+            <p><span className="text-gray-400 font-medium">iPhone Safari:</span>{' '}
+              Ajustes &rsaquo; Safari &rsaquo; Ubicación</p>
+            <p><span className="text-gray-400 font-medium">Android Chrome:</span>{' '}
+              Configuración &rsaquo; Permisos &rsaquo; Ubicación</p>
+          </div>
+        )}
+        <button
+          onClick={onRetry}
+          className="w-full bg-brand-600 hover:bg-brand-500 active:scale-[0.98]
+                     text-white font-semibold py-3.5 rounded-xl text-sm
+                     transition-all duration-150 shadow-lg shadow-brand-900/50"
+        >
+          {mode === 'auto' ? 'Permitir ubicación' : 'Intentar nuevamente'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Bottom sheet state ────────────────────────────────────────────────────────
 type SheetState = 'peek' | 'mid' | 'expanded'
 
@@ -206,7 +310,7 @@ const SHEET_HEIGHT: Record<SheetState, string> = {
 
 export default function PublicPage() {
   const { id } = useParams<{ id: string }>()
-  const { userLocation, locationStatus, addToast } = useGeoStore()
+  const { userLocation, locationStatus, setUserLocation, addToast } = useGeoStore()
   const [project, setProject] = useState<GeoProject | null>(null)
   const [points, setPoints] = useState<GeoPoint[]>([])
   const [loading, setLoading] = useState(true)
@@ -239,6 +343,41 @@ export default function PublicPage() {
   const [flyToKey, setFlyToKey] = useState<string | null>(null)
   const [flyToTarget, setFlyToTarget] = useState<FlyTarget | null>(null)
   const flyToCounterRef = useRef(0)
+
+  // ── Location permission UX ────────────────────────────────────────────────
+  const [locationSheet, setLocationSheet] = useState<'auto' | 'denied' | null>(null)
+  // Ref mirrors locationStatus so the auto-prompt timeout reads a fresh value
+  const locationStatusRef = useRef<LocationStatus>(locationStatus)
+  useEffect(() => { locationStatusRef.current = locationStatus }, [locationStatus])
+
+  // Close the sheet automatically once location is granted
+  useEffect(() => {
+    if (locationStatus === 'active') setLocationSheet(null)
+  }, [locationStatus])
+
+  // Auto-prompt: once per browser session, 2.5 s after mount
+  useEffect(() => {
+    if (sessionStorage.getItem('geo-ar-loc-prompted')) return
+    const t = setTimeout(() => {
+      if (locationStatusRef.current === 'active') return
+      sessionStorage.setItem('geo-ar-loc-prompted', '1')
+      setLocationSheet((cur) => cur ?? 'auto')
+    }, 2500)
+    return () => clearTimeout(t)
+  }, []) // intentionally mount-only
+
+  function handleBadgeClick() {
+    if (locationStatus === 'denied') {
+      setLocationSheet('denied')
+    } else if (locationStatus !== 'active' && locationStatus !== 'requesting') {
+      requestLocation(setUserLocation)
+    }
+  }
+
+  function handleLocationRetry() {
+    setLocationSheet(null)
+    requestLocation(setUserLocation)
+  }
 
   // Separate refs for mobile sheet and desktop panel so scrollIntoView works
   // correctly in both contexts regardless of display:none.
@@ -628,24 +767,6 @@ export default function PublicPage() {
       ? [points[0].latitude, points[0].longitude]
       : [-33.4489, -70.6693]
 
-  const locationBadge = () => {
-    if (locationStatus === 'requesting') return (
-      <span className="flex items-center gap-1 text-xs text-yellow-400">
-        <span className="animate-pulse">●</span> Obteniendo ubicación…
-      </span>
-    )
-    if (locationStatus === 'denied' || locationStatus === 'unavailable') return (
-      <span className="flex items-center gap-1 text-xs text-red-400">
-        <span>●</span> Ubicación no disponible
-      </span>
-    )
-    if (locationStatus === 'active') return (
-      <span className="flex items-center gap-1 text-xs text-green-400">
-        <span>●</span> Ubicación activa
-      </span>
-    )
-    return null
-  }
 
   // ── Shared card list renderer ──────────────────────────────────────────────
   // cardRefsProp: which ref map to populate (mobile or desktop)
@@ -722,11 +843,19 @@ export default function PublicPage() {
           {routeResult && <RoutePolyline latLngs={routeResult.latLngs} />}
         </MapContainer>
 
-        {/* Location badge */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400]
-                       bg-gray-900/95 border border-gray-700 rounded-full px-4 py-1.5 shadow-lg">
-          {locationBadge()}
+        {/* Location badge — interactive button */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400]">
+          <LocationBadge status={locationStatus} onClick={handleBadgeClick} />
         </div>
+
+        {/* Location permission sheet (mobile only) */}
+        {locationSheet && (
+          <LocationSheet
+            mode={locationSheet}
+            onRetry={handleLocationRetry}
+            onClose={() => setLocationSheet(null)}
+          />
+        )}
 
         {/* My location button — above the peek handle on mobile */}
         <button

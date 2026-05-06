@@ -8,6 +8,7 @@ import Modal from '../../components/ui/Modal'
 import ToastContainer from '../../components/ui/Toast'
 import GeoPointsList from './GeoPointsList'
 import GeoPointForm from './GeoPointForm'
+import PreviewQRModal from './PreviewQRModal'
 import { useGeoStore } from '../../store/geoStore'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
@@ -39,6 +40,7 @@ export default function DashboardPage() {
   // Used to skip re-sending unchanged images and keep payloads small.
   const lastSavedImagesRef = useRef<{ coverImage?: string; points: Record<string, string | undefined> } | null>(null)
   const [isPublishing, setIsPublishing] = useState(false)
+  const [previewModalOpen, setPreviewModalOpen] = useState(false)
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [poiResults, setPoiResults] = useState<PoiSearchResult[]>([])
 
@@ -450,7 +452,7 @@ export default function DashboardPage() {
               variant="ghost"
               size="sm"
               className="hidden sm:inline-flex"
-              onClick={() => navigate(`/project/${project?.id}/preview`)}
+              onClick={() => setPreviewModalOpen(true)}
             >
               Previsualizar
             </Button>
@@ -662,6 +664,14 @@ export default function DashboardPage() {
             />
           </div>
         </div>
+      )}
+
+      {project && (
+        <PreviewQRModal
+          projectId={project.id}
+          isOpen={previewModalOpen}
+          onClose={() => setPreviewModalOpen(false)}
+        />
       )}
 
       <Modal

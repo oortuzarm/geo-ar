@@ -83,6 +83,10 @@ export function fetchProjectAnalytics(projectId: string): Promise<ProjectAnalyti
   return apiFetch<ProjectAnalytics>(`${API_BASE}/api/geo_projects/${projectId}/analytics`)
 }
 
-export function fetchProjectAnalyticsByPoint(projectId: string): Promise<PointAnalytics[]> {
-  return apiFetch<PointAnalytics[]>(`${API_BASE}/api/geo_projects/${projectId}/analytics_by_point`)
+export async function fetchProjectAnalyticsByPoint(projectId: string): Promise<PointAnalytics[]> {
+  const data = await apiFetch<unknown>(`${API_BASE}/api/geo_projects/${projectId}/analytics_by_point`)
+  if (Array.isArray(data)) return data as PointAnalytics[]
+  if (data && typeof data === 'object' && Array.isArray((data as Record<string, unknown>).points))
+    return (data as { points: PointAnalytics[] }).points
+  return []
 }

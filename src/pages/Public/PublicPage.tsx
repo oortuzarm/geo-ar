@@ -476,10 +476,6 @@ export default function PublicPage() {
       longitude: userLocation.longitude,
     })
 
-    // Pre-open a blank window SYNCHRONOUSLY (inside the user gesture) so the
-    // browser doesn't treat the later window.open as an unsolicited popup.
-    const win = window.open('', '_blank', 'noopener,noreferrer')
-
     setActivatingPointId(point.id)
     try {
       const raw = await geoPointsApi.requestPointAccess(
@@ -488,10 +484,8 @@ export default function PublicPage() {
         userLocation.latitude,
         userLocation.longitude,
       )
-      // Log the full response to surface unexpected field names.
       console.log('[Access] ✓ Respuesta completa del backend:', JSON.stringify(raw))
 
-      // Normalise: backend returns { url } but check common alternatives.
       const r = raw as Record<string, unknown>
       const resolvedUrl =
         (typeof r.url          === 'string' && r.url)          ||
@@ -504,20 +498,14 @@ export default function PublicPage() {
       console.log('[Access] URL resuelta:', resolvedUrl || '(vacía)')
 
       if (!resolvedUrl || !resolvedUrl.startsWith('http')) {
-        win?.close()
         const msg = 'No se encontró una URL válida para esta experiencia.'
         console.warn('[Access] URL inválida o vacía — no se redirige. Campo "url" recibido:', r.url)
         setAccessError({ pointId: point.id, message: msg })
         addToast(msg, 'error')
-      } else if (win) {
-        win.location.href = resolvedUrl
       } else {
-        // Popup blocked: show a tappable fallback link in the card.
-        console.warn('[Access] Popup bloqueado por el navegador — mostrando link de fallback')
-        setAccessError({ pointId: point.id, message: 'Tap para abrir la experiencia', fallbackUrl: resolvedUrl })
+        window.location.href = resolvedUrl
       }
     } catch (err) {
-      win?.close()
       console.error('[Access] ✗ Error recibido:', err)
 
       let msg = 'No se pudo validar el acceso.'

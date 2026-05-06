@@ -286,7 +286,6 @@ export default function PublicPage() {
 
         setProject(proj)
         setPoints(activePoints)
-        if (activePoints.length > 0) setSelectedPointId(activePoints[0].id)
         setLoading(false)
       })
       .catch((err) => {

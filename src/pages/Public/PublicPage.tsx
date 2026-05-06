@@ -453,7 +453,10 @@ export default function PublicPage() {
     setSheetState('mid')
     flyToCounterRef.current += 1
     setFlyToKey(`point-${pt.id}-${flyToCounterRef.current}`)
-    setFlyToTarget({ lat: pt.latitude, lng: pt.longitude, zoom: 17 })
+    // mid sheet = 45dvh → visible map = 55dvh → its center is 27.5dvh from top.
+    // Full viewport center is 50dvh from top. Shift up by (45dvh / 2) = 22.5dvh.
+    const panOffsetPx = Math.round(0.225 * window.innerHeight)
+    setFlyToTarget({ lat: pt.latitude, lng: pt.longitude, zoom: 17, panOffsetPx })
   }
 
   function handleMyLocation() {

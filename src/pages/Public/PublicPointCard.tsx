@@ -287,10 +287,12 @@ export default function PublicPointCard({
   return (
     <div
       className={[
-        'rounded-xl border overflow-hidden transition-all cursor-pointer',
-        isSelected
-          ? 'border-brand-500 bg-gray-800/80'
-          : 'border-gray-800 bg-gray-900/60 hover:border-gray-700',
+        'rounded-xl border overflow-hidden transition-all duration-200 cursor-pointer',
+        isSelected && withinRadius
+          ? 'border-brand-500/70 bg-gray-800/80 shadow-lg shadow-brand-950/50 ring-1 ring-brand-500/20'
+          : isSelected
+          ? 'border-brand-500/50 bg-gray-800/75 shadow-md shadow-black/40'
+          : 'border-gray-800/70 bg-gray-900/50 hover:border-gray-700',
       ].join(' ')}
       onClick={onSelect}
     >
@@ -308,11 +310,16 @@ export default function PublicPointCard({
           {isSelected && onExit && (
             <button
               onClick={(e) => { e.stopPropagation(); onExit() }}
-              className="flex-shrink-0 bg-red-600 hover:bg-red-500 active:scale-95
-                         text-white text-xs font-semibold px-3 py-1.5 rounded-lg
-                         transition-all duration-150"
+              className="flex-shrink-0 w-7 h-7 flex items-center justify-center
+                         rounded-full bg-gray-700/60 hover:bg-gray-600/70
+                         border border-gray-600/40 text-gray-400 hover:text-gray-200
+                         active:scale-90 transition-all duration-150"
+              aria-label="Cerrar"
             >
-              Salir
+              <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none"
+                stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+                <path d="M6 6l8 8M14 6l-8 8" />
+              </svg>
             </button>
           )}
         </div>
@@ -402,10 +409,12 @@ export default function PublicPointCard({
                   onClick={(e) => { e.stopPropagation(); onActivate() }}
                   disabled={isActivating}
                   className={[
-                    'w-full font-semibold py-2.5 px-4 rounded-xl text-sm transition-all duration-150',
+                    'w-full font-semibold py-3.5 px-4 rounded-xl text-sm transition-all duration-200',
                     isActivating
                       ? 'bg-brand-700 text-white/70 cursor-wait'
-                      : 'bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white',
+                      : 'bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white'
+                        + ' shadow-lg shadow-brand-900/50'
+                        + ' ring-1 ring-brand-400/30',
                   ].join(' ')}
                 >
                   {isActivating ? (
@@ -419,8 +428,8 @@ export default function PublicPointCard({
               ) : (
                 <button
                   disabled
-                  className="w-full bg-gray-800 text-gray-600 font-semibold py-2.5 px-4
-                             rounded-xl text-sm cursor-not-allowed border border-gray-700/40"
+                  className="w-full bg-gray-800/60 text-gray-600 font-semibold py-3.5 px-4
+                             rounded-xl text-sm cursor-not-allowed border border-gray-700/30"
                 >
                   {point.buttonText || 'Ir a experiencia'}
                 </button>

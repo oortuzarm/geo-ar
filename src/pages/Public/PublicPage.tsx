@@ -191,6 +191,15 @@ function ErrorScreen({ error, id }: { error: LoadError; id?: string }) {
   )
 }
 
+// ── Bottom sheet state ────────────────────────────────────────────────────────
+type SheetState = 'peek' | 'mid' | 'expanded'
+
+const SHEET_TRANSLATE: Record<SheetState, string> = {
+  peek:     'translateY(calc(90vh - 4.5rem))',
+  mid:      'translateY(35vh)',
+  expanded: 'translateY(0px)',
+}
+
 export default function PublicPage() {
   const { id } = useParams<{ id: string }>()
   const { userLocation, locationStatus, addToast } = useGeoStore()
@@ -208,35 +217,36 @@ export default function PublicPage() {
   } | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // ── Bottom sheet ───────────────────────────────────────────────────────────
+  const [sheetState, setSheetState] = useState<SheetState>('peek')
+  const dragStartYRef = useRef<number | null>(null)
+
   // ── Route state ────────────────────────────────────────────────────────────
   const [routeResult, setRouteResult] = useState<RouteResult | null>(null)
   const [routeStatus, setRouteStatus] = useState<RouteStatus>('idle')
-  // pointId for which a route has been requested (avoids duplicate fetches)
   const routeForPointRef = useRef<string | null>(null)
-  // Last user position at which the route was calculated (movement threshold)
   const lastRoutePositionRef = useRef<{ lat: number; lng: number } | null>(null)
-  // Debounce timer for movement-triggered recalculations
   const routeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  // Stable ref to points so the route effect doesn't need it as a dependency
   const pointsRef = useRef<GeoPoint[]>([])
-  // Tracks previous inside/outside state per point to detect outside→inside transitions.
   const wasInsideRef = useRef<Record<string, boolean>>({})
 
   // ── flyTo control ─────────────────────────────────────────────────────────
-  // Changing flyToKey triggers ONE flyTo call in MapController.
   const [flyToKey, setFlyToKey] = useState<string | null>(null)
   const [flyToTarget, setFlyToTarget] = useState<FlyTarget | null>(null)
   const flyToCounterRef = useRef(0)
+
+  // Separate refs for mobile sheet and desktop panel so scrollIntoView works
+  // correctly in both contexts regardless of display:none.
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const mobileCardRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   useGeolocation(true)
 
-  // Keep pointsRef in sync so the route effect can read current points
-  // without being listed as a dependency (points don't change after load)
   useEffect(() => { pointsRef.current = points }, [points])
 
   useEffect(() => {
     if (!selectedPointId) return
+    mobileCardRefs.current[selectedPointId]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     cardRefs.current[selectedPointId]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [selectedPointId])
 
@@ -248,7 +258,6 @@ export default function PublicPage() {
       return
     }
 
-    // Safety timeout — no infinite spinner
     timeoutRef.current = setTimeout(() => {
       console.error(
         `[PublicPage] Timeout de ${LOAD_TIMEOUT_MS}ms al cargar proyecto id="${id}".`,
@@ -322,7 +331,7 @@ export default function PublicPage() {
     setDistances(newDist)
   }, [userLocation, points])
 
-  // ── Radius-enter tracking ──────────────────────────────────────────────────
+  // ── Radius-enter tracking + haptic feedback ────────────────────────────────
   useEffect(() => {
     if (!userLocation || !id) return
     for (const pt of points) {
@@ -334,6 +343,8 @@ export default function PublicPage() {
       const wasInside = wasInsideRef.current[pt.id] ?? false
       if (!wasInside && isInside) {
         trackRadiusEnter(id, pt.id)
+        // Subtle haptic pulse when entering the activation area
+        if ('vibrate' in navigator) navigator.vibrate(20)
       }
       wasInsideRef.current[pt.id] = isInside
     }
@@ -341,7 +352,6 @@ export default function PublicPage() {
 
   // ── Route calculation ──────────────────────────────────────────────────────
   useEffect(() => {
-    // No point selected → clear route
     if (!selectedPointId) {
       setRouteResult(null)
       setRouteStatus('idle')
@@ -351,7 +361,6 @@ export default function PublicPage() {
       return
     }
 
-    // No user location yet
     if (!userLocation) {
       if (routeForPointRef.current !== selectedPointId) {
         setRouteStatus('no-location')
@@ -364,7 +373,6 @@ export default function PublicPage() {
     const isNewPoint = routeForPointRef.current !== selectedPointId
 
     if (!isNewPoint) {
-      // Same point — only recalculate if user moved enough
       const last = lastRoutePositionRef.current
       if (last) {
         const moved = haversineDistance(
@@ -373,13 +381,10 @@ export default function PublicPage() {
         )
         if (moved < ROUTE_RECALC_THRESHOLD_M) return
       }
-      // Fell through: either no previous position, or moved enough
     }
 
-    // Mark which point we're fetching for
     routeForPointRef.current = selectedPointId
 
-    // Capture these at schedule-time so the async closure uses correct values
     const snapLat = userLocation.latitude
     const snapLng = userLocation.longitude
     const snapPointId = selectedPointId
@@ -404,17 +409,14 @@ export default function PublicPage() {
       } catch {
         if (!cancelled) {
           setRouteStatus('error')
-          // Keep existing route result if any (graceful degradation)
         }
       }
     }
 
     if (isNewPoint) {
-      // Point changed → run immediately
       if (routeTimerRef.current) clearTimeout(routeTimerRef.current)
       run()
     } else {
-      // Movement update → debounce to avoid hammering the API
       if (routeTimerRef.current) clearTimeout(routeTimerRef.current)
       routeTimerRef.current = setTimeout(run, ROUTE_MOVEMENT_DEBOUNCE_MS)
     }
@@ -425,11 +427,12 @@ export default function PublicPage() {
     }
   }, [selectedPointId, userLocation]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
   function handleExitSelectedPoint() {
     setSelectedPointId(null)
     setAccessError(null)
-    // Route state is cleared by the route effect when selectedPointId becomes null.
-    // Fly to user location if available; otherwise zoom out to show all points.
+    setSheetState('peek')
     flyToCounterRef.current += 1
     setFlyToKey(`exit-${flyToCounterRef.current}`)
     if (userLocation) {
@@ -444,6 +447,7 @@ export default function PublicPage() {
   function handlePointClick(pt: GeoPoint) {
     setSelectedPointId(pt.id)
     setAccessError(null)
+    setSheetState('mid')
     flyToCounterRef.current += 1
     setFlyToKey(`point-${pt.id}-${flyToCounterRef.current}`)
     setFlyToTarget({ lat: pt.latitude, lng: pt.longitude, zoom: 17 })
@@ -477,6 +481,26 @@ export default function PublicPage() {
         addToast('No pudimos compartir el link.', 'error')
       }
     }
+  }
+
+  // ── Bottom sheet drag ─────────────────────────────────────────────────────
+
+  function handleDragStart(e: React.TouchEvent) {
+    dragStartYRef.current = e.touches[0].clientY
+  }
+
+  function handleDragEnd(e: React.TouchEvent) {
+    if (dragStartYRef.current === null) return
+    const delta = dragStartYRef.current - e.changedTouches[0].clientY
+    dragStartYRef.current = null
+
+    if (Math.abs(delta) < 10) {
+      // Tap on handle: cycle through states
+      setSheetState(s => s === 'peek' ? 'mid' : s === 'mid' ? 'expanded' : 'peek')
+      return
+    }
+    if (delta > 40) setSheetState(s => s === 'peek' ? 'mid' : 'expanded')
+    else if (delta < -40) setSheetState(s => s === 'expanded' ? 'mid' : 'peek')
   }
 
   const handleActivate = useCallback(async (point: GeoPoint) => {
@@ -542,7 +566,6 @@ export default function PublicPage() {
           else if (parsed && typeof parsed === 'object' && 'error' in parsed)
             msg = String((parsed as { error: unknown }).error)
         } catch {
-          // Body is not JSON (HTML 500, plain text, etc.)
           console.warn('[Access]   Body no es JSON')
           if (err.status === 403)      msg = 'Proyecto no publicado.'
           else if (err.status === 404) msg = 'Punto no encontrado.'
@@ -559,6 +582,8 @@ export default function PublicPage() {
     }
   }, [activatingPointId, userLocation, id, addToast])
 
+  // ── Early returns ──────────────────────────────────────────────────────────
+
   if (loading) {
     return (
       <div className="h-screen bg-gray-950 flex flex-col items-center justify-center gap-3">
@@ -568,13 +593,8 @@ export default function PublicPage() {
     )
   }
 
-  if (loadError) {
-    return <ErrorScreen error={loadError} id={id} />
-  }
-
-  if (!project) {
-    return <ErrorScreen error="not-found" id={id} />
-  }
+  if (loadError) return <ErrorScreen error={loadError} id={id} />
+  if (!project)  return <ErrorScreen error="not-found" id={id} />
 
   const mapCenter: [number, number] =
     userLocation
@@ -602,14 +622,52 @@ export default function PublicPage() {
     return null
   }
 
+  // ── Shared card list renderer ──────────────────────────────────────────────
+  // cardRefsProp: which ref map to populate (mobile or desktop)
+  function renderPoints(cardRefsProp: React.MutableRefObject<Record<string, HTMLDivElement | null>>) {
+    if (points.length === 0) {
+      return (
+        <p className="text-sm text-gray-500 text-center py-6 px-4">
+          Este proyecto no tiene puntos activos aún.
+        </p>
+      )
+    }
+    return points.map((pt) => (
+      <div key={pt.id} ref={(el) => { cardRefsProp.current[pt.id] = el }}>
+        <PublicPointCard
+          point={pt}
+          distance={distances[pt.id] ?? null}
+          isSelected={pt.id === selectedPointId}
+          onSelect={() => handlePointClick(pt)}
+          onActivate={() => { void handleActivate(pt) }}
+          onExit={pt.id === selectedPointId ? handleExitSelectedPoint : undefined}
+          isActivating={pt.id === activatingPointId}
+          accessMessage={accessError?.pointId === pt.id ? accessError.message : undefined}
+          accessFallbackUrl={accessError?.pointId === pt.id ? accessError.fallbackUrl : undefined}
+          routeStatus={pt.id === selectedPointId ? routeStatus : undefined}
+          walkingDistanceMeters={
+            pt.id === selectedPointId && routeResult ? routeResult.distanceMeters : undefined
+          }
+          walkingDurationSeconds={
+            pt.id === selectedPointId && routeResult ? routeResult.durationSeconds : undefined
+          }
+        />
+      </div>
+    ))
+  }
+
+  const selectedPoint = points.find(p => p.id === selectedPointId)
+
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="h-screen bg-gray-950 flex flex-col overflow-hidden">
-      <div className="flex-1 relative">
+    <div className="h-screen bg-gray-950 overflow-hidden relative md:flex md:flex-col">
+
+      {/* ── MAP ─────────────────────────────────────────────────────────────
+          Mobile: absolute inset-0 → fills full viewport behind the sheet.
+          Desktop (md:): relative flex-1 → normal flex-column child.      */}
+      <div className="absolute inset-0 md:relative md:flex-1">
         <MapContainer center={mapCenter} zoom={15} className="w-full h-full">
-          <MapController
-            flyKey={flyToKey}
-            flyTarget={flyToTarget}
-          />
+          <MapController flyKey={flyToKey} flyTarget={flyToTarget} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -617,34 +675,41 @@ export default function PublicPage() {
           {userLocation && (
             <UserLocationMarker lat={userLocation.latitude} lng={userLocation.longitude} />
           )}
-          {points.map((pt) => (
-            <Circle
-              key={pt.id}
-              center={[pt.latitude, pt.longitude]}
-              radius={pt.activationRadius}
-              pathOptions={{
-                color: pt.id === selectedPointId ? '#0ea5e9' : '#ef4444',
-                fillColor: pt.id === selectedPointId ? '#0ea5e9' : '#ef4444',
-                fillOpacity: pt.id === selectedPointId ? 0.15 : 0.08,
-                weight: pt.id === selectedPointId ? 3 : 2,
-              }}
-              eventHandlers={{ click: () => handlePointClick(pt) }}
-            />
-          ))}
-          {routeResult && (
-            <RoutePolyline latLngs={routeResult.latLngs} />
-          )}
+          {points.map((pt) => {
+            const isSelected = pt.id === selectedPointId
+            const somethingSelected = selectedPointId !== null
+            return (
+              <Circle
+                key={pt.id}
+                center={[pt.latitude, pt.longitude]}
+                radius={pt.activationRadius}
+                pathOptions={{
+                  // Selected: cyan highlight. Others: dim to gray when something is selected.
+                  color:       isSelected ? '#0ea5e9' : somethingSelected ? '#6b7280' : '#ef4444',
+                  fillColor:   isSelected ? '#0ea5e9' : somethingSelected ? '#6b7280' : '#ef4444',
+                  fillOpacity: isSelected ? 0.18     : somethingSelected ? 0.04      : 0.08,
+                  weight:      isSelected ? 3        : somethingSelected ? 1         : 2,
+                  opacity:     isSelected ? 1        : somethingSelected ? 0.4       : 0.8,
+                }}
+                eventHandlers={{ click: () => handlePointClick(pt) }}
+              />
+            )
+          })}
+          {routeResult && <RoutePolyline latLngs={routeResult.latLngs} />}
         </MapContainer>
 
+        {/* Location badge */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400]
                        bg-gray-900/95 border border-gray-700 rounded-full px-4 py-1.5 shadow-lg">
           {locationBadge()}
         </div>
 
+        {/* My location button — above the peek handle on mobile */}
         <button
           onClick={handleMyLocation}
           disabled={!userLocation}
-          className="absolute bottom-4 right-4 z-[400]
+          className="absolute right-4 z-[400]
+                     bottom-[88px] md:bottom-4
                      w-11 h-11 flex items-center justify-center
                      bg-white rounded-full border border-gray-200/60 shadow-md
                      hover:bg-gray-50 active:scale-95 active:shadow-sm
@@ -658,7 +723,93 @@ export default function PublicPage() {
         </button>
       </div>
 
-      <div className="flex-shrink-0 bg-gray-950 border-t border-gray-800 px-4 pt-3 pb-4 max-h-[55vh] overflow-y-auto">
+      {/* ── MOBILE BOTTOM SHEET (hidden on md+) ─────────────────────────────
+          Sits over the map. Height: 90vh. Translate drives peek/mid/expanded.
+          peek     → shows 4.5rem (72px) — drag handle + mini summary
+          mid      → shows 55vh          — active card or top of list
+          expanded → shows 90vh          — full scrollable list              */}
+      <div
+        className="md:hidden absolute inset-x-0 bottom-0 z-[1000]"
+        style={{
+          height: '90vh',
+          transform: SHEET_TRANSLATE[sheetState],
+          transition: 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
+          willChange: 'transform',
+        }}
+      >
+        <div className="h-full flex flex-col rounded-t-[28px] overflow-hidden
+                        bg-gray-950/97 backdrop-blur-xl
+                        border-t border-white/[0.07]
+                        shadow-[0_-12px_40px_rgba(0,0,0,0.7)]">
+
+          {/* Drag handle zone — always visible in peek state */}
+          <div
+            className="flex-shrink-0 touch-none select-none cursor-grab active:cursor-grabbing"
+            onTouchStart={handleDragStart}
+            onTouchEnd={handleDragEnd}
+          >
+            {/* Pill */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-9 h-1 rounded-full bg-white/20" />
+            </div>
+
+            {/* Mini summary (always visible, 40px) */}
+            <div className="flex items-center gap-3 px-4 pb-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-100 truncate leading-snug">
+                  {selectedPoint ? selectedPoint.name : project.title}
+                </p>
+                <p className="text-xs text-gray-500 leading-none mt-0.5">
+                  {selectedPoint ? 'Deslizá para ver detalles' : `${points.length} punto${points.length !== 1 ? 's' : ''}`}
+                </p>
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); void handleShare() }}
+                className="flex-shrink-0 w-8 h-8 flex items-center justify-center
+                           rounded-full text-gray-400 hover:text-gray-200
+                           hover:bg-gray-800/80 active:scale-90 transition-all duration-150"
+                title="Compartir"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto overscroll-contain">
+            {/* Project cover + header */}
+            {project.coverImage && (
+              <div className="px-4 pb-3">
+                <img
+                  src={project.coverImage}
+                  alt={project.title}
+                  className="w-full h-36 object-cover rounded-2xl"
+                />
+              </div>
+            )}
+            <div className="px-4 pb-4">
+              <h1 className="font-bold text-gray-100 text-base leading-tight">{project.title}</h1>
+              {project.subtitle && (
+                <p className="text-sm text-gray-400 mt-0.5">{project.subtitle}</p>
+              )}
+            </div>
+
+            {/* Points */}
+            <div className="space-y-2 px-4 pb-10">
+              {renderPoints(mobileCardRefs)}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── DESKTOP PANEL (hidden on mobile) ────────────────────────────────
+          Same classic layout as before — untouched for desktop users.      */}
+      <div className="hidden md:block flex-shrink-0 bg-gray-950 border-t border-gray-800
+                      px-4 pt-3 pb-4 max-h-[55vh] overflow-y-auto">
         <div className="flex items-start gap-3 mb-3">
           {project.coverImage && (
             <img
@@ -686,37 +837,11 @@ export default function PublicPage() {
           </button>
         </div>
 
-        {points.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-4">
-            Este proyecto no tiene puntos activos aún.
-          </p>
-        ) : (
-          <div className="space-y-2 pb-2">
-            {points.map((pt) => (
-              <div key={pt.id} ref={(el) => { cardRefs.current[pt.id] = el }}>
-                <PublicPointCard
-                  point={pt}
-                  distance={distances[pt.id] ?? null}
-                  isSelected={pt.id === selectedPointId}
-                  onSelect={() => handlePointClick(pt)}
-                  onActivate={() => { void handleActivate(pt) }}
-                  onExit={pt.id === selectedPointId ? handleExitSelectedPoint : undefined}
-                  isActivating={pt.id === activatingPointId}
-                  accessMessage={accessError?.pointId === pt.id ? accessError.message : undefined}
-                  accessFallbackUrl={accessError?.pointId === pt.id ? accessError.fallbackUrl : undefined}
-                  routeStatus={pt.id === selectedPointId ? routeStatus : undefined}
-                  walkingDistanceMeters={
-                    pt.id === selectedPointId && routeResult ? routeResult.distanceMeters : undefined
-                  }
-                  walkingDurationSeconds={
-                    pt.id === selectedPointId && routeResult ? routeResult.durationSeconds : undefined
-                  }
-                />
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="space-y-2 pb-2">
+          {renderPoints(cardRefs)}
+        </div>
       </div>
+
       <ToastContainer />
     </div>
   )

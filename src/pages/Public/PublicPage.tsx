@@ -759,6 +759,15 @@ export default function PublicPage() {
 
             {/* Mini summary (always visible, 40px) */}
             <div className="flex items-center gap-3 px-4 pb-3">
+              {/* Mini cover — project identity; hidden when a point is selected */}
+              {project.coverImage && !selectedPoint && (
+                <img
+                  src={project.coverImage}
+                  alt={project.title}
+                  className="w-14 h-14 rounded-xl object-cover flex-shrink-0
+                             ring-1 ring-white/10 shadow-lg"
+                />
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-100 truncate leading-snug">
                   {selectedPoint ? selectedPoint.name : project.title}
@@ -789,26 +798,9 @@ export default function PublicPage() {
             className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
             style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
           >
-            {/* Project cover + header */}
-            {project.coverImage && (
-              <div className="px-4 pb-3">
-                <img
-                  src={project.coverImage}
-                  alt={project.title}
-                  className="w-full h-36 object-cover rounded-2xl"
-                />
-              </div>
-            )}
-            <div className="px-4 pb-4">
-              <h1 className="font-bold text-gray-100 text-base leading-tight">{project.title}</h1>
-              {project.subtitle && (
-                <p className="text-sm text-gray-400 mt-0.5">{project.subtitle}</p>
-              )}
-            </div>
-
             {/* Points — padding-bottom clears Safari bottom bar + home indicator */}
             <div
-              className="space-y-2 px-4"
+              className="space-y-2 px-4 pt-1"
               style={{ paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}
             >
               {renderPoints(mobileCardRefs)}

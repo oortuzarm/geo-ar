@@ -114,6 +114,17 @@ export class RemoteGeoRepository implements IGeoRepository {
     await apiFetch<void>(this.url(`/api/geo_points/${id}`), { method: 'DELETE' })
   }
 
+  listPublicPoints(projectId: string): Promise<GeoPoint[]> {
+    return apiFetch<GeoPoint[]>(this.url(`/api/public/geo_projects/${projectId}/geo_points`))
+  }
+
+  requestPointAccess(projectId: string, pointId: string, lat: number, lng: number): Promise<{ url: string }> {
+    return apiFetch<{ url: string }>(
+      this.url(`/api/public/geo_projects/${projectId}/geo_points/${pointId}/access`),
+      { method: 'POST', body: JSON.stringify({ latitude: lat, longitude: lng }) },
+    )
+  }
+
   // ── Cache helpers (fire-and-forget, never throw) ─────────────────────────────
 
   private async cacheProject(proj: GeoProject): Promise<void> {

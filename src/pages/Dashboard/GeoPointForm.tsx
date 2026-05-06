@@ -173,7 +173,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
   // The component is mounted with key={selectedPointId} in the parent, so
   // useState initializers run fresh whenever a different point is selected.
   const [name,         setName]         = useState(point.name)
-  const [lookiarUrl,   setLookiarUrl]   = useState(point.lookiarUrl)
+  const [lookiarUrl,   setLookiarUrl]   = useState(point.lookiarUrl ?? '')
   const [description,  setDescription]  = useState(point.description ?? '')
   const [instructions, setInstructions] = useState(point.instructions ?? '')
   const [buttonText,   setButtonText]   = useState(point.buttonText ?? '')

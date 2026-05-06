@@ -32,3 +32,16 @@ export function savePoint(id: string, updates: Partial<GeoPoint>): Promise<GeoPo
 export function removePoint(id: string): Promise<void> {
   return repository.removePoint(id)
 }
+
+export function listPublicPoints(projectId: string): Promise<GeoPoint[]> {
+  return repository.listPublicPoints(projectId)
+}
+
+export function requestPointAccess(
+  projectId: string,
+  pointId: string,
+  lat: number,
+  lng: number,
+): Promise<{ url: string }> {
+  return repository.requestPointAccess(projectId, pointId, lat, lng)
+}

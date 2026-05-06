@@ -229,13 +229,14 @@ interface PublicPointCardProps {
   routeStatus?: RouteStatus
   walkingDistanceMeters?: number
   walkingDurationSeconds?: number
+  isActivating?: boolean
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function PublicPointCard({
   point, distance, isSelected, onSelect, onActivate, onExit,
-  routeStatus, walkingDistanceMeters, walkingDurationSeconds,
+  routeStatus, walkingDistanceMeters, walkingDurationSeconds, isActivating,
 }: PublicPointCardProps) {
   const [descExpanded, setDescExpanded] = useState(false)
   const isLongDesc = (point.description?.length ?? 0) > DESCRIPTION_LIMIT
@@ -396,11 +397,21 @@ export default function PublicPointCard({
               {canActivate ? (
                 <button
                   onClick={(e) => { e.stopPropagation(); onActivate() }}
-                  className="w-full bg-brand-600 hover:bg-brand-700 active:scale-[0.98]
-                             text-white font-semibold py-2.5 px-4 rounded-xl text-sm
-                             transition-all duration-150"
+                  disabled={isActivating}
+                  className={[
+                    'w-full font-semibold py-2.5 px-4 rounded-xl text-sm transition-all duration-150',
+                    isActivating
+                      ? 'bg-brand-700 text-white/70 cursor-wait'
+                      : 'bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white',
+                  ].join(' ')}
                 >
-                  {point.buttonText || 'Ir a experiencia'}
+                  {isActivating ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white
+                                       rounded-full animate-spin" />
+                      Verificando…
+                    </span>
+                  ) : (point.buttonText || 'Ir a experiencia')}
                 </button>
               ) : (
                 <button

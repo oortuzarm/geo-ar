@@ -26,7 +26,7 @@ export interface GeoPoint {
   id: string
   geoProjectId: string
   name: string
-  lookiarUrl: string
+  lookiarUrl?: string
   latitude: number
   longitude: number
   activationRadius: number

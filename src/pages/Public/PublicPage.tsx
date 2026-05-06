@@ -1,9 +1,17 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Circle, Marker } from 'react-leaflet'
 import L from 'leaflet'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
+
+function parseAccessError(err: unknown): string {
+  if (err instanceof ApiError) {
+    try { return JSON.parse(err.message).message } catch { /* ignore */ }
+    if (err.status === 408) return 'El servidor no respondió. Intenta nuevamente.'
+  }
+  return 'No se pudo acceder a la experiencia.'
+}
 import { haversineDistance } from '../../features/geolocation/haversine'
 import { fetchWalkingRoute } from '../../features/routing/orsClient'
 import type { RouteResult } from '../../features/routing/orsClient'
@@ -198,6 +206,7 @@ export default function PublicPage() {
   const [loadError, setLoadError] = useState<LoadError>(null)
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null)
   const [distances, setDistances] = useState<Record<string, number>>({})
+  const [activatingPointId, setActivatingPointId] = useState<string | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ── Route state ────────────────────────────────────────────────────────────
@@ -250,7 +259,7 @@ export default function PublicPage() {
 
     Promise.all([
       geoProjectsApi.fetchPublicProject(id),
-      geoPointsApi.listPoints(id),
+      geoPointsApi.listPublicPoints(id),
     ])
       .then(([proj, pts]) => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current)
@@ -451,12 +460,27 @@ export default function PublicPage() {
     }
   }
 
-  function handleActivate(point: GeoPoint) {
-    const dist = distances[point.id] ?? Infinity
-    if (dist <= point.activationRadius) {
-      window.open(point.lookiarUrl, '_blank', 'noopener,noreferrer')
+  const handleActivate = useCallback(async (point: GeoPoint) => {
+    if (activatingPointId) return
+    if (!userLocation) {
+      addToast('Activá tu ubicación para acceder a la experiencia.', 'error')
+      return
     }
-  }
+    setActivatingPointId(point.id)
+    try {
+      const { url } = await geoPointsApi.requestPointAccess(
+        id!,
+        point.id,
+        userLocation.latitude,
+        userLocation.longitude,
+      )
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch (err) {
+      addToast(parseAccessError(err), 'error')
+    } finally {
+      setActivatingPointId(null)
+    }
+  }, [activatingPointId, userLocation, id, addToast])
 
   if (loading) {
     return (
@@ -598,8 +622,9 @@ export default function PublicPage() {
                   distance={distances[pt.id] ?? null}
                   isSelected={pt.id === selectedPointId}
                   onSelect={() => handlePointClick(pt)}
-                  onActivate={() => handleActivate(pt)}
+                  onActivate={() => { void handleActivate(pt) }}
                   onExit={pt.id === selectedPointId ? handleExitSelectedPoint : undefined}
+                  isActivating={pt.id === activatingPointId}
                   routeStatus={pt.id === selectedPointId ? routeStatus : undefined}
                   walkingDistanceMeters={
                     pt.id === selectedPointId && routeResult ? routeResult.distanceMeters : undefined

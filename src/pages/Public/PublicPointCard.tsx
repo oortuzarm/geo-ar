@@ -230,13 +230,16 @@ interface PublicPointCardProps {
   walkingDistanceMeters?: number
   walkingDurationSeconds?: number
   isActivating?: boolean
+  accessMessage?: string
+  accessFallbackUrl?: string
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function PublicPointCard({
   point, distance, isSelected, onSelect, onActivate, onExit,
-  routeStatus, walkingDistanceMeters, walkingDurationSeconds, isActivating,
+  routeStatus, walkingDistanceMeters, walkingDurationSeconds,
+  isActivating, accessMessage, accessFallbackUrl,
 }: PublicPointCardProps) {
   const [descExpanded, setDescExpanded] = useState(false)
   const isLongDesc = (point.description?.length ?? 0) > DESCRIPTION_LIMIT
@@ -392,8 +395,8 @@ export default function PublicPointCard({
               />
             )}
 
-            {/* Activation button */}
-            <div className="pt-0.5">
+            {/* Activation button + inline access feedback */}
+            <div className="pt-0.5 space-y-2">
               {canActivate ? (
                 <button
                   onClick={(e) => { e.stopPropagation(); onActivate() }}
@@ -421,6 +424,27 @@ export default function PublicPointCard({
                 >
                   {point.buttonText || 'Ir a experiencia'}
                 </button>
+              )}
+
+              {/* Inline feedback: error message or popup-blocked fallback */}
+              {accessMessage && (
+                accessFallbackUrl ? (
+                  <a
+                    href={accessFallbackUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="block w-full text-center text-xs font-medium
+                               text-brand-400 hover:text-brand-300 underline
+                               underline-offset-2 transition-colors py-1"
+                  >
+                    {accessMessage}
+                  </a>
+                ) : (
+                  <p className="text-xs text-red-400 text-center px-1 leading-snug">
+                    {accessMessage}
+                  </p>
+                )
               )}
             </div>
 

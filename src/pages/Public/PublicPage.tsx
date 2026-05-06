@@ -5,13 +5,6 @@ import L from 'leaflet'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
 
-function parseAccessError(err: unknown): string {
-  if (err instanceof ApiError) {
-    try { return JSON.parse(err.message).message } catch { /* ignore */ }
-    if (err.status === 408) return 'El servidor no respondió. Intenta nuevamente.'
-  }
-  return 'No se pudo acceder a la experiencia.'
-}
 import { haversineDistance } from '../../features/geolocation/haversine'
 import { fetchWalkingRoute } from '../../features/routing/orsClient'
 import type { RouteResult } from '../../features/routing/orsClient'
@@ -207,6 +200,11 @@ export default function PublicPage() {
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null)
   const [distances, setDistances] = useState<Record<string, number>>({})
   const [activatingPointId, setActivatingPointId] = useState<string | null>(null)
+  const [accessError, setAccessError] = useState<{
+    pointId: string
+    message: string
+    fallbackUrl?: string
+  } | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ── Route state ────────────────────────────────────────────────────────────
@@ -410,6 +408,7 @@ export default function PublicPage() {
 
   function handleExitSelectedPoint() {
     setSelectedPointId(null)
+    setAccessError(null)
     // Route state is cleared by the route effect when selectedPointId becomes null.
     // Fly to user location if available; otherwise zoom out to show all points.
     flyToCounterRef.current += 1
@@ -425,6 +424,7 @@ export default function PublicPage() {
 
   function handlePointClick(pt: GeoPoint) {
     setSelectedPointId(pt.id)
+    setAccessError(null)
     flyToCounterRef.current += 1
     setFlyToKey(`point-${pt.id}-${flyToCounterRef.current}`)
     setFlyToTarget({ lat: pt.latitude, lng: pt.longitude, zoom: 17 })
@@ -466,17 +466,67 @@ export default function PublicPage() {
       addToast('Activá tu ubicación para acceder a la experiencia.', 'error')
       return
     }
+
+    setAccessError(null)
+
+    console.log('[Access] → Iniciando acceso', {
+      projectId: id,
+      pointId:   point.id,
+      latitude:  userLocation.latitude,
+      longitude: userLocation.longitude,
+    })
+
+    // Pre-open a blank window SYNCHRONOUSLY (inside the user gesture) so the
+    // browser doesn't treat the later window.open as an unsolicited popup.
+    const win = window.open('', '_blank', 'noopener,noreferrer')
+
     setActivatingPointId(point.id)
     try {
-      const { url } = await geoPointsApi.requestPointAccess(
+      const result = await geoPointsApi.requestPointAccess(
         id!,
         point.id,
         userLocation.latitude,
         userLocation.longitude,
       )
-      window.open(url, '_blank', 'noopener,noreferrer')
+      console.log('[Access] ✓ Respuesta exitosa:', result)
+
+      if (win) {
+        win.location.href = result.url
+      } else {
+        // Popup blocked: show a tappable fallback link in the card.
+        console.warn('[Access] Popup bloqueado por el navegador — mostrando link de fallback')
+        setAccessError({ pointId: point.id, message: 'Tap para abrir la experiencia', fallbackUrl: result.url })
+      }
     } catch (err) {
-      addToast(parseAccessError(err), 'error')
+      win?.close()
+      console.error('[Access] ✗ Error recibido:', err)
+
+      let msg = 'No se pudo validar el acceso.'
+
+      if (err instanceof ApiError) {
+        console.error('[Access]   HTTP status:', err.status)
+        console.error('[Access]   Body raw:   ', err.message)
+
+        try {
+          const parsed: unknown = JSON.parse(err.message)
+          console.log('[Access]   Body parsed:', parsed)
+          if (parsed && typeof parsed === 'object' && 'message' in parsed)
+            msg = String((parsed as { message: unknown }).message)
+          else if (parsed && typeof parsed === 'object' && 'error' in parsed)
+            msg = String((parsed as { error: unknown }).error)
+        } catch {
+          // Body is not JSON (HTML 500, plain text, etc.)
+          console.warn('[Access]   Body no es JSON')
+          if (err.status === 403)      msg = 'Proyecto no publicado.'
+          else if (err.status === 404) msg = 'Punto no encontrado.'
+          else if (err.status === 408) msg = 'El servidor no respondió. Intenta nuevamente.'
+          else                         msg = err.message || msg
+        }
+      }
+
+      console.error('[Access]   Mensaje final:', msg)
+      setAccessError({ pointId: point.id, message: msg })
+      addToast(msg, 'error')
     } finally {
       setActivatingPointId(null)
     }
@@ -625,6 +675,8 @@ export default function PublicPage() {
                   onActivate={() => { void handleActivate(pt) }}
                   onExit={pt.id === selectedPointId ? handleExitSelectedPoint : undefined}
                   isActivating={pt.id === activatingPointId}
+                  accessMessage={accessError?.pointId === pt.id ? accessError.message : undefined}
+                  accessFallbackUrl={accessError?.pointId === pt.id ? accessError.fallbackUrl : undefined}
                   routeStatus={pt.id === selectedPointId ? routeStatus : undefined}
                   walkingDistanceMeters={
                     pt.id === selectedPointId && routeResult ? routeResult.distanceMeters : undefined

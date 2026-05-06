@@ -770,10 +770,10 @@ export default function PublicPage() {
                 />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white/95 line-clamp-2 leading-snug drop-shadow-sm">
+                <p className="text-sm font-semibold text-slate-900 line-clamp-2 leading-snug">
                   {project.title}
                 </p>
-                <p className="text-xs text-white/55 leading-snug mt-0.5">
+                <p className="text-xs text-slate-600 leading-snug mt-0.5">
                   {`${points.length} experiencia${points.length !== 1 ? 's' : ''} disponible${points.length !== 1 ? 's' : ''}`}
                 </p>
               </div>

@@ -68,7 +68,7 @@ export class RemoteGeoRepository implements IGeoRepository {
     return apiFetch<GeoProject>(this.url(`/api/geo_projects/${id}/sync`), {
       method: 'PATCH',
       body: JSON.stringify({ ...project, geoPoints: points }),
-      timeout: hasImage ? 45_000 : 20_000,
+      timeout: hasImage ? 60_000 : 30_000,
     })
   }
 

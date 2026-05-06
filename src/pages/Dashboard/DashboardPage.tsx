@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import DashboardMap from '../../components/map/DashboardMap'
 import POISearch from '../../components/map/POISearch'
@@ -31,6 +31,10 @@ export default function DashboardPage() {
   const [locatingUser, setLocatingUser] = useState(false)
   const [listDrawerOpen, setListDrawerOpen] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  // Ref-based guard so async continuations read the live value, not a stale closure.
+  const isSavingRef   = useRef(false)
+  // True when a save was requested while one was already in progress.
+  const pendingSaveRef = useRef(false)
   const [isPublishing, setIsPublishing] = useState(false)
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [poiResults, setPoiResults] = useState<PoiSearchResult[]>([])
@@ -295,40 +299,36 @@ export default function DashboardPage() {
   }
 
   async function handleSave() {
-    if (!project || isSaving) return
+    // Read fresh project from store — avoids stale closure after async gaps.
+    const currentProject = useGeoStore.getState().project
+    if (!currentProject) return
+
+    if (isSavingRef.current) {
+      // Another save is already in flight — queue one more for when it finishes.
+      pendingSaveRef.current = true
+      console.log('[Save] Guardado en curso — cambios pendientes registrados')
+      return
+    }
+
+    isSavingRef.current = true
     setIsSaving(true)
     console.time('[Save] SAVE_PROJECT_TOTAL')
 
-    let timeoutId: ReturnType<typeof setTimeout> | null = null
-    const overallTimeout = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(
-        () => reject(new ApiError(408, 'Save timeout')),
-        12_000,
-      )
-    })
-
     try {
-      await Promise.race([
-        (async () => {
-          const { status: _status, ...contentFields } = project
-          const currentPoints = useGeoStore.getState().points
+      const currentPoints = useGeoStore.getState().points
+      const { status: _status, ...contentFields } = currentProject
 
-          console.log(`[Save] SAVE_PROJECT_BULK_REQUEST — puntos enviados: ${currentPoints.length}`)
-          console.time('[Save] syncProject')
-          await geoProjectsApi.syncProject(project.id, contentFields, currentPoints)
-          console.timeEnd('[Save] syncProject')
-        })(),
-        overallTimeout,
-      ])
+      console.log(`[Save] SAVE_PROJECT_BULK_REQUEST — puntos enviados: ${currentPoints.length}`)
+      console.time('[Save] syncProject')
+      await geoProjectsApi.syncProject(currentProject.id, contentFields, currentPoints)
+      console.timeEnd('[Save] syncProject')
 
       setHasUnsavedChanges(false)
       addToast('Proyecto guardado correctamente', 'success')
     } catch (err) {
       if (err instanceof ApiError) {
         console.error('[Save] ApiError', err.status, err.message)
-        const detail = err.status === 408
-          ? 'El guardado está demorando más de lo esperado. Revisa tu conexión e intenta nuevamente.'
-          : err.status >= 500
+        const detail = err.status >= 500
           ? `Error del servidor (${err.status}). Intenta nuevamente.`
           : `Error al guardar (${err.status}): ${err.message}`
         addToast(detail, 'error')
@@ -337,9 +337,16 @@ export default function DashboardPage() {
         addToast('Error al guardar el proyecto', 'error')
       }
     } finally {
-      if (timeoutId) clearTimeout(timeoutId)
       console.timeEnd('[Save] SAVE_PROJECT_TOTAL')
+      isSavingRef.current = false
       setIsSaving(false)
+
+      // If changes arrived while this save was running, do one final save now.
+      if (pendingSaveRef.current) {
+        pendingSaveRef.current = false
+        console.log('[Save] Ejecutando guardado pendiente con estado más reciente...')
+        void handleSave()
+      }
     }
   }
 

@@ -5,6 +5,7 @@ import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
 import { uploadImage } from '../../lib/uploadImage'
 import MetricsModal from './MetricsModal'
+import ShareModal from '../../components/ui/ShareModal'
 import type { GeoProject } from '../../types'
 
 const MAX_NAME_LENGTH = 60
@@ -41,6 +42,22 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
   const [coverError, setCoverError] = useState<string | null>(null)
   const [togglingStatus, setTogglingStatus] = useState(false)
   const [metricsOpen, setMetricsOpen] = useState(false)
+  const [shareOpen,   setShareOpen]   = useState(false)
+
+  const publicUrl = `${window.location.origin}/public/${project.id}`
+
+  async function handleShare() {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: project.title, url: publicUrl })
+        return
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return
+        // share API failed — fall through to modal
+      }
+    }
+    setShareOpen(true)
+  }
 
   async function saveName() {
     const trimmed = draftName.trim().slice(0, MAX_NAME_LENGTH)
@@ -212,7 +229,7 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
         </p>
       </div>
 
-      {/* Actions — row 1: primary actions */}
+      {/* Actions — row 1: primary */}
       <div className="px-4 pb-1 flex gap-2">
         <Button
           variant="secondary"
@@ -227,18 +244,18 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
           variant="ghost"
           size="sm"
           className="flex-1 text-gray-400 hover:text-brand-300"
-          onClick={() => setMetricsOpen(true)}
-          title="Ver métricas"
+          onClick={() => { void handleShare() }}
+          title="Compartir"
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
           </svg>
-          Métricas
+          Compartir
         </Button>
       </div>
 
-      {/* Actions — row 2: icon-only secondary actions */}
+      {/* Actions — row 2: icon-only */}
       <div className="px-4 pb-4 flex gap-1 pt-1">
         {/* Publish / unpublish */}
         <Button
@@ -267,12 +284,24 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => window.open(`/public/${project.id}`, '_blank')}
+          onClick={() => window.open(publicUrl, '_blank')}
           title="Abrir vista pública"
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setMetricsOpen(true)}
+          title="Ver métricas"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
         </Button>
 
@@ -294,6 +323,12 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
         projectTitle={project.title}
         isOpen={metricsOpen}
         onClose={() => setMetricsOpen(false)}
+      />
+      <ShareModal
+        url={publicUrl}
+        title={project.title}
+        isOpen={shareOpen}
+        onClose={() => setShareOpen(false)}
       />
     </div>
   )

@@ -194,12 +194,13 @@ function ErrorScreen({ error, id }: { error: LoadError; id?: string }) {
 // ── Bottom sheet state ────────────────────────────────────────────────────────
 type SheetState = 'peek' | 'mid' | 'expanded'
 
-// peek: 8rem content + safe-area so the handle clears the iPhone home indicator.
-// env(safe-area-inset-bottom, 0px) evaluates to ~34px on Face ID iPhones, 0 elsewhere.
-const SHEET_TRANSLATE: Record<SheetState, string> = {
-  peek:     'translateY(calc(90dvh - 8rem - env(safe-area-inset-bottom, 0px)))',
-  mid:      'translateY(35dvh)',
-  expanded: 'translateY(0px)',
+// Height-driven sheet: actual height = visible area per state.
+// flex-1 on the scroll container then fills exactly the visible portion.
+// env(safe-area-inset-bottom, 0px) ≈ 34px on Face ID iPhones, 0 elsewhere.
+const SHEET_HEIGHT: Record<SheetState, string> = {
+  peek:     'calc(8rem + env(safe-area-inset-bottom, 0px))',
+  mid:      '55dvh',
+  expanded: '90dvh',
 }
 
 export default function PublicPage() {
@@ -726,17 +727,17 @@ export default function PublicPage() {
       </div>
 
       {/* ── MOBILE BOTTOM SHEET (hidden on md+) ─────────────────────────────
-          Sits over the map. Height: 90vh. Translate drives peek/mid/expanded.
-          peek     → shows 4.5rem (72px) — drag handle + mini summary
-          mid      → shows 55vh          — active card or top of list
-          expanded → shows 90vh          — full scrollable list              */}
+          Height changes per state — the sheet always anchors to bottom-0 and
+          grows/shrinks upward. flex-1 on the scroll area then fills exactly
+          the visible space, so scroll is always reachable.
+          peek     → 8rem + safe-area  — handle + mini summary only
+          mid      → 55dvh             — partial list, fully scrollable
+          expanded → 90dvh             — full scrollable list              */}
       <div
         className="md:hidden absolute inset-x-0 bottom-0 z-[1000]"
         style={{
-          height: '90dvh',
-          transform: SHEET_TRANSLATE[sheetState],
-          transition: 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
-          willChange: 'transform',
+          height: SHEET_HEIGHT[sheetState],
+          transition: 'height 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
         }}
       >
         <div className="h-full flex flex-col rounded-t-[28px] overflow-hidden
@@ -793,15 +794,21 @@ export default function PublicPage() {
             </div>
           </div>
 
-          {/* Scrollable content */}
+          {/* Scrollable content — hidden in peek (header-only state) */}
           <div
-            className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
+            className={[
+              'flex-1 min-h-0 overscroll-contain',
+              sheetState === 'peek' ? 'overflow-hidden' : 'overflow-y-auto',
+            ].join(' ')}
             style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
           >
-            {/* Points — padding-bottom clears Safari bottom bar + home indicator */}
             <div
               className="space-y-2 px-4 pt-1"
-              style={{ paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}
+              style={{
+                paddingBottom: sheetState === 'expanded'
+                  ? 'calc(40px + env(safe-area-inset-bottom, 0px))'
+                  : 'calc(96px + env(safe-area-inset-bottom, 0px))',
+              }}
             >
               {renderPoints(mobileCardRefs)}
             </div>

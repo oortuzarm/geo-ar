@@ -6,6 +6,7 @@ import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
 
 import { haversineDistance } from '../../features/geolocation/haversine'
+import { trackRadiusEnter, trackPointClick } from '../../lib/analytics'
 import { fetchWalkingRoute } from '../../features/routing/orsClient'
 import type { RouteResult } from '../../features/routing/orsClient'
 import type { RouteStatus } from './PublicPointCard'
@@ -218,6 +219,8 @@ export default function PublicPage() {
   const routeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   // Stable ref to points so the route effect doesn't need it as a dependency
   const pointsRef = useRef<GeoPoint[]>([])
+  // Tracks previous inside/outside state per point to detect outside→inside transitions.
+  const wasInsideRef = useRef<Record<string, boolean>>({})
 
   // ── flyTo control ─────────────────────────────────────────────────────────
   // Changing flyToKey triggers ONE flyTo call in MapController.
@@ -318,6 +321,23 @@ export default function PublicPage() {
     }
     setDistances(newDist)
   }, [userLocation, points])
+
+  // ── Radius-enter tracking ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (!userLocation || !id) return
+    for (const pt of points) {
+      const dist = haversineDistance(
+        userLocation.latitude, userLocation.longitude,
+        pt.latitude, pt.longitude,
+      )
+      const isInside  = dist <= pt.activationRadius
+      const wasInside = wasInsideRef.current[pt.id] ?? false
+      if (!wasInside && isInside) {
+        trackRadiusEnter(id, pt.id)
+      }
+      wasInsideRef.current[pt.id] = isInside
+    }
+  }, [userLocation, points, id])
 
   // ── Route calculation ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -467,6 +487,7 @@ export default function PublicPage() {
     }
 
     setAccessError(null)
+    trackPointClick(id!, point.id)
 
     console.log('[Access] → Iniciando acceso', {
       projectId: id,

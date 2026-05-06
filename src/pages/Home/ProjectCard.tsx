@@ -1,9 +1,11 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { geoProjectsApi } from '../../services'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
 import { uploadImage } from '../../lib/uploadImage'
+import { fetchProjectAnalytics } from '../../lib/analytics'
+import type { ProjectAnalytics } from '../../lib/analytics'
 import type { GeoProject } from '../../types'
 
 const MAX_NAME_LENGTH = 60
@@ -39,6 +41,13 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
   const [uploadingCover, setUploadingCover] = useState(false)
   const [coverError, setCoverError] = useState<string | null>(null)
   const [togglingStatus, setTogglingStatus] = useState(false)
+  const [analytics, setAnalytics] = useState<ProjectAnalytics | null>(null)
+
+  useEffect(() => {
+    fetchProjectAnalytics(project.id)
+      .then(setAnalytics)
+      .catch(() => { /* non-critical — silently skip if endpoint not available */ })
+  }, [project.id])
 
   async function saveName() {
     const trimmed = draftName.trim().slice(0, MAX_NAME_LENGTH)
@@ -208,6 +217,13 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
             day: 'numeric', month: 'short', year: 'numeric',
           })}
         </p>
+        {analytics !== null && (
+          <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 flex-wrap">
+            <span>📍 {analytics.radiusEntries} entradas</span>
+            <span>🖱 {analytics.clicks} clics</span>
+            <span>↗ {analytics.conversion}% conversión</span>
+          </div>
+        )}
       </div>
 
       {/* Actions */}

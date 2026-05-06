@@ -785,7 +785,10 @@ export default function PublicPage() {
           </div>
 
           {/* Scrollable content */}
-          <div className="flex-1 overflow-y-auto overscroll-contain">
+          <div
+            className="flex-1 overflow-y-auto overscroll-contain"
+            style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+          >
             {/* Project cover + header */}
             {project.coverImage && (
               <div className="px-4 pb-3">
@@ -803,8 +806,11 @@ export default function PublicPage() {
               )}
             </div>
 
-            {/* Points */}
-            <div className="space-y-2 px-4 pb-10">
+            {/* Points — padding-bottom clears Safari bottom bar + home indicator */}
+            <div
+              className="space-y-2 px-4"
+              style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
+            >
               {renderPoints(mobileCardRefs)}
             </div>
           </div>

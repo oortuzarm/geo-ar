@@ -11,7 +11,7 @@ import { trackRadiusEnter, trackPointClick } from '../../lib/analytics'
 import { fetchWalkingRoute } from '../../features/routing/orsClient'
 import type { RouteResult } from '../../features/routing/orsClient'
 import type { RouteStatus } from './PublicPointCard'
-import { useGeolocation, requestLocation } from '../../hooks/useGeolocation'
+import { useGeolocation } from '../../hooks/useGeolocation'
 import { useGeoStore } from '../../store/geoStore'
 import RoutePolyline from '../../components/map/RoutePolyline'
 import MapController from '../../components/map/MapController'
@@ -240,16 +240,15 @@ function LocationBadge({ status, onClick }: { status: LocationStatus; onClick: (
 // ── Location permission sheet ─────────────────────────────────────────────────
 
 function LocationSheet({
-  mode, onRetry, onClose,
+  mode, onRetry, onClose, showReloadHint,
 }: {
   mode: 'auto' | 'denied'
   onRetry: () => void
   onClose: () => void
+  showReloadHint?: boolean
 }) {
   return (
-    <div
-      className="absolute inset-0 z-[2000] flex flex-col justify-end md:hidden"
-    >
+    <div className="absolute inset-0 z-[2000] flex flex-col justify-end md:hidden">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-gray-950 border-t border-gray-800 rounded-t-[24px]
                       px-5 pt-5 shadow-2xl"
@@ -291,6 +290,23 @@ function LocationSheet({
         >
           {mode === 'auto' ? 'Permitir ubicación' : 'Intentar nuevamente'}
         </button>
+
+        {/* Safari hint: shown after at least one failed retry */}
+        {showReloadHint && (
+          <div className="mt-3 space-y-2">
+            <p className="text-xs text-gray-600 text-center leading-snug">
+              Si ya cambiaste el permiso y sigue sin funcionar, recargá esta página.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full border border-gray-700 text-gray-400 hover:text-gray-200
+                         hover:border-gray-600 active:scale-[0.98] font-medium py-3
+                         rounded-xl text-sm transition-all duration-150"
+            >
+              Recargar página
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -310,7 +326,7 @@ const SHEET_HEIGHT: Record<SheetState, string> = {
 
 export default function PublicPage() {
   const { id } = useParams<{ id: string }>()
-  const { userLocation, locationStatus, setUserLocation, addToast } = useGeoStore()
+  const { userLocation, locationStatus, addToast } = useGeoStore()
   const [project, setProject] = useState<GeoProject | null>(null)
   const [points, setPoints] = useState<GeoPoint[]>([])
   const [loading, setLoading] = useState(true)
@@ -345,14 +361,20 @@ export default function PublicPage() {
   const flyToCounterRef = useRef(0)
 
   // ── Location permission UX ────────────────────────────────────────────────
-  const [locationSheet, setLocationSheet] = useState<'auto' | 'denied' | null>(null)
-  // Ref mirrors locationStatus so the auto-prompt timeout reads a fresh value
+  const [locationSheet,    setLocationSheet]    = useState<'auto' | 'denied' | null>(null)
+  const [showReloadHint,   setShowReloadHint]   = useState(false)
+  // retryKey restarts the watchPosition inside useGeolocation when incremented
+  const [locationRetryKey, setLocationRetryKey] = useState(0)
+  // Ref mirrors locationStatus for safe reading inside timeouts and event listeners
   const locationStatusRef = useRef<LocationStatus>(locationStatus)
   useEffect(() => { locationStatusRef.current = locationStatus }, [locationStatus])
 
-  // Close the sheet automatically once location is granted
+  // Close the sheet and reset the hint when location is finally granted
   useEffect(() => {
-    if (locationStatus === 'active') setLocationSheet(null)
+    if (locationStatus === 'active') {
+      setLocationSheet(null)
+      setShowReloadHint(false)
+    }
   }, [locationStatus])
 
   // Auto-prompt: once per browser session, 2.5 s after mount
@@ -366,17 +388,41 @@ export default function PublicPage() {
     return () => clearTimeout(t)
   }, []) // intentionally mount-only
 
+  // Re-validate location when the user returns to the tab/window from Settings.
+  // Each visibilitychange gets one retry; a closure-local flag prevents doubles.
+  useEffect(() => {
+    function handleVisible() {
+      if (document.visibilityState !== 'visible') return
+      const s = locationStatusRef.current
+      if (s === 'denied' || s === 'unavailable') {
+        setLocationRetryKey((k) => k + 1)
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisible)
+    window.addEventListener('focus', handleVisible)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisible)
+      window.removeEventListener('focus', handleVisible)
+    }
+  }, []) // mount-only; reads status via ref to avoid stale closures
+
   function handleBadgeClick() {
     if (locationStatus === 'denied') {
       setLocationSheet('denied')
     } else if (locationStatus !== 'active' && locationStatus !== 'requesting') {
-      requestLocation(setUserLocation)
+      setLocationRetryKey((k) => k + 1)
     }
   }
 
   function handleLocationRetry() {
     setLocationSheet(null)
-    requestLocation(setUserLocation)
+    // Mark that a retry was attempted — enables the "reload page" hint
+    // if the next attempt also fails.
+    setShowReloadHint(true)
+    // Increment retryKey → useGeolocation restarts watchPosition cleanly.
+    // This avoids the race where a stale watchPosition error callback fires
+    // immediately after getCurrentPosition succeeds, overwriting 'active'.
+    setLocationRetryKey((k) => k + 1)
   }
 
   // Separate refs for mobile sheet and desktop panel so scrollIntoView works
@@ -384,7 +430,7 @@ export default function PublicPage() {
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const mobileCardRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
-  useGeolocation(true)
+  useGeolocation(true, locationRetryKey)
 
   useEffect(() => { pointsRef.current = points }, [points])
 
@@ -854,6 +900,7 @@ export default function PublicPage() {
             mode={locationSheet}
             onRetry={handleLocationRetry}
             onClose={() => setLocationSheet(null)}
+            showReloadHint={showReloadHint}
           />
         )}
 

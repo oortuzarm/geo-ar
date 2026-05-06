@@ -2,7 +2,12 @@ import { useEffect, useRef } from 'react'
 import { useGeoStore } from '../store/geoStore'
 import type { LocationStatus, UserLocation } from '../types'
 
-export function useGeolocation(active = true) {
+/**
+ * Watches the user's position continuously.
+ * `retryKey` — increment this value from outside to restart the watch
+ * (e.g. after the user changes location permissions in Settings).
+ */
+export function useGeolocation(active = true, retryKey = 0) {
   const { setUserLocation } = useGeoStore()
   const watchIdRef = useRef<number | null>(null)
 
@@ -11,6 +16,12 @@ export function useGeolocation(active = true) {
     if (!navigator.geolocation) {
       setUserLocation(null, 'unavailable')
       return
+    }
+
+    // Clear any previous watch before starting a new one
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current)
+      watchIdRef.current = null
     }
 
     setUserLocation(null, 'requesting')
@@ -37,9 +48,10 @@ export function useGeolocation(active = true) {
     return () => {
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current)
+        watchIdRef.current = null
       }
     }
-  }, [active, setUserLocation])
+  }, [active, setUserLocation, retryKey]) // retryKey change restarts the watch
 }
 
 /**

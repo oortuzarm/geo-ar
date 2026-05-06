@@ -194,10 +194,10 @@ function ErrorScreen({ error, id }: { error: LoadError; id?: string }) {
 // ── Bottom sheet state ────────────────────────────────────────────────────────
 type SheetState = 'peek' | 'mid' | 'expanded'
 
-// peek: 6rem content + safe-area so the handle clears the iPhone home indicator.
+// peek: 8rem content + safe-area so the handle clears the iPhone home indicator.
 // env(safe-area-inset-bottom, 0px) evaluates to ~34px on Face ID iPhones, 0 elsewhere.
 const SHEET_TRANSLATE: Record<SheetState, string> = {
-  peek:     'translateY(calc(90vh - 6rem - env(safe-area-inset-bottom, 0px)))',
+  peek:     'translateY(calc(90vh - 8rem - env(safe-area-inset-bottom, 0px)))',
   mid:      'translateY(35vh)',
   expanded: 'translateY(0px)',
 }
@@ -711,7 +711,7 @@ export default function PublicPage() {
           onClick={handleMyLocation}
           disabled={!userLocation}
           className="absolute right-4 z-[400]
-                     bottom-[136px] md:bottom-4
+                     bottom-[160px] md:bottom-4
                      w-11 h-11 flex items-center justify-center
                      bg-white rounded-full border border-gray-200/60 shadow-md
                      hover:bg-gray-50 active:scale-95 active:shadow-sm
@@ -763,8 +763,10 @@ export default function PublicPage() {
                 <p className="text-sm font-semibold text-gray-100 truncate leading-snug">
                   {selectedPoint ? selectedPoint.name : project.title}
                 </p>
-                <p className="text-xs text-gray-500 leading-none mt-0.5">
-                  {selectedPoint ? 'Deslizá para ver detalles' : `${points.length} punto${points.length !== 1 ? 's' : ''}`}
+                <p className="text-xs text-gray-400 leading-snug mt-0.5">
+                  {selectedPoint
+                    ? 'Deslizá para ver detalles'
+                    : `${points.length} experiencia${points.length !== 1 ? 's' : ''} disponible${points.length !== 1 ? 's' : ''}`}
                 </p>
               </div>
               <button

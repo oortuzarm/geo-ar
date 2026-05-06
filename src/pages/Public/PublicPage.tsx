@@ -659,8 +659,6 @@ export default function PublicPage() {
     ))
   }
 
-  const selectedPoint = points.find(p => p.id === selectedPointId)
-
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="bg-gray-950 overflow-hidden relative md:flex md:flex-col" style={{ height: '100dvh' }}>
@@ -760,8 +758,8 @@ export default function PublicPage() {
 
             {/* Mini summary (always visible, 40px) */}
             <div className="flex items-start gap-3 px-4 pb-3">
-              {/* Mini cover — project identity; hidden when a point is selected */}
-              {project.coverImage && !selectedPoint && (
+              {/* Mini cover — always shows project identity */}
+              {project.coverImage && (
                 <img
                   src={project.coverImage}
                   alt={project.title}
@@ -771,12 +769,10 @@ export default function PublicPage() {
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-100 line-clamp-2 leading-snug">
-                  {selectedPoint ? selectedPoint.name : project.title}
+                  {project.title}
                 </p>
                 <p className="text-xs text-gray-400 leading-snug mt-0.5">
-                  {selectedPoint
-                    ? 'Deslizá para ver detalles'
-                    : `${points.length} experiencia${points.length !== 1 ? 's' : ''} disponible${points.length !== 1 ? 's' : ''}`}
+                  {`${points.length} experiencia${points.length !== 1 ? 's' : ''} disponible${points.length !== 1 ? 's' : ''}`}
                 </p>
               </div>
               <button

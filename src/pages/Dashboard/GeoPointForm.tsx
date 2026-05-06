@@ -180,29 +180,46 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
   const [buttonText,  setButtonText]  = useState(point.buttonText ?? '')
 
   // ── Address: auto-geocoded + optional manual override ────────────────────
-  // addressCustom: what's in the input (persisted via point.instructions)
-  // addressAuto:   live reverse-geocoded string (never persisted directly)
+  // addressCustom:  what's in the input (persisted via point.instructions)
+  // addressAuto:    live reverse-geocoded string (never persisted directly)
+  // addressFetching: true while a geocoding request is in flight
   // addressEditedRef: true when user has manually typed; suppresses auto-fill
-  const [addressCustom,  setAddressCustom]  = useState(point.instructions ?? '')
-  const [addressAuto,    setAddressAuto]    = useState<string | null>(null)
-  const [addressLoading, setAddressLoading] = useState(false)
+  const [addressCustom,   setAddressCustom]   = useState(point.instructions ?? '')
+  const [addressAuto,     setAddressAuto]     = useState<string | null>(null)
+  const [addressFetching, setAddressFetching] = useState(false)
   const addressEditedRef = useRef(!!point.instructions)
   const geoTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (geoTimerRef.current) clearTimeout(geoTimerRef.current)
-    setAddressLoading(true)
+    let cancelled = false
+
+    // Immediately clear stale address so the loading placeholder shows right away.
+    // Skip when the user has manually edited — never touch their custom text.
+    if (!addressEditedRef.current) {
+      setAddressCustom('')
+      setAddressFetching(true)
+    }
+
     geoTimerRef.current = setTimeout(() => {
       reverseGeocode(point.latitude, point.longitude)
         .then((addr) => {
+          if (cancelled) return
           setAddressAuto(addr)
-          // Only auto-fill the input when the user hasn't manually edited
           if (!addressEditedRef.current) setAddressCustom(addr)
         })
-        .catch(() => setAddressAuto(null))
-        .finally(() => setAddressLoading(false))
+        .catch(() => {
+          if (!cancelled) setAddressAuto(null)
+        })
+        .finally(() => {
+          if (!cancelled) setAddressFetching(false)
+        })
     }, 800)
-    return () => { if (geoTimerRef.current) clearTimeout(geoTimerRef.current) }
+
+    return () => {
+      cancelled = true
+      if (geoTimerRef.current) clearTimeout(geoTimerRef.current)
+    }
   }, [point.latitude, point.longitude])
 
   // Push all local text state to the parent store in one shot.
@@ -403,33 +420,29 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           </p>
         </div>
 
-        {/* Address: auto-filled from reverse geocoding, editable manually */}
-        {addressLoading && !addressCustom ? (
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-              Dirección del punto
-            </span>
-            <div className="h-9 bg-gray-800/50 border border-gray-700 rounded-md animate-pulse" />
-          </div>
-        ) : (
-          <Input
-            label="Dirección del punto"
-            placeholder={addressAuto ?? 'Ej: Entrada principal'}
-            value={addressCustom}
-            onChange={(e) => {
-              const val = e.target.value
-              // Empty → reset to auto-fill mode so next geocode will refill
-              addressEditedRef.current = val.length > 0
-              setAddressCustom(val)
-            }}
-            onBlur={() => onChange({ instructions: addressCustom || undefined })}
-            hint={
-              addressAuto && addressCustom && addressCustom !== addressAuto
-                ? `Auto: ${addressAuto}`
-                : undefined
-            }
-          />
-        )}
+        {/* Address: auto-filled from reverse geocoding, editable manually.
+            Placeholder switches to "Obteniendo dirección…" while fetching so
+            the user never sees a stale address during an in-progress geocode. */}
+        <Input
+          label="Dirección del punto"
+          placeholder={
+            addressFetching && !addressEditedRef.current
+              ? 'Obteniendo dirección…'
+              : (addressAuto ?? 'Ej: Entrada principal')
+          }
+          value={addressCustom}
+          onChange={(e) => {
+            const val = e.target.value
+            addressEditedRef.current = val.length > 0
+            setAddressCustom(val)
+          }}
+          onBlur={() => onChange({ instructions: addressCustom || undefined })}
+          hint={
+            !addressFetching && addressAuto && addressCustom && addressCustom !== addressAuto
+              ? `Auto: ${addressAuto}`
+              : undefined
+          }
+        />
 
         <Input
           label="Texto del botón"

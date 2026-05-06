@@ -669,6 +669,7 @@ export default function DashboardPage() {
       {project && (
         <PreviewQRModal
           projectId={project.id}
+          projectTitle={project.title}
           isOpen={previewModalOpen}
           onClose={() => setPreviewModalOpen(false)}
         />

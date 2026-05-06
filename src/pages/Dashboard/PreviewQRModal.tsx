@@ -4,11 +4,22 @@ import Spinner from '../../components/ui/Spinner'
 
 interface PreviewQRModalProps {
   projectId: string
+  projectTitle?: string
   isOpen: boolean
   onClose: () => void
 }
 
-export default function PreviewQRModal({ projectId, isOpen, onClose }: PreviewQRModalProps) {
+function toFileStem(title: string | undefined): string {
+  const base = (title ?? '').trim() || 'proyecto'
+  return base
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-|-$/g, '') || 'proyecto'
+}
+
+export default function PreviewQRModal({ projectId, projectTitle, isOpen, onClose }: PreviewQRModalProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [qrError, setQrError] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -39,11 +50,13 @@ export default function PreviewQRModal({ projectId, isOpen, onClose }: PreviewQR
     return () => window.removeEventListener('keydown', handler)
   }, [isOpen, onClose])
 
+  const stem = toFileStem(projectTitle)
+
   function downloadPng() {
     if (!qrDataUrl) return
     const a = document.createElement('a')
     a.href = qrDataUrl
-    a.download = `qr-${projectId}.png`
+    a.download = `${stem}-qr.png`
     a.click()
   }
 
@@ -58,7 +71,7 @@ export default function PreviewQRModal({ projectId, isOpen, onClose }: PreviewQR
       const objectUrl = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = objectUrl
-      a.download = `qr-${projectId}.svg`
+      a.download = `${stem}-qr.svg`
       a.click()
       URL.revokeObjectURL(objectUrl)
     } catch { /* non-critical */ }

@@ -29,14 +29,16 @@ export default function ShareModal({ url, title, isOpen, onClose }: ShareModalPr
 
   if (!isOpen) return null
 
-  const encodedUrl   = encodeURIComponent(url)
-  const encodedTitle = encodeURIComponent(title)
-  const shareText    = encodeURIComponent(`${title} — ${url}`)
+  const encodedUrl     = encodeURIComponent(url)
+  const shareMessage   = `Echa un vistazo a esta experiencia geolocalizada: ${title}`
+  const encodedText    = encodeURIComponent(shareMessage)
+  const encodedSubject = encodeURIComponent(title)
+  const encodedBody    = encodeURIComponent(`${shareMessage}\n\n${url}`)
 
   const socials = [
     {
       label: 'WhatsApp',
-      href: `https://wa.me/?text=${shareText}`,
+      href: `https://wa.me/?text=${encodeURIComponent(`${shareMessage}\n${url}`)}`,
       bg: 'bg-[#25D366]',
       icon: (
         <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
@@ -46,7 +48,7 @@ export default function ShareModal({ url, title, isOpen, onClose }: ShareModalPr
     },
     {
       label: 'X / Twitter',
-      href: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`,
+      href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`,
       bg: 'bg-[#1DA1F2]',
       icon: (
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
@@ -66,7 +68,7 @@ export default function ShareModal({ url, title, isOpen, onClose }: ShareModalPr
     },
     {
       label: 'Mail',
-      href: `mailto:?subject=${encodedTitle}&body=${shareText}`,
+      href: `mailto:?subject=${encodedSubject}&body=${encodedBody}`,
       bg: 'bg-gray-600',
       icon: (
         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

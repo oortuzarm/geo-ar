@@ -46,16 +46,7 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
 
   const publicUrl = `${window.location.origin}/public/${project.id}`
 
-  async function handleShare() {
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: project.title, url: publicUrl })
-        return
-      } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') return
-        // share API failed — fall through to modal
-      }
-    }
+  function handleShare() {
     setShareOpen(true)
   }
 
@@ -244,7 +235,7 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
           variant="ghost"
           size="sm"
           className="flex-1 text-gray-400 hover:text-brand-300"
-          onClick={() => { void handleShare() }}
+          onClick={handleShare}
           title="Compartir"
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

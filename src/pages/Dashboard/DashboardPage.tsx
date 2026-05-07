@@ -9,7 +9,6 @@ import ToastContainer from '../../components/ui/Toast'
 import GeoPointsList from './GeoPointsList'
 import GeoPointForm from './GeoPointForm'
 import PreviewQRModal from './PreviewQRModal'
-import ProjectInfoPanel from './ProjectInfoPanel'
 import { useGeoStore } from '../../store/geoStore'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
@@ -43,7 +42,6 @@ export default function DashboardPage() {
   const lastSavedImagesRef = useRef<{ coverImage?: string; points: Record<string, string | undefined> } | null>(null)
   const [isPublishing, setIsPublishing] = useState(false)
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
-  const [leftTab, setLeftTab] = useState<'points' | 'project'>('points')
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [poiResults, setPoiResults] = useState<PoiSearchResult[]>([])
 
@@ -518,46 +516,16 @@ export default function DashboardPage() {
 
         {/* Left sidebar: desktop only */}
         <aside className="hidden lg:flex w-64 flex-shrink-0 border-r border-gray-800 bg-gray-900 flex-col overflow-hidden">
-          {/* Tab headers */}
-          <div className="flex flex-shrink-0 border-b border-gray-800">
-            <button
-              onClick={() => setLeftTab('points')}
-              className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
-                leftTab === 'points'
-                  ? 'text-gray-100 border-b-2 border-brand-500 -mb-px'
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              Puntos GPS
-            </button>
-            <button
-              onClick={() => setLeftTab('project')}
-              className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
-                leftTab === 'project'
-                  ? 'text-gray-100 border-b-2 border-brand-500 -mb-px'
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              Proyecto
-            </button>
-          </div>
-          {leftTab === 'points' ? (
-            <GeoPointsList
-              points={points}
-              selectedId={selectedPointId}
-              onSelect={handleSelectPoint}
-              onAdd={handleAddPoint}
-              onToggleActive={handleToggleActive}
-              onBulkActivate={handleBulkActivate}
-              onBulkDeactivate={handleBulkDeactivate}
-              onBulkDelete={handleBulkDelete}
-            />
-          ) : (
-            <ProjectInfoPanel
-              onClose={() => setLeftTab('points')}
-              onSave={handleSave}
-            />
-          )}
+          <GeoPointsList
+            points={points}
+            selectedId={selectedPointId}
+            onSelect={handleSelectPoint}
+            onAdd={handleAddPoint}
+            onToggleActive={handleToggleActive}
+            onBulkActivate={handleBulkActivate}
+            onBulkDeactivate={handleBulkDeactivate}
+            onBulkDelete={handleBulkDelete}
+          />
         </aside>
 
         {/* Map area */}

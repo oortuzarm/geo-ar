@@ -252,7 +252,7 @@ const IOS_STEPS = [
   'Toca "Localización"',
   'Entra a "Sitios web de Safari"',
   'Selecciona "Al usar la app"',
-  'Vuelve a Safari y recarga la página',
+  'Recarga la página',
 ]
 
 const ANDROID_STEPS = [

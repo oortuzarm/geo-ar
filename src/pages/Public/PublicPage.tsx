@@ -365,14 +365,13 @@ function LocationSheet({ onRetry, onClose }: { onRetry: () => void; onClose: () 
 type MobileState = 'clean' | 'preview' | 'detail'
 
 // ── Bottom sheet state ────────────────────────────────────────────────────────
-type SheetState = 'peek' | 'mid' | 'expanded'
+type SheetState = 'peek' | 'expanded'
 
 // Height-driven sheet: actual height = visible area per state.
 // flex-1 on the scroll container then fills exactly the visible portion.
 // env(safe-area-inset-bottom, 0px) ≈ 34px on Face ID iPhones, 0 elsewhere.
 const SHEET_HEIGHT: Record<SheetState, string> = {
   peek:     'calc(80px + env(safe-area-inset-bottom, 0px))',
-  mid:      '45dvh',
   expanded: '90dvh',
 }
 
@@ -769,12 +768,11 @@ export default function PublicPage() {
     dragStartYRef.current = null
 
     if (Math.abs(delta) < 10) {
-      // Tap on handle: cycle through states
-      setSheetState(s => s === 'peek' ? 'mid' : s === 'mid' ? 'expanded' : 'peek')
+      setSheetState(s => s === 'peek' ? 'expanded' : 'peek')
       return
     }
-    if (delta > 40) setSheetState(s => s === 'peek' ? 'mid' : 'expanded')
-    else if (delta < -40) setSheetState(s => s === 'expanded' ? 'mid' : 'peek')
+    if (delta > 40)  setSheetState('expanded')
+    else if (delta < -40) setSheetState('peek')
   }
 
   const handleActivate = useCallback(async (point: GeoPoint) => {
@@ -986,8 +984,7 @@ export default function PublicPage() {
           Height changes per state — the sheet always anchors to bottom-0 and
           grows/shrinks upward. flex-1 on the scroll area then fills exactly
           the visible space, so scroll is always reachable.
-          peek     → 8rem + safe-area  — handle + mini summary only
-          mid      → 55dvh             — partial list, fully scrollable
+          peek     → 80px + safe-area  — handle + mini summary only
           expanded → 90dvh             — full scrollable list              */}
       <div
         className="md:hidden absolute inset-x-0 bottom-0 z-[1000]"

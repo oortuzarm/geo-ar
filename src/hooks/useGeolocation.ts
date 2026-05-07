@@ -4,10 +4,10 @@ import type { LocationStatus, UserLocation } from '../types'
 
 /**
  * Watches the user's position continuously.
- * `retryKey` — increment this value from outside to restart the watch
- * (e.g. after the user changes location permissions in Settings).
+ * Pass `active = false` to defer the watch until the user explicitly
+ * grants location — avoids triggering Safari's permission prompt at mount.
  */
-export function useGeolocation(active = true, retryKey = 0) {
+export function useGeolocation(active = true) {
   const { setUserLocation } = useGeoStore()
   const watchIdRef = useRef<number | null>(null)
 
@@ -18,13 +18,10 @@ export function useGeolocation(active = true, retryKey = 0) {
       return
     }
 
-    // Clear any previous watch before starting a new one
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current)
       watchIdRef.current = null
     }
-
-    setUserLocation(null, 'requesting')
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
@@ -51,7 +48,7 @@ export function useGeolocation(active = true, retryKey = 0) {
         watchIdRef.current = null
       }
     }
-  }, [active, setUserLocation, retryKey]) // retryKey change restarts the watch
+  }, [active, setUserLocation])
 }
 
 /**

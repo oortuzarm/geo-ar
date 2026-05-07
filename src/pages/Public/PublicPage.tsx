@@ -240,12 +240,11 @@ function LocationBadge({ status, onClick }: { status: LocationStatus; onClick: (
 // ── Location permission sheet ─────────────────────────────────────────────────
 
 function LocationSheet({
-  mode, onRetry, onClose, showReloadHint,
+  mode, onRetry, onClose,
 }: {
-  mode: 'auto' | 'denied'
+  mode: 'denied' | 'unavailable'
   onRetry: () => void
   onClose: () => void
-  showReloadHint?: boolean
 }) {
   return (
     <div className="absolute inset-0 z-[2000] flex flex-col justify-end md:hidden">
@@ -266,46 +265,49 @@ function LocationSheet({
           </svg>
         </div>
         <h2 className="text-base font-semibold text-gray-100 text-center mb-2">
-          {mode === 'auto' ? 'Activa tu ubicación' : 'Permite el acceso a tu ubicación'}
+          {mode === 'denied' ? 'Permite el acceso a tu ubicación' : 'GPS no disponible'}
         </h2>
         <p className="text-sm text-gray-400 text-center leading-relaxed mb-4">
-          {mode === 'auto'
-            ? 'Necesitamos acceso a tu ubicación para desbloquear experiencias cercanas.'
-            : 'Para activar experiencias cercanas necesitas habilitar el permiso de ubicación en tu navegador.'}
+          {mode === 'denied'
+            ? 'Safari bloqueó el acceso a ubicación para este sitio.'
+            : 'No pudimos obtener tu posición. Verificá que el GPS esté activo e intentá nuevamente.'}
         </p>
+
         {mode === 'denied' && (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 mb-4
-                          space-y-2 text-xs text-gray-500">
-            <p><span className="text-gray-400 font-medium">iPhone Safari:</span>{' '}
-              Ajustes &rsaquo; Safari &rsaquo; Ubicación</p>
-            <p><span className="text-gray-400 font-medium">Android Chrome:</span>{' '}
-              Configuración &rsaquo; Permisos &rsaquo; Ubicación</p>
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-4 space-y-2.5">
+            <p className="text-xs font-medium text-gray-300">Cómo habilitarlo en Safari:</p>
+            {[
+              'Toca el botón "aA" en la barra de Safari',
+              'Abre "Configuración del sitio web"',
+              'Cambia "Ubicación" a Permitir',
+              'Recarga la página',
+            ].map((step, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <span className="text-xs text-brand-400 font-bold flex-shrink-0">{i + 1}.</span>
+                <span className="text-xs text-gray-400 leading-snug">{step}</span>
+              </div>
+            ))}
           </div>
         )}
+
         <button
           onClick={onRetry}
           className="w-full bg-brand-600 hover:bg-brand-500 active:scale-[0.98]
                      text-white font-semibold py-3.5 rounded-xl text-sm
                      transition-all duration-150 shadow-lg shadow-brand-900/50"
         >
-          {mode === 'auto' ? 'Permitir ubicación' : 'Intentar nuevamente'}
+          Intentar nuevamente
         </button>
 
-        {/* Safari hint: shown after at least one failed retry */}
-        {showReloadHint && (
-          <div className="mt-3 space-y-2">
-            <p className="text-xs text-gray-600 text-center leading-snug">
-              Si ya cambiaste el permiso y sigue sin funcionar, recargá esta página.
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="w-full border border-gray-700 text-gray-400 hover:text-gray-200
-                         hover:border-gray-600 active:scale-[0.98] font-medium py-3
-                         rounded-xl text-sm transition-all duration-150"
-            >
-              Recargar página
-            </button>
-          </div>
+        {mode === 'denied' && (
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-3 w-full border border-gray-700 text-gray-400
+                       hover:text-gray-200 hover:border-gray-600 active:scale-[0.98]
+                       font-medium py-3 rounded-xl text-sm transition-all duration-150"
+          >
+            Recargar página
+          </button>
         )}
       </div>
     </div>
@@ -326,7 +328,7 @@ const SHEET_HEIGHT: Record<SheetState, string> = {
 
 export default function PublicPage() {
   const { id } = useParams<{ id: string }>()
-  const { userLocation, locationStatus, addToast } = useGeoStore()
+  const { userLocation, locationStatus, setUserLocation, addToast } = useGeoStore()
   const [project, setProject] = useState<GeoProject | null>(null)
   const [points, setPoints] = useState<GeoPoint[]>([])
   const [loading, setLoading] = useState(true)
@@ -361,68 +363,49 @@ export default function PublicPage() {
   const flyToCounterRef = useRef(0)
 
   // ── Location permission UX ────────────────────────────────────────────────
-  const [locationSheet,    setLocationSheet]    = useState<'auto' | 'denied' | null>(null)
-  const [showReloadHint,   setShowReloadHint]   = useState(false)
-  // retryKey restarts the watchPosition inside useGeolocation when incremented
-  const [locationRetryKey, setLocationRetryKey] = useState(0)
-  // Ref mirrors locationStatus for safe reading inside timeouts and event listeners
-  const locationStatusRef = useRef<LocationStatus>(locationStatus)
-  useEffect(() => { locationStatusRef.current = locationStatus }, [locationStatus])
+  // locationActive gates the watchPosition — stays false until user grants access.
+  // This ensures Safari never shows an automatic permission prompt at mount.
+  const [locationActive, setLocationActive] = useState(false)
+  const [locationSheet,  setLocationSheet]  = useState<'denied' | 'unavailable' | null>(null)
 
-  // Close the sheet and reset the hint when location is finally granted
+  // Close the sheet when location becomes active (e.g. after a successful retry).
   useEffect(() => {
-    if (locationStatus === 'active') {
-      setLocationSheet(null)
-      setShowReloadHint(false)
-    }
+    if (locationStatus === 'active') setLocationSheet(null)
   }, [locationStatus])
 
-  // Auto-prompt: once per browser session, 2.5 s after mount
-  useEffect(() => {
-    if (sessionStorage.getItem('geo-ar-loc-prompted')) return
-    const t = setTimeout(() => {
-      if (locationStatusRef.current === 'active') return
-      sessionStorage.setItem('geo-ar-loc-prompted', '1')
-      setLocationSheet((cur) => cur ?? 'auto')
-    }, 2500)
-    return () => clearTimeout(t)
-  }, []) // intentionally mount-only
-
-  // Re-validate location when the user returns to the tab/window from Settings.
-  // Each visibilitychange gets one retry; a closure-local flag prevents doubles.
-  useEffect(() => {
-    function handleVisible() {
-      if (document.visibilityState !== 'visible') return
-      const s = locationStatusRef.current
-      if (s === 'denied' || s === 'unavailable') {
-        setLocationRetryKey((k) => k + 1)
-      }
+  function requestLocation() {
+    if (!navigator.geolocation) {
+      setUserLocation(null, 'unavailable')
+      setLocationSheet('unavailable')
+      return
     }
-    document.addEventListener('visibilitychange', handleVisible)
-    window.addEventListener('focus', handleVisible)
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisible)
-      window.removeEventListener('focus', handleVisible)
-    }
-  }, []) // mount-only; reads status via ref to avoid stale closures
+    setUserLocation(null, 'requesting')
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation(
+          { latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy },
+          'active',
+        )
+        setLocationSheet(null)
+        setLocationActive(true)
+      },
+      (err) => {
+        const status: LocationStatus = err.code === 1 ? 'denied' : 'unavailable'
+        setUserLocation(null, status)
+        setLocationSheet(status)
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    )
+  }
 
   function handleBadgeClick() {
-    if (locationStatus === 'denied') {
-      setLocationSheet('denied')
-    } else if (locationStatus !== 'active' && locationStatus !== 'requesting') {
-      setLocationRetryKey((k) => k + 1)
-    }
+    if (locationStatus === 'requesting' || locationStatus === 'active') return
+    requestLocation()
   }
 
   function handleLocationRetry() {
     setLocationSheet(null)
-    // Mark that a retry was attempted — enables the "reload page" hint
-    // if the next attempt also fails.
-    setShowReloadHint(true)
-    // Increment retryKey → useGeolocation restarts watchPosition cleanly.
-    // This avoids the race where a stale watchPosition error callback fires
-    // immediately after getCurrentPosition succeeds, overwriting 'active'.
-    setLocationRetryKey((k) => k + 1)
+    requestLocation()
   }
 
   // Separate refs for mobile sheet and desktop panel so scrollIntoView works
@@ -430,7 +413,7 @@ export default function PublicPage() {
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const mobileCardRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
-  useGeolocation(true, locationRetryKey)
+  useGeolocation(locationActive)
 
   useEffect(() => { pointsRef.current = points }, [points])
 
@@ -900,7 +883,6 @@ export default function PublicPage() {
             mode={locationSheet}
             onRetry={handleLocationRetry}
             onClose={() => setLocationSheet(null)}
-            showReloadHint={showReloadHint}
           />
         )}
 

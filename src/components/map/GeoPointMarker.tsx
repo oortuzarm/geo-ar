@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Circle, Marker, Popup } from 'react-leaflet'
 import { createGeoIcon } from './createGeoIcon'
+import { mapTheme } from './mapTheme'
 import type { GeoPoint } from '../../types'
 
 interface GeoPointMarkerProps {
@@ -62,7 +63,7 @@ export default function GeoPointMarker({ point, selected, onClick, onDragEnd }: 
     }
   }, []) // stable: same Leaflet instance lives as long as this component (keyed by point.id)
 
-  const icon = createGeoIcon(selected, point.active)
+  const icon = createGeoIcon(selected, point.active, false, point.image)
 
   return (
     <>
@@ -91,17 +92,18 @@ export default function GeoPointMarker({ point, selected, onClick, onDragEnd }: 
           center={[point.latitude, point.longitude]}
           radius={point.activationRadius}
           pathOptions={selected ? {
-            color: '#0ea5e9',
-            fillColor: '#0ea5e9',
-            fillOpacity: 0.1,
-            weight: 2,
-            dashArray: '6 4',
+            // Colors from theme; editor uses dashed + slightly tighter fill
+            color:       mapTheme.activationRadius.selected.color,
+            fillColor:   mapTheme.activationRadius.selected.fillColor,
+            fillOpacity: 0.10,
+            weight:      2,
+            dashArray:   '6 4',
           } : {
-            color: '#ef4444',
-            fillColor: '#ef4444',
+            color:       mapTheme.activationRadius.default.color,
+            fillColor:   mapTheme.activationRadius.default.fillColor,
             fillOpacity: 0.04,
-            weight: 1,
-            dashArray: '4 4',
+            weight:      1,
+            dashArray:   '4 4',
           }}
         />
       )}

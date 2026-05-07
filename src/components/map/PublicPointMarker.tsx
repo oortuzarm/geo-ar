@@ -1,19 +1,22 @@
 import { Marker, Circle } from 'react-leaflet'
 import { createGeoIcon } from './createGeoIcon'
+import { mapTheme } from './mapTheme'
 import type { GeoPoint } from '../../types'
 
+const { activationRadius: ar } = mapTheme
+
 interface PublicPointMarkerProps {
-  point: GeoPoint
+  point:    GeoPoint
   selected: boolean
-  /** true when another point is selected — dims this pin */
-  dimmed: boolean
-  onClick: () => void
+  /** true when another point is selected — dims this pin and its radius */
+  dimmed:   boolean
+  onClick:  () => void
 }
 
 /**
- * Read-only teardrop pin for the public map.
- * Uses the same icon factory as the editor's GeoPointMarker.
- * Shows the activation-radius Circle only when selected.
+ * Read-only circular thumbnail pin for the public map.
+ * Shares the same icon factory (createGeoIcon) and theme tokens (mapTheme)
+ * as the editor's GeoPointMarker — single source of visual truth.
  */
 export default function PublicPointMarker({
   point,
@@ -21,13 +24,9 @@ export default function PublicPointMarker({
   dimmed,
   onClick,
 }: PublicPointMarkerProps) {
-  const icon = createGeoIcon(selected, point.active, dimmed)
+  const icon = createGeoIcon(selected, point.active, dimmed, point.image)
 
-  const circleOptions = selected
-    ? { color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.18, weight: 3, opacity: 1 }
-    : dimmed
-      ? { color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.03, weight: 1, opacity: 0.35 }
-      : { color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.07, weight: 1, opacity: 0.7 }
+  const circleOptions = selected ? ar.selected : dimmed ? ar.dimmed : ar.default
 
   return (
     <>

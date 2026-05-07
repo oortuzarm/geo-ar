@@ -771,8 +771,14 @@ export default function PublicPage() {
 
   function handleDragStart(e: React.TouchEvent) {
     e.stopPropagation()
-    if (mobileState !== 'clean') return
     dragStartYRef.current = e.touches[0].clientY
+  }
+
+  function expandSheet() {
+    setMobileState('clean')
+    setSelectedPointId(null)
+    setAccessError(null)
+    setSheetState('expanded')
   }
 
   function handleDragEnd(e: React.TouchEvent) {
@@ -782,10 +788,11 @@ export default function PublicPage() {
     dragStartYRef.current = null
 
     if (Math.abs(delta) < 10) {
-      setSheetState(s => s === 'peek' ? 'expanded' : 'peek')
+      if (sheetState === 'peek') expandSheet()
+      else setSheetState('peek')
       return
     }
-    if (delta > 40)  setSheetState('expanded')
+    if (delta > 40)       expandSheet()
     else if (delta < -40) setSheetState('peek')
   }
 

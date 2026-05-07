@@ -23,27 +23,35 @@ export interface RadiusStyle {
 }
 
 export const mapTheme = {
-  // ── Pin marker ─────────────────────────────────────────────────────────────
+  // ── Bubble-card marker ────────────────────────────────────────────────────
   marker: {
-    /** Outer circle diameter in px */
-    size:                44,
-    /** Default white border for all pins */
+    /** Card width in px */
+    cardWidth:           52,
+    /** Card height in px (rounded rect, above the pointer) */
+    cardHeight:          42,
+    /** Downward pointer triangle height in px */
+    pointerH:            8,
+    /** Pointer half-width in px (each side of the triangle) */
+    pointerHW:           7,
+    /** Card corner radius in px */
+    cardRadius:          10,
+    /** Default white border */
     borderColor:         'rgba(255,255,255,0.9)',
     borderWidth:         2.5,
     /** Cyan border for the selected pin */
     selectedBorderColor: '#0ea5e9',
     selectedBorderWidth: 3,
-    /** Glow ring that appears on the selected pin */
-    glowColor:           'rgba(14,165,233,0.45)',
-    glowSize:            4,
+    /** Glow ring that appears on the selected pin (drop-shadow layer) */
+    glowColor:           'rgba(14,165,233,0.55)',
+    glowSize:            5,
     /** Drop-shadow on every pin */
-    shadow:              '0 2px 10px rgba(0,0,0,0.5)',
+    shadow:              '0 3px 10px rgba(0,0,0,0.55)',
     /** Background shown when the point has no thumbnail image */
-    fallbackBg:          '#0f172a',   // dark navy — premium feel
+    fallbackBg:          '#0f172a',
     /** Background for inactive points (editor only) */
-    inactiveBg:          '#1f2937',   // dark gray
+    inactiveBg:          '#1f2937',
     /** Opacity of pins that are NOT selected while another point IS selected */
-    dimOpacity:          0.45,
+    dimOpacity:          0.40,
   },
 
   // ── Activation-radius circles ──────────────────────────────────────────────

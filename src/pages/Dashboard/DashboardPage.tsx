@@ -8,6 +8,7 @@ import Modal from '../../components/ui/Modal'
 import ToastContainer from '../../components/ui/Toast'
 import GeoPointsList from './GeoPointsList'
 import GeoPointForm from './GeoPointForm'
+import ProjectPanel from './ProjectPanel'
 import PreviewQRModal from './PreviewQRModal'
 import { useGeoStore } from '../../store/geoStore'
 import { geoProjectsApi, geoPointsApi } from '../../services'
@@ -32,6 +33,7 @@ export default function DashboardPage() {
   const [locatingUser, setLocatingUser] = useState(false)
   const [listDrawerOpen, setListDrawerOpen] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [leftTab, setLeftTab] = useState<'points' | 'project'>('points')
 
   // Ref-based guard so async continuations read the live value, not a stale closure.
   const isSavingRef   = useRef(false)
@@ -432,6 +434,13 @@ export default function DashboardPage() {
 
   const selectedPoint = points.find((p) => p.id === selectedPointId) ?? null
 
+  // When "usar imagen por defecto" is on, points without their own image inherit the project cover.
+  // Applied only to the map layer — the form and list always show the real point state.
+  const coverImg = project?.useDefaultImage ? project.coverImage : undefined
+  const effectiveMapPoints = coverImg
+    ? points.map((pt) => ({ ...pt, image: pt.image ?? coverImg }))
+    : points
+
   return (
     <div className="h-screen bg-gray-950 flex flex-col overflow-hidden">
 
@@ -516,16 +525,37 @@ export default function DashboardPage() {
 
         {/* Left sidebar: desktop only */}
         <aside className="hidden lg:flex w-64 flex-shrink-0 border-r border-gray-800 bg-gray-900 flex-col overflow-hidden">
-          <GeoPointsList
-            points={points}
-            selectedId={selectedPointId}
-            onSelect={handleSelectPoint}
-            onAdd={handleAddPoint}
-            onToggleActive={handleToggleActive}
-            onBulkActivate={handleBulkActivate}
-            onBulkDeactivate={handleBulkDeactivate}
-            onBulkDelete={handleBulkDelete}
-          />
+          {/* Tab bar */}
+          <div className="flex-shrink-0 flex border-b border-gray-800">
+            {(['points', 'project'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setLeftTab(tab)}
+                className={`flex-1 py-2.5 text-xs font-medium transition-colors -mb-px border-b-2 ${
+                  leftTab === tab
+                    ? 'text-brand-400 border-brand-500'
+                    : 'text-gray-500 hover:text-gray-300 border-transparent'
+                }`}
+              >
+                {tab === 'points' ? `Puntos GPS (${points.length})` : 'Proyecto'}
+              </button>
+            ))}
+          </div>
+
+          {leftTab === 'points' ? (
+            <GeoPointsList
+              points={points}
+              selectedId={selectedPointId}
+              onSelect={handleSelectPoint}
+              onAdd={handleAddPoint}
+              onToggleActive={handleToggleActive}
+              onBulkActivate={handleBulkActivate}
+              onBulkDeactivate={handleBulkDeactivate}
+              onBulkDelete={handleBulkDelete}
+            />
+          ) : (
+            <ProjectPanel onMarkUnsaved={() => setHasUnsavedChanges(true)} />
+          )}
         </aside>
 
         {/* Map area */}
@@ -585,7 +615,7 @@ export default function DashboardPage() {
           )}
 
           <DashboardMap
-            points={points}
+            points={effectiveMapPoints}
             selectedPointId={selectedPointId}
             onMapClick={handleMapClick}
             onMarkerClick={handleSelectPoint}

@@ -11,6 +11,8 @@ interface GeoPointsListProps {
   onBulkDelete: (ids: string[]) => Promise<void>
   onBulkActivate: (ids: string[]) => Promise<void>
   onBulkDeactivate: (ids: string[]) => Promise<void>
+  /** When provided (mobile drawer context), renders a × button in the header */
+  onClose?: () => void
 }
 
 export default function GeoPointsList({
@@ -22,6 +24,7 @@ export default function GeoPointsList({
   onBulkDelete,
   onBulkActivate,
   onBulkDeactivate,
+  onClose,
 }: GeoPointsListProps) {
   const [selectionMode, setSelectionMode] = useState(false)
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set())
@@ -143,27 +146,42 @@ export default function GeoPointsList({
           )}
         </h2>
 
-        {/* Right action: "Seleccionar" or "✕" */}
-        {points.length > 0 && (
-          selectionMode ? (
+        {/* Right actions */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {points.length > 0 && (
+            selectionMode ? (
+              <button
+                onClick={exitSelectionMode}
+                className="text-xs text-gray-400 hover:text-gray-100 transition-colors px-1 py-0.5"
+                aria-label="Salir del modo selección"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            ) : (
+              <button
+                onClick={enterSelectionMode}
+                className="text-xs text-gray-400 hover:text-brand-400 transition-colors"
+              >
+                Seleccionar
+              </button>
+            )
+          )}
+
+          {/* Drawer close button — only in non-selection mode */}
+          {onClose && !selectionMode && (
             <button
-              onClick={exitSelectionMode}
-              className="flex-shrink-0 text-xs text-gray-400 hover:text-gray-100 transition-colors px-1 py-0.5"
-              aria-label="Salir del modo selección"
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-200 transition-colors p-0.5"
+              aria-label="Cerrar panel"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-          ) : (
-            <button
-              onClick={enterSelectionMode}
-              className="flex-shrink-0 text-xs text-gray-400 hover:text-brand-400 transition-colors"
-            >
-              Seleccionar
-            </button>
-          )
-        )}
+          )}
+        </div>
       </div>
 
       {/* ── Bulk action bar — only in selection mode with ≥1 checked ── */}

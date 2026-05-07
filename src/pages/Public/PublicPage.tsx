@@ -363,8 +363,8 @@ type SheetState = 'peek' | 'mid' | 'expanded'
 // flex-1 on the scroll container then fills exactly the visible portion.
 // env(safe-area-inset-bottom, 0px) ≈ 34px on Face ID iPhones, 0 elsewhere.
 const SHEET_HEIGHT: Record<SheetState, string> = {
-  peek:     'calc(96px + env(safe-area-inset-bottom, 0px))',
-  mid:      '50dvh',
+  peek:     'calc(8rem + env(safe-area-inset-bottom, 0px))',
+  mid:      '45dvh',
   expanded: '90dvh',
 }
 
@@ -938,7 +938,7 @@ export default function PublicPage() {
           onClick={handleMyLocation}
           disabled={!userLocation}
           className="absolute right-4 z-[400]
-                     bottom-[132px] md:bottom-4
+                     bottom-[160px] md:bottom-4
                      w-11 h-11 flex items-center justify-center
                      bg-white rounded-full border border-gray-200/60 shadow-md
                      hover:bg-gray-50 active:scale-95 active:shadow-sm
@@ -956,8 +956,8 @@ export default function PublicPage() {
           Height changes per state — the sheet always anchors to bottom-0 and
           grows/shrinks upward. flex-1 on the scroll area then fills exactly
           the visible space, so scroll is always reachable.
-          peek     → 96px + safe-area  — handle + compact identity row only
-          mid      → 50dvh             — partial list, fully scrollable
+          peek     → 8rem + safe-area  — handle + mini summary only
+          mid      → 55dvh             — partial list, fully scrollable
           expanded → 90dvh             — full scrollable list              */}
       <div
         className="md:hidden absolute inset-x-0 bottom-0 z-[1000]"
@@ -980,30 +980,32 @@ export default function PublicPage() {
             onTouchEnd={handleDragEnd}
           >
             {/* Pill */}
-            <div className="flex justify-center pt-2 pb-1.5">
+            <div className="flex justify-center pt-3 pb-2">
               <div className="w-9 h-1 rounded-full bg-white/20" />
             </div>
 
-            {/* Mini summary — compact identity row always visible in peek */}
-            <div className="flex items-center gap-3 px-4 pb-2">
+            {/* Mini summary (always visible, 40px) */}
+            <div className="flex items-start gap-3 px-4 pb-3">
+              {/* Mini cover — always shows project identity */}
               {project.coverImage && (
                 <img
                   src={project.coverImage}
                   alt={project.title}
-                  className="w-10 h-10 rounded-lg object-cover flex-shrink-0 ring-1 ring-white/10"
+                  className="w-14 h-14 rounded-xl object-cover flex-shrink-0
+                             ring-1 ring-white/10 shadow-lg"
                 />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-100 line-clamp-1 leading-snug">
+                <p className="text-sm font-semibold text-slate-900 line-clamp-2 leading-snug">
                   {project.title}
                 </p>
-                <p className="text-xs text-gray-400 leading-snug mt-0.5">
-                  {`${points.length} experiencia${points.length !== 1 ? 's' : ''}`}
+                <p className="text-xs text-slate-600 leading-snug mt-0.5">
+                  {`${points.length} experiencia${points.length !== 1 ? 's' : ''} disponible${points.length !== 1 ? 's' : ''}`}
                 </p>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); void handleShare() }}
-                className="flex-shrink-0 w-8 h-8 flex items-center justify-center
+                className="flex-shrink-0 mt-0.5 w-8 h-8 flex items-center justify-center
                            rounded-full text-gray-400 hover:text-gray-200
                            hover:bg-gray-800/80 active:scale-90 transition-all duration-150"
                 title="Compartir"

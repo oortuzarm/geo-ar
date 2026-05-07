@@ -23,6 +23,12 @@ export default function PublicPointMarker({
 }: PublicPointMarkerProps) {
   const icon = createGeoIcon(selected, point.active, dimmed)
 
+  const circleOptions = selected
+    ? { color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.18, weight: 3, opacity: 1 }
+    : dimmed
+      ? { color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.03, weight: 1, opacity: 0.35 }
+      : { color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.07, weight: 1, opacity: 0.7 }
+
   return (
     <>
       <Marker
@@ -30,19 +36,12 @@ export default function PublicPointMarker({
         icon={icon}
         eventHandlers={{ click: onClick }}
       />
-
-      {selected && (
-        <Circle
-          center={[point.latitude, point.longitude]}
-          radius={point.activationRadius}
-          pathOptions={{
-            color:       '#0ea5e9',
-            fillColor:   '#0ea5e9',
-            fillOpacity: 0.18,
-            weight:      3,
-          }}
-        />
-      )}
+      <Circle
+        center={[point.latitude, point.longitude]}
+        radius={point.activationRadius}
+        pathOptions={circleOptions}
+        eventHandlers={{ click: onClick }}
+      />
     </>
   )
 }

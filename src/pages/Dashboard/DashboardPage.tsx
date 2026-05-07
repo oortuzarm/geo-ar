@@ -524,7 +524,7 @@ export default function DashboardPage() {
       <div className="flex-1 flex overflow-hidden min-h-0">
 
         {/* Left sidebar: desktop only */}
-        <aside className="hidden lg:flex w-80 flex-shrink-0 border-r border-gray-800 bg-gray-900 flex-col overflow-hidden">
+        <aside className="hidden lg:flex w-80 max-w-80 flex-shrink-0 border-r border-gray-800 bg-gray-900 flex-col overflow-hidden min-w-0">
           {/* Tab bar */}
           <div className="flex-shrink-0 flex border-b border-gray-800">
             {(['points', 'project'] as const).map((tab) => (

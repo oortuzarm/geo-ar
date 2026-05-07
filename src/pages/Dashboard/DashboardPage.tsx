@@ -560,7 +560,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* Map area */}
-        <div className="flex-1 relative overflow-hidden min-h-0">
+        <div className="flex-1 relative overflow-hidden min-h-0 min-w-0">
 
           {/* POI / address search bar
               Mobile: left-14 (56 px) clears the Leaflet zoom controls on the left;

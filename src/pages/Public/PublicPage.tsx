@@ -18,6 +18,8 @@ import RoutePolyline from '../../components/map/RoutePolyline'
 import MapController from '../../components/map/MapController'
 import type { FlyTarget } from '../../components/map/MapController'
 import PublicPointCard from './PublicPointCard'
+import PublicPointPreviewCard from './PublicPointPreviewCard'
+import PublicPointDetailSheet from './PublicPointDetailSheet'
 import Spinner from '../../components/ui/Spinner'
 import ToastContainer from '../../components/ui/Toast'
 import type { GeoProject, GeoPoint, LocationStatus } from '../../types'
@@ -356,6 +358,12 @@ function LocationSheet({ onRetry, onClose }: { onRetry: () => void; onClose: () 
   )
 }
 
+// ── Mobile interaction state ─────────────────────────────────────────────────
+// clean   → map only, peek sheet shows project summary (draggable to browse list)
+// preview → floating preview card above peek (point selected, no full sheet)
+// detail  → full detail bottom sheet covering most of the screen
+type MobileState = 'clean' | 'preview' | 'detail'
+
 // ── Bottom sheet state ────────────────────────────────────────────────────────
 type SheetState = 'peek' | 'mid' | 'expanded'
 
@@ -385,6 +393,9 @@ export default function PublicPage() {
     fallbackUrl?: string
   } | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // ── Mobile interaction state ──────────────────────────────────────────────
+  const [mobileState, setMobileState] = useState<MobileState>('clean')
 
   // ── Bottom sheet ───────────────────────────────────────────────────────────
   const [sheetState, setSheetState] = useState<SheetState>('peek')
@@ -682,6 +693,7 @@ export default function PublicPage() {
   function handleExitSelectedPoint() {
     setSelectedPointId(null)
     setAccessError(null)
+    setMobileState('clean')
     setSheetState('peek')
     flyToCounterRef.current += 1
     setFlyToKey(`exit-${flyToCounterRef.current}`)
@@ -697,12 +709,21 @@ export default function PublicPage() {
   function handlePointClick(pt: GeoPoint) {
     setSelectedPointId(pt.id)
     setAccessError(null)
-    setSheetState('mid')
+    setMobileState('preview')
+    setSheetState('peek')
     flyToCounterRef.current += 1
     setFlyToKey(`point-${pt.id}-${flyToCounterRef.current}`)
-    // Shift the fly target 150px south so the real point lands above the mid sheet.
-    const panOffsetPx = 150
+    // Shift the fly target 80px south so the pin lands in the upper portion of the visible map area.
+    const panOffsetPx = 80
     setFlyToTarget({ lat: pt.latitude, lng: pt.longitude, zoom: 17, panOffsetPx })
+  }
+
+  function handleViewDetail() {
+    setMobileState('detail')
+  }
+
+  function handleCloseDetail() {
+    setMobileState('preview')
   }
 
   function handleMyLocation() {
@@ -738,6 +759,7 @@ export default function PublicPage() {
   // ── Bottom sheet drag ─────────────────────────────────────────────────────
 
   function handleDragStart(e: React.TouchEvent) {
+    if (mobileState !== 'clean') return
     dragStartYRef.current = e.touches[0].clientY
   }
 
@@ -855,6 +877,10 @@ export default function PublicPage() {
       ? [points[0].latitude, points[0].longitude]
       : [-33.4489, -70.6693]
 
+  const selectedPoint = selectedPointId
+    ? (points.find((p) => p.id === selectedPointId) ?? null)
+    : null
+
 
   // ── Shared card list renderer ──────────────────────────────────────────────
   // cardRefsProp: which ref map to populate (mobile or desktop)
@@ -933,17 +959,21 @@ export default function PublicPage() {
           />
         )}
 
-        {/* My location button — above the peek handle on mobile */}
+        {/* My location button — repositioned based on mobile overlay state */}
         <button
           onClick={handleMyLocation}
           disabled={!userLocation}
-          className="absolute right-4 z-[400]
-                     bottom-[160px] md:bottom-4
-                     w-11 h-11 flex items-center justify-center
-                     bg-white rounded-full border border-gray-200/60 shadow-md
-                     hover:bg-gray-50 active:scale-95 active:shadow-sm
-                     transition-all duration-150
-                     disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+          className={[
+            'absolute right-4 z-[400]',
+            'w-11 h-11 flex items-center justify-center',
+            'bg-white rounded-full border border-gray-200/60 shadow-md',
+            'hover:bg-gray-50 active:scale-95 active:shadow-sm',
+            'transition-all duration-150',
+            'disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100',
+            mobileState === 'detail'  ? 'hidden md:flex md:bottom-4'
+            : mobileState === 'preview' ? 'bottom-[300px] md:bottom-4'
+            :                             'bottom-[160px] md:bottom-4',
+          ].join(' ')}
           title="Mi ubicación"
         >
           <svg className="h-5 w-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
@@ -996,10 +1026,10 @@ export default function PublicPage() {
                 />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-900 line-clamp-2 leading-snug">
+                <p className="text-sm font-semibold text-gray-100 line-clamp-2 leading-snug">
                   {project.title}
                 </p>
-                <p className="text-xs text-slate-600 leading-snug mt-0.5">
+                <p className="text-xs text-gray-400 leading-snug mt-0.5">
                   {`${points.length} experiencia${points.length !== 1 ? 's' : ''} disponible${points.length !== 1 ? 's' : ''}`}
                 </p>
               </div>
@@ -1040,6 +1070,41 @@ export default function PublicPage() {
 
         </div>
       </div>
+
+      {/* ── MOBILE PREVIEW CARD ─────────────────────────────────────────────
+          Floats above the peek sheet when a pin is selected (preview state).
+          Tapping "Ver detalle" opens the full detail sheet.                */}
+      {mobileState === 'preview' && selectedPoint && (
+        <div
+          className="md:hidden absolute inset-x-4 z-[1050]"
+          style={{ bottom: 'calc(80px + env(safe-area-inset-bottom, 0px) + 8px)' }}
+        >
+          <PublicPointPreviewCard
+            point={selectedPoint}
+            distance={distances[selectedPoint.id] ?? null}
+            onViewDetail={handleViewDetail}
+            onClose={handleExitSelectedPoint}
+          />
+        </div>
+      )}
+
+      {/* ── MOBILE DETAIL SHEET ──────────────────────────────────────────────
+          Full-height sheet with all point information. Mobile only.        */}
+      {mobileState === 'detail' && selectedPoint && (
+        <PublicPointDetailSheet
+          point={selectedPoint}
+          distance={distances[selectedPoint.id] ?? null}
+          onClose={handleCloseDetail}
+          onActivate={() => { void handleActivate(selectedPoint) }}
+          isActivating={selectedPoint.id === activatingPointId}
+          accessMessage={accessError?.pointId === selectedPoint.id ? accessError.message : undefined}
+          accessFallbackUrl={accessError?.pointId === selectedPoint.id ? accessError.fallbackUrl : undefined}
+          routeStatus={routeStatus}
+          walkingDistanceMeters={routeResult?.distanceMeters}
+          walkingDurationSeconds={routeResult?.durationSeconds}
+          address={selectedPoint.instructions ?? addresses[selectedPoint.id]}
+        />
+      )}
 
       {/* ── DESKTOP PANEL (hidden on mobile) ────────────────────────────────
           Same classic layout as before — untouched for desktop users.      */}

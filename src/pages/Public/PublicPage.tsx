@@ -237,15 +237,9 @@ function LocationBadge({ status, onClick }: { status: LocationStatus; onClick: (
   )
 }
 
-// ── Location permission sheet ─────────────────────────────────────────────────
+// ── Location permission sheet (shown only when status === 'denied') ───────────
 
-function LocationSheet({
-  mode, onRetry, onClose,
-}: {
-  mode: 'denied' | 'unavailable'
-  onRetry: () => void
-  onClose: () => void
-}) {
+function LocationSheet({ onRetry, onClose }: { onRetry: () => void; onClose: () => void }) {
   return (
     <div className="absolute inset-0 z-[2000] flex flex-col justify-end md:hidden">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
@@ -265,30 +259,49 @@ function LocationSheet({
           </svg>
         </div>
         <h2 className="text-base font-semibold text-gray-100 text-center mb-2">
-          {mode === 'denied' ? 'Permite el acceso a tu ubicación' : 'GPS no disponible'}
+          Permite el acceso a tu ubicación
         </h2>
         <p className="text-sm text-gray-400 text-center leading-relaxed mb-4">
-          {mode === 'denied'
-            ? 'Safari bloqueó el acceso a ubicación para este sitio.'
-            : 'No pudimos obtener tu posición. Verificá que el GPS esté activo e intentá nuevamente.'}
+          Necesitamos tu ubicación para activar experiencias cercanas.
         </p>
 
-        {mode === 'denied' && (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-4 space-y-2.5">
-            <p className="text-xs font-medium text-gray-300">Cómo habilitarlo en Safari:</p>
-            {[
-              'Toca el botón "aA" en la barra de Safari',
-              'Abre "Configuración del sitio web"',
-              'Cambia "Ubicación" a Permitir',
-              'Recarga la página',
-            ].map((step, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="text-xs text-brand-400 font-bold flex-shrink-0">{i + 1}.</span>
-                <span className="text-xs text-gray-400 leading-snug">{step}</span>
-              </div>
-            ))}
+        <div className="space-y-3 mb-4">
+          {/* iPhone Safari */}
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-3.5">
+            <p className="text-xs font-semibold text-gray-300 mb-2">iPhone (Safari)</p>
+            <div className="space-y-1.5">
+              {[
+                'Toca "aA" en la barra de Safari',
+                'Abre "Configuración del sitio web"',
+                'Cambia "Ubicación" a Permitir',
+                'Recarga la página',
+              ].map((step, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span className="text-xs text-brand-400 font-bold flex-shrink-0 w-3">{i + 1}.</span>
+                  <span className="text-xs text-gray-400 leading-snug">{step}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        )}
+
+          {/* Android Chrome */}
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-3.5">
+            <p className="text-xs font-semibold text-gray-300 mb-2">Android (Chrome)</p>
+            <div className="space-y-1.5">
+              {[
+                'Toca el candado o configuración del sitio',
+                'Entra a Permisos',
+                'Activa Ubicación',
+                'Recarga la página',
+              ].map((step, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span className="text-xs text-brand-400 font-bold flex-shrink-0 w-3">{i + 1}.</span>
+                  <span className="text-xs text-gray-400 leading-snug">{step}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
         <button
           onClick={onRetry}
@@ -298,17 +311,14 @@ function LocationSheet({
         >
           Intentar nuevamente
         </button>
-
-        {mode === 'denied' && (
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-3 w-full border border-gray-700 text-gray-400
-                       hover:text-gray-200 hover:border-gray-600 active:scale-[0.98]
-                       font-medium py-3 rounded-xl text-sm transition-all duration-150"
-          >
-            Recargar página
-          </button>
-        )}
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-3 w-full border border-gray-700 text-gray-400
+                     hover:text-gray-200 hover:border-gray-600 active:scale-[0.98]
+                     font-medium py-3 rounded-xl text-sm transition-all duration-150"
+        >
+          Recargar página
+        </button>
       </div>
     </div>
   )
@@ -363,22 +373,20 @@ export default function PublicPage() {
   const flyToCounterRef = useRef(0)
 
   // ── Location permission UX ────────────────────────────────────────────────
-  // locationActive gates the watchPosition — stays false until user grants access.
-  // This ensures Safari never shows an automatic permission prompt at mount.
+  // locationActive gates watchPosition — flipped to true after the first success.
   const [locationActive, setLocationActive] = useState(false)
-  const [locationSheet,  setLocationSheet]  = useState<'denied' | 'unavailable' | null>(null)
+  // locationSheet is only shown when status === 'denied'
+  const [locationSheet,  setLocationSheet]  = useState(false)
 
-  // Close the sheet when location becomes active (e.g. after a successful retry).
+  // Close the sheet whenever location becomes active
   useEffect(() => {
-    if (locationStatus === 'active') setLocationSheet(null)
+    if (locationStatus === 'active') setLocationSheet(false)
   }, [locationStatus])
 
-  function requestLocation() {
-    if (!navigator.geolocation) {
-      setUserLocation(null, 'unavailable')
-      setLocationSheet('unavailable')
-      return
-    }
+  // One-time automatic request at mount — triggers the native browser prompt.
+  // On failure we only update the badge; we don't auto-open the help sheet.
+  useEffect(() => {
+    if (!navigator.geolocation) { setUserLocation(null, 'unavailable'); return }
     setUserLocation(null, 'requesting')
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -386,13 +394,31 @@ export default function PublicPage() {
           { latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy },
           'active',
         )
-        setLocationSheet(null)
         setLocationActive(true)
       },
       (err) => {
-        const status: LocationStatus = err.code === 1 ? 'denied' : 'unavailable'
-        setUserLocation(null, status)
-        setLocationSheet(status)
+        setUserLocation(null, err.code === 1 ? 'denied' : 'unavailable')
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    )
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Manual request — called from badge click or "Intentar nuevamente".
+  // Never caches a denied state; each call is a fresh browser prompt attempt.
+  function requestLocation() {
+    if (!navigator.geolocation) { setUserLocation(null, 'unavailable'); return }
+    setUserLocation(null, 'requesting')
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation(
+          { latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy },
+          'active',
+        )
+        setLocationSheet(false)
+        setLocationActive(true)
+      },
+      (err) => {
+        setUserLocation(null, err.code === 1 ? 'denied' : 'unavailable')
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
     )
@@ -400,11 +426,12 @@ export default function PublicPage() {
 
   function handleBadgeClick() {
     if (locationStatus === 'requesting' || locationStatus === 'active') return
+    if (locationStatus === 'denied') { setLocationSheet(true); return }
     requestLocation()
   }
 
   function handleLocationRetry() {
-    setLocationSheet(null)
+    setLocationSheet(false)
     requestLocation()
   }
 
@@ -880,9 +907,8 @@ export default function PublicPage() {
         {/* Location permission sheet (mobile only) */}
         {locationSheet && (
           <LocationSheet
-            mode={locationSheet}
             onRetry={handleLocationRetry}
-            onClose={() => setLocationSheet(null)}
+            onClose={() => setLocationSheet(false)}
           />
         )}
 

@@ -47,7 +47,7 @@ export function createGeoIcon(
   // Selected cards scale up slightly from the pointer tip (transform-origin: bottom center).
   // This gives visual elevation without changing the hit area or anchor.
   const transform = selected
-    ? 'transform:scale(1.08);transform-origin:50% 100%;'
+    ? 'transform:scale(1.18);transform-origin:50% 100%;'
     : ''
 
   const opacity =

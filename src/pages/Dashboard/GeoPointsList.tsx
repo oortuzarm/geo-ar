@@ -109,7 +109,7 @@ export default function GeoPointsList({
   }
 
   return (
-    <div className="flex flex-col h-full w-full min-w-0">
+    <div className="flex flex-col h-full w-full overflow-hidden">
 
       {/* ── Header ── */}
       <div className="px-3 py-3 border-b border-gray-800 flex items-center gap-2.5 min-h-[48px]">
@@ -248,7 +248,7 @@ export default function GeoPointsList({
       )}
 
       {/* ── List ── */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden min-w-0">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden [scrollbar-gutter:stable]">
         {points.length === 0 ? (
           <div className="p-4 text-center">
             <p className="text-xs text-gray-500">

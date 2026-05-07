@@ -121,7 +121,7 @@ export default function ProjectPanel({ onMarkUnsaved }: ProjectPanelProps) {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 min-w-0 w-full">
+    <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 [scrollbar-gutter:stable]">
       <div className="p-4 space-y-6">
 
         {/* ── Portada del proyecto ─────────────────────────────────────────── */}

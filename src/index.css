@@ -27,6 +27,18 @@
   }
 }
 
+/* Selected geo marker — scale from pointer tip upward.
+   Desktop: 1.18×  Mobile (<1024px): 1.28× */
+.geo-marker--selected {
+  transform: scale(1.18);
+  transform-origin: 50% 100%;
+}
+@media (max-width: 1023px) {
+  .geo-marker--selected {
+    transform: scale(1.28);
+  }
+}
+
 /* Override Leaflet dark theme */
 .leaflet-container {
   background: #1f2937;

@@ -33,6 +33,7 @@ export default function DashboardPage() {
   const [locatingUser, setLocatingUser] = useState(false)
   const [listDrawerOpen, setListDrawerOpen] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+
   // Ref-based guard so async continuations read the live value, not a stale closure.
   const isSavingRef   = useRef(false)
   // True when a save was requested while one was already in progress.
@@ -43,7 +44,6 @@ export default function DashboardPage() {
   const [isPublishing, setIsPublishing] = useState(false)
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
   const [leftTab, setLeftTab] = useState<'points' | 'project'>('points')
-  const [projectInfoDrawerOpen, setProjectInfoDrawerOpen] = useState(false)
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [poiResults, setPoiResults] = useState<PoiSearchResult[]>([])
 
@@ -597,15 +597,8 @@ export default function DashboardPage() {
             )}
           </button>
 
-          {/* Mobile: Info + List buttons */}
-          <div className="lg:hidden absolute bottom-8 right-4 z-[1000] flex gap-2">
-            <button
-              className="bg-gray-900/95 border border-gray-700 rounded-lg px-3 py-2
-                         text-sm font-medium text-gray-300 shadow-lg hover:bg-gray-800 transition-colors"
-              onClick={() => setProjectInfoDrawerOpen(true)}
-            >
-              Info
-            </button>
+          {/* Mobile: List button */}
+          <div className="lg:hidden absolute bottom-8 right-4 z-[1000]">
             <button
               className="bg-gray-900/95 border border-gray-700 rounded-lg px-3 py-2
                          text-sm font-medium text-gray-300 shadow-lg hover:bg-gray-800 transition-colors"
@@ -673,23 +666,6 @@ export default function DashboardPage() {
               onBulkDeactivate={handleBulkDeactivate}
               onBulkDelete={handleBulkDelete}
               onClose={() => setListDrawerOpen(false)}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* ── Mobile: project info bottom sheet ── */}
-      {projectInfoDrawerOpen && (
-        <div className="lg:hidden fixed inset-0 z-[3000]">
-          <div
-            className="absolute inset-0 bg-black/60"
-            onClick={() => setProjectInfoDrawerOpen(false)}
-          />
-          <div className="absolute inset-x-0 bottom-0 h-[88vh] bg-gray-900 rounded-t-2xl
-                         border-t border-gray-800 flex flex-col overflow-hidden">
-            <ProjectInfoPanel
-              onClose={() => setProjectInfoDrawerOpen(false)}
-              onSave={handleSave}
             />
           </div>
         </div>

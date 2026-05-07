@@ -132,12 +132,12 @@ export function computePointAvailability(
       if (cur < scheduleStartTime) {
         scheduleAvailable = false
         scheduleLabel     = `Disponible desde las ${scheduleStartTime}`
-      } else if (cur > scheduleEndTime) {
-        // Past closing time today — point to next open window.
+      } else if (cur >= scheduleEndTime) {
+        // At or past closing time — exclusive end: [start, end) is the open window.
         scheduleAvailable = false
         scheduleLabel     = nextAvailableLabel('Disponible')
       } else {
-        // cur >= scheduleStartTime && cur <= scheduleEndTime → open now.
+        // cur >= scheduleStartTime && cur < scheduleEndTime → open now.
         scheduleAvailable = true
         scheduleLabel     = `Disponible hasta las ${scheduleEndTime}`
       }

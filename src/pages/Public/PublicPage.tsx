@@ -781,6 +781,16 @@ export default function PublicPage() {
     setSheetState('expanded')
   }
 
+  // Explicit tap handler for every element in the compact sheet header.
+  // Calls both preventDefault (suppresses any residual synthetic browser action)
+  // and stopPropagation (prevents the click from reaching Leaflet or any ancestor
+  // React handler), then expands the sheet and clears stale selection state.
+  function handleCompactSheetTap(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    expandSheet()
+  }
+
   function handleDragEnd(e: React.TouchEvent) {
     e.stopPropagation()
     if (dragStartYRef.current === null) return
@@ -1029,6 +1039,7 @@ export default function PublicPage() {
             style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
             onTouchStart={handleDragStart}
             onTouchEnd={handleDragEnd}
+            onClick={handleCompactSheetTap}
           >
             {/* Pill */}
             <div className="flex justify-center pt-2 pb-1">
@@ -1042,11 +1053,12 @@ export default function PublicPage() {
                 <img
                   src={project.coverImage}
                   alt={project.title}
+                  onClick={handleCompactSheetTap}
                   className="w-14 h-14 rounded-xl object-cover flex-shrink-0
                              ring-1 ring-white/10 shadow-lg"
                 />
               )}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0" onClick={handleCompactSheetTap}>
                 <p className="text-sm font-semibold text-gray-100 line-clamp-2 leading-snug">
                   {project.title}
                 </p>

@@ -980,7 +980,7 @@ export default function PublicPage() {
             onTouchEnd={handleDragEnd}
           >
             {/* Pill */}
-            <div className="flex justify-center pt-3 pb-2">
+            <div className="flex justify-center pt-2 pb-1">
               <div className="w-9 h-1 rounded-full bg-white/20" />
             </div>
 

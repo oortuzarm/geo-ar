@@ -26,28 +26,28 @@ export const mapTheme = {
   // ── Bubble-card marker ────────────────────────────────────────────────────
   marker: {
     /** Card width in px */
-    cardWidth:           52,
+    cardWidth:           64,
     /** Card height in px (rounded rect, above the pointer) */
-    cardHeight:          42,
+    cardHeight:          52,
     /** Downward pointer triangle height in px */
-    pointerH:            8,
+    pointerH:            10,
     /** Pointer half-width in px (each side of the triangle) */
-    pointerHW:           7,
+    pointerHW:           8,
     /** Card corner radius in px */
-    cardRadius:          10,
+    cardRadius:          12,
     /** Default white border */
-    borderColor:         'rgba(255,255,255,0.9)',
+    borderColor:         'rgba(255,255,255,0.92)',
     borderWidth:         2.5,
     /** Cyan border for the selected pin */
     selectedBorderColor: '#0ea5e9',
-    selectedBorderWidth: 3,
-    /** Glow ring that appears on the selected pin (drop-shadow layer) */
-    glowColor:           'rgba(14,165,233,0.55)',
-    glowSize:            5,
-    /** Drop-shadow on every pin */
-    shadow:              '0 3px 10px rgba(0,0,0,0.55)',
-    /** Background shown when the point has no thumbnail image */
-    fallbackBg:          '#0f172a',
+    selectedBorderWidth: 3.5,
+    /** Glow blur radius in px — used as drop-shadow blur for the selected state */
+    glowColor:           'rgba(14,165,233,0.70)',
+    glowSize:            8,
+    /** Drop-shadow on every pin — passed directly to drop-shadow() filter */
+    shadow:              '0 4px 12px rgba(0,0,0,0.55)',
+    /** Background for fallback (no image) — softer navy, less dominant */
+    fallbackBg:          '#1a2d48',
     /** Background for inactive points (editor only) */
     inactiveBg:          '#1f2937',
     /** Opacity of pins that are NOT selected while another point IS selected */

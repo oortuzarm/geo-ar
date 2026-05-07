@@ -33,6 +33,7 @@ export default function PublicPointMarker({
       <Marker
         position={[point.latitude, point.longitude]}
         icon={icon}
+        zIndexOffset={selected ? 1000 : 0}
         eventHandlers={{ click: onClick }}
       />
       <Circle

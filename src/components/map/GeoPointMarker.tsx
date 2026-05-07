@@ -72,6 +72,7 @@ export default function GeoPointMarker({ point, selected, onClick, onDragEnd }: 
         position={[point.latitude, point.longitude]}
         icon={icon}
         draggable
+        zIndexOffset={selected ? 1000 : 0}
         eventHandlers={{ click: () => onClick(point.id) }}
       >
         <Popup>

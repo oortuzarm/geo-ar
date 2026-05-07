@@ -408,6 +408,9 @@ export default function PublicPage() {
   const routeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pointsRef = useRef<GeoPoint[]>([])
   const wasInsideRef = useRef<Record<string, boolean>>({})
+  // Ref for the mobile bottom sheet — used to call L.DomEvent.disableClickPropagation
+  // so Leaflet's internal tap/click detection cannot fire through the sheet.
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   // ── flyTo control ─────────────────────────────────────────────────────────
   const [flyToKey, setFlyToKey] = useState<string | null>(null)
@@ -419,6 +422,15 @@ export default function PublicPage() {
   const [locationActive, setLocationActive] = useState(false)
   // locationSheet is only shown when status === 'denied'
   const [locationSheet,  setLocationSheet]  = useState(false)
+
+  // Isolate the mobile bottom sheet from Leaflet's tap/click detection.
+  // Without this, Leaflet's internal event tracking can receive touch events
+  // that bubble through common DOM ancestors and misfire as map/marker clicks.
+  useEffect(() => {
+    if (sheetRef.current) {
+      L.DomEvent.disableClickPropagation(sheetRef.current)
+    }
+  }, [])
 
   // Close the sheet whenever location becomes active
   useEffect(() => {
@@ -758,11 +770,13 @@ export default function PublicPage() {
   // ── Bottom sheet drag ─────────────────────────────────────────────────────
 
   function handleDragStart(e: React.TouchEvent) {
+    e.stopPropagation()
     if (mobileState !== 'clean') return
     dragStartYRef.current = e.touches[0].clientY
   }
 
   function handleDragEnd(e: React.TouchEvent) {
+    e.stopPropagation()
     if (dragStartYRef.current === null) return
     const delta = dragStartYRef.current - e.changedTouches[0].clientY
     dragStartYRef.current = null
@@ -987,7 +1001,10 @@ export default function PublicPage() {
           peek     → 80px + safe-area  — handle + mini summary only
           expanded → 90dvh             — full scrollable list              */}
       <div
+        ref={sheetRef}
         className="md:hidden absolute inset-x-0 bottom-0 z-[1000]"
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
         style={{
           height: SHEET_HEIGHT[sheetState],
           transition: 'height 0.4s cubic-bezier(0.32, 0.72, 0, 1)',

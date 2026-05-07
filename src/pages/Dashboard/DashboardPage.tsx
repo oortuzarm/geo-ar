@@ -524,7 +524,7 @@ export default function DashboardPage() {
       <div className="flex-1 flex overflow-hidden min-h-0">
 
         {/* Left sidebar: desktop only */}
-        <aside className="hidden lg:flex w-80 flex-shrink-0 border-r border-gray-800 bg-gray-900 flex-col overflow-hidden">
+        <aside className="hidden lg:flex w-64 flex-shrink-0 border-r border-gray-800 bg-gray-900 flex-col overflow-hidden">
           {/* Tab bar */}
           <div className="flex-shrink-0 flex border-b border-gray-800">
             {(['points', 'project'] as const).map((tab) => (
@@ -560,7 +560,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* Map area */}
-        <div className="flex-1 relative overflow-hidden min-h-0 min-w-0">
+        <div className="flex-1 relative overflow-hidden min-h-0">
 
           {/* POI / address search bar
               Mobile: left-14 (56 px) clears the Leaflet zoom controls on the left;

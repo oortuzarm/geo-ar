@@ -1,26 +1,7 @@
 import { useEffect, useRef } from 'react'
-import L from 'leaflet'
 import { Circle, Marker, Popup } from 'react-leaflet'
+import { createGeoIcon } from './createGeoIcon'
 import type { GeoPoint } from '../../types'
-
-function createIcon(selected: boolean, active: boolean) {
-  const color = !active ? '#6b7280' : selected ? '#0ea5e9' : '#ef4444'
-  const ring = selected ? 'box-shadow: 0 0 0 3px rgba(14,165,233,0.5);' : ''
-  return L.divIcon({
-    className: '',
-    html: `<div style="
-      width: 28px; height: 28px;
-      background: ${color};
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      border: 2px solid rgba(255,255,255,0.8);
-      ${ring}
-    "></div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 28],
-    popupAnchor: [0, -32],
-  })
-}
 
 interface GeoPointMarkerProps {
   point: GeoPoint
@@ -81,7 +62,7 @@ export default function GeoPointMarker({ point, selected, onClick, onDragEnd }: 
     }
   }, []) // stable: same Leaflet instance lives as long as this component (keyed by point.id)
 
-  const icon = createIcon(selected, point.active)
+  const icon = createGeoIcon(selected, point.active)
 
   return (
     <>

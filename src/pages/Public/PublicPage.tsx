@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { MapContainer, TileLayer, Circle, Marker } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker } from 'react-leaflet'
 import L from 'leaflet'
+import PublicPointMarker from '../../components/map/PublicPointMarker'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
 
@@ -907,26 +908,15 @@ export default function PublicPage() {
           {userLocation && (
             <UserLocationMarker lat={userLocation.latitude} lng={userLocation.longitude} />
           )}
-          {points.map((pt) => {
-            const isSelected = pt.id === selectedPointId
-            const somethingSelected = selectedPointId !== null
-            return (
-              <Circle
-                key={pt.id}
-                center={[pt.latitude, pt.longitude]}
-                radius={pt.activationRadius}
-                pathOptions={{
-                  // Selected: cyan highlight. Others: dim to gray when something is selected.
-                  color:       isSelected ? '#0ea5e9' : somethingSelected ? '#6b7280' : '#ef4444',
-                  fillColor:   isSelected ? '#0ea5e9' : somethingSelected ? '#6b7280' : '#ef4444',
-                  fillOpacity: isSelected ? 0.18     : somethingSelected ? 0.04      : 0.08,
-                  weight:      isSelected ? 3        : somethingSelected ? 1         : 2,
-                  opacity:     isSelected ? 1        : somethingSelected ? 0.4       : 0.8,
-                }}
-                eventHandlers={{ click: () => handlePointClick(pt) }}
-              />
-            )
-          })}
+          {points.map((pt) => (
+            <PublicPointMarker
+              key={pt.id}
+              point={pt}
+              selected={pt.id === selectedPointId}
+              dimmed={selectedPointId !== null && pt.id !== selectedPointId}
+              onClick={() => handlePointClick(pt)}
+            />
+          ))}
           {routeResult && <RoutePolyline latLngs={routeResult.latLngs} />}
         </MapContainer>
 

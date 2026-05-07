@@ -552,6 +552,7 @@ export default function DashboardPage() {
               onBulkActivate={handleBulkActivate}
               onBulkDeactivate={handleBulkDeactivate}
               onBulkDelete={handleBulkDelete}
+              hideIdleTitle
             />
           ) : (
             <ProjectPanel onMarkUnsaved={() => setHasUnsavedChanges(true)} />

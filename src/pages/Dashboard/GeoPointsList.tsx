@@ -13,6 +13,8 @@ interface GeoPointsListProps {
   onBulkDeactivate: (ids: string[]) => Promise<void>
   /** When provided (mobile drawer context), renders a × button in the header */
   onClose?: () => void
+  /** Hides "Puntos GPS (N)" when idle — use in sidebar where the tab already provides that context */
+  hideIdleTitle?: boolean
 }
 
 export default function GeoPointsList({
@@ -25,6 +27,7 @@ export default function GeoPointsList({
   onBulkActivate,
   onBulkDeactivate,
   onClose,
+  hideIdleTitle = false,
 }: GeoPointsListProps) {
   const [selectionMode, setSelectionMode] = useState(false)
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set())
@@ -138,12 +141,12 @@ export default function GeoPointsList({
             <span className="text-brand-400">
               {checkedCount} seleccionado{checkedCount !== 1 ? 's' : ''}
             </span>
-          ) : (
+          ) : !hideIdleTitle ? (
             <span className="text-gray-100">
               Puntos GPS{' '}
               <span className="text-xs font-normal text-gray-500">({points.length})</span>
             </span>
-          )}
+          ) : null}
         </h2>
 
         {/* Right actions */}

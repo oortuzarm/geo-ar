@@ -237,85 +237,116 @@ function LocationBadge({ status, onClick }: { status: LocationStatus; onClick: (
   )
 }
 
+// ── Platform detection ────────────────────────────────────────────────────────
+
+function detectPlatform(): 'ios' | 'android' | 'other' {
+  const ua = navigator.userAgent
+  if (/iPhone|iPad|iPod/.test(ua)) return 'ios'
+  if (/Android/.test(ua))          return 'android'
+  return 'other'
+}
+
+const IOS_STEPS = [
+  'Abre Ajustes',
+  'Entra a "Privacidad y seguridad"',
+  'Toca "Localización"',
+  'Entra a "Sitios web de Safari"',
+  'Selecciona "Al usar la app"',
+  'Vuelve a Safari y recarga la página',
+]
+
+const ANDROID_STEPS = [
+  'Toca el botón ⓘ en la barra de Chrome',
+  'Entra a "Permisos"',
+  'Activa "Ubicación"',
+  'Recarga la página',
+]
+
+function StepList({ steps }: { steps: string[] }) {
+  return (
+    <div className="space-y-2.5">
+      {steps.map((step, i) => (
+        <div key={i} className="flex items-start gap-3">
+          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-brand-900/60 border border-brand-700/50
+                           flex items-center justify-center text-[10px] font-bold text-brand-400 mt-0.5">
+            {i + 1}
+          </span>
+          <span className="text-sm text-gray-300 leading-snug">{step}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── Location permission sheet (shown only when status === 'denied') ───────────
 
 function LocationSheet({ onRetry, onClose }: { onRetry: () => void; onClose: () => void }) {
+  const platform = detectPlatform()
+
+  const platformLabel = platform === 'ios' ? 'iPhone · Safari' : platform === 'android' ? 'Android · Chrome' : null
+  const steps = platform === 'ios' ? IOS_STEPS : platform === 'android' ? ANDROID_STEPS : null
+
   return (
     <div className="absolute inset-0 z-[2000] flex flex-col justify-end md:hidden">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-gray-950 border-t border-gray-800 rounded-t-[24px]
-                      px-5 pt-5 shadow-2xl"
-        style={{ paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom))' }}
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative bg-gray-950 border-t border-white/[0.07] rounded-t-[28px]
+                      px-5 pt-4 shadow-2xl"
+        style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}
       >
-        <div className="flex justify-center mb-4">
-          <div className="w-8 h-1 rounded-full bg-gray-700" />
+        {/* Handle */}
+        <div className="flex justify-center mb-5">
+          <div className="w-9 h-1 rounded-full bg-white/20" />
         </div>
-        <div className="w-12 h-12 rounded-full bg-amber-900/30 flex items-center
-                        justify-center mx-auto mb-3">
-          <svg className="w-6 h-6 text-amber-400" viewBox="0 0 24 24" fill="none"
+
+        {/* Icon */}
+        <div className="w-11 h-11 rounded-full bg-amber-900/30 border border-amber-800/30
+                        flex items-center justify-center mx-auto mb-4">
+          <svg className="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
             <circle cx="12" cy="10" r="3" />
           </svg>
         </div>
-        <h2 className="text-base font-semibold text-gray-100 text-center mb-2">
+
+        <h2 className="text-base font-semibold text-gray-100 text-center mb-1">
           Permite el acceso a tu ubicación
         </h2>
-        <p className="text-sm text-gray-400 text-center leading-relaxed mb-4">
+        <p className="text-sm text-gray-500 text-center leading-relaxed mb-5">
           Necesitamos tu ubicación para activar experiencias cercanas.
         </p>
 
-        <div className="space-y-3 mb-4">
-          {/* iPhone Safari */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-3.5">
-            <p className="text-xs font-semibold text-gray-300 mb-2">iPhone (Safari)</p>
-            <div className="space-y-1.5">
-              {[
-                'Toca "aA" en la barra de Safari',
-                'Abre "Configuración del sitio web"',
-                'Cambia "Ubicación" a Permitir',
-                'Recarga la página',
-              ].map((step, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <span className="text-xs text-brand-400 font-bold flex-shrink-0 w-3">{i + 1}.</span>
-                  <span className="text-xs text-gray-400 leading-snug">{step}</span>
-                </div>
-              ))}
-            </div>
+        {/* Instructions — platform-specific */}
+        {steps ? (
+          <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-4 mb-5">
+            {platformLabel && (
+              <p className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wide">
+                {platformLabel}
+              </p>
+            )}
+            <StepList steps={steps} />
           </div>
-
-          {/* Android Chrome */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-3.5">
-            <p className="text-xs font-semibold text-gray-300 mb-2">Android (Chrome)</p>
-            <div className="space-y-1.5">
-              {[
-                'Toca el candado o configuración del sitio',
-                'Entra a Permisos',
-                'Activa Ubicación',
-                'Recarga la página',
-              ].map((step, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <span className="text-xs text-brand-400 font-bold flex-shrink-0 w-3">{i + 1}.</span>
-                  <span className="text-xs text-gray-400 leading-snug">{step}</span>
-                </div>
-              ))}
-            </div>
+        ) : (
+          /* Fallback for desktop or unknown UA — generic hint */
+          <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-4 mb-5">
+            <p className="text-sm text-gray-400 leading-relaxed">
+              Abre la configuración de tu navegador, buscá los permisos de este sitio y habilitá el acceso a la ubicación.
+            </p>
           </div>
-        </div>
+        )}
 
+        {/* Actions */}
         <button
           onClick={onRetry}
           className="w-full bg-brand-600 hover:bg-brand-500 active:scale-[0.98]
                      text-white font-semibold py-3.5 rounded-xl text-sm
-                     transition-all duration-150 shadow-lg shadow-brand-900/50"
+                     transition-all duration-150 shadow-lg shadow-brand-900/40 mb-2.5"
         >
           Intentar nuevamente
         </button>
         <button
           onClick={() => window.location.reload()}
-          className="mt-3 w-full border border-gray-700 text-gray-400
-                     hover:text-gray-200 hover:border-gray-600 active:scale-[0.98]
-                     font-medium py-3 rounded-xl text-sm transition-all duration-150"
+          className="w-full text-gray-500 hover:text-gray-300 active:scale-[0.98]
+                     font-medium py-2.5 rounded-xl text-sm transition-all duration-150"
         >
           Recargar página
         </button>

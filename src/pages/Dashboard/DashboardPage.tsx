@@ -563,8 +563,11 @@ export default function DashboardPage() {
         {/* Map area */}
         <div className="flex-1 relative overflow-hidden min-h-0">
 
-          {/* POI / address search bar */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-[calc(100%-1rem)] sm:w-full sm:max-w-lg sm:px-4">
+          {/* POI / address search bar
+              Mobile: left-14 (56 px) clears the Leaflet zoom controls on the left;
+              right-2 gives 8 px breathing room on the right edge.
+              sm+: revert to centred layout with max-width cap. */}
+          <div className="absolute top-4 z-[1000] left-14 right-2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-full sm:max-w-lg sm:px-4">
             <POISearch
               mapBounds={mapBounds}
               existingPoints={points}

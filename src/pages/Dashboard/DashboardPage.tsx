@@ -434,11 +434,11 @@ export default function DashboardPage() {
 
   const selectedPoint = points.find((p) => p.id === selectedPointId) ?? null
 
-  // When "usar imagen por defecto" is on, points without their own image inherit the project cover.
+  // Priority: point.image → project.markerImage → fallback navy (handled in createGeoIcon).
   // Applied only to the map layer — the form and list always show the real point state.
-  const coverImg = project?.useDefaultImage ? project.coverImage : undefined
-  const effectiveMapPoints = coverImg
-    ? points.map((pt) => ({ ...pt, image: pt.image ?? coverImg }))
+  const markerImg = project?.markerImage
+  const effectiveMapPoints = markerImg
+    ? points.map((pt) => ({ ...pt, image: pt.image ?? markerImg }))
     : points
 
   return (

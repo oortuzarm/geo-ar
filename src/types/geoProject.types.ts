@@ -5,7 +5,7 @@ export interface GeoProject {
   description?: string
   coverImage?: string
   shareText?: string
-  useDefaultImage?: boolean
+  markerImage?: string
   howToGet?: string
   status: 'draft' | 'active' | 'inactive'
   createdAt: string

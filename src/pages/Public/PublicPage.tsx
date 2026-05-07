@@ -363,7 +363,7 @@ type SheetState = 'peek' | 'mid' | 'expanded'
 // flex-1 on the scroll container then fills exactly the visible portion.
 // env(safe-area-inset-bottom, 0px) ≈ 34px on Face ID iPhones, 0 elsewhere.
 const SHEET_HEIGHT: Record<SheetState, string> = {
-  peek:     'calc(8rem + env(safe-area-inset-bottom, 0px))',
+  peek:     'calc(80px + env(safe-area-inset-bottom, 0px))',
   mid:      '45dvh',
   expanded: '90dvh',
 }

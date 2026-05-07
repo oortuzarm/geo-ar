@@ -2,104 +2,11 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { formatDistance } from '../../features/geolocation/haversine'
 import { formatDuration } from '../../features/routing/orsClient'
-import type { GeoPoint, GeoPointAvailability } from '../../types'
-
-// ─── Calendar constants ───────────────────────────────────────────────────────
-
-const WEEK_DAYS_INDEX = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-const DAY_ORDER       = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
-const DAY_FULL: Record<string, string> = {
-  Lun: 'Lunes', Mar: 'Martes', Mié: 'Miércoles',
-  Jue: 'Jueves', Vie: 'Viernes', Sáb: 'Sábado', Dom: 'Domingo',
-}
+import { computePointAvailability, formatDays } from '../../features/geolocation/availability'
+import type { PointAvailability } from '../../features/geolocation/availability'
+import type { GeoPoint } from '../../types'
 
 const DESCRIPTION_LIMIT = 140
-
-// ─── Day formatting ───────────────────────────────────────────────────────────
-
-function formatDays(days: string[]): string {
-  if (!days.length || days.length === 7) return 'Todos los días'
-  const sorted = [...days].sort((a, b) => DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(b))
-  const first = sorted[0]
-  const last  = sorted[sorted.length - 1]
-  if (DAY_ORDER.indexOf(last) - DAY_ORDER.indexOf(first) === days.length - 1)
-    return days.length === 1
-      ? (DAY_FULL[first] ?? first)
-      : `${DAY_FULL[first] ?? first} a ${DAY_FULL[last] ?? last}`
-  return sorted.map((d) => DAY_FULL[d] ?? d).join(', ')
-}
-
-// ─── Schedule state ───────────────────────────────────────────────────────────
-
-interface ScheduleState {
-  active: boolean
-  available: boolean
-  label: string
-  days: string[]
-  startTime?: string
-  endTime?: string
-}
-
-function getScheduleState(av: GeoPointAvailability | undefined): ScheduleState {
-  const NONE: ScheduleState = { active: false, available: true, label: '', days: [] }
-  if (!av?.scheduleEnabled) return NONE
-
-  const now   = new Date()
-  const idx   = now.getDay()
-  const today = WEEK_DAYS_INDEX[idx]
-  const days  = av.scheduleDays ?? []
-  const st    = av.scheduleStartTime
-  const et    = av.scheduleEndTime
-  const cur   = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-  const dayOk = days.length === 0 || days.includes(today)
-
-  function nextAvailableLabel(prefix: string): string {
-    for (let i = 1; i <= 7; i++) {
-      const nl = WEEK_DAYS_INDEX[(idx + i) % 7]
-      if (days.length === 0 || days.includes(nl)) {
-        const when = i === 1 ? 'mañana' : `el ${DAY_FULL[nl] ?? nl}`
-        return `${prefix} ${when}${st ? ` desde las ${st}` : ''}`
-      }
-    }
-    return `Solo los ${formatDays(days)}`
-  }
-
-  if (!dayOk)
-    return { active: true, available: false, label: nextAvailableLabel('Disponible'), days, startTime: st, endTime: et }
-
-  if (st && et) {
-    if (cur < st)
-      return { active: true, available: false, label: `Disponible desde las ${st}`, days, startTime: st, endTime: et }
-    if (cur > et)
-      return { active: true, available: false, label: nextAvailableLabel('Disponible'), days, startTime: st, endTime: et }
-    return { active: true, available: true, label: `Disponible hasta las ${et}`, days, startTime: st, endTime: et }
-  }
-
-  return { active: true, available: true, label: 'Disponible hoy', days, startTime: st, endTime: et }
-}
-
-// ─── Quota state ──────────────────────────────────────────────────────────────
-
-interface QuotaState {
-  active: boolean
-  available: boolean
-  label: string
-  remaining?: number
-  total?: number
-}
-
-function getQuotaState(av: GeoPointAvailability | undefined): QuotaState {
-  if (!av?.quotaEnabled || av.quotaLimit === undefined)
-    return { active: false, available: true, label: '' }
-  const remaining = av.quotaLimit - (av.quotaUsed ?? 0)
-  if (remaining <= 0)
-    return { active: true, available: false, label: 'Sin cupos disponibles', remaining: 0, total: av.quotaLimit }
-  return {
-    active: true, available: true,
-    label: remaining === 1 ? 'Queda 1 cupo' : `Quedan ${remaining} cupos`,
-    remaining, total: av.quotaLimit,
-  }
-}
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -197,22 +104,22 @@ function StatusChip({
 
 // ─── Detail sub-components ────────────────────────────────────────────────────
 
-function ScheduleDetail({ schedule }: { schedule: ScheduleState }) {
+function ScheduleDetail({ avail }: { avail: PointAvailability }) {
   return (
     <>
-      {schedule.days.length > 0 && <p>{formatDays(schedule.days)}</p>}
-      {schedule.startTime && schedule.endTime
-        ? <p>{schedule.startTime} – {schedule.endTime}</p>
-        : schedule.days.length === 0 && <p>Sin restricción de horario</p>
+      {avail.scheduleDays.length > 0 && <p>{formatDays(avail.scheduleDays)}</p>}
+      {avail.scheduleStartTime && avail.scheduleEndTime
+        ? <p>{avail.scheduleStartTime} – {avail.scheduleEndTime}</p>
+        : avail.scheduleDays.length === 0 && <p>Sin restricción de horario</p>
       }
     </>
   )
 }
 
-function QuotaDetail({ quota }: { quota: QuotaState }) {
-  if (quota.total === undefined) return null
-  const used = quota.total - (quota.remaining ?? 0)
-  return <p>{quota.remaining} de {quota.total} disponibles · {used} usados</p>
+function QuotaDetail({ avail }: { avail: PointAvailability }) {
+  if (avail.quotaTotal === undefined) return null
+  const used = avail.quotaTotal - (avail.quotaRemaining ?? 0)
+  return <p>{avail.quotaRemaining} de {avail.quotaTotal} disponibles · {used} usados</p>
 }
 
 // ─── Public types ─────────────────────────────────────────────────────────────
@@ -246,16 +153,9 @@ export default function PublicPointCard({
   const [descExpanded, setDescExpanded] = useState(false)
   const isLongDesc = (point.description?.length ?? 0) > DESCRIPTION_LIMIT
 
-  // Radius check always uses straight-line Haversine.
-  const withinRadius = distance !== null && distance <= point.activationRadius
-
-  // Walking distance from ORS for the expand detail (display only, never used for radius check).
-  const distanceToEdge =
-    distance !== null ? Math.max(0, distance - point.activationRadius) : null
-
-  const schedule = getScheduleState(point.availability)
-  const quota    = getQuotaState(point.availability)
-  const canActivate = withinRadius && schedule.available && quota.available
+  // Single availability computation — all chips, button state, and messages
+  // derive exclusively from this object. Never re-check schedules below.
+  const avail = computePointAvailability(point, distance)
 
   // ── Location chip derivation ──────────────────────────────────────────────
   let locationLabel: string
@@ -265,12 +165,12 @@ export default function PublicPointCard({
   if (distance === null) {
     locationLabel   = 'Activá tu ubicación'
     locationVariant = 'neutral'
-  } else if (withinRadius) {
+  } else if (avail.insideRadius) {
     locationLabel   = 'Dentro del área'
     locationVariant = 'ok'
   } else {
-    locationLabel   = distanceToEdge !== null && distanceToEdge > 0
-      ? `A ${formatDistance(distanceToEdge)} del área`
+    locationLabel   = avail.distanceToEdge !== null && avail.distanceToEdge > 0
+      ? `A ${formatDistance(avail.distanceToEdge)} del área`
       : 'Fuera del área'
     locationVariant = 'block'
 
@@ -290,7 +190,7 @@ export default function PublicPointCard({
     <div
       className={[
         'rounded-xl border overflow-hidden transition-all duration-200 cursor-pointer',
-        isSelected && withinRadius
+        isSelected && avail.insideRadius
           ? 'border-brand-500/70 bg-gray-800/80 shadow-lg shadow-brand-950/50 ring-1 ring-brand-500/20'
           : isSelected
           ? 'border-brand-500/50 bg-gray-800/75 shadow-md shadow-black/40'
@@ -382,31 +282,31 @@ export default function PublicPointCard({
               detail={locationDetail}
             />
 
-            {/* Schedule (only when configured) */}
-            {schedule.active && (
+            {/* Schedule chip — only when a schedule is configured on this point */}
+            {avail.scheduleActive && (
               <StatusChip
                 icon={<ClockIcon />}
-                label={schedule.label}
-                variant={schedule.available ? 'ok' : 'block'}
+                label={avail.scheduleLabel}
+                variant={avail.scheduleAvailable ? 'ok' : 'block'}
                 expandLabel="Ver horarios"
-                detail={<ScheduleDetail schedule={schedule} />}
+                detail={<ScheduleDetail avail={avail} />}
               />
             )}
 
-            {/* Quota (only when configured) */}
-            {quota.active && (
+            {/* Quota chip — only when a quota is configured on this point */}
+            {avail.quotaActive && (
               <StatusChip
                 icon={<TagIcon />}
-                label={quota.label}
-                variant={quota.available ? (quota.remaining === 1 ? 'warn' : 'ok') : 'block'}
+                label={avail.quotaLabel}
+                variant={avail.quotaAvailable ? (avail.quotaRemaining === 1 ? 'warn' : 'ok') : 'block'}
                 expandLabel="Ver detalle"
-                detail={<QuotaDetail quota={quota} />}
+                detail={<QuotaDetail avail={avail} />}
               />
             )}
 
-            {/* Activation button + inline access feedback */}
+            {/* CTA button — enabled iff avail.canAccess */}
             <div className="pt-0.5 space-y-2">
-              {canActivate ? (
+              {avail.canAccess ? (
                 <button
                   onClick={(e) => { e.stopPropagation(); onActivate() }}
                   disabled={isActivating}
@@ -437,7 +337,9 @@ export default function PublicPointCard({
                 </button>
               )}
 
-              {/* Inline feedback: error message or popup-blocked fallback */}
+              {/* Inline feedback: server error message or popup-blocked fallback.
+                  Shown only after the user attempts activation and the server
+                  responds — never derived from local availability state.      */}
               {accessMessage && (
                 accessFallbackUrl ? (
                   <a

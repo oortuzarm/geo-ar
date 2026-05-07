@@ -1,43 +1,9 @@
+import { computePointAvailability } from '../../features/geolocation/availability'
 import { formatDistance } from '../../features/geolocation/haversine'
-import type { GeoPoint, GeoPointAvailability } from '../../types'
+import type { GeoPoint } from '../../types'
 
-const WEEK_DAYS_INDEX = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-
-function checkSchedule(av: GeoPointAvailability): boolean {
-  if (!av.scheduleEnabled) return true
-  const now   = new Date()
-  const today = WEEK_DAYS_INDEX[now.getDay()]
-  const days  = av.scheduleDays ?? []
-  if (days.length > 0 && !days.includes(today)) return false
-  if (av.scheduleStartTime && av.scheduleEndTime) {
-    const cur = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-    return cur >= av.scheduleStartTime && cur <= av.scheduleEndTime
-  }
-  return true
-}
-
+// Badge variants mirror the three possible access states visible from a glance.
 type StatusVariant = 'ok' | 'block' | 'neutral'
-
-function deriveStatus(point: GeoPoint, distance: number | null): { label: string; variant: StatusVariant } {
-  if (distance === null) return { label: 'Activá tu ubicación', variant: 'neutral' }
-
-  const withinRadius = distance <= point.activationRadius
-  if (!withinRadius) {
-    const edge = Math.max(0, distance - point.activationRadius)
-    return { label: `A ${formatDistance(edge)} del área`, variant: 'block' }
-  }
-
-  const av = point.availability
-  if (av) {
-    if (!checkSchedule(av)) return { label: 'Fuera de horario', variant: 'block' }
-    if (av.quotaEnabled && av.quotaLimit !== undefined) {
-      const remaining = av.quotaLimit - (av.quotaUsed ?? 0)
-      if (remaining <= 0) return { label: 'Sin cupos', variant: 'block' }
-    }
-  }
-
-  return { label: 'Disponible', variant: 'ok' }
-}
 
 const BADGE: Record<StatusVariant, string> = {
   ok:      'bg-emerald-500/15 border-emerald-500/30 text-emerald-400',
@@ -55,7 +21,40 @@ interface PublicPointPreviewCardProps {
 export default function PublicPointPreviewCard({
   point, distance, onViewDetail, onClose,
 }: PublicPointPreviewCardProps) {
-  const { label, variant } = deriveStatus(point, distance)
+  // Derived from the same computePointAvailability used by PublicPointCard —
+  // both components always agree on the access state.
+  const avail = computePointAvailability(point, distance)
+
+  // Map the blocked reason to a compact badge label + colour.
+  let label:   string
+  let variant: StatusVariant
+
+  switch (avail.blockedReason) {
+    case null:
+      label   = 'Disponible'
+      variant = 'ok'
+      break
+    case 'no-location':
+      label   = 'Activá tu ubicación'
+      variant = 'neutral'
+      break
+    case 'radius':
+      label   = avail.distanceToEdge !== null && avail.distanceToEdge > 0
+        ? `A ${formatDistance(avail.distanceToEdge)} del área`
+        : 'Fuera del área'
+      variant = 'block'
+      break
+    case 'schedule':
+      // avail.scheduleLabel already contains the human-readable "next open" message
+      // (e.g. "Disponible desde las 10:00" / "Disponible mañana desde las 10:00")
+      label   = avail.scheduleLabel
+      variant = 'block'
+      break
+    case 'quota':
+      label   = avail.quotaLabel
+      variant = 'block'
+      break
+  }
 
   return (
     <div className="geo-preview-enter rounded-2xl overflow-hidden

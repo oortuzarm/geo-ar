@@ -417,6 +417,14 @@ export default function PublicPage() {
   const [flyToTarget, setFlyToTarget] = useState<FlyTarget | null>(null)
   const flyToCounterRef = useRef(0)
 
+  // ── Ghost-click suppression ───────────────────────────────────────────────
+  // Mobile browsers fire a synthetic click ~300ms after touchend.  When the
+  // compact sheet is tapped and expands, that ghost click can land on a map
+  // marker or point card that has shifted into position, re-opening the last
+  // selected point.  Any point-selection handler checks this timestamp and
+  // returns early if the ghost-click window has not yet elapsed.
+  const suppressMapClickUntilRef = useRef<number>(0)
+
   // ── Location permission UX ────────────────────────────────────────────────
   // locationActive gates watchPosition — flipped to true after the first success.
   const [locationActive, setLocationActive] = useState(false)
@@ -718,6 +726,7 @@ export default function PublicPage() {
   }
 
   function handlePointClick(pt: GeoPoint) {
+    if (Date.now() < suppressMapClickUntilRef.current) return
     setSelectedPointId(pt.id)
     setAccessError(null)
     setMobileState('preview')
@@ -775,6 +784,7 @@ export default function PublicPage() {
   }
 
   function expandSheet() {
+    suppressMapClickUntilRef.current = Date.now() + 500
     setMobileState('clean')
     setSelectedPointId(null)
     setAccessError(null)

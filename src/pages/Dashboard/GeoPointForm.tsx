@@ -10,6 +10,7 @@ interface GeoPointFormProps {
   onDelete: () => void
   onClose: () => void
   onSave: () => void
+  hideHeader?: boolean
 }
 
 const RADIUS_TOOLTIP =
@@ -163,7 +164,7 @@ function AvailabilityRules({
   )
 }
 
-export default function GeoPointForm({ point, onChange, onDelete, onClose, onSave }: GeoPointFormProps) {
+export default function GeoPointForm({ point, onChange, onDelete, onClose, onSave, hideHeader = false }: GeoPointFormProps) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [showTooltip, setShowTooltip] = useState(false)
   const [imageError, setImageError] = useState<string | null>(null)
@@ -254,28 +255,30 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
-        <h2 className="text-sm font-semibold text-gray-100 truncate flex-1 mr-2">
-          {name || 'Punto GPS'}
-        </h2>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onDelete}
-            className="text-red-400 hover:text-red-300 transition-colors"
-            title="Eliminar punto"
-          >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
-          <button onClick={handleCloseClick} className="text-gray-500 hover:text-gray-300 transition-colors">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+      {!hideHeader && (
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+          <h2 className="text-sm font-semibold text-gray-100 truncate flex-1 mr-2">
+            {name || 'Punto GPS'}
+          </h2>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onDelete}
+              className="text-red-400 hover:text-red-300 transition-colors"
+              title="Eliminar punto"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+            <button onClick={handleCloseClick} className="text-gray-500 hover:text-gray-300 transition-colors">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
 

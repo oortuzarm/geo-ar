@@ -34,6 +34,7 @@ export default function DashboardPage() {
   const [locatingUser, setLocatingUser] = useState(false)
   const [listDrawerOpen, setListDrawerOpen] = useState(false)
   const [mobileEditOpen, setMobileEditOpen] = useState(false)
+  const [isNewMobilePoint, setIsNewMobilePoint] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [leftTab, setLeftTab] = useState<'points' | 'project'>('points')
 
@@ -95,6 +96,7 @@ export default function DashboardPage() {
     setSelectedPointId(pointId)
     setPointFormOpen(true)
     setMobileEditOpen(false)
+    setIsNewMobilePoint(false)
     const pt = points.find((p) => p.id === pointId)
     if (pt) focusPoint(pt)
   }
@@ -108,6 +110,7 @@ export default function DashboardPage() {
         setSelectedPointId(null)
         setPointFormOpen(false)
         setMobileEditOpen(false)
+        setIsNewMobilePoint(false)
         return
       }
 
@@ -126,6 +129,7 @@ export default function DashboardPage() {
       setSelectedPointId(newPoint.id)
       setPointFormOpen(true)
       setMobileEditOpen(true)
+      setIsNewMobilePoint(true)
     },
     [project, selectedPointId, upsertPoint, setSelectedPointId, addToast],
   )
@@ -149,6 +153,7 @@ export default function DashboardPage() {
     setSelectedPointId(newPoint.id)
     setPointFormOpen(true)
     setMobileEditOpen(true)
+    setIsNewMobilePoint(true)
   }
 
   async function createPointAt(lat: number, lng: number, name?: string): Promise<GeoPoint> {
@@ -196,6 +201,7 @@ export default function DashboardPage() {
       setSelectedPointId(id)
       setPointFormOpen(true)
       setMobileEditOpen(false)
+      setIsNewMobilePoint(false)
     }
 
     // Autosave: persist coordinates immediately so reload keeps the new position
@@ -625,15 +631,18 @@ export default function DashboardPage() {
           </button>
 
           {/* Mobile: FAB Agregar punto */}
-          <div className="lg:hidden absolute bottom-20 right-4 z-[1000]">
+          <div
+            className="lg:hidden absolute right-4 z-[1000]"
+            style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
+          >
             <button
               onClick={handleAddPoint}
-              className="flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white
-                         rounded-full px-4 py-3 shadow-lg shadow-brand-950/60 transition-colors
-                         font-medium text-sm"
+              className="flex items-center gap-2 bg-brand-600 hover:bg-brand-500 active:bg-brand-700
+                         text-white rounded-full px-4 py-3 font-semibold text-sm transition-colors
+                         shadow-[0_4px_20px_rgba(2,132,199,0.4)]"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
               </svg>
               Agregar punto
             </button>
@@ -727,19 +736,74 @@ export default function DashboardPage() {
 
       {/* ── Mobile: point fullscreen edit sheet ── */}
       {pointFormOpen && selectedPoint && mobileEditOpen && (
-        <div className="lg:hidden fixed inset-0 z-[3000] bg-gray-900 flex flex-col overflow-hidden">
+        <div
+          className="lg:hidden fixed inset-0 z-[3000] bg-gray-900 flex flex-col overflow-hidden animate-sheet-up"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
+          {/* Nav header — back/cancel left, point name center, delete right */}
+          <div
+            className="flex-shrink-0 flex items-center gap-3 px-2 border-b border-gray-800"
+            style={{
+              paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0.75rem))',
+              paddingBottom: '0.75rem',
+            }}
+          >
+            <button
+              onClick={isNewMobilePoint
+                ? () => {
+                    setSelectedPointId(null)
+                    setPointFormOpen(false)
+                    setMobileEditOpen(false)
+                    setIsNewMobilePoint(false)
+                  }
+                : () => setMobileEditOpen(false)
+              }
+              className="flex items-center justify-center w-10 h-10 text-gray-400
+                         hover:text-gray-100 transition-colors flex-shrink-0"
+              aria-label={isNewMobilePoint ? 'Cancelar' : 'Volver'}
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <h2 className="flex-1 text-base font-semibold text-gray-100 truncate">
+              {selectedPoint.name || (isNewMobilePoint ? 'Nuevo punto' : 'Punto GPS')}
+            </h2>
+            <button
+              onClick={() => setDeletePointTarget(selectedPoint.id)}
+              className="flex items-center justify-center w-10 h-10 text-red-400
+                         hover:text-red-300 transition-colors flex-shrink-0"
+              title="Eliminar punto"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+
           <GeoPointForm
             key={selectedPointId ?? ''}
             point={selectedPoint}
             onChange={handlePointChange}
             onDelete={() => setDeletePointTarget(selectedPoint.id)}
-            onClose={() => setMobileEditOpen(false)}
+            onClose={isNewMobilePoint
+              ? () => {
+                  setSelectedPointId(null)
+                  setPointFormOpen(false)
+                  setMobileEditOpen(false)
+                  setIsNewMobilePoint(false)
+                }
+              : () => setMobileEditOpen(false)
+            }
             onSave={() => {
               addToast('Punto guardado', 'success')
               setSelectedPointId(null)
               setPointFormOpen(false)
               setMobileEditOpen(false)
+              setIsNewMobilePoint(false)
             }}
+            hideHeader
           />
         </div>
       )}

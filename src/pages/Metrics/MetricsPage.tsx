@@ -1,7 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { fetchProjectAnalytics, fetchProjectAnalyticsByPoint } from '../../lib/analytics'
-import type { ProjectAnalytics, PointAnalytics } from '../../lib/analytics'
+import {
+  fetchProjectAnalytics,
+  fetchProjectAnalyticsByPoint,
+  fetchProjectAnalyticsByHour,
+  fetchProjectAnalyticsByDay,
+  fetchProjectGeoDistribution,
+} from '../../lib/analytics'
+import type {
+  ProjectAnalytics,
+  PointAnalytics,
+  HourBucket,
+  DayBucket,
+  GeoBucket,
+  GeoDistribution,
+} from '../../lib/analytics'
 import { geoProjectsApi } from '../../services'
 import type { GeoProject } from '../../types'
 
@@ -254,59 +267,35 @@ function BarRow({
   )
 }
 
-// ── Mock geo/temporal distributions ──────────────────────────────────────────
-// Deterministic distributions tuned for a Latin American geo-experience product.
-// Bar width uses % of max value (maximises visual contrast).
-// Display value uses % of total (shows actual share).
+// ── Dist bar row — pre-computed barPct + display label ────────────────────────
 
-type PublicSubTab   = 'pais' | 'ciudad' | 'comuna'
-type HorariosSubTab = 'horas' | 'dias'
-
-function buildDist(labels: string[], weights: number[]) {
-  const total = weights.reduce((s, v) => s + v, 0)
-  const maxW  = Math.max(...weights)
-  return labels.map((label, i) => ({
-    label,
-    barPct:     Math.round((weights[i] / maxW)  * 100),
-    displayPct: Math.round((weights[i] / total) * 100),
-  }))
-}
-
-const GEO: Record<PublicSubTab, ReturnType<typeof buildDist>> = {
-  pais:   buildDist(
-    ['Chile', 'Argentina', 'México', 'Est. Unidos', 'Otros'],
-    [40, 25, 14, 12, 9],
-  ),
-  ciudad: buildDist(
-    ['Santiago', 'Buenos Aires', 'Cdad. México', 'Miami', 'Otros'],
-    [36, 22, 18, 14, 10],
-  ),
-  comuna: buildDist(
-    ['Providencia', 'Las Condes', 'Stgo. Centro', 'Vitacura', 'Ñuñoa', 'Otros'],
-    [30, 22, 18, 14, 10, 6],
-  ),
-}
-
-const TEMPORAL: Record<HorariosSubTab, ReturnType<typeof buildDist>> = {
-  horas: buildDist(
-    ['00h', '03h', '06h', '09h', '12h', '15h', '18h', '21h'],
-    [3, 1, 4, 12, 18, 22, 35, 28],
-  ),
-  dias: buildDist(
-    ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-    [68, 72, 78, 82, 100, 45, 32],
-  ),
-}
-
-const GEO_INSIGHTS: Record<PublicSubTab, string> = {
-  pais:   'Chile lidera el tráfico · la experiencia alcanza audiencia internacional.',
-  ciudad: 'Santiago concentra el mayor engagement urbano del proyecto.',
-  comuna: 'Providencia y Las Condes lideran — zonas de alto tráfico peatonal.',
-}
-
-const TEMPORAL_INSIGHTS: Record<HorariosSubTab, string> = {
-  horas: 'Pico entre 18:00 y 21:00 — comportamiento after-office típico.',
-  dias:  'Viernes lidera la semana. Actividad cae notablemente el fin de semana.',
+function DistBarRow({ label, barPct, displayLabel, mounted, delay }: {
+  label: string; barPct: number; displayLabel: string; mounted: boolean; delay: number
+}) {
+  const [hov, setHov] = useState(false)
+  return (
+    <div
+      className="flex items-center gap-3 py-0.5 cursor-default"
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+    >
+      <span className={`w-24 text-sm truncate shrink-0 transition-colors duration-150 ${
+        hov ? 'text-gray-200' : 'text-gray-400'
+      }`}>{label}</span>
+      <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-400"
+          style={{
+            width: mounted ? `${barPct}%` : '0%',
+            transition: `width 0.65s cubic-bezier(0.4, 0, 0.2, 1) ${delay}ms`,
+          }}
+        />
+      </div>
+      <span className={`w-10 text-right text-sm tabular-nums shrink-0 transition-colors duration-150 ${
+        hov ? 'text-gray-100' : 'text-gray-500'
+      }`}>{displayLabel}</span>
+    </div>
+  )
 }
 
 // ── Widget primitives ─────────────────────────────────────────────────────────
@@ -347,37 +336,61 @@ function WidgetInsight({ text }: { text: string }) {
   )
 }
 
-// Reusable bar row — barPct drives width, displayPct is the right label
-function MockBarRow({ label, barPct, displayPct, mounted, delay }: {
-  label: string; barPct: number; displayPct: number; mounted: boolean; delay: number
-}) {
-  const [hov, setHov] = useState(false)
+function TabSpinner() {
   return (
-    <div
-      className="flex items-center gap-3 py-0.5 cursor-default"
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-    >
-      <span className={`w-24 text-sm truncate shrink-0 transition-colors duration-150 ${
-        hov ? 'text-gray-200' : 'text-gray-400'
-      }`}>{label}</span>
-      <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-400"
-          style={{
-            width: mounted ? `${barPct}%` : '0%',
-            transition: `width 0.65s cubic-bezier(0.4, 0, 0.2, 1) ${delay}ms`,
-          }}
-        />
-      </div>
-      <span className={`w-10 text-right text-sm tabular-nums shrink-0 transition-colors duration-150 ${
-        hov ? 'text-gray-100' : 'text-gray-500'
-      }`}>{displayPct}%</span>
+    <div className="flex-1 flex items-center justify-center">
+      <div className="w-4 h-4 rounded-full border-2 border-brand-400/30 border-t-brand-400 animate-spin" />
     </div>
   )
 }
 
+function TabEmpty({ icon, title, sub }: { icon: React.ReactNode; title: string; sub: string }) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center gap-2 text-center py-4">
+      <div className="text-gray-700">{icon}</div>
+      <p className="text-[11px] font-medium text-gray-600">{title}</p>
+      <p className="text-[10px] text-gray-700 leading-snug max-w-[180px]">{sub}</p>
+    </div>
+  )
+}
+
+// ── Geo helpers ───────────────────────────────────────────────────────────────
+
+function bucketsToBars(buckets: GeoBucket[]): { label: string; barPct: number; displayLabel: string }[] {
+  const maxCount = Math.max(...buckets.map(b => b.count), 1)
+  return buckets.map(b => ({
+    label:        b.label,
+    barPct:       Math.round((b.count / maxCount) * 100),
+    displayLabel: `${b.pct}%`,
+  }))
+}
+
+// ── Temporal helpers ──────────────────────────────────────────────────────────
+
+const HOUR_GROUP_LABELS = ['00h', '03h', '06h', '09h', '12h', '15h', '18h', '21h']
+
+function groupHours(buckets: HourBucket[]): { label: string; barPct: number }[] {
+  const map = new Map(buckets.map(b => [b.hour, b.count]))
+  const grouped = HOUR_GROUP_LABELS.map((label, gi) => ({
+    label,
+    count: (map.get(gi * 3) ?? 0) + (map.get(gi * 3 + 1) ?? 0) + (map.get(gi * 3 + 2) ?? 0),
+  }))
+  const max = Math.max(...grouped.map(g => g.count), 1)
+  return grouped.map(g => ({ label: g.label, barPct: Math.round((g.count / max) * 100) }))
+}
+
+const DAY_LABELS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+
+function mapDays(buckets: DayBucket[]): { label: string; barPct: number; count: number }[] {
+  const map  = new Map(buckets.map(b => [b.day, b.count]))
+  const days = DAY_LABELS.map((label, i) => ({ label, count: map.get(i) ?? 0 }))
+  const max  = Math.max(...days.map(d => d.count), 1)
+  return days.map(d => ({ ...d, barPct: Math.round((d.count / max) * 100) }))
+}
+
 // ── Public tab ────────────────────────────────────────────────────────────────
+
+type PublicSubTab = 'pais' | 'ciudad' | 'comuna'
 
 const PUBLIC_SUBTABS: { id: PublicSubTab; label: string }[] = [
   { id: 'pais',   label: 'País'   },
@@ -385,10 +398,19 @@ const PUBLIC_SUBTABS: { id: PublicSubTab; label: string }[] = [
   { id: 'comuna', label: 'Comuna' },
 ]
 
-function PublicTab() {
+function PublicTab({ projectId }: { projectId: string }) {
   const [sub, setSub]         = useState<PublicSubTab>('pais')
   const [fade, setFade]       = useState(true)
   const [mounted, setMounted] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [geo, setGeo]         = useState<GeoDistribution | null>(null)
+
+  useEffect(() => {
+    setLoading(true)
+    fetchProjectGeoDistribution(projectId)
+      .then(setGeo)
+      .finally(() => setLoading(false))
+  }, [projectId])
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 150)
@@ -402,45 +424,89 @@ function PublicTab() {
     setTimeout(() => { setSub(n); setFade(true) }, 120)
   }
 
+  const subData: GeoBucket[] = geo
+    ? (sub === 'pais' ? geo.countries : sub === 'ciudad' ? geo.cities : geo.communes)
+    : []
+  const bars = bucketsToBars(subData)
+  const hasData = bars.length > 0
+  const insight = hasData ? `${subData[0].label} lidera con el ${subData[0].pct}% del tráfico registrado.` : null
+
+  const globeIcon = (
+    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+        d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 004 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  )
+
   return (
     <>
       <div className="flex items-center justify-between mb-3 shrink-0">
         <h3 className="text-sm font-semibold text-gray-200">Público</h3>
         <WidgetSubTabs options={PUBLIC_SUBTABS} value={sub} onChange={changeSub} />
       </div>
-      <div
-        className="flex-1 flex flex-col min-h-0"
-        style={{ opacity: fade ? 1 : 0, transition: 'opacity 0.12s ease' }}
-      >
-        <div className="flex-1 flex flex-col justify-between min-h-0">
-          {GEO[sub].map((row, i) => (
-            <MockBarRow
-              key={row.label}
-              label={row.label}
-              barPct={row.barPct}
-              displayPct={row.displayPct}
-              mounted={mounted}
-              delay={i * 50}
-            />
-          ))}
+
+      {loading ? (
+        <TabSpinner />
+      ) : !hasData ? (
+        <>
+          <TabEmpty
+            icon={globeIcon}
+            title="Sin datos geográficos aún"
+            sub="Aparecerán cuando los usuarios visiten tu experiencia con ubicación activada."
+          />
+          <WidgetInsight text="Los datos de país, ciudad y comuna se registran al entrar al radio de activación." />
+        </>
+      ) : (
+        <div
+          className="flex-1 flex flex-col min-h-0"
+          style={{ opacity: fade ? 1 : 0, transition: 'opacity 0.12s ease' }}
+        >
+          <div className="flex-1 flex flex-col justify-between min-h-0">
+            {bars.map((row, i) => (
+              <DistBarRow
+                key={row.label}
+                label={row.label}
+                barPct={row.barPct}
+                displayLabel={row.displayLabel}
+                mounted={mounted}
+                delay={i * 50}
+              />
+            ))}
+          </div>
+          {insight && <WidgetInsight text={insight} />}
         </div>
-        <WidgetInsight text={GEO_INSIGHTS[sub]} />
-      </div>
+      )}
     </>
   )
 }
 
 // ── Horarios tab ──────────────────────────────────────────────────────────────
 
+type HorariosSubTab = 'horas' | 'dias'
+
 const HORARIOS_SUBTABS: { id: HorariosSubTab; label: string }[] = [
   { id: 'horas', label: 'Horas' },
   { id: 'dias',  label: 'Días'  },
 ]
 
-function HorariosTab() {
+function HorariosTab({ projectId }: { projectId: string }) {
   const [sub, setSub]         = useState<HorariosSubTab>('horas')
   const [fade, setFade]       = useState(true)
   const [mounted, setMounted] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [hours, setHours]     = useState<HourBucket[]>([])
+  const [days,  setDays]      = useState<DayBucket[]>([])
+
+  useEffect(() => {
+    setLoading(true)
+    Promise.all([
+      fetchProjectAnalyticsByHour(projectId),
+      fetchProjectAnalyticsByDay(projectId),
+    ])
+      .then(([h, d]) => { setHours(h); setDays(d) })
+      .finally(() => setLoading(false))
+  }, [projectId])
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 150)
@@ -454,67 +520,105 @@ function HorariosTab() {
     setTimeout(() => { setSub(n); setFade(true) }, 120)
   }
 
+  const hourBars = groupHours(hours)
+  const dayBars  = mapDays(days)
+  const hasHours = hours.some(h => h.count > 0)
+  const hasDays  = days.some(d => d.count > 0)
+  const hasData  = sub === 'horas' ? hasHours : hasDays
+
+  const peakHourGroup = hasHours
+    ? HOUR_GROUP_LABELS[hourBars.reduce((best, row, i) => row.barPct > hourBars[best].barPct ? i : best, 0)]
+    : null
+  const peakDay = hasDays
+    ? dayBars.reduce((best, row) => row.count > best.count ? row : best, dayBars[0])
+    : null
+
+  const clockIcon = (
+    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  )
+
   return (
     <>
       <div className="flex items-center justify-between mb-3 shrink-0">
         <h3 className="text-sm font-semibold text-gray-200">Horarios</h3>
         <WidgetSubTabs options={HORARIOS_SUBTABS} value={sub} onChange={changeSub} />
       </div>
-      <div
-        className="flex-1 flex flex-col min-h-0"
-        style={{ opacity: fade ? 1 : 0, transition: 'opacity 0.12s ease' }}
-      >
-        {sub === 'horas' ? (
-          <>
-            {/* 2-column grid matches LookiAR Horarios reference */}
-            <div
-              className="flex-1 grid grid-cols-2 gap-x-5 min-h-0"
-              style={{ alignContent: 'space-between' }}
-            >
-              {TEMPORAL.horas.map((row, i) => (
-                <div key={row.label} className="flex items-center gap-2">
-                  <span className="w-7 text-xs text-gray-500 tabular-nums shrink-0">
-                    {row.label}
-                  </span>
-                  <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-400"
-                      style={{
-                        width: mounted ? `${row.barPct}%` : '0%',
-                        transition: `width 0.65s cubic-bezier(0.4, 0, 0.2, 1) ${i * 35}ms`,
-                      }}
-                    />
+
+      {loading ? (
+        <TabSpinner />
+      ) : !hasData ? (
+        <>
+          <TabEmpty
+            icon={clockIcon}
+            title="Sin actividad temporal aún"
+            sub="Los horarios y días de mayor visita aparecerán con el tiempo."
+          />
+          <WidgetInsight text="Los datos temporales se registran automáticamente al entrar al radio de activación." />
+        </>
+      ) : (
+        <div
+          className="flex-1 flex flex-col min-h-0"
+          style={{ opacity: fade ? 1 : 0, transition: 'opacity 0.12s ease' }}
+        >
+          {sub === 'horas' ? (
+            <>
+              {/* 2-column grid matches LookiAR Horarios reference */}
+              <div
+                className="flex-1 grid grid-cols-2 gap-x-5 min-h-0"
+                style={{ alignContent: 'space-between' }}
+              >
+                {hourBars.map((row, i) => (
+                  <div key={row.label} className="flex items-center gap-2">
+                    <span className="w-7 text-xs text-gray-500 tabular-nums shrink-0">
+                      {row.label}
+                    </span>
+                    <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-400"
+                        style={{
+                          width: mounted ? `${row.barPct}%` : '0%',
+                          transition: `width 0.65s cubic-bezier(0.4, 0, 0.2, 1) ${i * 35}ms`,
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-            <WidgetInsight text={TEMPORAL_INSIGHTS.horas} />
-          </>
-        ) : (
-          <>
-            <div className="flex-1 flex flex-col justify-between min-h-0">
-              {TEMPORAL.dias.map((row, i) => (
-                <MockBarRow
-                  key={row.label}
-                  label={row.label}
-                  barPct={row.barPct}
-                  displayPct={row.displayPct}
-                  mounted={mounted}
-                  delay={i * 45}
-                />
-              ))}
-            </div>
-            <WidgetInsight text={TEMPORAL_INSIGHTS.dias} />
-          </>
-        )}
-      </div>
+                ))}
+              </div>
+              {peakHourGroup && (
+                <WidgetInsight text={`Mayor actividad registrada alrededor de las ${peakHourGroup}.`} />
+              )}
+            </>
+          ) : (
+            <>
+              <div className="flex-1 flex flex-col justify-between min-h-0">
+                {dayBars.map((row, i) => (
+                  <DistBarRow
+                    key={row.label}
+                    label={row.label}
+                    barPct={row.barPct}
+                    displayLabel={String(row.count)}
+                    mounted={mounted}
+                    delay={i * 45}
+                  />
+                ))}
+              </div>
+              {peakDay && (
+                <WidgetInsight text={`${peakDay.label} concentra la mayor actividad de la semana.`} />
+              )}
+            </>
+          )}
+        </div>
+      )}
     </>
   )
 }
 
 // ── Left widget ───────────────────────────────────────────────────────────────
 
-function LeftWidget({ byPoint }: { byPoint: PointAnalytics[] | null }) {
+function LeftWidget({ byPoint, projectId }: { byPoint: PointAnalytics[] | null; projectId: string }) {
   const [tab, setTab]       = useState<LeftTab>('actividad')
   const [subTab, setSubTab] = useState<SubTab>('entradas')
   const [fade, setFade]     = useState(true)
@@ -656,10 +760,10 @@ function LeftWidget({ byPoint }: { byPoint: PointAnalytics[] | null }) {
         )}
 
         {/* ── Público ── */}
-        {tab === 'publico' && <PublicTab />}
+        {tab === 'publico' && <PublicTab projectId={projectId} />}
 
         {/* ── Horarios ── */}
-        {tab === 'horarios' && <HorariosTab />}
+        {tab === 'horarios' && <HorariosTab projectId={projectId} />}
       </div>
     </div>
   )
@@ -1139,7 +1243,7 @@ export default function MetricsPage() {
             {/* Hero — left widget + right chart */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 h-auto lg:h-[280px]">
               <div className="lg:col-span-2 min-h-[260px] lg:min-h-0">
-                <LeftWidget byPoint={byPoint} />
+                <LeftWidget byPoint={byPoint} projectId={selectedId} />
               </div>
               <div className="lg:col-span-3 min-h-[260px] lg:min-h-0
                               bg-gray-900/70 border border-white/[0.07] rounded-2xl px-5 pt-5 pb-4">

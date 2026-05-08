@@ -622,7 +622,7 @@ export default function PublicPage() {
       const isInside  = dist <= pt.activationRadius
       const wasInside = wasInsideRef.current[pt.id] ?? false
       if (!wasInside && isInside) {
-        trackRadiusEnter(id, pt.id)
+        trackRadiusEnter(id, pt.id, userLocation)
         // Subtle haptic pulse when entering the activation area
         if ('vibrate' in navigator) navigator.vibrate(20)
       }

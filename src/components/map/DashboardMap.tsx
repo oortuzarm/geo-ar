@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Popup, useMapEvents, useMap } from 'react-leaflet'
-import type { LeafletMouseEvent } from 'leaflet'
 import { useGeoStore } from '../../store/geoStore'
 import { haversineDistance } from '../../features/geolocation/haversine'
 import GeoPointMarker from './GeoPointMarker'
@@ -21,31 +20,10 @@ interface ClickHandlerProps {
 
 function ClickHandler({ onMapClick }: ClickHandlerProps) {
   useMapEvents({
-    click(e: LeafletMouseEvent) {
+    click(e) {
       onMapClick(e.latlng.lat, e.latlng.lng)
     },
   })
-  return null
-}
-
-interface MobileMapHandlerProps {
-  onDoubleClick: (lat: number, lng: number) => void
-}
-
-function MobileMapHandler({ onDoubleClick }: MobileMapHandlerProps) {
-  const map = useMap()
-
-  useEffect(() => {
-    map.doubleClickZoom.disable()
-    return () => { map.doubleClickZoom.enable() }
-  }, [map])
-
-  useMapEvents({
-    dblclick(e: LeafletMouseEvent) {
-      onDoubleClick(e.latlng.lat, e.latlng.lng)
-    },
-  })
-
   return null
 }
 
@@ -91,8 +69,6 @@ interface DashboardMapProps {
   poiResults?: PoiSearchResult[]
   onBoundsChange?: (bounds: MapBounds) => void
   onPoiCreate?: (result: PoiSearchResult) => void
-  mobileMode?: boolean
-  onMapDoubleClick?: (lat: number, lng: number) => void
 }
 
 export default function DashboardMap({
@@ -104,8 +80,6 @@ export default function DashboardMap({
   poiResults = [],
   onBoundsChange,
   onPoiCreate,
-  mobileMode = false,
-  onMapDoubleClick,
 }: DashboardMapProps) {
   const { mapCenter, mapZoom } = useGeoStore()
 
@@ -122,9 +96,6 @@ export default function DashboardMap({
       />
       <MapController />
       <ClickHandler onMapClick={onMapClick} />
-      {mobileMode && onMapDoubleClick && (
-        <MobileMapHandler onDoubleClick={onMapDoubleClick} />
-      )}
       {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} />}
 
       {points.map((point) => (

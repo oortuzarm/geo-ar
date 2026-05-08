@@ -38,8 +38,6 @@ export default function DashboardPage() {
   const [fabPlacementMode, setFabPlacementMode] = useState(false)
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-  // Debounce guard: prevents duplicate creation from rapid double-taps
-  const lastCreateRef = useRef(0)
   const [leftTab, setLeftTab] = useState<'points' | 'project'>('points')
 
   // Ref-based guard so async continuations read the live value, not a stale closure.
@@ -113,8 +111,6 @@ export default function DashboardPage() {
   }
 
   // Shared helper — creates a point and opens the mobile editor (or desktop panel).
-  // Keeps creation logic in one place so both single-click (desktop / FAB-placement)
-  // and double-tap (mobile) paths are always consistent.
   async function openNewPoint(lat: number, lng: number) {
     if (!project) return
     setHasUnsavedChanges(true)
@@ -166,21 +162,6 @@ export default function DashboardPage() {
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [project, selectedPointId, isMobile, fabPlacementMode],
-  )
-
-  // Mobile only: double-tap on empty map creates a point.
-  // Debounced with lastCreateRef to prevent accidental duplicate creation.
-  const handleMapDoubleClick = useCallback(
-    async (lat: number, lng: number) => {
-      if (!project || !isMobile) return
-      const now = Date.now()
-      if (now - lastCreateRef.current < 800) return
-      lastCreateRef.current = now
-      if (fabPlacementMode) setFabPlacementMode(false)
-      await openNewPoint(lat, lng)
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [project, isMobile, fabPlacementMode],
   )
 
   async function handleAddPoint() {
@@ -709,9 +690,6 @@ export default function DashboardPage() {
                   <p className="text-sm font-medium text-gray-100">
                     Toca el mapa para colocar el punto
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    O doble tap para crearlo en ese lugar
-                  </p>
                 </div>
                 <button
                   onClick={() => setFabPlacementMode(false)}
@@ -743,7 +721,7 @@ export default function DashboardPage() {
                            bg-gray-900/90 border border-gray-700 rounded-lg px-4 py-2
                            text-sm text-gray-400 whitespace-nowrap">
               {isMobile
-                ? 'Doble tap o FAB para agregar el primer punto'
+                ? 'Usa el botón + para agregar el primer punto'
                 : 'Haz clic en el mapa para agregar el primer punto'}
             </div>
           )}
@@ -757,8 +735,6 @@ export default function DashboardPage() {
             poiResults={poiResults}
             onBoundsChange={setMapBounds}
             onPoiCreate={handlePoiCreateFromPopup}
-            mobileMode={isMobile}
-            onMapDoubleClick={handleMapDoubleClick}
           />
         </div>
 

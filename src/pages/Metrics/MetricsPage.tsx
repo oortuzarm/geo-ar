@@ -567,7 +567,10 @@ function HorariosTab({ projectId }: { projectId: string }) {
           {sub === 'horas' ? (
             <>
               {/* 2-column grid matches LookiAR Horarios reference */}
-              <div className="grid grid-cols-2 gap-x-5 gap-y-2.5 shrink-0">
+              <div
+                className="flex-1 grid grid-cols-2 gap-x-5 min-h-0"
+                style={{ alignContent: 'space-between' }}
+              >
                 {hourBars.map((row, i) => (
                   <div key={row.label} className="flex items-center gap-2">
                     <span className="w-7 text-xs text-gray-500 tabular-nums shrink-0">
@@ -591,7 +594,7 @@ function HorariosTab({ projectId }: { projectId: string }) {
             </>
           ) : (
             <>
-              <div className="flex flex-col gap-2 shrink-0">
+              <div className="flex-1 flex flex-col justify-between min-h-0">
                 {dayBars.map((row, i) => (
                   <DistBarRow
                     key={row.label}

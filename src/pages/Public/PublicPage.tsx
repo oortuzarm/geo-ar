@@ -847,6 +847,20 @@ export default function PublicPage() {
 
   const handleActivate = useCallback(async (point: GeoPoint) => {
     if (activatingPointId) return
+
+    const isOpen = point.accessMode === 'open'
+
+    // Open mode without location: skip API call, navigate directly to the point URL.
+    if (!userLocation && isOpen) {
+      trackPointClick(id!, point.id)
+      if (point.lookiarUrl) {
+        window.location.href = point.lookiarUrl
+      } else {
+        addToast('Este punto no tiene una URL configurada.', 'error')
+      }
+      return
+    }
+
     if (!userLocation) {
       addToast('Activá tu ubicación para acceder a la experiencia.', 'error')
       return
@@ -856,10 +870,11 @@ export default function PublicPage() {
     trackPointClick(id!, point.id)
 
     console.log('[Access] → Iniciando acceso', {
-      projectId: id,
-      pointId:   point.id,
-      latitude:  userLocation.latitude,
-      longitude: userLocation.longitude,
+      projectId:  id,
+      pointId:    point.id,
+      latitude:   userLocation.latitude,
+      longitude:  userLocation.longitude,
+      accessMode: point.accessMode ?? 'restricted',
     })
 
     setActivatingPointId(point.id)
@@ -883,16 +898,28 @@ export default function PublicPage() {
 
       console.log('[Access] URL resuelta:', resolvedUrl || '(vacía)')
 
-      if (!resolvedUrl || !resolvedUrl.startsWith('http')) {
+      if (resolvedUrl && resolvedUrl.startsWith('http')) {
+        window.location.href = resolvedUrl
+      } else if (isOpen && point.lookiarUrl) {
+        // Backend returned no valid URL; open mode falls back to the configured URL.
+        console.warn('[Access] Open mode — usando lookiarUrl como fallback')
+        window.location.href = point.lookiarUrl
+      } else {
         const msg = 'No se encontró una URL válida para esta experiencia.'
         console.warn('[Access] URL inválida o vacía — no se redirige. Campo "url" recibido:', r.url)
         setAccessError({ pointId: point.id, message: msg })
         addToast(msg, 'error')
-      } else {
-        window.location.href = resolvedUrl
       }
     } catch (err) {
       console.error('[Access] ✗ Error recibido:', err)
+
+      // Open mode: backend blocked the request (e.g. 403 radius check), but the
+      // point is configured as open — bypass and navigate directly to the URL.
+      if (isOpen && point.lookiarUrl) {
+        console.warn('[Access] Open mode — backend rechazó, navegando por lookiarUrl')
+        window.location.href = point.lookiarUrl
+        return
+      }
 
       let msg = 'No se pudo validar el acceso.'
 

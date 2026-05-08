@@ -39,6 +39,12 @@ export type BlockedReason = 'no-location' | 'radius' | 'schedule' | 'quota' | nu
 export interface PointAvailability {
   // ── Core access gate — the ONLY canAccess flag any component should use ──
   canAccess:      boolean
+  /**
+   * Whether the CTA button should be interactive.
+   * Equals canAccess for "restricted" mode (default).
+   * Always true for "open" mode — conditions are still shown but never block the button.
+   */
+  canActivate:    boolean
   blockedReason:  BlockedReason
 
   // ── Radius ───────────────────────────────────────────────────────────────
@@ -177,6 +183,10 @@ export function computePointAvailability(
     scheduleAvailable &&
     quotaAvailable
 
+  // canActivate controls the CTA button only.
+  // "open" mode bypasses the gate so the button is always enabled.
+  const canActivate = point.accessMode === 'open' ? true : canAccess
+
   let blockedReason: BlockedReason = null
   if (distance === null)         blockedReason = 'no-location'
   else if (!insideRadius)        blockedReason = 'radius'
@@ -184,7 +194,7 @@ export function computePointAvailability(
   else if (!quotaAvailable)      blockedReason = 'quota'
 
   return {
-    canAccess, blockedReason,
+    canAccess, canActivate, blockedReason,
     insideRadius, distanceToEdge,
     scheduleActive, scheduleAvailable, scheduleLabel,
     scheduleDays, scheduleStartTime, scheduleEndTime,

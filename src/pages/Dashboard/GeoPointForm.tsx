@@ -310,6 +310,50 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
         />
 
+        {/* ── Access mode ─────────────────────────────────────────────────── */}
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Acceso al contenido
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              {
+                value: 'restricted' as const,
+                emoji: '🔒',
+                label: 'Restringido',
+                desc: 'El usuario debe cumplir las condiciones del punto para acceder.',
+              },
+              {
+                value: 'open' as const,
+                emoji: '🌍',
+                label: 'Abierto',
+                desc: 'El usuario podrá acceder aunque esté fuera del área o no cumpla las condiciones.',
+              },
+            ] as const).map(({ value, emoji, label, desc }) => {
+              const selected = (point.accessMode ?? 'restricted') === value
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => onChange({ accessMode: value })}
+                  className={[
+                    'flex flex-col gap-1 p-3 rounded-lg border text-left transition-colors',
+                    selected
+                      ? 'bg-brand-900/30 border-brand-600/60 ring-1 ring-brand-500/30'
+                      : 'bg-gray-800/50 border-gray-700 hover:border-gray-600',
+                  ].join(' ')}
+                >
+                  <span className="text-base leading-none">{emoji}</span>
+                  <span className={`text-xs font-semibold mt-1 ${selected ? 'text-brand-300' : 'text-gray-300'}`}>
+                    {label}
+                  </span>
+                  <span className="text-[11px] text-gray-500 leading-snug">{desc}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
         {/* Coordinates — inside collapsible section; drag the marker to reposition */}
         <div>
           <button

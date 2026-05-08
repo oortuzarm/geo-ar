@@ -304,9 +304,9 @@ export default function PublicPointCard({
               />
             )}
 
-            {/* CTA button — enabled iff avail.canAccess */}
+            {/* CTA button — enabled when canActivate (respects accessMode) */}
             <div className="pt-0.5 space-y-2">
-              {avail.canAccess ? (
+              {avail.canActivate ? (
                 <button
                   onClick={(e) => { e.stopPropagation(); onActivate() }}
                   disabled={isActivating}

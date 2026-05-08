@@ -38,6 +38,12 @@ export interface GeoPoint {
   active: boolean
   order: number
   availability?: GeoPointAvailability
+  /**
+   * Controls whether the CTA is gated by conditions.
+   * "restricted" (default): user must meet all conditions (radius, schedule, quota).
+   * "open": CTA is always enabled; conditions are still shown visually but never block access.
+   */
+  accessMode?: 'restricted' | 'open'
 }
 
 export type NominatimResult = {

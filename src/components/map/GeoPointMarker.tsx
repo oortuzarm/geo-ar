@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Circle, Marker, Popup } from 'react-leaflet'
+import { Circle, Marker } from 'react-leaflet'
 import { createGeoIcon } from './createGeoIcon'
 import { mapTheme } from './mapTheme'
 import type { GeoPoint } from '../../types'
@@ -74,17 +74,7 @@ export default function GeoPointMarker({ point, selected, onClick, onDragEnd }: 
         draggable
         zIndexOffset={selected ? 1000 : 0}
         eventHandlers={{ click: () => onClick(point.id) }}
-      >
-        <Popup>
-          <div className="text-sm">
-            <p className="font-semibold text-gray-100">{point.name}</p>
-            {point.description && (
-              <p className="text-gray-400 mt-1 text-xs">{point.description}</p>
-            )}
-            <p className="text-gray-500 text-xs mt-1">Radio: {point.activationRadius} m</p>
-          </div>
-        </Popup>
-      </Marker>
+      />
 
       {/* Circle is always mounted for active points so circleRef is populated during drag */}
       {point.active && (

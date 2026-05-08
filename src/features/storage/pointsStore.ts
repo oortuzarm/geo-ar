@@ -25,10 +25,6 @@ export async function createPoint(data: Partial<GeoPoint> & { geoProjectId: stri
     activationRadius: data.activationRadius ?? 50,
     image: data.image,
     description: data.description,
-    instructions: data.instructions,
-    buttonText: data.buttonText,
-    availability: data.availability,
-    accessMode: data.accessMode,
     active: data.active ?? true,
     order: data.order ?? 0,
   }

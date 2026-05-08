@@ -42,7 +42,6 @@ export function requestPointAccess(
   pointId: string,
   lat: number,
   lng: number,
-  accessMode?: string,
 ): Promise<{ url: string }> {
-  return repository.requestPointAccess(projectId, pointId, lat, lng, accessMode)
+  return repository.requestPointAccess(projectId, pointId, lat, lng)
 }

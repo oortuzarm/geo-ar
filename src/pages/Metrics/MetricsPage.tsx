@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { MetricTooltip } from '../../components/MetricTooltip'
 import { useSearchParams } from 'react-router-dom'
 import {
   fetchProjectAnalytics,
@@ -641,11 +642,11 @@ function LeftWidget({ byPoint, projectId }: { byPoint: PointAnalytics[] | null; 
     return () => clearTimeout(t)
   }, [tab, subTab])
 
-  const TABS: { id: LeftTab; label: string }[] = [
-    { id: 'actividad',  label: 'Actividad'  },
-    { id: 'conversion', label: 'Conversión' },
-    { id: 'publico',    label: 'Público'    },
-    { id: 'horarios',   label: 'Horarios'   },
+  const TABS: { id: LeftTab; label: string; tooltip: string }[] = [
+    { id: 'actividad',  label: 'Actividad',  tooltip: 'Muestra la cantidad de entradas al radio y clics registrados por punto.' },
+    { id: 'conversion', label: 'Conversión', tooltip: 'Porcentaje de usuarios que hicieron clic en la experiencia después de entrar al radio de activación.' },
+    { id: 'publico',    label: 'Público',    tooltip: 'Distribución geográfica de las personas que ingresaron al radio de activación.' },
+    { id: 'horarios',   label: 'Horarios',   tooltip: 'Horarios y días en que los usuarios ingresaron físicamente a los radios de activación.' },
   ]
 
   const sorted = byPoint ?? []
@@ -673,7 +674,10 @@ function LeftWidget({ byPoint, projectId }: { byPoint: PointAnalytics[] | null; 
               tab === t.id ? 'text-gray-100' : 'text-gray-500 hover:text-gray-300',
             ].join(' ')}
           >
-            {t.label}
+            <span className="inline-flex items-center">
+              {t.label}
+              <MetricTooltip content={t.tooltip} />
+            </span>
             {tab === t.id && (
               <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-brand-400 rounded-t-full" />
             )}

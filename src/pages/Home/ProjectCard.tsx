@@ -214,9 +214,14 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
         )}
         <p className="text-xs text-gray-600 mt-2 mb-0.5">
           {project.geoPointIds.length} punto{project.geoPointIds.length !== 1 ? 's' : ''} ·{' '}
-          {new Date(project.updatedAt).toLocaleDateString('es', {
+          {new Date(project.createdAt).toLocaleDateString('es', {
             day: 'numeric', month: 'short', year: 'numeric',
           })}
+          {project.updatedAt && project.updatedAt.slice(0, 10) !== project.createdAt?.slice(0, 10) && (
+            <>{' · Editado '}{new Date(project.updatedAt).toLocaleDateString('es', {
+              day: 'numeric', month: 'short', year: 'numeric',
+            })}</>
+          )}
         </p>
       </div>
 

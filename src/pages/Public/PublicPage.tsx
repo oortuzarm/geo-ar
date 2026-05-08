@@ -394,17 +394,12 @@ function LocationSheet({ onRetry, onClose }: { onRetry: () => void; onClose: () 
 type MobileState = 'clean' | 'preview' | 'detail'
 
 // ── Bottom sheet state ────────────────────────────────────────────────────────
-// hidden   → initial state: map-first, sheet invisible, "Mostrar lista" button shown
-// peek     → compact header only (project identity + count, draggable handle)
-// expanded → full scrollable point list
-type SheetState = 'hidden' | 'peek' | 'expanded'
+// hidden   → map fullscreen, "Mostrar lista" button shown
+// expanded → full scrollable list (the existing large sheet, unchanged design)
+type SheetState = 'hidden' | 'expanded'
 
-// Height-driven sheet: actual height = visible area per state.
-// flex-1 on the scroll container then fills exactly the visible portion.
-// env(safe-area-inset-bottom, 0px) ≈ 34px on Face ID iPhones, 0 elsewhere.
 const SHEET_HEIGHT: Record<SheetState, string> = {
   hidden:   '0px',
-  peek:     'calc(80px + env(safe-area-inset-bottom, 0px))',
   expanded: '90dvh',
 }
 
@@ -763,9 +758,8 @@ export default function PublicPage() {
     setSelectedPointId(pt.id)
     setAccessError(null)
     setMobileState('preview')
-    // Tap from expanded list → collapse to peek so the map is visible.
-    // Tap from map pin (hidden or peek) → leave sheet state unchanged.
-    if (sheetState === 'expanded') setSheetState('peek')
+    // Tap from expanded list → close list so the map is visible.
+    if (sheetState === 'expanded') setSheetState('hidden')
     flyToCounterRef.current += 1
     setFlyToKey(`point-${pt.id}-${flyToCounterRef.current}`)
     // Shift the fly target 80px south so the pin lands in the upper portion of the visible map area.
@@ -818,39 +812,15 @@ export default function PublicPage() {
     dragStartYRef.current = e.touches[0].clientY
   }
 
-  function expandSheet() {
-    suppressMapClickUntilRef.current = Date.now() + 500
-    setMobileState('clean')
-    setSelectedPointId(null)
-    setAccessError(null)
-    setSheetState('expanded')
-  }
-
-  // Explicit tap handler for every element in the compact sheet header.
-  // Calls both preventDefault (suppresses any residual synthetic browser action)
-  // and stopPropagation (prevents the click from reaching Leaflet or any ancestor
-  // React handler), then expands the sheet and clears stale selection state.
-  function handleCompactSheetTap(e: React.MouseEvent) {
-    e.preventDefault()
-    e.stopPropagation()
-    expandSheet()
-  }
-
   function handleDragEnd(e: React.TouchEvent) {
     e.stopPropagation()
     if (dragStartYRef.current === null) return
     const delta = dragStartYRef.current - e.changedTouches[0].clientY
     dragStartYRef.current = null
-
-    if (Math.abs(delta) < 10) {
-      if (sheetState === 'peek') expandSheet()
-      else if (sheetState === 'expanded') setSheetState('peek')
-      return
-    }
-    if (delta > 40)       expandSheet()
-    else if (delta < -40) {
-      if (sheetState === 'expanded') setSheetState('peek')
-      else setSheetState('hidden')
+    // Swipe down on the list → close and return to map
+    if (delta < -40) {
+      suppressMapClickUntilRef.current = Date.now() + 500
+      setSheetState('hidden')
     }
   }
 
@@ -1076,12 +1046,10 @@ export default function PublicPage() {
             'hover:bg-gray-50 active:scale-95 active:shadow-sm',
             'transition-all duration-150',
             'disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100',
-            mobileState === 'detail'                             ? 'hidden md:flex md:bottom-4'
-            : sheetState === 'expanded'                          ? 'hidden md:flex md:bottom-4'
-            : sheetState === 'peek' && mobileState === 'preview' ? 'bottom-[290px] md:bottom-4'
-            : sheetState === 'peek'                              ? 'bottom-[160px] md:bottom-4'
-            : mobileState === 'preview'                          ? 'bottom-[272px] md:bottom-4'
-            :                                                       'bottom-24 md:bottom-4',
+            mobileState === 'detail'    ? 'hidden md:flex md:bottom-4'
+            : sheetState === 'expanded' ? 'hidden md:flex md:bottom-4'
+            : mobileState === 'preview' ? 'bottom-[272px] md:bottom-4'
+            :                             'bottom-24 md:bottom-4',
           ].join(' ')}
           title="Mi ubicación"
         >
@@ -1112,33 +1080,26 @@ export default function PublicPage() {
                         border-t border-white/[0.07]
                         shadow-[0_-12px_40px_rgba(0,0,0,0.7)]">
 
-          {/* Drag handle zone — always visible in peek state.
-              paddingBottom pushes content above the iPhone home indicator. */}
+          {/* Drag handle — swipe down to close */}
           <div
             className="flex-shrink-0 touch-none select-none cursor-grab active:cursor-grabbing"
-            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
             onTouchStart={handleDragStart}
             onTouchEnd={handleDragEnd}
-            onClick={handleCompactSheetTap}
           >
-            {/* Pill */}
             <div className="flex justify-center pt-2 pb-1">
               <div className="w-9 h-1 rounded-full bg-white/20" />
             </div>
 
-            {/* Mini summary (always visible, 40px) */}
             <div className="flex items-center gap-3 px-4 pb-3">
-              {/* Mini cover — always shows project identity */}
               {project.coverImage && (
                 <img
                   src={project.coverImage}
                   alt={project.title}
-                  onClick={handleCompactSheetTap}
                   className="w-14 h-14 rounded-xl object-cover flex-shrink-0
                              ring-1 ring-white/10 shadow-lg"
                 />
               )}
-              <div className="flex-1 min-w-0" onClick={handleCompactSheetTap}>
+              <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-100 line-clamp-2 leading-snug">
                   {project.title}
                 </p>
@@ -1161,21 +1122,14 @@ export default function PublicPage() {
             </div>
           </div>
 
-          {/* Scrollable content — hidden in peek (header-only state) */}
+          {/* Scrollable point list */}
           <div
-            className={[
-              'flex-1 min-h-0 overscroll-contain',
-              sheetState !== 'expanded' ? 'overflow-hidden' : 'overflow-y-auto',
-            ].join(' ')}
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
             style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
           >
             <div
               className="space-y-2 px-4 pt-1"
-              style={{
-                paddingBottom: sheetState === 'expanded'
-                  ? 'calc(40px + env(safe-area-inset-bottom, 0px))'
-                  : 'calc(96px + env(safe-area-inset-bottom, 0px))',
-              }}
+              style={{ paddingBottom: 'calc(40px + env(safe-area-inset-bottom, 0px))' }}
             >
               {renderPoints(mobileCardRefs)}
             </div>
@@ -1193,7 +1147,10 @@ export default function PublicPage() {
           style={{ bottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}
         >
           <button
-            onClick={() => setSheetState('peek')}
+            onClick={() => {
+              suppressMapClickUntilRef.current = Date.now() + 500
+              setSheetState('expanded')
+            }}
             className="flex items-center gap-2 pl-3.5 pr-4 py-3
                        rounded-full bg-white text-gray-900
                        font-semibold text-sm leading-none

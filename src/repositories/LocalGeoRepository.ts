@@ -28,7 +28,7 @@ export class LocalGeoRepository implements IGeoRepository {
     return pointsStore.getPointsByProject(projectId)
   }
 
-  async requestPointAccess(projectId: string, pointId: string, _lat: number, _lng: number): Promise<{ url: string }> {
+  async requestPointAccess(projectId: string, pointId: string, _lat: number, _lng: number, _accessMode?: string): Promise<{ url: string }> {
     const points = await pointsStore.getPointsByProject(projectId)
     const point  = points.find((p) => p.id === pointId)
     if (!point) throw new Error('Punto no encontrado')

@@ -884,6 +884,7 @@ export default function PublicPage() {
         point.id,
         userLocation.latitude,
         userLocation.longitude,
+        point.accessMode,
       )
       console.log('[Access] ✓ Respuesta completa del backend:', JSON.stringify(raw))
 
@@ -913,11 +914,18 @@ export default function PublicPage() {
     } catch (err) {
       console.error('[Access] ✗ Error recibido:', err)
 
-      // Open mode: backend blocked the request (e.g. 403 radius check), but the
-      // point is configured as open — bypass and navigate directly to the URL.
-      if (isOpen && point.lookiarUrl) {
-        console.warn('[Access] Open mode — backend rechazó, navegando por lookiarUrl')
-        window.location.href = point.lookiarUrl
+      // Open mode: backend blocked the request (e.g. backend doesn't support
+      // access_mode yet), bypass and navigate directly to the configured URL.
+      if (isOpen) {
+        if (point.lookiarUrl) {
+          console.warn('[Access] Open mode — backend rechazó, navegando por lookiarUrl')
+          window.location.href = point.lookiarUrl
+          return
+        }
+        // Open mode but no URL configured — show a helpful message instead of generic error.
+        const msg = 'Este punto no tiene una URL configurada.'
+        setAccessError({ pointId: point.id, message: msg })
+        addToast(msg, 'error')
         return
       }
 

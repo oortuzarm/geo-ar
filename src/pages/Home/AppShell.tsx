@@ -38,7 +38,10 @@ const bottom = {
 
 export default function AppShell() {
   return (
-    <div className="flex h-screen bg-gray-950 text-gray-100 overflow-hidden">
+    <div
+      className="flex h-screen bg-gray-950 text-gray-100 overflow-hidden"
+      style={{ height: '100dvh' }}
+    >
 
       {/* ── Desktop left sidebar ─────────────────────────────────────────────── */}
       <aside className="hidden md:flex flex-col w-[220px] flex-shrink-0
@@ -88,13 +91,13 @@ export default function AppShell() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Page renders here — each page manages its own sticky header */}
-        <main className="flex-1 min-h-0 overflow-y-auto">
+        <main className="flex-1 min-h-0 overflow-y-auto scroll-area-mobile md:pb-0">
           <Outlet />
         </main>
 
-        {/* ── Mobile bottom tab bar ─────────────────────────────────────────── */}
+        {/* ── Mobile bottom tab bar — fixed to viewport bottom ─────────────── */}
         <nav
-          className="md:hidden flex border-t border-gray-800 bg-gray-900 flex-shrink-0"
+          className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t border-gray-800 bg-gray-900"
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
           <NavLink

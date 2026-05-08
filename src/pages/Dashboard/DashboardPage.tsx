@@ -426,7 +426,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="h-screen bg-gray-950 flex items-center justify-center">
+      <div className="h-full bg-gray-950 flex items-center justify-center">
         <Spinner size="lg" />
       </div>
     )
@@ -442,10 +442,13 @@ export default function DashboardPage() {
     : points
 
   return (
-    <div className="h-screen bg-gray-950 flex flex-col overflow-hidden">
+    <div className="h-full bg-gray-950 flex flex-col overflow-hidden">
 
       {/* ── Top bar ── */}
-      <header className="flex-shrink-0 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm z-50">
+      <header
+        className="sticky top-0 flex-shrink-0 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm z-50"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      >
         <div className="flex items-center h-14 px-3 sm:px-4 gap-2 sm:gap-3">
           <button
             onClick={() => navigate('/')}

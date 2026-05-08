@@ -27,6 +27,13 @@
   }
 }
 
+/* Mobile scroll area: leaves room for the fixed bottom tab bar (including safe area) */
+@media (max-width: 767px) {
+  .scroll-area-mobile {
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* Preview card entrance animation */
 @keyframes geo-preview-enter {
   from { opacity: 0; transform: translateY(10px); }

@@ -1176,6 +1176,10 @@ export default function PublicPage() {
           <button
             onClick={() => {
               suppressMapClickUntilRef.current = Date.now() + 500
+              // Dismiss any active pin selection before opening the list
+              setMobileState('clean')
+              setSelectedPointId(null)
+              setAccessError(null)
               setSheetState('expanded')
             }}
             className="flex items-center gap-2 pl-3.5 pr-4 py-3

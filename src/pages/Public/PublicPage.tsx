@@ -1129,6 +1129,23 @@ export default function PublicPage() {
                   {`${points.length} experiencia${points.length !== 1 ? 's' : ''} disponible${points.length !== 1 ? 's' : ''}`}
                 </p>
               </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  suppressMapClickUntilRef.current = Date.now() + 500
+                  setSheetState('hidden')
+                }}
+                className="flex-shrink-0 w-8 h-8 flex items-center justify-center
+                           rounded-full bg-gray-800/60 border border-white/[0.07]
+                           text-gray-400 hover:text-gray-100 hover:bg-gray-700/60
+                           active:scale-90 transition-all duration-150"
+                aria-label="Cerrar lista"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none"
+                  stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+                  <path d="M6 6l8 8M14 6l-8 8" />
+                </svg>
+              </button>
             </div>
           </div>
 

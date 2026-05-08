@@ -7,8 +7,187 @@ import type { GeoProject } from '../../types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type LeftTab   = 'actividad' | 'conversion' | 'publico' | 'horarios'
-type SubTab    = 'entradas'  | 'clics'
+type LeftTab    = 'actividad' | 'conversion' | 'publico' | 'horarios'
+type SubTab     = 'entradas'  | 'clics'
+type InsightTag = 'positive'  | 'warning'    | 'info'    | 'neutral'
+
+interface Insight { id: string; tag: InsightTag; text: string }
+
+// ── Insights derivation ───────────────────────────────────────────────────────
+
+function deriveInsights(summary: ProjectAnalytics, byPoint: PointAnalytics[]): Insight[] {
+  const pool: Insight[] = []
+  const total = summary.radiusEntries
+  const sorted = [...byPoint].sort((a, b) => b.radiusEntries - a.radiusEntries)
+
+  // No data at all — single motivational insight
+  if (total === 0) {
+    pool.push({
+      id: 'no-data', tag: 'neutral',
+      text: 'Aún no hay datos de actividad. Compartí el link público para comenzar a registrar entradas.',
+    })
+    return pool
+  }
+
+  // Top point by entries
+  const top = sorted[0]
+  if (top && top.radiusEntries > 0) {
+    const pct = Math.round((top.radiusEntries / total) * 100)
+    pool.push({
+      id: 'top-point', tag: 'info',
+      text: `El punto más visitado es "${top.pointName}" · concentra el ${pct}% de las entradas totales.`,
+    })
+  }
+
+  // Best conversion point
+  const withClicks = byPoint.filter(p => p.clicks > 0)
+  if (withClicks.length > 0) {
+    const best = [...withClicks].sort((a, b) => b.conversion - a.conversion)[0]
+    pool.push({
+      id: 'best-conv', tag: 'positive',
+      text: `"${best.pointName}" tiene la mejor conversión del proyecto — ${best.conversion}% de entradas activadas.`,
+    })
+  }
+
+  // Overall conversion quality
+  if (total > 0) {
+    const q = summary.conversion >= 30 ? 'excelente' : summary.conversion >= 15 ? 'saludable' : 'baja'
+    pool.push({
+      id: 'overall-conv',
+      tag: summary.conversion >= 15 ? 'positive' : 'warning',
+      text: `Conversión general ${q} — el ${summary.conversion}% de las entradas al radio resultaron en un clic.`,
+    })
+  }
+
+  // Points with zero entries (inactive)
+  const inactive = byPoint.filter(p => p.radiusEntries === 0)
+  if (inactive.length > 0 && byPoint.length > 1) {
+    pool.push({
+      id: 'inactive', tag: 'warning',
+      text: `${inactive.length} de ${byPoint.length} puntos aún no registran visitas — revisá su radio de activación.`,
+    })
+  }
+
+  // Traffic concentration (top-2 > 65%)
+  if (sorted.length >= 3 && total > 0) {
+    const top2 = sorted[0].radiusEntries + sorted[1].radiusEntries
+    const pct  = Math.round((top2 / total) * 100)
+    if (pct >= 65) {
+      pool.push({
+        id: 'concentration', tag: 'neutral',
+        text: `Tráfico concentrado — solo 2 puntos capturan el ${pct}% de todas las entradas del proyecto.`,
+      })
+    }
+  }
+
+  // Points visited but no clicks
+  const visitedNoClicks = byPoint.filter(p => p.radiusEntries > 0 && p.clicks === 0)
+  if (visitedNoClicks.length > 0 && summary.clicks > 0) {
+    pool.push({
+      id: 'no-click-points', tag: 'neutral',
+      text: `${visitedNoClicks.length} punto${visitedNoClicks.length > 1 ? 's' : ''} reciben visitas pero ningún usuario activó la experiencia allí.`,
+    })
+  }
+
+  // No activations despite entries
+  if (summary.clicks === 0 && total > 0) {
+    pool.push({
+      id: 'zero-activation', tag: 'warning',
+      text: `${total} entrada${total !== 1 ? 's' : ''} registrada${total !== 1 ? 's' : ''} pero ningún usuario activó la experiencia todavía.`,
+    })
+  }
+
+  // Prioritise: positive first, then info, then warning, neutral last
+  const order: InsightTag[] = ['positive', 'info', 'warning', 'neutral']
+  pool.sort((a, b) => order.indexOf(a.tag) - order.indexOf(b.tag))
+  return pool.slice(0, 4)
+}
+
+// ── Insights section ──────────────────────────────────────────────────────────
+
+function InsightsSection({ summary, byPoint }: {
+  summary: ProjectAnalytics
+  byPoint: PointAnalytics[]
+}) {
+  const insights = deriveInsights(summary, byPoint)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 80)
+    return () => clearTimeout(t)
+  }, [])
+
+  if (insights.length === 0) return null
+
+  const DOT: Record<InsightTag, string> = {
+    positive: 'bg-emerald-400',
+    warning:  'bg-amber-400',
+    info:     'bg-brand-400',
+    neutral:  'bg-gray-600',
+  }
+
+  const TEXT: Record<InsightTag, string> = {
+    positive: 'text-emerald-300/90',
+    warning:  'text-amber-300/90',
+    info:     'text-brand-300/90',
+    neutral:  'text-gray-400',
+  }
+
+  return (
+    <div
+      className="rounded-2xl border border-brand-500/[0.18] px-6 py-5"
+      style={{ background: 'linear-gradient(135deg, #0a1c2e 0%, #0d1f2d 50%, #0c1a28 100%)' }}
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between mb-5">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-5 h-5 rounded-md bg-brand-500/15 border border-brand-500/25
+                            flex items-center justify-center">
+              <svg className="w-3 h-3 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h3 className="text-sm font-semibold text-gray-100">Insights automáticos</h3>
+          </div>
+          <p className="text-[11px] text-gray-600">
+            Resumen inteligente del comportamiento de tu experiencia.
+          </p>
+        </div>
+        <span className="text-[10px] font-medium text-brand-500/70 bg-brand-500/8
+                         border border-brand-500/15 rounded-full px-2 py-0.5 shrink-0">
+          {insights.length} activos
+        </span>
+      </div>
+
+      {/* Insight items */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+        {insights.map((ins, i) => (
+          <div
+            key={ins.id}
+            className="flex items-start gap-2.5 group cursor-default"
+            style={{
+              opacity:   mounted ? 1 : 0,
+              transform: mounted ? 'translateY(0)' : 'translateY(5px)',
+              transition: `opacity 0.32s ease-out ${i * 75}ms, transform 0.32s ease-out ${i * 75}ms`,
+            }}
+          >
+            {/* Dot indicator */}
+            <span
+              className={`w-1.5 h-1.5 rounded-full shrink-0 mt-[5px] ${DOT[ins.tag]}`}
+            />
+            {/* Text */}
+            <p className={`text-[12.5px] leading-snug transition-colors duration-150
+                           group-hover:text-gray-200 ${TEXT[ins.tag]}`}>
+              {ins.text}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
@@ -761,6 +940,11 @@ export default function MetricsPage() {
                 accent
               />
             </div>
+
+            {/* Insights */}
+            {byPoint !== null && (
+              <InsightsSection summary={summary} byPoint={byPoint} />
+            )}
 
             {/* Points list */}
             {byPoint !== null && <PointsSection byPoint={byPoint} />}

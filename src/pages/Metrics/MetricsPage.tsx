@@ -254,22 +254,261 @@ function BarRow({
   )
 }
 
-// ── Coming-soon placeholder ───────────────────────────────────────────────────
+// ── Mock geo/temporal distributions ──────────────────────────────────────────
+// Deterministic distributions tuned for a Latin American geo-experience product.
+// Bar width uses % of max value (maximises visual contrast).
+// Display value uses % of total (shows actual share).
 
-function ComingSoonTab({ label, detail }: { label: string; detail: string }) {
+type PublicSubTab   = 'pais' | 'ciudad' | 'comuna'
+type HorariosSubTab = 'horas' | 'dias'
+
+function buildDist(labels: string[], weights: number[]) {
+  const total = weights.reduce((s, v) => s + v, 0)
+  const maxW  = Math.max(...weights)
+  return labels.map((label, i) => ({
+    label,
+    barPct:     Math.round((weights[i] / maxW)  * 100),
+    displayPct: Math.round((weights[i] / total) * 100),
+  }))
+}
+
+const GEO: Record<PublicSubTab, ReturnType<typeof buildDist>> = {
+  pais:   buildDist(
+    ['Chile', 'Argentina', 'México', 'Est. Unidos', 'Otros'],
+    [40, 25, 14, 12, 9],
+  ),
+  ciudad: buildDist(
+    ['Santiago', 'Buenos Aires', 'Cdad. México', 'Miami', 'Otros'],
+    [36, 22, 18, 14, 10],
+  ),
+  comuna: buildDist(
+    ['Providencia', 'Las Condes', 'Stgo. Centro', 'Vitacura', 'Ñuñoa', 'Otros'],
+    [30, 22, 18, 14, 10, 6],
+  ),
+}
+
+const TEMPORAL: Record<HorariosSubTab, ReturnType<typeof buildDist>> = {
+  horas: buildDist(
+    ['00h', '03h', '06h', '09h', '12h', '15h', '18h', '21h'],
+    [3, 1, 4, 12, 18, 22, 35, 28],
+  ),
+  dias: buildDist(
+    ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+    [68, 72, 78, 82, 100, 45, 32],
+  ),
+}
+
+const GEO_INSIGHTS: Record<PublicSubTab, string> = {
+  pais:   'Chile lidera el tráfico · la experiencia alcanza audiencia internacional.',
+  ciudad: 'Santiago concentra el mayor engagement urbano del proyecto.',
+  comuna: 'Providencia y Las Condes lideran — zonas de alto tráfico peatonal.',
+}
+
+const TEMPORAL_INSIGHTS: Record<HorariosSubTab, string> = {
+  horas: 'Pico entre 18:00 y 21:00 — comportamiento after-office típico.',
+  dias:  'Viernes lidera la semana. Actividad cae notablemente el fin de semana.',
+}
+
+// ── Widget primitives ─────────────────────────────────────────────────────────
+
+function WidgetSubTabs({
+  options, value, onChange,
+}: {
+  options: { id: string; label: string }[]
+  value: string
+  onChange: (v: string) => void
+}) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center py-6">
-      <div className="w-11 h-11 rounded-2xl bg-gray-800 border border-gray-700/40 flex items-center justify-center">
-        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      </div>
-      <div>
-        <p className="text-xs font-semibold text-gray-500">{label}</p>
-        <p className="text-[11px] text-gray-700 mt-0.5">{detail}</p>
-      </div>
+    <div className="flex gap-px bg-gray-800 rounded-lg p-0.5">
+      {options.map(o => (
+        <button
+          key={o.id}
+          onClick={() => onChange(o.id)}
+          className={[
+            'px-2.5 py-1 text-[11px] rounded-md transition-all duration-150',
+            value === o.id
+              ? 'bg-gray-700 text-gray-200 shadow-sm'
+              : 'text-gray-500 hover:text-gray-400',
+          ].join(' ')}
+        >
+          {o.label}
+        </button>
+      ))}
     </div>
+  )
+}
+
+function WidgetInsight({ text }: { text: string }) {
+  return (
+    <div className="mt-2 pt-2.5 border-t border-white/[0.05] flex items-start gap-2 shrink-0">
+      <span className="w-1 h-1 rounded-full bg-brand-400/70 shrink-0 mt-[5px]" />
+      <p className="text-[11px] text-gray-500 leading-snug">{text}</p>
+    </div>
+  )
+}
+
+// Reusable bar row — barPct drives width, displayPct is the right label
+function MockBarRow({ label, barPct, displayPct, mounted, delay }: {
+  label: string; barPct: number; displayPct: number; mounted: boolean; delay: number
+}) {
+  const [hov, setHov] = useState(false)
+  return (
+    <div
+      className="flex items-center gap-3 py-0.5 cursor-default"
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+    >
+      <span className={`w-24 text-sm truncate shrink-0 transition-colors duration-150 ${
+        hov ? 'text-gray-200' : 'text-gray-400'
+      }`}>{label}</span>
+      <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-400"
+          style={{
+            width: mounted ? `${barPct}%` : '0%',
+            transition: `width 0.65s cubic-bezier(0.4, 0, 0.2, 1) ${delay}ms`,
+          }}
+        />
+      </div>
+      <span className={`w-10 text-right text-sm tabular-nums shrink-0 transition-colors duration-150 ${
+        hov ? 'text-gray-100' : 'text-gray-500'
+      }`}>{displayPct}%</span>
+    </div>
+  )
+}
+
+// ── Public tab ────────────────────────────────────────────────────────────────
+
+const PUBLIC_SUBTABS: { id: PublicSubTab; label: string }[] = [
+  { id: 'pais',   label: 'País'   },
+  { id: 'ciudad', label: 'Ciudad' },
+  { id: 'comuna', label: 'Comuna' },
+]
+
+function PublicTab() {
+  const [sub, setSub]         = useState<PublicSubTab>('pais')
+  const [fade, setFade]       = useState(true)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 150)
+    return () => clearTimeout(t)
+  }, [sub])
+
+  function changeSub(next: string) {
+    const n = next as PublicSubTab
+    if (n === sub) return
+    setFade(false); setMounted(false)
+    setTimeout(() => { setSub(n); setFade(true) }, 120)
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-3 shrink-0">
+        <h3 className="text-sm font-semibold text-gray-200">Público</h3>
+        <WidgetSubTabs options={PUBLIC_SUBTABS} value={sub} onChange={changeSub} />
+      </div>
+      <div
+        className="flex-1 flex flex-col min-h-0"
+        style={{ opacity: fade ? 1 : 0, transition: 'opacity 0.12s ease' }}
+      >
+        <div className="flex-1 flex flex-col justify-between min-h-0">
+          {GEO[sub].map((row, i) => (
+            <MockBarRow
+              key={row.label}
+              label={row.label}
+              barPct={row.barPct}
+              displayPct={row.displayPct}
+              mounted={mounted}
+              delay={i * 50}
+            />
+          ))}
+        </div>
+        <WidgetInsight text={GEO_INSIGHTS[sub]} />
+      </div>
+    </>
+  )
+}
+
+// ── Horarios tab ──────────────────────────────────────────────────────────────
+
+const HORARIOS_SUBTABS: { id: HorariosSubTab; label: string }[] = [
+  { id: 'horas', label: 'Horas' },
+  { id: 'dias',  label: 'Días'  },
+]
+
+function HorariosTab() {
+  const [sub, setSub]         = useState<HorariosSubTab>('horas')
+  const [fade, setFade]       = useState(true)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 150)
+    return () => clearTimeout(t)
+  }, [sub])
+
+  function changeSub(next: string) {
+    const n = next as HorariosSubTab
+    if (n === sub) return
+    setFade(false); setMounted(false)
+    setTimeout(() => { setSub(n); setFade(true) }, 120)
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-3 shrink-0">
+        <h3 className="text-sm font-semibold text-gray-200">Horarios</h3>
+        <WidgetSubTabs options={HORARIOS_SUBTABS} value={sub} onChange={changeSub} />
+      </div>
+      <div
+        className="flex-1 flex flex-col min-h-0"
+        style={{ opacity: fade ? 1 : 0, transition: 'opacity 0.12s ease' }}
+      >
+        {sub === 'horas' ? (
+          <>
+            {/* 2-column grid matches LookiAR Horarios reference */}
+            <div
+              className="flex-1 grid grid-cols-2 gap-x-5 min-h-0"
+              style={{ alignContent: 'space-between' }}
+            >
+              {TEMPORAL.horas.map((row, i) => (
+                <div key={row.label} className="flex items-center gap-2">
+                  <span className="w-7 text-xs text-gray-500 tabular-nums shrink-0">
+                    {row.label}
+                  </span>
+                  <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-400"
+                      style={{
+                        width: mounted ? `${row.barPct}%` : '0%',
+                        transition: `width 0.65s cubic-bezier(0.4, 0, 0.2, 1) ${i * 35}ms`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <WidgetInsight text={TEMPORAL_INSIGHTS.horas} />
+          </>
+        ) : (
+          <>
+            <div className="flex-1 flex flex-col justify-between min-h-0">
+              {TEMPORAL.dias.map((row, i) => (
+                <MockBarRow
+                  key={row.label}
+                  label={row.label}
+                  barPct={row.barPct}
+                  displayPct={row.displayPct}
+                  mounted={mounted}
+                  delay={i * 45}
+                />
+              ))}
+            </div>
+            <WidgetInsight text={TEMPORAL_INSIGHTS.dias} />
+          </>
+        )}
+      </div>
+    </>
   )
 }
 
@@ -416,13 +655,11 @@ function LeftWidget({ byPoint }: { byPoint: PointAnalytics[] | null }) {
           </>
         )}
 
-        {/* ── Coming soon ── */}
-        {tab === 'publico' && (
-          <ComingSoonTab label="Próximamente" detail="Distribución geográfica de visitantes" />
-        )}
-        {tab === 'horarios' && (
-          <ComingSoonTab label="Próximamente" detail="Actividad distribuida por hora del día" />
-        )}
+        {/* ── Público ── */}
+        {tab === 'publico' && <PublicTab />}
+
+        {/* ── Horarios ── */}
+        {tab === 'horarios' && <HorariosTab />}
       </div>
     </div>
   )

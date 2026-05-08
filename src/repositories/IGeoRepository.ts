@@ -20,5 +20,5 @@ export interface IGeoRepository {
 
   // Points (public — lookiarUrl excluded from payload)
   listPublicPoints(projectId: string): Promise<GeoPoint[]>
-  requestPointAccess(projectId: string, pointId: string, lat: number, lng: number): Promise<{ url: string }>
+  requestPointAccess(projectId: string, pointId: string, lat: number, lng: number, accessMode?: string): Promise<{ url: string }>
 }

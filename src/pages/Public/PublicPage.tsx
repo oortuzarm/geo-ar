@@ -388,18 +388,22 @@ function LocationSheet({ onRetry, onClose }: { onRetry: () => void; onClose: () 
 }
 
 // ── Mobile interaction state ─────────────────────────────────────────────────
-// clean   → map only, peek sheet shows project summary (draggable to browse list)
-// preview → floating preview card above peek (point selected, no full sheet)
+// clean   → map fullscreen, floating "Mostrar lista" button visible
+// preview → floating preview card above map (point selected, sheet unchanged)
 // detail  → full detail bottom sheet covering most of the screen
 type MobileState = 'clean' | 'preview' | 'detail'
 
 // ── Bottom sheet state ────────────────────────────────────────────────────────
-type SheetState = 'peek' | 'expanded'
+// hidden   → initial state: map-first, sheet invisible, "Mostrar lista" button shown
+// peek     → compact header only (project identity + count, draggable handle)
+// expanded → full scrollable point list
+type SheetState = 'hidden' | 'peek' | 'expanded'
 
 // Height-driven sheet: actual height = visible area per state.
 // flex-1 on the scroll container then fills exactly the visible portion.
 // env(safe-area-inset-bottom, 0px) ≈ 34px on Face ID iPhones, 0 elsewhere.
 const SHEET_HEIGHT: Record<SheetState, string> = {
+  hidden:   '0px',
   peek:     'calc(80px + env(safe-area-inset-bottom, 0px))',
   expanded: '90dvh',
 }
@@ -426,7 +430,7 @@ export default function PublicPage() {
   const [mobileState, setMobileState] = useState<MobileState>('clean')
 
   // ── Bottom sheet ───────────────────────────────────────────────────────────
-  const [sheetState, setSheetState] = useState<SheetState>('peek')
+  const [sheetState, setSheetState] = useState<SheetState>('hidden')
   const dragStartYRef = useRef<number | null>(null)
 
   // ── Route state ────────────────────────────────────────────────────────────
@@ -742,7 +746,7 @@ export default function PublicPage() {
     setSelectedPointId(null)
     setAccessError(null)
     setMobileState('clean')
-    setSheetState('peek')
+    setSheetState('hidden')
     flyToCounterRef.current += 1
     setFlyToKey(`exit-${flyToCounterRef.current}`)
     if (userLocation) {
@@ -759,7 +763,9 @@ export default function PublicPage() {
     setSelectedPointId(pt.id)
     setAccessError(null)
     setMobileState('preview')
-    setSheetState('peek')
+    // Tap from expanded list → collapse to peek so the map is visible.
+    // Tap from map pin (hidden or peek) → leave sheet state unchanged.
+    if (sheetState === 'expanded') setSheetState('peek')
     flyToCounterRef.current += 1
     setFlyToKey(`point-${pt.id}-${flyToCounterRef.current}`)
     // Shift the fly target 80px south so the pin lands in the upper portion of the visible map area.
@@ -838,16 +844,27 @@ export default function PublicPage() {
 
     if (Math.abs(delta) < 10) {
       if (sheetState === 'peek') expandSheet()
-      else setSheetState('peek')
+      else if (sheetState === 'expanded') setSheetState('peek')
       return
     }
     if (delta > 40)       expandSheet()
-    else if (delta < -40) setSheetState('peek')
+    else if (delta < -40) {
+      if (sheetState === 'expanded') setSheetState('peek')
+      else setSheetState('hidden')
+    }
   }
 
   const handleActivate = useCallback(async (point: GeoPoint) => {
     if (activatingPointId) return
+
+    const isOpen = point.accessMode === 'open'
+
     if (!userLocation) {
+      if (isOpen && point.lookiarUrl) {
+        trackPointClick(id!, point.id)
+        window.location.href = point.lookiarUrl
+        return
+      }
       addToast('Activá tu ubicación para acceder a la experiencia.', 'error')
       return
     }
@@ -869,6 +886,7 @@ export default function PublicPage() {
         point.id,
         userLocation.latitude,
         userLocation.longitude,
+        point.accessMode,
       )
       console.log('[Access] ✓ Respuesta completa del backend:', JSON.stringify(raw))
 
@@ -893,6 +911,18 @@ export default function PublicPage() {
       }
     } catch (err) {
       console.error('[Access] ✗ Error recibido:', err)
+
+      if (isOpen) {
+        if (point.lookiarUrl) {
+          console.warn('[Access] Open mode — backend rechazó, navegando por lookiarUrl')
+          window.location.href = point.lookiarUrl
+          return
+        }
+        const openMsg = 'Este punto no tiene una URL configurada.'
+        setAccessError({ pointId: point.id, message: openMsg })
+        addToast(openMsg, 'error')
+        return
+      }
 
       let msg = 'No se pudo validar el acceso.'
 
@@ -1046,9 +1076,12 @@ export default function PublicPage() {
             'hover:bg-gray-50 active:scale-95 active:shadow-sm',
             'transition-all duration-150',
             'disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100',
-            mobileState === 'detail'  ? 'hidden md:flex md:bottom-4'
-            : mobileState === 'preview' ? 'bottom-[300px] md:bottom-4'
-            :                             'bottom-[160px] md:bottom-4',
+            mobileState === 'detail'                             ? 'hidden md:flex md:bottom-4'
+            : sheetState === 'expanded'                          ? 'hidden md:flex md:bottom-4'
+            : sheetState === 'peek' && mobileState === 'preview' ? 'bottom-[290px] md:bottom-4'
+            : sheetState === 'peek'                              ? 'bottom-[160px] md:bottom-4'
+            : mobileState === 'preview'                          ? 'bottom-[272px] md:bottom-4'
+            :                                                       'bottom-24 md:bottom-4',
           ].join(' ')}
           title="Mi ubicación"
         >
@@ -1132,7 +1165,7 @@ export default function PublicPage() {
           <div
             className={[
               'flex-1 min-h-0 overscroll-contain',
-              sheetState === 'peek' ? 'overflow-hidden' : 'overflow-y-auto',
+              sheetState !== 'expanded' ? 'overflow-hidden' : 'overflow-y-auto',
             ].join(' ')}
             style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
           >
@@ -1151,13 +1184,43 @@ export default function PublicPage() {
         </div>
       </div>
 
+      {/* ── FLOATING "MOSTRAR LISTA" BUTTON (mobile only) ─────────────────────
+          Visible only when the sheet is hidden (map-first state).
+          Tapping opens the sheet to peek. Disappears when list is open.    */}
+      {sheetState === 'hidden' && mobileState !== 'detail' && (
+        <div
+          className="md:hidden absolute right-4 z-[1100]"
+          style={{ bottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}
+        >
+          <button
+            onClick={() => setSheetState('peek')}
+            className="flex items-center gap-2 pl-3.5 pr-4 py-3
+                       rounded-full bg-white text-gray-900
+                       font-semibold text-sm leading-none
+                       shadow-[0_4px_20px_rgba(0,0,0,0.28)]
+                       active:scale-95 transition-transform duration-100"
+          >
+            <svg className="w-4 h-4 flex-shrink-0 text-gray-700" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd"
+                d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1z"
+              />
+            </svg>
+            <span>Mostrar lista</span>
+          </button>
+        </div>
+      )}
+
       {/* ── MOBILE PREVIEW CARD ─────────────────────────────────────────────
-          Floats above the peek sheet when a pin is selected (preview state).
+          Floats above the floating button or peek sheet (preview state).
           Tapping "Ver detalle" opens the full detail sheet.                */}
       {mobileState === 'preview' && selectedPoint && (
         <div
           className="md:hidden absolute inset-x-4 z-[1050]"
-          style={{ bottom: 'calc(80px + env(safe-area-inset-bottom, 0px) + 8px)' }}
+          style={{
+            bottom: sheetState !== 'hidden'
+              ? 'calc(80px + env(safe-area-inset-bottom, 0px) + 8px)'
+              : 'calc(80px + env(safe-area-inset-bottom, 0px))',
+          }}
         >
           <PublicPointPreviewCard
             point={selectedPoint}

@@ -1035,7 +1035,29 @@ export default function PublicPage() {
           />
         )}
 
-        {/* My location button — repositioned based on mobile overlay state */}
+        {/* Share button — mobile only, column above my-location */}
+        <button
+          onClick={() => void handleShare()}
+          className={[
+            'absolute right-4 z-[400]',
+            'w-11 h-11 flex items-center justify-center',
+            'bg-white rounded-full border border-gray-200/60 shadow-md',
+            'hover:bg-gray-50 active:scale-95 active:shadow-sm',
+            'transition-all duration-150',
+            mobileState === 'detail'    ? 'hidden'
+            : sheetState === 'expanded' ? 'hidden'
+            : mobileState === 'preview' ? 'bottom-[324px] md:hidden'
+            :                             'bottom-[148px] md:hidden',
+          ].join(' ')}
+          title="Compartir"
+        >
+          <svg className="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+        </button>
+
+        {/* My location button */}
         <button
           onClick={handleMyLocation}
           disabled={!userLocation}
@@ -1107,18 +1129,6 @@ export default function PublicPage() {
                   {`${points.length} experiencia${points.length !== 1 ? 's' : ''} disponible${points.length !== 1 ? 's' : ''}`}
                 </p>
               </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); void handleShare() }}
-                className="flex-shrink-0 w-8 h-8 flex items-center justify-center
-                           rounded-full text-gray-400 hover:text-gray-200
-                           hover:bg-gray-800/80 active:scale-90 transition-all duration-150"
-                title="Compartir"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-              </button>
             </div>
           </div>
 

@@ -789,6 +789,7 @@ export default function DashboardPage() {
             onClose={() => { setSelectedPointId(null); setPointFormOpen(false) }}
             onEdit={() => setMobileEditOpen(true)}
             onToggleActive={handleToggleActive}
+            onDelete={(id) => setDeletePointTarget(id)}
           />
         </div>
       )}

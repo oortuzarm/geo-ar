@@ -5,6 +5,7 @@ interface Props {
   onClose: () => void
   onEdit: () => void
   onToggleActive: (id: string) => void
+  onDelete: (id: string) => void
 }
 
 function domain(url: string): string {
@@ -12,7 +13,7 @@ function domain(url: string): string {
   catch { return url.replace('https://', '').split('/')[0] }
 }
 
-export default function PointSummarySheet({ point, onClose, onEdit, onToggleActive }: Props) {
+export default function PointSummarySheet({ point, onClose, onEdit, onToggleActive, onDelete }: Props) {
   return (
     <>
       {/* Backdrop */}
@@ -31,6 +32,19 @@ export default function PointSummarySheet({ point, onClose, onEdit, onToggleActi
           <div className="w-10 h-1 rounded-full bg-gray-700" />
         </div>
 
+        {/* Delete button */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(point.id) }}
+          className="absolute top-2 right-12 flex items-center justify-center w-9 h-9
+                     text-red-500/60 hover:text-red-400 transition-colors rounded-full"
+          aria-label="Eliminar punto"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+
         {/* Close button */}
         <button
           onClick={onClose}
@@ -45,7 +59,7 @@ export default function PointSummarySheet({ point, onClose, onEdit, onToggleActi
 
         <div className="px-4 pt-2 pb-5">
           <div className="flex gap-4 items-center">
-            {/* Thumbnail — 16×16 for better presence */}
+            {/* Thumbnail */}
             {point.image ? (
               <img
                 src={point.image}
@@ -70,6 +84,12 @@ export default function PointSummarySheet({ point, onClose, onEdit, onToggleActi
                 {point.name || <span className="text-gray-500 italic font-normal text-sm">Sin nombre</span>}
               </p>
 
+              {point.instructions && (
+                <p className="text-xs text-gray-500 truncate mt-0.5 leading-snug">
+                  {point.instructions}
+                </p>
+              )}
+
               {point.lookiarUrl ? (
                 <p className="text-xs text-brand-400 truncate mt-0.5 font-medium">
                   {domain(point.lookiarUrl)}
@@ -79,10 +99,6 @@ export default function PointSummarySheet({ point, onClose, onEdit, onToggleActi
               )}
 
               <div className="flex items-center gap-2 mt-2.5">
-                <span className="text-xs font-medium text-gray-400 tabular-nums">
-                  {point.activationRadius} m
-                </span>
-                <span className="text-gray-700 select-none">·</span>
                 <button
                   onClick={(e) => { e.stopPropagation(); onToggleActive(point.id) }}
                   className={[

@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import Modal from '../../components/ui/Modal'
 import type { GeoPoint } from '../../types'
 
+function urlDomain(url: string): string {
+  try { return new URL(url).hostname.replace('www.', '') }
+  catch { return url.replace('https://', '').split('/')[0] }
+}
+
 interface GeoPointsListProps {
   points: GeoPoint[]
   selectedId: string | null
@@ -264,7 +269,7 @@ export default function GeoPointsList({
                 <li key={point.id}>
                   <div
                     className={[
-                      'flex items-center gap-2.5 px-3 py-2.5 cursor-pointer transition-colors border-l-2',
+                      'flex items-center gap-3 px-3 py-3 cursor-pointer transition-colors border-l-2',
                       isEditing
                         ? 'bg-brand-900/40 border-brand-500'
                         : checked
@@ -304,27 +309,33 @@ export default function GeoPointsList({
                       </button>
                     )}
 
-                    {/* Status dot */}
-                    <div
-                      className={[
-                        'w-2 h-2 rounded-full flex-shrink-0',
-                        point.active ? 'bg-red-500' : 'bg-gray-600',
-                      ].join(' ')}
-                    />
+                    {/* Thumbnail */}
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-gray-800 border border-gray-700/50">
+                      {point.image ? (
+                        <img src={point.image} alt={point.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                              d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Name + metadata */}
                     <div className="flex-1 min-w-0">
                       <p className={[
-                        'text-sm truncate',
-                        point.active ? 'text-gray-200' : 'text-gray-500',
+                        'text-sm font-medium truncate',
+                        point.active ? 'text-gray-100' : 'text-gray-500',
                       ].join(' ')}>
-                        {point.name || <span className="italic text-gray-600">Sin nombre</span>}
+                        {point.name || <span className="italic text-gray-600 font-normal">Sin nombre</span>}
                       </p>
-                      <p className="text-xs text-gray-600 truncate">
+                      <p className="text-xs text-gray-600 truncate mt-0.5">
                         {point.activationRadius} m
-                        {point.lookiarUrl
-                          ? ' · ' + point.lookiarUrl.replace('https://', '').split('/').slice(0, 2).join('/')
-                          : ''}
+                        {point.lookiarUrl ? ' · ' + urlDomain(point.lookiarUrl) : ''}
                       </p>
                     </div>
 

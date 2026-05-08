@@ -167,6 +167,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
   const fileRef = useRef<HTMLInputElement>(null)
   const [showTooltip, setShowTooltip] = useState(false)
   const [imageError, setImageError] = useState<string | null>(null)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
 
   // ── Local state for text fields ───────────────────────────────────────────
   // Decoupled from the parent store so every keystroke doesn't trigger a
@@ -302,30 +303,48 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
         />
 
-        {/* Coordinates — committed immediately for live map updates */}
-        <div className="grid grid-cols-2 gap-3">
-          <Input
-            label="Latitud*"
-            type="number"
-            step="0.000001"
-            placeholder="-33.4489"
-            value={point.latitude}
-            onChange={(e) => {
-              const val = parseFloat(e.target.value)
-              if (!isNaN(val)) onChange({ latitude: val })
-            }}
-          />
-          <Input
-            label="Longitud*"
-            type="number"
-            step="0.000001"
-            placeholder="-70.6693"
-            value={point.longitude}
-            onChange={(e) => {
-              const val = parseFloat(e.target.value)
-              if (!isNaN(val)) onChange({ longitude: val })
-            }}
-          />
+        {/* Coordinates — inside collapsible section; drag the marker to reposition */}
+        <div>
+          <button
+            type="button"
+            onClick={() => setAdvancedOpen((o) => !o)}
+            className="flex items-center gap-1.5 text-xs font-medium text-gray-500
+                       hover:text-gray-300 uppercase tracking-wide transition-colors w-full text-left"
+          >
+            <svg
+              className={`h-3 w-3 transition-transform ${advancedOpen ? 'rotate-90' : ''}`}
+              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            Configuración avanzada
+          </button>
+          {advancedOpen && (
+            <div className="mt-2 grid grid-cols-2 gap-3">
+              <Input
+                label="Latitud*"
+                type="number"
+                step="0.000001"
+                placeholder="-33.4489"
+                value={point.latitude}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value)
+                  if (!isNaN(val)) onChange({ latitude: val })
+                }}
+              />
+              <Input
+                label="Longitud*"
+                type="number"
+                step="0.000001"
+                placeholder="-70.6693"
+                value={point.longitude}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value)
+                  if (!isNaN(val)) onChange({ longitude: val })
+                }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Activation radius — committed immediately for live circle update */}

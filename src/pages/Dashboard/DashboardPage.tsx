@@ -8,6 +8,7 @@ import Modal from '../../components/ui/Modal'
 import ToastContainer from '../../components/ui/Toast'
 import GeoPointsList from './GeoPointsList'
 import GeoPointForm from './GeoPointForm'
+import PointSummarySheet from './PointSummarySheet'
 import ProjectPanel from './ProjectPanel'
 import PreviewQRModal from './PreviewQRModal'
 import { useGeoStore } from '../../store/geoStore'
@@ -32,6 +33,7 @@ export default function DashboardPage() {
   const [deletePointTarget, setDeletePointTarget] = useState<string | null>(null)
   const [locatingUser, setLocatingUser] = useState(false)
   const [listDrawerOpen, setListDrawerOpen] = useState(false)
+  const [mobileEditOpen, setMobileEditOpen] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [leftTab, setLeftTab] = useState<'points' | 'project'>('points')
 
@@ -92,6 +94,7 @@ export default function DashboardPage() {
   function handleSelectPoint(pointId: string) {
     setSelectedPointId(pointId)
     setPointFormOpen(true)
+    setMobileEditOpen(false)
     const pt = points.find((p) => p.id === pointId)
     if (pt) focusPoint(pt)
   }
@@ -104,6 +107,7 @@ export default function DashboardPage() {
         // Click on empty map → deselect. Drag is the only way to move a pin.
         setSelectedPointId(null)
         setPointFormOpen(false)
+        setMobileEditOpen(false)
         return
       }
 
@@ -121,6 +125,7 @@ export default function DashboardPage() {
       await geoProjectsApi.saveProject(project.id, { ...project, geoPointIds: updatedIds })
       setSelectedPointId(newPoint.id)
       setPointFormOpen(true)
+      setMobileEditOpen(true)
     },
     [project, selectedPointId, upsertPoint, setSelectedPointId, addToast],
   )
@@ -143,6 +148,7 @@ export default function DashboardPage() {
     focusPoint(newPoint)
     setSelectedPointId(newPoint.id)
     setPointFormOpen(true)
+    setMobileEditOpen(true)
   }
 
   async function createPointAt(lat: number, lng: number, name?: string): Promise<GeoPoint> {
@@ -189,6 +195,7 @@ export default function DashboardPage() {
     if (selectedPointId !== id) {
       setSelectedPointId(id)
       setPointFormOpen(true)
+      setMobileEditOpen(false)
     }
 
     // Autosave: persist coordinates immediately so reload keeps the new position
@@ -449,7 +456,33 @@ export default function DashboardPage() {
         className="sticky top-0 flex-shrink-0 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm z-50"
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
-        <div className="flex items-center h-14 px-3 sm:px-4 gap-2 sm:gap-3">
+        {/* Mobile topbar: 3-column grid with centered title */}
+        <div className="lg:hidden grid grid-cols-[40px_1fr_auto] items-center h-14 px-3 gap-2">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center justify-center text-gray-400 hover:text-gray-100 transition-colors"
+            aria-label="Volver"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span className="text-sm font-semibold text-gray-100 text-center truncate px-1">
+            {project?.title ?? 'Proyecto geolocalizado'}
+          </span>
+          <Button
+            variant="primary"
+            size="sm"
+            loading={isSaving}
+            onClick={handleSave}
+            className={hasUnsavedChanges ? 'ring-2 ring-yellow-500/50' : ''}
+          >
+            {hasUnsavedChanges ? '● Guardar' : 'Guardar'}
+          </Button>
+        </div>
+
+        {/* Desktop topbar */}
+        <div className="hidden lg:flex items-center h-14 px-4 gap-3">
           <button
             onClick={() => navigate('/')}
             className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-100 transition-colors flex-shrink-0"
@@ -457,31 +490,29 @@ export default function DashboardPage() {
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            <span className="hidden sm:inline">Volver</span>
+            Volver
           </button>
 
-          <div className="hidden sm:block w-px h-5 bg-gray-700" />
+          <div className="w-px h-5 bg-gray-700" />
 
           <span className="text-sm font-medium text-gray-300 flex-1 truncate min-w-0">
             {project?.title ?? 'Proyecto geolocalizado'}
           </span>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Button
               variant="ghost"
               size="sm"
-              className="hidden sm:inline-flex"
               onClick={() => setPreviewModalOpen(true)}
             >
               Previsualizar
             </Button>
 
-            {/* Publish toggle — saves immediately to backend */}
             {project && (
               <button
                 onClick={handleToggleStatus}
                 disabled={isPublishing}
-                className={`hidden sm:flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-medium
+                className={`flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-medium
                             border transition-colors flex-shrink-0 disabled:opacity-60 disabled:cursor-wait ${
                   project.status === 'active'
                     ? 'bg-green-900/40 border-green-700 text-green-300 hover:bg-red-900/30 hover:border-red-700 hover:text-red-300'
@@ -500,11 +531,8 @@ export default function DashboardPage() {
               </button>
             )}
 
-            {/* Unsaved content indicator */}
             {hasUnsavedChanges && (
-              <span className="hidden sm:inline text-xs text-yellow-400 flex-shrink-0">
-                Sin guardar
-              </span>
+              <span className="text-xs text-yellow-400 flex-shrink-0">Sin guardar</span>
             )}
 
             <Button
@@ -514,10 +542,7 @@ export default function DashboardPage() {
               onClick={handleSave}
               className={hasUnsavedChanges ? 'ring-2 ring-yellow-500/50' : ''}
             >
-              <span className="hidden sm:inline">Guardar proyecto</span>
-              <span className="sm:hidden">
-                {hasUnsavedChanges ? '● Guardar' : 'Guardar'}
-              </span>
+              Guardar proyecto
             </Button>
           </div>
         </div>
@@ -599,6 +624,21 @@ export default function DashboardPage() {
             )}
           </button>
 
+          {/* Mobile: FAB Agregar punto */}
+          <div className="lg:hidden absolute bottom-20 right-4 z-[1000]">
+            <button
+              onClick={handleAddPoint}
+              className="flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white
+                         rounded-full px-4 py-3 shadow-lg shadow-brand-950/60 transition-colors
+                         font-medium text-sm"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Agregar punto
+            </button>
+          </div>
+
           {/* Mobile: List button */}
           <div className="lg:hidden absolute bottom-8 right-4 z-[1000]">
             <button
@@ -611,7 +651,7 @@ export default function DashboardPage() {
           </div>
 
           {points.length === 0 && (
-            <div className="absolute bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-[1000]
+            <div className="absolute bottom-36 lg:bottom-8 left-1/2 -translate-x-1/2 z-[1000]
                            bg-gray-900/90 border border-gray-700 rounded-lg px-4 py-2
                            text-sm text-gray-400 whitespace-nowrap">
               Haz clic en el mapa para agregar el primer punto
@@ -673,28 +713,34 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ── Mobile: point form bottom sheet ── */}
-      {pointFormOpen && selectedPoint && (
+      {/* ── Mobile: point summary sheet ── */}
+      {pointFormOpen && selectedPoint && !mobileEditOpen && (
         <div className="lg:hidden fixed inset-0 z-[3000]">
-          <div
-            className="absolute inset-0 bg-black/60"
-            onClick={() => { setSelectedPointId(null); setPointFormOpen(false) }}
+          <PointSummarySheet
+            point={selectedPoint}
+            onClose={() => { setSelectedPointId(null); setPointFormOpen(false) }}
+            onEdit={() => setMobileEditOpen(true)}
+            onToggleActive={handleToggleActive}
           />
-          <div className="absolute inset-x-0 bottom-0 h-[88vh] bg-gray-900 rounded-t-2xl
-                         border-t border-gray-800 flex flex-col overflow-hidden">
-            <GeoPointForm
-              key={selectedPointId ?? ''}
-              point={selectedPoint}
-              onChange={handlePointChange}
-              onDelete={() => setDeletePointTarget(selectedPoint.id)}
-              onClose={() => { setSelectedPointId(null); setPointFormOpen(false) }}
-              onSave={() => {
-                addToast('Punto guardado', 'success')
-                setSelectedPointId(null)
-                setPointFormOpen(false)
-              }}
-            />
-          </div>
+        </div>
+      )}
+
+      {/* ── Mobile: point fullscreen edit sheet ── */}
+      {pointFormOpen && selectedPoint && mobileEditOpen && (
+        <div className="lg:hidden fixed inset-0 z-[3000] bg-gray-900 flex flex-col overflow-hidden">
+          <GeoPointForm
+            key={selectedPointId ?? ''}
+            point={selectedPoint}
+            onChange={handlePointChange}
+            onDelete={() => setDeletePointTarget(selectedPoint.id)}
+            onClose={() => setMobileEditOpen(false)}
+            onSave={() => {
+              addToast('Punto guardado', 'success')
+              setSelectedPointId(null)
+              setPointFormOpen(false)
+              setMobileEditOpen(false)
+            }}
+          />
         </div>
       )}
 

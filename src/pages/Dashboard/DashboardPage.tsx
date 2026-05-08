@@ -35,7 +35,11 @@ export default function DashboardPage() {
   const [listDrawerOpen, setListDrawerOpen] = useState(false)
   const [mobileEditOpen, setMobileEditOpen] = useState(false)
   const [isNewMobilePoint, setIsNewMobilePoint] = useState(false)
+  const [fabPlacementMode, setFabPlacementMode] = useState(false)
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  // Debounce guard: prevents duplicate creation from rapid double-taps
+  const lastCreateRef = useRef(0)
   const [leftTab, setLeftTab] = useState<'points' | 'project'>('points')
 
   // Ref-based guard so async continuations read the live value, not a stale closure.
@@ -78,6 +82,13 @@ export default function DashboardPage() {
     return () => { setProject(null); setPoints([]) }
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Sync isMobile with viewport width on resize
+  useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth < 1024)
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
   // Warn on accidental navigation when there are unsaved content changes
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
@@ -101,12 +112,39 @@ export default function DashboardPage() {
     if (pt) focusPoint(pt)
   }
 
+  // Shared helper — creates a point and opens the mobile editor (or desktop panel).
+  // Keeps creation logic in one place so both single-click (desktop / FAB-placement)
+  // and double-tap (mobile) paths are always consistent.
+  async function openNewPoint(lat: number, lng: number) {
+    if (!project) return
+    setHasUnsavedChanges(true)
+    const currentProject = useGeoStore.getState().project!
+    const newPoint = await geoPointsApi.createPoint({
+      geoProjectId: currentProject.id,
+      latitude: lat,
+      longitude: lng,
+      order: useGeoStore.getState().points.length,
+    })
+    upsertPoint(newPoint)
+    const updatedIds = [...currentProject.geoPointIds, newPoint.id]
+    useGeoStore.getState().updateProjectField('geoPointIds', updatedIds)
+    await geoProjectsApi.saveProject(currentProject.id, {
+      ...currentProject,
+      geoPointIds: updatedIds,
+    })
+    setSelectedPointId(newPoint.id)
+    setPointFormOpen(true)
+    setMobileEditOpen(true)
+    setIsNewMobilePoint(true)
+    addToast('Nuevo punto creado', 'success')
+  }
+
   const handleMapClick = useCallback(
     async (lat: number, lng: number) => {
       if (!project) return
 
       if (selectedPointId) {
-        // Click on empty map → deselect. Drag is the only way to move a pin.
+        // Tap on empty map → deselect current point.
         setSelectedPointId(null)
         setPointFormOpen(false)
         setMobileEditOpen(false)
@@ -114,24 +152,35 @@ export default function DashboardPage() {
         return
       }
 
-      // No point selected → create a new one at the clicked location
-      setHasUnsavedChanges(true)
-      const newPoint = await geoPointsApi.createPoint({
-        geoProjectId: project.id,
-        latitude: lat,
-        longitude: lng,
-        order: useGeoStore.getState().points.length,
-      })
-      upsertPoint(newPoint)
-      const updatedIds = [...project.geoPointIds, newPoint.id]
-      useGeoStore.getState().updateProjectField('geoPointIds', updatedIds)
-      await geoProjectsApi.saveProject(project.id, { ...project, geoPointIds: updatedIds })
-      setSelectedPointId(newPoint.id)
-      setPointFormOpen(true)
-      setMobileEditOpen(true)
-      setIsNewMobilePoint(true)
+      if (isMobile) {
+        // Mobile: single tap never creates a point unless FAB placement mode is active.
+        if (fabPlacementMode) {
+          setFabPlacementMode(false)
+          await openNewPoint(lat, lng)
+        }
+        return
+      }
+
+      // Desktop: single click on empty map → create point immediately (unchanged).
+      await openNewPoint(lat, lng)
     },
-    [project, selectedPointId, upsertPoint, setSelectedPointId, addToast],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [project, selectedPointId, isMobile, fabPlacementMode],
+  )
+
+  // Mobile only: double-tap on empty map creates a point.
+  // Debounced with lastCreateRef to prevent accidental duplicate creation.
+  const handleMapDoubleClick = useCallback(
+    async (lat: number, lng: number) => {
+      if (!project || !isMobile) return
+      const now = Date.now()
+      if (now - lastCreateRef.current < 800) return
+      lastCreateRef.current = now
+      if (fabPlacementMode) setFabPlacementMode(false)
+      await openNewPoint(lat, lng)
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [project, isMobile, fabPlacementMode],
   )
 
   async function handleAddPoint() {
@@ -630,23 +679,53 @@ export default function DashboardPage() {
             )}
           </button>
 
-          {/* Mobile: FAB Agregar punto */}
-          <div
-            className="lg:hidden absolute right-4 z-[1000]"
-            style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
-          >
-            <button
-              onClick={handleAddPoint}
-              className="flex items-center gap-2 bg-brand-600 hover:bg-brand-500 active:bg-brand-700
-                         text-white rounded-full px-4 py-3 font-semibold text-sm transition-colors
-                         shadow-[0_4px_20px_rgba(2,132,199,0.4)]"
+          {/* Mobile: FAB Agregar punto — hidden while placement mode is active */}
+          {!fabPlacementMode && (
+            <div
+              className="lg:hidden absolute right-4 z-[1000]"
+              style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-              </svg>
-              Agregar punto
-            </button>
-          </div>
+              <button
+                onClick={() => setFabPlacementMode(true)}
+                className="flex items-center gap-2 bg-brand-600 hover:bg-brand-500 active:bg-brand-700
+                           text-white rounded-full px-4 py-3 font-semibold text-sm transition-colors
+                           shadow-[0_4px_20px_rgba(2,132,199,0.4)]"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                </svg>
+                Agregar punto
+              </button>
+            </div>
+          )}
+
+          {/* Mobile: placement mode hint — shown instead of FAB while user picks a location */}
+          {fabPlacementMode && (
+            <div className="lg:hidden absolute inset-x-4 top-[72px] z-[1001] animate-slide-up">
+              <div className="bg-gray-900/97 backdrop-blur-sm border border-brand-600/50
+                             rounded-2xl px-4 py-3.5 flex items-center gap-3
+                             shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-100">
+                    Toca el mapa para colocar el punto
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    O doble tap para crearlo en ese lugar
+                  </p>
+                </div>
+                <button
+                  onClick={() => setFabPlacementMode(false)}
+                  className="flex-shrink-0 flex items-center justify-center w-8 h-8
+                             text-gray-400 hover:text-gray-100 transition-colors rounded-full"
+                  aria-label="Cancelar"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Mobile: List button */}
           <div className="lg:hidden absolute bottom-8 right-4 z-[1000]">
@@ -659,11 +738,13 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          {points.length === 0 && (
+          {points.length === 0 && !fabPlacementMode && (
             <div className="absolute bottom-36 lg:bottom-8 left-1/2 -translate-x-1/2 z-[1000]
                            bg-gray-900/90 border border-gray-700 rounded-lg px-4 py-2
                            text-sm text-gray-400 whitespace-nowrap">
-              Haz clic en el mapa para agregar el primer punto
+              {isMobile
+                ? 'Doble tap o FAB para agregar el primer punto'
+                : 'Haz clic en el mapa para agregar el primer punto'}
             </div>
           )}
 
@@ -676,6 +757,8 @@ export default function DashboardPage() {
             poiResults={poiResults}
             onBoundsChange={setMapBounds}
             onPoiCreate={handlePoiCreateFromPopup}
+            mobileMode={isMobile}
+            onMapDoubleClick={handleMapDoubleClick}
           />
         </div>
 

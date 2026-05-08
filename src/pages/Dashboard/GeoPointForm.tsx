@@ -208,7 +208,11 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
         .then((addr) => {
           if (cancelled) return
           setAddressAuto(addr)
-          if (!addressEditedRef.current) setAddressCustom(addr)
+          if (!addressEditedRef.current) {
+            setAddressCustom(addr)
+            // Commit immediately so navigating back (without blur) still shows the address
+            onChange({ instructions: addr || undefined })
+          }
         })
         .catch(() => {
           if (!cancelled) setAddressAuto(null)

@@ -102,6 +102,35 @@ function updatePageMeta(title: string, description: string, image: OgImage, page
 function resetPageMeta() {
   document.title = ORIGINAL_TITLE
 }
+
+/**
+ * Trims the ORS route so it always starts from the user's current position.
+ *
+ * Finds the ORS waypoint closest to the user (excluding the destination) and
+ * discards every point before it — those are segments the user has already
+ * walked past.  The user's exact current position is then prepended as the
+ * new first point, so the polyline always originates at their feet.
+ *
+ * This runs on every render (no recalc needed) so the line updates in real
+ * time without extra ORS requests.
+ */
+function trimRouteFromUser(
+  latLngs: [number, number][],
+  userLat: number,
+  userLng: number,
+): [number, number][] {
+  if (latLngs.length < 2) return [[userLat, userLng], ...latLngs]
+  // Search all waypoints except the destination — we never want to skip the end.
+  let closestIdx = 0
+  let minDist = Infinity
+  for (let i = 0; i < latLngs.length - 1; i++) {
+    const d = haversineDistance(userLat, userLng, latLngs[i][0], latLngs[i][1])
+    if (d < minDist) { minDist = d; closestIdx = i }
+  }
+  // Start from the user's real position; drop waypoints already passed.
+  return [[userLat, userLng], ...latLngs.slice(closestIdx + 1)]
+}
+
 /** Debounce delay in ms for movement-triggered recalculations */
 const ROUTE_MOVEMENT_DEBOUNCE_MS = 2_000
 
@@ -982,7 +1011,15 @@ export default function PublicPage() {
               onClick={() => handlePointClick(pt)}
             />
           ))}
-          {routeResult && <RoutePolyline latLngs={routeResult.latLngs} />}
+          {routeResult && (
+            <RoutePolyline
+              latLngs={
+                userLocation
+                  ? trimRouteFromUser(routeResult.latLngs, userLocation.latitude, userLocation.longitude)
+                  : routeResult.latLngs
+              }
+            />
+          )}
         </MapContainer>
 
         {/* Location badge — interactive button */}

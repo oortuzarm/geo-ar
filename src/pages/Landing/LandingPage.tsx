@@ -1,24 +1,8 @@
-import { Fragment, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MapContainer, TileLayer, Circle, Marker, Polyline } from 'react-leaflet'
-import L from 'leaflet'
 import { motion, useInView } from 'framer-motion'
 
 // ─── Demo data ────────────────────────────────────────────────────────────────
-
-const DEMO_POINTS = [
-  { id: 1, lat: -34.6168, lng: -58.3731, name: 'Café Histórico',  radius: 80,  color: '#0ea5e9' },
-  { id: 2, lat: -34.5831, lng: -58.4315, name: 'Arte Urbano',     radius: 65,  color: '#8b5cf6' },
-  { id: 3, lat: -34.5875, lng: -58.3937, name: 'Ruta Recoleta',   radius: 100, color: '#10b981' },
-  { id: 4, lat: -34.6107, lng: -58.3632, name: 'Puerto Madero',   radius: 70,  color: '#f59e0b' },
-]
-
-const HERO_ROUTE: [number, number][] = [
-  [-34.6168, -58.3731],
-  [-34.5875, -58.3937],
-  [-34.5831, -58.4315],
-  [-34.6107, -58.3632],
-]
 
 const USE_CASES = [
   { emoji: '🗺️', title: 'Turismo Interactivo', desc: 'Rutas culturales con contenido que se activa al llegar al lugar.', color: '#0ea5e9' },
@@ -66,65 +50,6 @@ function Badge({ children }: { children: React.ReactNode }) {
                      text-brand-400 border border-brand-500/30 bg-brand-500/[0.08] px-3.5 py-1.5 rounded-full">
       {children}
     </span>
-  )
-}
-
-// ─── Animated pin icon for Leaflet ───────────────────────────────────────────
-
-function makeIcon(color: string): L.DivIcon {
-  return L.divIcon({
-    className: '',
-    html: `<div style="position:relative;width:36px;height:36px;">
-      <div style="position:absolute;inset:0;border-radius:50%;background:${color}40;
-        animation:ubPing 2.5s cubic-bezier(0,0,0.2,1) infinite;"></div>
-      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-        width:13px;height:13px;border-radius:50%;background:${color};
-        border:2.5px solid rgba(255,255,255,0.9);box-shadow:0 0 14px ${color}99;"></div>
-    </div>`,
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-  })
-}
-
-// ─── Hero: editor map (inside product mockup) ────────────────────────────────
-
-function HeroEditorMap() {
-  if (!document.getElementById('ub-pin-style')) {
-    const s = document.createElement('style')
-    s.id = 'ub-pin-style'
-    s.textContent = '@keyframes ubPing{0%{transform:scale(1);opacity:.7}70%,100%{transform:scale(2.4);opacity:0}}'
-    document.head.appendChild(s)
-  }
-
-  return (
-    <MapContainer
-      center={[-34.6037, -58.3916]}
-      zoom={12}
-      zoomControl={false}
-      dragging={false}
-      scrollWheelZoom={false}
-      doubleClickZoom={false}
-      touchZoom={false}
-      keyboard={false}
-      attributionControl={false}
-      className="w-full h-full"
-    >
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-      <Polyline
-        positions={HERO_ROUTE}
-        pathOptions={{ color: '#3b82f6', weight: 3, opacity: 0.65, dashArray: '8 6', lineCap: 'round', lineJoin: 'round' }}
-      />
-      {DEMO_POINTS.map((pt) => (
-        <Fragment key={pt.id}>
-          <Circle
-            center={[pt.lat, pt.lng]}
-            radius={pt.radius}
-            pathOptions={{ color: pt.color, fillColor: pt.color, fillOpacity: 0.13, weight: 1.5, opacity: 0.55 }}
-          />
-          <Marker position={[pt.lat, pt.lng]} icon={makeIcon(pt.color)} />
-        </Fragment>
-      ))}
-    </MapContainer>
   )
 }
 
@@ -343,101 +268,65 @@ function HeroSection() {
           <div className="relative rounded-2xl overflow-hidden border border-white/[0.09]
                           shadow-[0_32px_96px_rgba(0,0,0,0.7)]">
             {/* Title bar */}
-            <div className="h-10 bg-gray-900 border-b border-white/[0.06] flex items-center gap-3 px-4 flex-shrink-0">
+            <div className="h-10 bg-[#0d1117] border-b border-white/[0.06] flex items-center gap-3 px-4 flex-shrink-0">
               <div className="flex gap-1.5">
                 <div className="w-3 h-3 rounded-full bg-red-500/60" />
                 <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
                 <div className="w-3 h-3 rounded-full bg-green-500/60" />
               </div>
               <div className="flex-1 flex justify-center">
-                <div className="bg-gray-800/80 rounded-md px-4 py-0.5 text-[11px] text-slate-500">
-                  app.ubyca.com/project/ruta-arte-ba
+                <div className="bg-white/[0.05] rounded-md px-4 py-0.5 text-[11px] text-slate-500">
+                  app.ubyca.com/project/descuentos
                 </div>
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold flex-shrink-0
+                              text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Publicado
               </div>
             </div>
 
-            {/* Editor body */}
-            <div className="flex bg-gray-950" style={{ height: 400 }}>
+            {/* Real editor screenshot */}
+            <div className="relative bg-[#0d1117] overflow-hidden" style={{ height: 400 }}>
+              <img
+                src="/screenshot-editor.png"
+                alt="Editor geolocalizado Ubyca"
+                className="absolute inset-0 w-full h-full object-cover select-none"
+                style={{ objectPosition: '18% top', filter: 'brightness(0.88) saturate(0.9)' }}
+                draggable={false}
+              />
+              {/* Edge gradients — blend into the dark frame */}
+              <div className="absolute inset-0 pointer-events-none" style={{
+                background: [
+                  'linear-gradient(to right, transparent 45%, rgba(3,6,14,0.80) 100%)',
+                  'linear-gradient(to bottom, transparent 58%, rgba(3,6,14,0.70) 100%)',
+                ].join(', '),
+              }} />
 
-              {/* Sidebar */}
-              <div className="w-48 flex-shrink-0 border-r border-white/[0.06] flex flex-col">
-                <div className="px-4 pt-4 pb-3 border-b border-white/[0.04]">
-                  <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1">Proyecto</p>
-                  <p className="text-sm font-bold text-white leading-snug">Ruta Arte BA</p>
-                  <div className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-semibold
-                                  text-emerald-400 bg-emerald-500/10 border border-emerald-500/20
-                                  px-2 py-0.5 rounded-full">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Publicado
-                  </div>
+              {/* Floating point detail */}
+              <div className="absolute top-3 right-3 bg-gray-950/92 backdrop-blur-xl
+                              border border-white/[0.13] rounded-xl p-3 w-40
+                              shadow-[0_8px_32px_rgba(0,0,0,0.65)]">
+                <div className="flex items-center gap-2 mb-2.5">
+                  <div className="w-2 h-2 rounded-full bg-brand-400 flex-shrink-0
+                                  shadow-[0_0_8px_#38bdf8]" />
+                  <p className="text-[10px] font-bold text-white truncate">Punto activo</p>
                 </div>
-
-                <div className="px-3 pt-3 flex-1 overflow-hidden">
-                  <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-1 mb-2">Puntos</p>
-                  {[
-                    { name: 'Café Histórico', color: '#0ea5e9', visits: '247' },
-                    { name: 'Arte Urbano',    color: '#8b5cf6', visits: '189' },
-                    { name: 'Ruta Recoleta', color: '#10b981', visits: '94'  },
-                    { name: 'Puerto Madero', color: '#f59e0b', visits: '61'  },
-                  ].map((pt, i) => (
-                    <div key={pt.name}
-                      className={`flex items-center gap-2 px-1.5 py-1.5 rounded-lg transition-colors
-                                  ${i === 0 ? 'bg-white/[0.06]' : 'hover:bg-white/5'} cursor-pointer`}>
-                      <div className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ background: pt.color, boxShadow: `0 0 5px ${pt.color}` }} />
-                      <span className="text-[11px] text-slate-300 flex-1 truncate">{pt.name}</span>
-                      <span className="text-[10px] text-slate-600 font-mono">{pt.visits}</span>
+                <div className="space-y-1.5">
+                  {[['Radio', '195m', 'text-white'], ['Visitas', '247', 'text-brand-400'], ['Activ.', '189', 'text-emerald-400']].map(([k, v, cls]) => (
+                    <div key={k} className="flex justify-between text-[10px]">
+                      <span className="text-slate-500">{k}</span>
+                      <span className={`font-semibold ${cls}`}>{v}</span>
                     </div>
                   ))}
-                  <button className="flex items-center gap-1.5 w-full px-1.5 py-2 mt-1
-                                     text-[11px] text-slate-600 hover:text-slate-400 transition-colors">
-                    <span className="text-sm leading-none font-light">+</span> Agregar punto
-                  </button>
-                </div>
-
-                {/* Mini analytics */}
-                <div className="border-t border-white/[0.05] px-4 py-3">
-                  <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-2">Hoy</p>
-                  <div className="flex gap-5">
-                    <div>
-                      <p className="text-[17px] font-black text-white leading-none">591</p>
-                      <p className="text-[9px] text-slate-600 mt-0.5">Visitas</p>
-                    </div>
-                    <div>
-                      <p className="text-[17px] font-black text-emerald-400 leading-none">89%</p>
-                      <p className="text-[9px] text-slate-600 mt-0.5">Complet.</p>
-                    </div>
-                  </div>
                 </div>
               </div>
 
-              {/* Map area */}
-              <div className="flex-1 relative overflow-hidden">
-                <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
-                  <HeroEditorMap />
-                </div>
-
-                {/* Floating detail panel */}
-                <div className="absolute top-3 right-3 bg-gray-950/92 backdrop-blur-md
-                                border border-white/[0.12] rounded-xl p-3 w-40
-                                shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
-                  <p className="text-[10px] font-bold text-white mb-2 truncate">Café Histórico</p>
-                  <div className="space-y-1.5">
-                    {[['Radio', '80m', 'text-white'], ['Visitas', '247', 'text-brand-400'], ['Activ.', '189', 'text-emerald-400']].map(([k, v, cls]) => (
-                      <div key={k} className="flex justify-between text-[10px]">
-                        <span className="text-slate-500">{k}</span>
-                        <span className={`font-semibold ${cls}`}>{v}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Inside-radius chip */}
-                <div className="absolute bottom-3 left-3 flex items-center gap-1.5
-                                bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2.5 py-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[10px] font-semibold text-emerald-400">Dentro del área · 42m</span>
-                </div>
+              {/* Inside-radius chip */}
+              <div className="absolute bottom-3 left-3 flex items-center gap-1.5 backdrop-blur-sm
+                              bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2.5 py-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[10px] font-semibold text-emerald-400">Dentro del área · 42m</span>
               </div>
             </div>
           </div>
@@ -498,6 +387,139 @@ function HeroSection() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </motion.div>
+    </section>
+  )
+}
+
+// ─── Metrics dashboard screenshot section ────────────────────────────────────
+
+function MetricsDashboardSection() {
+  return (
+    <section className="py-28 px-5 relative overflow-hidden"
+      style={{ background: 'linear-gradient(180deg, #050810 0%, #060c18 55%, #050810 100%)' }}>
+      {/* Ambient glow */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(ellipse 55% 60% at 25% 55%, rgba(14,165,233,0.07) 0%, transparent 65%)',
+      }} />
+
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+
+          {/* ── Screenshot ── */}
+          <Reveal className="flex-1 w-full relative">
+            {/* Glow behind frame */}
+            <div className="absolute -inset-12 pointer-events-none" style={{
+              background: 'radial-gradient(ellipse 75% 60% at 50% 50%, rgba(14,165,233,0.08) 0%, transparent 70%)',
+            }} />
+
+            {/* Browser chrome */}
+            <div className="relative rounded-2xl overflow-hidden border border-white/[0.09]
+                            shadow-[0_32px_96px_rgba(0,0,0,0.7)]">
+              <div className="h-10 bg-[#0d1117] border-b border-white/[0.06] flex items-center gap-3 px-4">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/60" />
+                </div>
+                <div className="flex-1 flex justify-center">
+                  <div className="bg-white/[0.05] rounded-md px-4 py-0.5 text-[11px] text-slate-500">
+                    app.ubyca.com/project/descuentos/metrics
+                  </div>
+                </div>
+              </div>
+              <div className="relative overflow-hidden" style={{ height: 420 }}>
+                <img
+                  src="/screenshot-metrics.png"
+                  alt="Dashboard de métricas Ubyca"
+                  className="absolute inset-0 w-full h-full object-cover select-none"
+                  style={{ objectPosition: 'center top' }}
+                  draggable={false}
+                />
+                {/* Bottom fade */}
+                <div className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
+                  style={{ background: 'linear-gradient(to bottom, transparent, rgba(9,11,17,0.92))' }} />
+              </div>
+            </div>
+
+            {/* Floating conversion card */}
+            <motion.div
+              animate={{ y: [0, -7, 0] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -right-5 top-14 hidden lg:block"
+            >
+              <div className="bg-gray-950/95 backdrop-blur-xl border border-white/[0.12]
+                              rounded-2xl px-4 py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-2">Conversión</p>
+                <p className="text-3xl font-black text-emerald-400 leading-none">46%</p>
+                <p className="text-[10px] text-slate-600 mt-1">Excelente · entrada → clic</p>
+              </div>
+            </motion.div>
+
+            {/* Floating insight card */}
+            <motion.div
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+              className="absolute -left-5 bottom-14 hidden lg:block"
+            >
+              <div className="bg-gray-950/95 backdrop-blur-xl border border-white/[0.12]
+                              rounded-2xl px-4 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.6)] max-w-[195px]">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="w-5 h-5 rounded-full bg-brand-500/20 border border-brand-500/30
+                                  flex items-center justify-center flex-shrink-0 text-[10px]">⚡</div>
+                  <p className="text-[10px] font-bold text-white">Insight automático</p>
+                </div>
+                <p className="text-[10px] text-emerald-400 leading-snug">
+                  "Nuevo punto" — 60% conversión, mejor del proyecto
+                </p>
+              </div>
+            </motion.div>
+          </Reveal>
+
+          {/* ── Text ── */}
+          <div className="flex-shrink-0 w-full lg:w-[380px] flex flex-col items-start">
+            <Reveal>
+              <Badge>Analytics</Badge>
+              <h2 className="mt-5 text-3xl md:text-4xl font-black text-white leading-tight">
+                Métricas reales.<br />Comportamiento real.
+              </h2>
+              <p className="mt-4 text-slate-400 text-base leading-relaxed">
+                Cada entrada al área, cada clic, cada conversión — en tiempo real. Sin estimaciones, sin supuestos.
+              </p>
+            </Reveal>
+
+            <Reveal delay={0.1}>
+              <div className="mt-8 grid grid-cols-3 gap-3 w-full">
+                {[
+                  { v: '13',  l: 'Entradas al radio', c: 'text-white' },
+                  { v: '6',   l: 'Clics en exp.',     c: 'text-brand-400' },
+                  { v: '46%', l: 'Conversión',         c: 'text-emerald-400' },
+                ].map((s) => (
+                  <div key={s.l} className="p-3.5 rounded-xl border border-white/[0.07] bg-white/[0.02] text-center">
+                    <p className={`text-xl font-black leading-none ${s.c}`}>{s.v}</p>
+                    <p className="text-[10px] text-slate-600 mt-1.5 leading-snug">{s.l}</p>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.15}>
+              <div className="mt-7 space-y-2.5">
+                {[
+                  'Entradas al área de activación por punto',
+                  'Activaciones y clics por contenido',
+                  'Análisis por horarios, días y conversiones',
+                  'Insights automáticos generados en tiempo real',
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-2.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0" />
+                    <span className="text-sm text-slate-400">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </div>
     </section>
   )
 }
@@ -868,6 +890,7 @@ export default function LandingPage() {
       <NavBar />
       <HeroSection />
       <HowItWorksSection />
+      <MetricsDashboardSection />
       <DualPreviewSection />
       <UseCasesSection />
       <FeaturesSection />

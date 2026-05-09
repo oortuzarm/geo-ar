@@ -1,6 +1,6 @@
 import { Fragment, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MapContainer, TileLayer, Circle, Marker } from 'react-leaflet'
+import { MapContainer, TileLayer, Circle, Marker, Polyline } from 'react-leaflet'
 import L from 'leaflet'
 import { motion, useInView } from 'framer-motion'
 
@@ -11,6 +11,13 @@ const DEMO_POINTS = [
   { id: 2, lat: -34.5831, lng: -58.4315, name: 'Arte Urbano',     radius: 65,  color: '#8b5cf6' },
   { id: 3, lat: -34.5875, lng: -58.3937, name: 'Ruta Recoleta',   radius: 100, color: '#10b981' },
   { id: 4, lat: -34.6107, lng: -58.3632, name: 'Puerto Madero',   radius: 70,  color: '#f59e0b' },
+]
+
+const HERO_ROUTE: [number, number][] = [
+  [-34.6168, -58.3731],
+  [-34.5875, -58.3937],
+  [-34.5831, -58.4315],
+  [-34.6107, -58.3632],
 ]
 
 const USE_CASES = [
@@ -79,9 +86,9 @@ function makeIcon(color: string): L.DivIcon {
   })
 }
 
-// ─── Hero: live dark map ──────────────────────────────────────────────────────
+// ─── Hero: editor map (inside product mockup) ────────────────────────────────
 
-function HeroMap() {
+function HeroEditorMap() {
   if (!document.getElementById('ub-pin-style')) {
     const s = document.createElement('style')
     s.id = 'ub-pin-style'
@@ -91,8 +98,8 @@ function HeroMap() {
 
   return (
     <MapContainer
-      center={[-34.6037, -58.3816]}
-      zoom={13}
+      center={[-34.6037, -58.3916]}
+      zoom={12}
       zoomControl={false}
       dragging={false}
       scrollWheelZoom={false}
@@ -103,12 +110,16 @@ function HeroMap() {
       className="w-full h-full"
     >
       <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+      <Polyline
+        positions={HERO_ROUTE}
+        pathOptions={{ color: '#3b82f6', weight: 3, opacity: 0.65, dashArray: '8 6', lineCap: 'round', lineJoin: 'round' }}
+      />
       {DEMO_POINTS.map((pt) => (
         <Fragment key={pt.id}>
           <Circle
             center={[pt.lat, pt.lng]}
             radius={pt.radius}
-            pathOptions={{ color: pt.color, fillColor: pt.color, fillOpacity: 0.12, weight: 1.5, opacity: 0.55 }}
+            pathOptions={{ color: pt.color, fillColor: pt.color, fillOpacity: 0.13, weight: 1.5, opacity: 0.55 }}
           />
           <Marker position={[pt.lat, pt.lng]} icon={makeIcon(pt.color)} />
         </Fragment>
@@ -240,131 +251,250 @@ function NavBar() {
 
 function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-[#050810]" style={{ height: '100dvh', minHeight: 600 }}>
-      {/* Live map — pointer-events disabled, interaction locked */}
-      <div className="absolute inset-0 select-none" style={{ pointerEvents: 'none' }}>
-        <HeroMap />
-      </div>
+    <section className="relative bg-[#050810] overflow-hidden" style={{ minHeight: '100dvh' }}>
+      {/* Ambient glow */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse 70% 80% at 72% 50%, rgba(14,165,233,0.07) 0%, transparent 65%)' }} />
 
-      {/* Gradient overlays */}
-      <div className="absolute inset-0" style={{ pointerEvents: 'none', background: [
-        'radial-gradient(ellipse 82% 68% at 50% 46%, transparent 18%, rgba(5,8,16,0.88) 76%)',
-        'linear-gradient(to bottom, rgba(5,8,16,0.58) 0%, transparent 18%, transparent 56%, rgba(5,8,16,0.94) 82%, rgba(5,8,16,1) 100%)',
-      ].join(', ') }} />
+      <div className="relative z-10 max-w-7xl mx-auto px-5 lg:px-10
+                      flex flex-col lg:flex-row items-center gap-12 lg:gap-10 pt-24 pb-16 lg:py-0"
+        style={{ minHeight: '100dvh' }}>
 
-      {/* Brand center glow */}
-      <div className="absolute inset-0" style={{ pointerEvents: 'none',
-        background: 'radial-gradient(ellipse 55% 45% at 50% 52%, rgba(14,165,233,0.08) 0%, transparent 70%)' }} />
+        {/* ── Left: text + CTAs ─────────────────────────────────────────────── */}
+        <div className="flex-shrink-0 w-full lg:w-[440px] xl:w-[500px] flex flex-col items-start">
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}>
+            <Badge>Plataforma de experiencias GPS</Badge>
+          </motion.div>
 
-      {/* Content */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-5 pt-16">
-        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
-          <Badge>Plataforma de experiencias geolocalizadas</Badge>
-        </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-6 font-black text-white tracking-tight leading-[1.06]
+                       text-[2.1rem] sm:text-[2.6rem] lg:text-[2.8rem]"
+          >
+            La plataforma para crear experiencias geolocalizadas.
+          </motion.h1>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-6 font-black text-white tracking-tight leading-[1.0] max-w-3xl
-                     text-[2.6rem] md:text-6xl lg:text-7xl"
-        >
-          Convierte lugares en{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-brand-300">
-            experiencias digitales.
-          </span>
-        </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-5 text-base md:text-lg text-slate-400 leading-relaxed"
+          >
+            Crea rutas, puntos interactivos y contenido desbloqueable por ubicación.
+          </motion.p>
 
-        <motion.p
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-5 text-base md:text-lg text-slate-400 max-w-xl leading-relaxed"
-        >
-          Crea proyectos geolocalizados donde el contenido se desbloquea cuando tu audiencia
-          llega al lugar físico. Sin app. Solo una URL.
-        </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.24, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-8 flex items-center gap-3 flex-wrap"
+          >
+            <Link to="/app"
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
+                         bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
+                         font-semibold text-sm transition-all duration-150
+                         shadow-[0_4px_24px_rgba(2,132,199,0.4)]">
+              Crear experiencia
+              <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" clipRule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+              </svg>
+            </Link>
+            <button onClick={() => document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' })}
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
+                         bg-white/[0.06] hover:bg-white/[0.10] active:scale-[0.98]
+                         border border-white/10 text-white font-semibold text-sm
+                         backdrop-blur-sm transition-all duration-150">
+              Cómo funciona
+            </button>
+          </motion.div>
 
+          {/* Proof points */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.7, delay: 0.4 }}
+            className="mt-10 flex items-center gap-5 flex-wrap"
+          >
+            {[['Sin app nativa', '🌐'], ['Solo una URL', '🔗'], ['GPS verificado', '📍']].map(([label, icon]) => (
+              <div key={label} className="flex items-center gap-1.5 text-xs text-slate-600">
+                <span>{icon}</span>
+                <span>{label}</span>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* ── Right: product mockup ──────────────────────────────────────────── */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.24, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-8 flex items-center gap-3 flex-wrap justify-center"
+          initial={{ opacity: 0, x: 36 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.9, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+          className="flex-1 w-full min-w-0 relative"
         >
-          <Link to="/app"
-            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
-                       bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
-                       font-semibold text-sm transition-all duration-150
-                       shadow-[0_4px_24px_rgba(2,132,199,0.4)]">
-            Crear experiencia
-            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" clipRule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
-            </svg>
-          </Link>
-          <button onClick={() => document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' })}
-            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
-                       bg-white/[0.06] hover:bg-white/[0.10] active:scale-[0.98]
-                       border border-white/10 text-white font-semibold text-sm
-                       backdrop-blur-sm transition-all duration-150">
-            Cómo funciona
-          </button>
+          {/* Glow behind mockup */}
+          <div className="absolute -inset-16 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(14,165,233,0.06) 0%, transparent 70%)' }} />
+
+          {/* Browser chrome */}
+          <div className="relative rounded-2xl overflow-hidden border border-white/[0.09]
+                          shadow-[0_32px_96px_rgba(0,0,0,0.7)]">
+            {/* Title bar */}
+            <div className="h-10 bg-gray-900 border-b border-white/[0.06] flex items-center gap-3 px-4 flex-shrink-0">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-500/60" />
+                <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
+                <div className="w-3 h-3 rounded-full bg-green-500/60" />
+              </div>
+              <div className="flex-1 flex justify-center">
+                <div className="bg-gray-800/80 rounded-md px-4 py-0.5 text-[11px] text-slate-500">
+                  app.ubyca.com/project/ruta-arte-ba
+                </div>
+              </div>
+            </div>
+
+            {/* Editor body */}
+            <div className="flex bg-gray-950" style={{ height: 400 }}>
+
+              {/* Sidebar */}
+              <div className="w-48 flex-shrink-0 border-r border-white/[0.06] flex flex-col">
+                <div className="px-4 pt-4 pb-3 border-b border-white/[0.04]">
+                  <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1">Proyecto</p>
+                  <p className="text-sm font-bold text-white leading-snug">Ruta Arte BA</p>
+                  <div className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-semibold
+                                  text-emerald-400 bg-emerald-500/10 border border-emerald-500/20
+                                  px-2 py-0.5 rounded-full">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Publicado
+                  </div>
+                </div>
+
+                <div className="px-3 pt-3 flex-1 overflow-hidden">
+                  <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-1 mb-2">Puntos</p>
+                  {[
+                    { name: 'Café Histórico', color: '#0ea5e9', visits: '247' },
+                    { name: 'Arte Urbano',    color: '#8b5cf6', visits: '189' },
+                    { name: 'Ruta Recoleta', color: '#10b981', visits: '94'  },
+                    { name: 'Puerto Madero', color: '#f59e0b', visits: '61'  },
+                  ].map((pt, i) => (
+                    <div key={pt.name}
+                      className={`flex items-center gap-2 px-1.5 py-1.5 rounded-lg transition-colors
+                                  ${i === 0 ? 'bg-white/[0.06]' : 'hover:bg-white/5'} cursor-pointer`}>
+                      <div className="w-2 h-2 rounded-full flex-shrink-0"
+                        style={{ background: pt.color, boxShadow: `0 0 5px ${pt.color}` }} />
+                      <span className="text-[11px] text-slate-300 flex-1 truncate">{pt.name}</span>
+                      <span className="text-[10px] text-slate-600 font-mono">{pt.visits}</span>
+                    </div>
+                  ))}
+                  <button className="flex items-center gap-1.5 w-full px-1.5 py-2 mt-1
+                                     text-[11px] text-slate-600 hover:text-slate-400 transition-colors">
+                    <span className="text-sm leading-none font-light">+</span> Agregar punto
+                  </button>
+                </div>
+
+                {/* Mini analytics */}
+                <div className="border-t border-white/[0.05] px-4 py-3">
+                  <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-2">Hoy</p>
+                  <div className="flex gap-5">
+                    <div>
+                      <p className="text-[17px] font-black text-white leading-none">591</p>
+                      <p className="text-[9px] text-slate-600 mt-0.5">Visitas</p>
+                    </div>
+                    <div>
+                      <p className="text-[17px] font-black text-emerald-400 leading-none">89%</p>
+                      <p className="text-[9px] text-slate-600 mt-0.5">Complet.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Map area */}
+              <div className="flex-1 relative overflow-hidden">
+                <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
+                  <HeroEditorMap />
+                </div>
+
+                {/* Floating detail panel */}
+                <div className="absolute top-3 right-3 bg-gray-950/92 backdrop-blur-md
+                                border border-white/[0.12] rounded-xl p-3 w-40
+                                shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
+                  <p className="text-[10px] font-bold text-white mb-2 truncate">Café Histórico</p>
+                  <div className="space-y-1.5">
+                    {[['Radio', '80m', 'text-white'], ['Visitas', '247', 'text-brand-400'], ['Activ.', '189', 'text-emerald-400']].map(([k, v, cls]) => (
+                      <div key={k} className="flex justify-between text-[10px]">
+                        <span className="text-slate-500">{k}</span>
+                        <span className={`font-semibold ${cls}`}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Inside-radius chip */}
+                <div className="absolute bottom-3 left-3 flex items-center gap-1.5
+                                bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2.5 py-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10px] font-semibold text-emerald-400">Dentro del área · 42m</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Floating phone mockup */}
+          <motion.div
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
+            className="absolute -right-4 xl:-right-8 -bottom-10 z-20 hidden lg:block"
+            style={{ width: 158, height: 316 }}
+          >
+            <div className="w-full h-full rounded-[2.2rem] border-[4px] border-gray-700/80
+                            bg-gray-950 overflow-hidden shadow-[0_32px_64px_rgba(0,0,0,0.85)]">
+              {/* Status bar */}
+              <div className="relative flex items-center justify-between px-4 pt-2.5">
+                <span className="text-[8px] text-white/40 font-semibold">9:41</span>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-3 bg-black rounded-b-xl" />
+                <div className="w-3 h-1.5 rounded-[2px] border border-white/25 overflow-hidden">
+                  <div className="h-full w-4/5 bg-green-400 rounded-[1px]" />
+                </div>
+              </div>
+              {/* Map */}
+              <div className="relative overflow-hidden" style={{ height: 115 }}>
+                <MockMap />
+              </div>
+              {/* Location badge */}
+              <div className="flex justify-center mt-2">
+                <div className="flex items-center gap-1 bg-gray-900/80 border border-white/10 rounded-full px-2 py-0.5">
+                  <div className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-[8px] text-slate-300 font-semibold">Ubicación activa</span>
+                </div>
+              </div>
+              {/* Bottom sheet */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gray-950 rounded-t-2xl
+                              border-t border-white/[0.06] px-3 pt-2.5 pb-4">
+                <div className="w-6 h-0.5 bg-white/15 rounded-full mx-auto mb-2.5" />
+                <p className="text-[10px] font-black text-white">Café Histórico</p>
+                <div className="flex items-center gap-1.5 mt-0.5 mb-2.5">
+                  <span className="text-[8px] text-emerald-400 font-bold">✓ Dentro del área</span>
+                  <span className="text-[8px] text-slate-600">· 42m</span>
+                </div>
+                <button className="w-full py-1.5 rounded-xl bg-brand-600 text-white text-[9px] font-bold">
+                  Acceder al contenido
+                </button>
+              </div>
+            </div>
+          </motion.div>
         </motion.div>
       </div>
-
-      {/* Floating card: point detail */}
-      <motion.div
-        animate={{ y: [0, -8, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute left-6 bottom-24 z-10 hidden md:block"
-      >
-        <div className="bg-gray-950/90 backdrop-blur-xl border border-white/10 rounded-2xl p-4 w-56 shadow-2xl">
-          <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-2.5 h-2.5 rounded-full bg-brand-400 flex-shrink-0
-                            shadow-[0_0_8px_#38bdf8]" />
-            <span className="text-xs font-bold text-white">Arte Urbano BA</span>
-          </div>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-emerald-400">✓ Dentro del área</span>
-            <span className="text-xs text-slate-500">42m</span>
-          </div>
-          <div className="h-1.5 rounded-full bg-white/[0.06]">
-            <div className="h-full w-4/5 rounded-full bg-gradient-to-r from-brand-600 to-brand-400" />
-          </div>
-          <div className="mt-3 w-full py-2 rounded-xl bg-brand-600/80 text-white text-[11px] font-bold text-center">
-            Acceder al contenido
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Floating stats card */}
-      <motion.div
-        animate={{ y: [0, -6, 0] }}
-        transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-        className="absolute right-8 top-28 z-10 hidden lg:block"
-      >
-        <div className="bg-gray-950/90 backdrop-blur-xl border border-white/10 rounded-2xl px-5 py-4 shadow-2xl">
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Hoy</p>
-          <div className="flex items-end gap-5">
-            <div>
-              <p className="text-2xl font-black text-white leading-none">423</p>
-              <p className="text-[11px] text-slate-500 mt-1">Activaciones</p>
-            </div>
-            <div>
-              <p className="text-2xl font-black text-emerald-400 leading-none">94%</p>
-              <p className="text-[11px] text-slate-500 mt-1">Completado</p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
 
       {/* Scroll cue */}
       <motion.div
-        animate={{ y: [0, 7, 0], opacity: [0.4, 1, 0.4] }}
-        transition={{ duration: 2, repeat: Infinity }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
+        animate={{ y: [0, 7, 0], opacity: [0.35, 0.9, 0.35] }}
+        transition={{ duration: 2.2, repeat: Infinity }}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10"
       >
-        <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </motion.div>

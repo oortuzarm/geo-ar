@@ -1234,7 +1234,6 @@ export default function PublicPage() {
           walkingDistanceMeters={routeResult?.distanceMeters}
           walkingDurationSeconds={routeResult?.durationSeconds}
           address={selectedPoint.instructions ?? addresses[selectedPoint.id]}
-          onStartRoute={handleCloseDetail}
         />
       )}
 

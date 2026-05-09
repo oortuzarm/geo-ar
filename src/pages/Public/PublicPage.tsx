@@ -387,20 +387,6 @@ function LocationSheet({ onRetry, onClose }: { onRetry: () => void; onClose: () 
   )
 }
 
-// ── Navigation heading helpers ────────────────────────────────────────────────
-/** Degrees of change below which sensor noise is ignored */
-const NAV_HEADING_THRESHOLD = 3
-/** Exponential smoothing factor for compass heading (0 = frozen, 1 = instant) */
-const NAV_HEADING_ALPHA = 0.2
-/** Smooth a heading change using circular interpolation + exponential filter. */
-function smoothHeading(prev: number, next: number, alpha: number, threshold: number): number | null {
-  let diff = next - prev
-  if (diff > 180)  diff -= 360
-  if (diff < -180) diff += 360
-  if (Math.abs(diff) < threshold) return null  // below noise threshold — skip
-  return ((prev + diff * alpha) + 360) % 360
-}
-
 // ── Mobile interaction state ─────────────────────────────────────────────────
 // clean   → map fullscreen, floating "Mostrar lista" button visible
 // preview → floating preview card above map (point selected, sheet unchanged)
@@ -449,11 +435,6 @@ export default function PublicPage() {
   const lastRoutePositionRef = useRef<{ lat: number; lng: number } | null>(null)
   const routeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pointsRef = useRef<GeoPoint[]>([])
-
-  // ── Navigation mode ────────────────────────────────────────────────────────
-  const [isNavigating,  setIsNavigating]  = useState(false)
-  const [navHeading,    setNavHeading]    = useState(0)
-  const navHeadingRef = useRef<number>(0)
   const wasInsideRef = useRef<Record<string, boolean>>({})
   // Ref for the mobile bottom sheet — used to call L.DomEvent.disableClickPropagation
   // so Leaflet's internal tap/click detection cannot fire through the sheet.
@@ -491,35 +472,6 @@ export default function PublicPage() {
   useEffect(() => {
     if (locationStatus === 'active') setLocationSheet(false)
   }, [locationStatus])
-
-  // ── Compass heading (DeviceOrientationEvent) ──────────────────────────────
-  // Only active during navigation to avoid unnecessary sensor load.
-  useEffect(() => {
-    if (!isNavigating) return
-
-    function onOrientation(e: DeviceOrientationEvent) {
-      const raw =
-        (e as DeviceOrientationEvent & { webkitCompassHeading?: number }).webkitCompassHeading ??
-        (e.alpha !== null ? (360 - e.alpha + 360) % 360 : null)
-
-      if (raw === null) return
-
-      const smoothed = smoothHeading(navHeadingRef.current, raw, NAV_HEADING_ALPHA, NAV_HEADING_THRESHOLD)
-      if (smoothed === null) return   // below noise threshold
-
-      navHeadingRef.current = smoothed
-      setNavHeading(smoothed)
-    }
-
-    // deviceorientationabsolute gives a true-north heading on Android without
-    // the arbitrary reference offset that plain deviceorientation can have.
-    window.addEventListener('deviceorientationabsolute', onOrientation as EventListener, true)
-    window.addEventListener('deviceorientation',         onOrientation as EventListener, true)
-    return () => {
-      window.removeEventListener('deviceorientationabsolute', onOrientation as EventListener, true)
-      window.removeEventListener('deviceorientation',         onOrientation as EventListener, true)
-    }
-  }, [isNavigating])
 
   // One-time automatic request at mount — triggers the native browser prompt.
   // On failure we only update the badge; we don't auto-open the help sheet.
@@ -581,15 +533,6 @@ export default function PublicPage() {
   useGeolocation(locationActive)
 
   useEffect(() => { pointsRef.current = points }, [points])
-
-  // Exit navigation when the selected point is deselected
-  useEffect(() => {
-    if (!selectedPointId) {
-      setIsNavigating(false)
-      setNavHeading(0)
-      navHeadingRef.current = 0
-    }
-  }, [selectedPointId])
 
   // Reverse-geocode each point's address when the point list changes.
   // Requests are staggered 300ms apart to respect Nominatim's rate limit.
@@ -839,25 +782,6 @@ export default function PublicPage() {
     setFlyToTarget({ lat: userLocation.latitude, lng: userLocation.longitude, zoom: 17 })
   }
 
-  async function handleStartNavigation() {
-    const DOE = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }
-    if (typeof DOE.requestPermission === 'function') {
-      try { await DOE.requestPermission() } catch { /* proceed without heading */ }
-    }
-
-    navHeadingRef.current = 0
-    setNavHeading(0)
-    setIsNavigating(true)
-    setMobileState('preview')
-    setSheetState('hidden')
-
-    if (userLocation) {
-      flyToCounterRef.current += 1
-      setFlyToKey(`nav-start-${flyToCounterRef.current}`)
-      setFlyToTarget({ lat: userLocation.latitude, lng: userLocation.longitude, zoom: 18 })
-    }
-  }
-
   async function handleShare() {
     const url = window.location.href
     const title = project?.title ?? 'Experiencia GeoAR'
@@ -1067,60 +991,38 @@ export default function PublicPage() {
 
       {/* ── MAP ─────────────────────────────────────────────────────────────
           Mobile: absolute inset-0 → fills full viewport behind the sheet.
-          Desktop (md:): relative flex-1 → normal flex-column child.
-
-          Navigation mode splits into two layers:
-          · canvas div  — rotates/tilts with the compass heading
-          · overlay div — badges and buttons that never rotate           */}
-      <div className="absolute inset-0 md:relative md:flex-1 overflow-hidden">
-
-        {/* ── Rotating map canvas ── */}
-        <div
-          className="absolute inset-0"
-          style={
-            isNavigating
-              ? {
-                  transform: `rotate(${-navHeading}deg)`,
-                  transformOrigin: 'center center',
-                  willChange: 'transform',
-                  transition: 'transform 0.4s ease-out',
-                }
-              : {}
-          }
-        >
-          <MapContainer center={mapCenter} zoom={15} className="w-full h-full">
-            <MapController flyKey={flyToKey} flyTarget={flyToTarget} />
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          Desktop (md:): relative flex-1 → normal flex-column child.      */}
+      <div className="absolute inset-0 md:relative md:flex-1">
+        <MapContainer center={mapCenter} zoom={15} className="w-full h-full">
+          <MapController flyKey={flyToKey} flyTarget={flyToTarget} />
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          {userLocation && (
+            <UserLocationMarker lat={userLocation.latitude} lng={userLocation.longitude} />
+          )}
+          {points.map((pt) => (
+            <PublicPointMarker
+              key={pt.id}
+              point={pt}
+              selected={pt.id === selectedPointId}
+              dimmed={selectedPointId !== null && pt.id !== selectedPointId}
+              onClick={() => handlePointClick(pt)}
             />
-            {userLocation && (
-              <UserLocationMarker lat={userLocation.latitude} lng={userLocation.longitude} />
-            )}
-            {points.map((pt) => (
-              <PublicPointMarker
-                key={pt.id}
-                point={pt}
-                selected={pt.id === selectedPointId}
-                dimmed={selectedPointId !== null && pt.id !== selectedPointId}
-                onClick={() => handlePointClick(pt)}
-              />
-            ))}
-            {routeResult && (
-              <RoutePolyline
-                latLngs={
-                  userLocation
-                    ? trimRouteFromUser(routeResult.latLngs, userLocation.latitude, userLocation.longitude)
-                    : routeResult.latLngs
-                }
-              />
-            )}
-          </MapContainer>
-        </div>
+          ))}
+          {routeResult && (
+            <RoutePolyline
+              latLngs={
+                userLocation
+                  ? trimRouteFromUser(routeResult.latLngs, userLocation.latitude, userLocation.longitude)
+                  : routeResult.latLngs
+              }
+            />
+          )}
+        </MapContainer>
 
-        {/* ── Static overlays — unaffected by canvas rotation ── */}
-
-        {/* Location badge */}
+        {/* Location badge — interactive button */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400]">
           <LocationBadge status={locationStatus} onClick={handleBadgeClick} />
         </div>
@@ -1133,7 +1035,7 @@ export default function PublicPage() {
           />
         )}
 
-        {/* Share button */}
+        {/* Share button — mobile only, column above my-location */}
         <button
           onClick={() => void handleShare()}
           className={[
@@ -1143,9 +1045,9 @@ export default function PublicPage() {
             'hover:bg-gray-50 active:scale-95 active:shadow-sm',
             'transition-all duration-150',
             mobileState === 'detail'    ? 'hidden'
-            : sheetState === 'expanded'   ? 'hidden'
-            : mobileState === 'preview'   ? 'bottom-[324px] md:hidden'
-            :                               'bottom-[148px] md:hidden',
+            : sheetState === 'expanded' ? 'hidden'
+            : mobileState === 'preview' ? 'bottom-[324px] md:hidden'
+            :                             'bottom-[148px] md:hidden',
           ].join(' ')}
           title="Compartir"
         >
@@ -1167,9 +1069,9 @@ export default function PublicPage() {
             'transition-all duration-150',
             'disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100',
             mobileState === 'detail'    ? 'hidden md:flex md:bottom-4'
-            : sheetState === 'expanded'   ? 'hidden md:flex md:bottom-4'
-            : mobileState === 'preview'   ? 'bottom-[272px] md:bottom-4'
-            :                               'bottom-24 md:bottom-4',
+            : sheetState === 'expanded' ? 'hidden md:flex md:bottom-4'
+            : mobileState === 'preview' ? 'bottom-[272px] md:bottom-4'
+            :                             'bottom-24 md:bottom-4',
           ].join(' ')}
           title="Mi ubicación"
         >
@@ -1332,7 +1234,7 @@ export default function PublicPage() {
           walkingDistanceMeters={routeResult?.distanceMeters}
           walkingDurationSeconds={routeResult?.durationSeconds}
           address={selectedPoint.instructions ?? addresses[selectedPoint.id]}
-          onStartRoute={() => void handleStartNavigation()}
+          onStartRoute={handleCloseDetail}
         />
       )}
 

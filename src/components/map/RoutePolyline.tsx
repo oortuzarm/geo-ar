@@ -4,6 +4,7 @@ interface RoutePolylineProps {
   latLngs: [number, number][]
 }
 
+/** Draws the walking route polyline. fitBounds is handled by MapController. */
 export default function RoutePolyline({ latLngs }: RoutePolylineProps) {
   return (
     <Polyline

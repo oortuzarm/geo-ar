@@ -816,7 +816,7 @@ function CtaSection() {
           </h2>
           <p className="mt-5 text-slate-400 text-base md:text-lg leading-relaxed">
             Sin instalaciones. Sin configuraciones complejas.<br />
-            Creá, configurá y compartí.
+            Crea, configura y comparte.
           </p>
 
           {sent ? (

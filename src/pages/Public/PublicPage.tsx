@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { MapContainer, TileLayer, Marker } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import PublicPointMarker from '../../components/map/PublicPointMarker'
 import { geoProjectsApi, geoPointsApi } from '../../services'
@@ -137,6 +137,25 @@ const ROUTE_MOVEMENT_DEBOUNCE_MS = 2_000
 type LoadError = 'not-found' | 'not-published' | 'fetch-error' | 'timeout' | null
 
 const LOAD_TIMEOUT_MS = 10_000
+
+// Fits the map to show all points exactly once on initial load (fit_points mode).
+function FitBoundsOnLoad({ points }: { points: GeoPoint[] }) {
+  const map = useMap()
+  const didFit = useRef(false)
+  useEffect(() => {
+    if (didFit.current || points.length === 0) return
+    didFit.current = true
+    if (points.length === 1) {
+      map.setView([points[0].latitude, points[0].longitude], 16)
+    } else {
+      const bounds = L.latLngBounds(
+        points.map((p) => [p.latitude, p.longitude] as [number, number]),
+      )
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 })
+    }
+  }, [map, points])
+  return null
+}
 
 function UserLocationMarker({ lat, lng }: { lat: number; lng: number }) {
   const icon = L.divIcon({
@@ -938,12 +957,30 @@ export default function PublicPage() {
   if (loadError) return <ErrorScreen error={loadError} id={id} />
   if (!project)  return <ErrorScreen error="not-found" id={id} />
 
-  const mapCenter: [number, number] =
-    userLocation
-      ? [userLocation.latitude, userLocation.longitude]
-      : points.length > 0
-      ? [points[0].latitude, points[0].longitude]
-      : [-33.4489, -70.6693]
+  const viewMode = project.publicInitialViewMode ?? 'fit_points'
+
+  const hasCustomView =
+    viewMode === 'custom' &&
+    project.publicInitialCenterLat != null &&
+    project.publicInitialCenterLng != null &&
+    project.publicInitialZoom    != null
+
+  // Centroid of all points — used as fallback when user location is unavailable
+  const pointsCentroid: [number, number] = points.length > 0
+    ? [
+        points.reduce((s, p) => s + p.latitude,  0) / points.length,
+        points.reduce((s, p) => s + p.longitude, 0) / points.length,
+      ]
+    : [-33.4489, -70.6693]
+
+  // Initial center for MapContainer (only applied at mount — MapController handles later navigation)
+  const mapCenter: [number, number] = hasCustomView
+    ? [project.publicInitialCenterLat!, project.publicInitialCenterLng!]
+    : viewMode === 'user_location' && userLocation
+    ? [userLocation.latitude, userLocation.longitude]
+    : pointsCentroid
+
+  const mapInitialZoom = hasCustomView ? project.publicInitialZoom! : 14
 
   const selectedPoint = selectedPointId
     ? (points.find((p) => p.id === selectedPointId) ?? null)
@@ -993,8 +1030,11 @@ export default function PublicPage() {
           Mobile: absolute inset-0 → fills full viewport behind the sheet.
           Desktop (md:): relative flex-1 → normal flex-column child.      */}
       <div className="absolute inset-0 md:relative md:flex-1">
-        <MapContainer center={mapCenter} zoom={15} className="w-full h-full">
+        <MapContainer center={mapCenter} zoom={mapInitialZoom} className="w-full h-full">
           <MapController flyKey={flyToKey} flyTarget={flyToTarget} />
+          {viewMode === 'fit_points' && points.length > 0 && (
+            <FitBoundsOnLoad points={points} />
+          )}
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

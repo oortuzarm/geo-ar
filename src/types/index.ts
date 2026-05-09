@@ -1,1 +1,1 @@
-export type { GeoProject, GeoPoint, GeoPointAvailability, NominatimResult, LocationStatus, UserLocation, MapBounds, PoiSearchResult } from './geoProject.types'
+export type { GeoProject, GeoPoint, GeoPointAvailability, NominatimResult, LocationStatus, UserLocation, MapBounds, PoiSearchResult, PublicInitialViewMode } from './geoProject.types'

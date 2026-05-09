@@ -1,3 +1,5 @@
+export type PublicInitialViewMode = 'fit_points' | 'user_location' | 'custom'
+
 export interface GeoProject {
   id: string
   title: string
@@ -11,6 +13,11 @@ export interface GeoProject {
   createdAt: string
   updatedAt: string
   geoPointIds: string[]
+  // Public initial map view
+  publicInitialViewMode?: PublicInitialViewMode
+  publicInitialCenterLat?: number
+  publicInitialCenterLng?: number
+  publicInitialZoom?: number
 }
 
 export interface GeoPointAvailability {

@@ -716,6 +716,26 @@ export default function DashboardPage() {
             </button>
           </div>
 
+          {/* Custom initial view hint — shown while the user frames the initial public view */}
+          {project?.publicInitialViewMode === 'custom' && (
+            <>
+              {/* Subtle border that frames the map */}
+              <div className="absolute inset-0 pointer-events-none z-[900]
+                              border-2 border-brand-500/20" />
+              {/* Floating instruction banner */}
+              <div className="absolute bottom-24 lg:bottom-14 left-1/2 -translate-x-1/2
+                              z-[900] pointer-events-none whitespace-nowrap">
+                <div className="flex items-center gap-2 bg-gray-900/96 backdrop-blur-sm
+                                border border-brand-500/30 rounded-xl px-3.5 py-2 shadow-xl">
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse flex-shrink-0" />
+                  <p className="text-xs text-brand-300 font-medium">
+                    Mueve y ajusta el mapa para definir la vista inicial pública
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+
           {points.length === 0 && !fabPlacementMode && (
             <div className="absolute bottom-36 lg:bottom-8 left-1/2 -translate-x-1/2 z-[1000]
                            bg-gray-900/90 border border-gray-700 rounded-lg px-4 py-2

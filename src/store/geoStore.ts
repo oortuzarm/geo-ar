@@ -29,6 +29,9 @@ interface GeoStore {
   setMapCenter: (center: [number, number]) => void
   mapZoom: number
   setMapZoom: (zoom: number) => void
+  // Tracks the real current map view as the user pans/zooms in the dashboard
+  lastKnownMapView: { center: [number, number]; zoom: number } | null
+  setLastKnownMapView: (view: { center: [number, number]; zoom: number }) => void
 
   // User location (for public view)
   userLocation: UserLocation | null
@@ -79,6 +82,8 @@ export const useGeoStore = create<GeoStore>((set) => ({
   setMapCenter: (center) => set({ mapCenter: center }),
   mapZoom: 13,
   setMapZoom: (zoom) => set({ mapZoom: zoom }),
+  lastKnownMapView: null,
+  setLastKnownMapView: (view) => set({ lastKnownMapView: view }),
 
   userLocation: null,
   locationStatus: 'idle',

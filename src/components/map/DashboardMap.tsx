@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Popup, useMapEvents, useMap } from 'react-leaflet'
 import { useGeoStore } from '../../store/geoStore'
+import type { Map as LeafletMap } from 'leaflet'
 import { haversineDistance } from '../../features/geolocation/haversine'
 import GeoPointMarker from './GeoPointMarker'
 import type { GeoPoint, PoiSearchResult, MapBounds } from '../../types'
@@ -11,6 +12,30 @@ function MapController() {
   useEffect(() => {
     map.setView(mapCenter, mapZoom, { animate: true })
   }, [map, mapCenter, mapZoom])
+  return null
+}
+
+// Tracks the real map view (pan + zoom) as the user moves around, without
+// feeding back into MapController (which would cause a setView loop).
+function MapViewTracker() {
+  const { setLastKnownMapView } = useGeoStore()
+  const mapRef = useRef<LeafletMap | null>(null)
+
+  const map = useMapEvents({
+    moveend() { snapshot(map) },
+    zoomend() { snapshot(map) },
+  })
+
+  function snapshot(m: LeafletMap) {
+    const c = m.getCenter()
+    setLastKnownMapView({ center: [c.lat, c.lng], zoom: m.getZoom() })
+  }
+
+  useEffect(() => {
+    mapRef.current = map
+    snapshot(map)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   return null
 }
 
@@ -95,6 +120,7 @@ export default function DashboardMap({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <MapController />
+      <MapViewTracker />
       <ClickHandler onMapClick={onMapClick} />
       {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} />}
 

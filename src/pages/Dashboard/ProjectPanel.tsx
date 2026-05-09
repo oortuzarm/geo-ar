@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useGeoStore } from '../../store/geoStore'
 import { uploadImage } from '../../lib/uploadImage'
 import Spinner from '../../components/ui/Spinner'
-import type { GeoProject } from '../../types'
+import type { GeoProject, PublicInitialViewMode } from '../../types'
 
 const DEFAULT_SHARE_TEXT = 'Mira esta experiencia geolocalizada'
 
@@ -95,6 +95,97 @@ function ImageField({ value, label, description, onUpload, onRemove }: ImageFiel
   )
 }
 
+// ── Public initial view section ───────────────────────────────────────────────
+
+const VIEW_OPTIONS: { value: PublicInitialViewMode; label: string }[] = [
+  { value: 'fit_points',     label: 'Mostrar todos los puntos' },
+  { value: 'user_location',  label: 'Mostrar ubicación del visitante' },
+  { value: 'custom',         label: 'Usar vista personalizada actual del mapa' },
+]
+
+function PublicInitialViewSection({ onMarkUnsaved }: { onMarkUnsaved: () => void }) {
+  const { project, updateProjectField, lastKnownMapView } = useGeoStore()
+  const [savedFeedback, setSavedFeedback] = useState(false)
+
+  if (!project) return null
+
+  const currentMode: PublicInitialViewMode = project.publicInitialViewMode ?? 'fit_points'
+
+  function handleModeChange(mode: PublicInitialViewMode) {
+    updateProjectField('publicInitialViewMode', mode)
+    onMarkUnsaved()
+  }
+
+  function handleSaveView() {
+    const view = lastKnownMapView
+    if (!view) return
+    updateProjectField('publicInitialCenterLat', view.center[0])
+    updateProjectField('publicInitialCenterLng', view.center[1])
+    updateProjectField('publicInitialZoom', view.zoom)
+    onMarkUnsaved()
+    setSavedFeedback(true)
+    setTimeout(() => setSavedFeedback(false), 2000)
+  }
+
+  const hasSavedView =
+    project.publicInitialCenterLat != null &&
+    project.publicInitialCenterLng != null &&
+    project.publicInitialZoom != null
+
+  return (
+    <section>
+      <h3 className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-1">
+        Vista inicial pública
+      </h3>
+      <p className="text-xs text-gray-500 mb-3 leading-snug">
+        Define cómo se verá el mapa cuando alguien abra este proyecto.
+      </p>
+
+      <div className="space-y-2">
+        {VIEW_OPTIONS.map(({ value, label }) => (
+          <label
+            key={value}
+            className="flex items-start gap-2.5 cursor-pointer group rounded-lg
+                       px-2 py-1.5 -mx-2 hover:bg-gray-800/40 transition-colors"
+          >
+            <input
+              type="radio"
+              name="publicInitialViewMode"
+              value={value}
+              checked={currentMode === value}
+              onChange={() => handleModeChange(value)}
+              className="mt-0.5 flex-shrink-0 accent-brand-500"
+            />
+            <span className="text-sm text-gray-300 leading-snug">{label}</span>
+          </label>
+        ))}
+      </div>
+
+      {currentMode === 'custom' && (
+        <div className="mt-3 p-3 rounded-xl bg-brand-500/[0.07] border border-brand-500/20">
+          <p className="text-xs text-brand-300/80 mb-3 leading-snug">
+            La vista actual del mapa será utilizada como vista inicial pública.
+          </p>
+          <button
+            onClick={handleSaveView}
+            className="w-full py-2 rounded-lg bg-brand-600 hover:bg-brand-500 active:scale-[0.98]
+                       text-white text-xs font-semibold transition-all duration-150"
+          >
+            {savedFeedback ? '✓ Vista guardada' : 'Guardar vista actual'}
+          </button>
+          {hasSavedView && (
+            <p className="text-[10px] text-gray-600 mt-2 text-center tabular-nums">
+              {project.publicInitialCenterLat!.toFixed(4)},&nbsp;
+              {project.publicInitialCenterLng!.toFixed(4)}
+              &nbsp;·&nbsp;zoom&nbsp;{project.publicInitialZoom}
+            </p>
+          )}
+        </div>
+      )}
+    </section>
+  )
+}
+
 // ── Main panel ────────────────────────────────────────────────────────────────
 
 export default function ProjectPanel({ onMarkUnsaved }: ProjectPanelProps) {
@@ -183,6 +274,9 @@ export default function ProjectPanel({ onMarkUnsaved }: ProjectPanelProps) {
           />
           <p className="text-right text-[10px] text-gray-600 mt-0.5">{shareText.length}/160</p>
         </section>
+
+        {/* ── Vista inicial pública ────────────────────────────────────────── */}
+        <PublicInitialViewSection onMarkUnsaved={onMarkUnsaved} />
 
         {/* ── Markers del mapa ─────────────────────────────────────────────── */}
         <section>

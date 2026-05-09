@@ -5,6 +5,7 @@ import { formatDuration } from '../../features/routing/orsClient'
 import { computePointAvailability, formatDays } from '../../features/geolocation/availability'
 import type { PointAvailability } from '../../features/geolocation/availability'
 import type { GeoPoint } from '../../types'
+import Modal from '../../components/ui/Modal'
 
 const DESCRIPTION_LIMIT = 140
 
@@ -151,11 +152,28 @@ export default function PublicPointCard({
   isActivating, accessMessage, accessFallbackUrl, address,
 }: PublicPointCardProps) {
   const [descExpanded, setDescExpanded] = useState(false)
+  const [showRouteWarning, setShowRouteWarning] = useState(false)
   const isLongDesc = (point.description?.length ?? 0) > DESCRIPTION_LIMIT
 
   // Single availability computation — all chips, button state, and messages
   // derive exclusively from this object. Never re-check schedules below.
   const avail = computePointAvailability(point, distance)
+
+  const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${point.latitude},${point.longitude}&travelmode=walking`
+
+  // True when content won't be accessible even if the user arrives physically.
+  const contentUnavailableOnArrival =
+    (avail.scheduleActive && !avail.scheduleAvailable) ||
+    (avail.quotaActive && !avail.quotaAvailable)
+
+  function handleNavigate(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (contentUnavailableOnArrival) {
+      setShowRouteWarning(true)
+    } else {
+      window.open(mapsUrl, '_blank', 'noopener,noreferrer')
+    }
+  }
 
   // ── Location chip derivation ──────────────────────────────────────────────
   let locationLabel: string
@@ -187,6 +205,7 @@ export default function PublicPointCard({
   }
 
   return (
+    <>
     <div
       className={[
         'rounded-xl border overflow-hidden transition-all duration-200 cursor-pointer',
@@ -307,11 +326,8 @@ export default function PublicPointCard({
             {/* CTA button — enabled iff avail.canAccess */}
             <div className="pt-0.5 space-y-2">
               {!avail.insideRadius && (
-                <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${point.latitude},${point.longitude}&travelmode=walking`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
+                <button
+                  onClick={handleNavigate}
                   className="w-full flex items-center justify-center gap-2
                              py-3 px-4 rounded-xl text-sm font-semibold
                              border border-gray-600/60 text-gray-300
@@ -323,7 +339,7 @@ export default function PublicPointCard({
                     <polygon points="3 11 22 2 13 21 11 13 3 11" />
                   </svg>
                   Cómo llegar
-                </a>
+                </button>
               )}
               {avail.canAccess ? (
                 <button
@@ -384,5 +400,19 @@ export default function PublicPointCard({
         )}
       </div>
     </div>
+
+    <Modal
+      open={showRouteWarning}
+      title="Contenido no disponible"
+      description="Puedes dirigirte al lugar, pero actualmente no podrás acceder al contenido."
+      confirmLabel="Ir de todas formas"
+      cancelLabel="Cancelar"
+      onConfirm={() => {
+        setShowRouteWarning(false)
+        window.open(mapsUrl, '_blank', 'noopener,noreferrer')
+      }}
+      onCancel={() => setShowRouteWarning(false)}
+    />
+    </>
   )
 }

@@ -66,14 +66,14 @@ export default function AppShell() {
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-0.5">
           <NavLink
-            to="/" end
+            to="/app" end
             className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
           >
             <FolderIcon />
             Proyectos
           </NavLink>
           <NavLink
-            to="/metrics"
+            to="/app/metrics"
             className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
           >
             <ChartBarIcon />
@@ -101,14 +101,14 @@ export default function AppShell() {
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
           <NavLink
-            to="/" end
+            to="/app" end
             className={({ isActive }) => `${bottom.link} ${isActive ? bottom.active : bottom.idle}`}
           >
             <FolderIcon />
             Proyectos
           </NavLink>
           <NavLink
-            to="/metrics"
+            to="/app/metrics"
             className={({ isActive }) => `${bottom.link} ${isActive ? bottom.active : bottom.idle}`}
           >
             <ChartBarIcon />

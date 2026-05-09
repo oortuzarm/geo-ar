@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom'
+import LandingPage from './pages/Landing/LandingPage'
 import AppShell from './pages/Home/AppShell'
 import HomePage from './pages/Home/HomePage'
 import MetricsPage from './pages/Metrics/MetricsPage'
@@ -8,10 +9,15 @@ import PublicPage from './pages/Public/PublicPage'
 
 export const router = createBrowserRouter([
   {
+    path: '/',
+    element: <LandingPage />,
+  },
+  {
+    path: '/app',
     element: <AppShell />,
     children: [
-      { index: true,      element: <HomePage /> },
-      { path: 'metrics',  element: <MetricsPage /> },
+      { index: true,         element: <HomePage /> },
+      { path: 'metrics',     element: <MetricsPage /> },
     ],
   },
   {

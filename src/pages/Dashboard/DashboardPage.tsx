@@ -67,7 +67,7 @@ export default function DashboardPage() {
         geoProjectsApi.fetchProject(id),
         geoPointsApi.listPoints(id),
       ])
-      if (!proj) { navigate('/'); return }
+      if (!proj) { navigate('/app'); return }
       setProject(proj)
       setPoints(pts)
       if (pts.length > 0) {
@@ -495,7 +495,7 @@ export default function DashboardPage() {
         {/* Mobile topbar: 3-column grid with centered title */}
         <div className="lg:hidden grid grid-cols-[40px_1fr_auto] items-center h-14 px-3 gap-2">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/app')}
             className="flex items-center justify-center text-gray-400 hover:text-gray-100 transition-colors"
             aria-label="Volver"
           >
@@ -520,7 +520,7 @@ export default function DashboardPage() {
         {/* Desktop topbar */}
         <div className="hidden lg:flex items-center h-14 px-4 gap-3">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/app')}
             className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-100 transition-colors flex-shrink-0"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

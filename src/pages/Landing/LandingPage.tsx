@@ -288,12 +288,17 @@ function HeroSection() {
 
             {/* Real editor screenshot */}
             <div className="relative bg-[#0d1117] overflow-hidden" style={{ height: 400 }}>
+              {/* Fallback visible when image is missing */}
+              <div className="absolute inset-0">
+                <MockMap />
+              </div>
               <img
                 src="/screenshot-editor.png"
                 alt="Editor geolocalizado Ubyca"
                 className="absolute inset-0 w-full h-full object-cover select-none"
                 style={{ objectPosition: '18% top', filter: 'brightness(0.88) saturate(0.9)' }}
                 draggable={false}
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
               />
               {/* Edge gradients — blend into the dark frame */}
               <div className="absolute inset-0 pointer-events-none" style={{
@@ -428,12 +433,17 @@ function MetricsDashboardSection() {
                 </div>
               </div>
               <div className="relative overflow-hidden" style={{ height: 420 }}>
+                {/* Fallback visible when image is missing */}
+                <div className="absolute inset-0">
+                  <MockMap />
+                </div>
                 <img
                   src="/screenshot-metrics.png"
                   alt="Dashboard de métricas Ubyca"
                   className="absolute inset-0 w-full h-full object-cover select-none"
                   style={{ objectPosition: 'center top' }}
                   draggable={false}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                 />
                 {/* Bottom fade */}
                 <div className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"

@@ -343,7 +343,7 @@ export default function PublicPointCard({
                                        rounded-full animate-spin" />
                       Verificando…
                     </span>
-                  ) : (point.buttonText || 'Ir a experiencia')}
+                  ) : (point.buttonText || 'Acceder al contenido')}
                 </button>
               ) : (
                 <button
@@ -351,7 +351,7 @@ export default function PublicPointCard({
                   className="w-full bg-gray-800/60 text-gray-600 font-semibold py-3.5 px-4
                              rounded-xl text-sm cursor-not-allowed border border-gray-700/30"
                 >
-                  {point.buttonText || 'Ir a experiencia'}
+                  {point.buttonText || 'Acceder al contenido'}
                 </button>
               )}
 

@@ -472,11 +472,11 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
 
         <Input
           label="Texto del botón"
-          placeholder="Ej: Ir a experiencia"
+          placeholder="Ej: Acceder al contenido"
           value={buttonText}
           onChange={(e) => setButtonText(e.target.value)}
           onBlur={() => onChange({ buttonText: buttonText || undefined })}
-          hint='Si se deja vacío, se usa "Ir a experiencia"'
+          hint='Si se deja vacío, se usa "Acceder al contenido"'
         />
 
       </div>

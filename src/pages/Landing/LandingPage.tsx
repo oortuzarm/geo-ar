@@ -771,7 +771,7 @@ function FeaturesSection() {
         <Reveal className="text-center mb-14">
           <Badge>Diferenciales</Badge>
           <h2 className="mt-5 text-4xl md:text-5xl font-black text-white leading-tight">
-            Todo lo que necesitas.<br /> Nada que no.
+            El contenido correcto.<br /> En el lugar exacto.
           </h2>
         </Reveal>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

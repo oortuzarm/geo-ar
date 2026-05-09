@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { ReactNode } from 'react'
 import { formatDistance } from '../../features/geolocation/haversine'
 import { formatDuration } from '../../features/routing/orsClient'
@@ -161,17 +162,23 @@ export default function PublicPointCard({
 
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${point.latitude},${point.longitude}&travelmode=walking`
 
-  // True when content won't be accessible even if the user arrives physically.
+  // True when schedule or quota would block access even if the user were inside the radius.
+  // Location/radius is intentionally excluded — it is never a reason to show this warning.
   const contentUnavailableOnArrival =
     (avail.scheduleActive && !avail.scheduleAvailable) ||
     (avail.quotaActive && !avail.quotaAvailable)
 
+  function openMaps() {
+    window.open(mapsUrl, '_blank', 'noopener,noreferrer')
+  }
+
   function handleNavigate(e: React.MouseEvent) {
+    e.preventDefault()
     e.stopPropagation()
     if (contentUnavailableOnArrival) {
       setShowRouteWarning(true)
     } else {
-      window.open(mapsUrl, '_blank', 'noopener,noreferrer')
+      openMaps()
     }
   }
 
@@ -401,18 +408,20 @@ export default function PublicPointCard({
       </div>
     </div>
 
-    <Modal
-      open={showRouteWarning}
-      title="Contenido no disponible"
-      description="Puedes dirigirte al lugar, pero actualmente no podrás acceder al contenido."
-      confirmLabel="Ir de todas formas"
-      cancelLabel="Cancelar"
-      onConfirm={() => {
-        setShowRouteWarning(false)
-        window.open(mapsUrl, '_blank', 'noopener,noreferrer')
-      }}
-      onCancel={() => setShowRouteWarning(false)}
-    />
+    {/* Portal ensures the modal escapes any backdrop-filter / overflow:hidden
+        ancestor (e.g. PublicPointDetailSheet) that would clip a fixed overlay. */}
+    {showRouteWarning && createPortal(
+      <Modal
+        open
+        title="Contenido no disponible"
+        description="Puedes dirigirte al lugar, pero actualmente no podrás acceder al contenido."
+        confirmLabel="Ir de todas formas"
+        cancelLabel="Cancelar"
+        onConfirm={() => { setShowRouteWarning(false); openMaps() }}
+        onCancel={() => setShowRouteWarning(false)}
+      />,
+      document.body,
+    )}
     </>
   )
 }

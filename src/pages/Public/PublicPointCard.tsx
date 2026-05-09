@@ -133,6 +133,7 @@ interface PublicPointCardProps {
   onSelect: () => void
   onActivate: () => void
   onExit?: () => void
+  onStartRoute?: () => void
   routeStatus?: RouteStatus
   walkingDistanceMeters?: number
   walkingDurationSeconds?: number
@@ -146,7 +147,7 @@ interface PublicPointCardProps {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function PublicPointCard({
-  point, distance, isSelected, onSelect, onActivate, onExit,
+  point, distance, isSelected, onSelect, onActivate, onExit, onStartRoute,
   routeStatus, walkingDistanceMeters, walkingDurationSeconds,
   isActivating, accessMessage, accessFallbackUrl, address,
 }: PublicPointCardProps) {
@@ -306,6 +307,23 @@ export default function PublicPointCard({
 
             {/* CTA button — enabled iff avail.canAccess */}
             <div className="pt-0.5 space-y-2">
+              {onStartRoute && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onStartRoute() }}
+                  className="w-full flex items-center justify-center gap-2
+                             py-3 px-4 rounded-xl text-sm font-semibold
+                             border border-gray-600/60 text-gray-300
+                             hover:border-gray-500/70 hover:text-gray-100
+                             active:scale-[0.98] transition-all duration-150"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                  </svg>
+                  Iniciar ruta
+                </button>
+              )}
               {avail.canAccess ? (
                 <button
                   onClick={(e) => { e.stopPropagation(); onActivate() }}

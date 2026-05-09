@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import PublicPointCard from './PublicPointCard'
 import type { GeoPoint } from '../../types'
 import type { RouteStatus } from './PublicPointCard'
+import Modal from '../../components/ui/Modal'
+import { computePointAvailability } from '../../features/geolocation/availability'
 
 interface PublicPointDetailSheetProps {
   point:                  GeoPoint
@@ -14,14 +17,28 @@ interface PublicPointDetailSheetProps {
   walkingDistanceMeters?: number
   walkingDurationSeconds?: number
   address?:               string
+  onStartRoute?:          () => void
 }
 
 export default function PublicPointDetailSheet({
   point, distance, onClose, onActivate,
   isActivating, accessMessage, accessFallbackUrl,
   routeStatus, walkingDistanceMeters, walkingDurationSeconds, address,
+  onStartRoute,
 }: PublicPointDetailSheetProps) {
+  const [showRouteWarning, setShowRouteWarning] = useState(false)
+  const avail = computePointAvailability(point, distance)
+
+  function handleStartRoute() {
+    if (!avail.canAccess) {
+      setShowRouteWarning(true)
+    } else {
+      onStartRoute?.()
+    }
+  }
+
   return (
+    <>
     <div
       className="md:hidden absolute inset-x-0 bottom-0 z-[1100]"
       style={{ height: '82dvh', transition: 'height 0.4s cubic-bezier(0.32,0.72,0,1)' }}
@@ -73,11 +90,23 @@ export default function PublicPointDetailSheet({
               walkingDistanceMeters={walkingDistanceMeters}
               walkingDurationSeconds={walkingDurationSeconds}
               address={address}
+              onStartRoute={onStartRoute ? handleStartRoute : undefined}
             />
           </div>
         </div>
 
       </div>
     </div>
+
+    <Modal
+      open={showRouteWarning}
+      title="Contenido no disponible"
+      description="Puedes dirigirte al lugar, pero actualmente no podrás acceder al contenido."
+      confirmLabel="Ir de todas formas"
+      cancelLabel="Cancelar"
+      onConfirm={() => { setShowRouteWarning(false); onStartRoute?.() }}
+      onCancel={() => setShowRouteWarning(false)}
+    />
+    </>
   )
 }

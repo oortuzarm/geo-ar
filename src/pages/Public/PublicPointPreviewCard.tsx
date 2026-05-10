@@ -6,9 +6,9 @@ import type { GeoPoint } from '../../types'
 type StatusVariant = 'ok' | 'block' | 'neutral'
 
 const BADGE: Record<StatusVariant, string> = {
-  ok:      'bg-emerald-500/15 border-emerald-500/30 text-emerald-400',
-  block:   'bg-red-500/15 border-red-500/30 text-red-400',
-  neutral: 'bg-gray-500/15 border-gray-500/25 text-gray-400',
+  ok:      'bg-emerald-500/[0.18] border-emerald-500/35 text-emerald-300',
+  block:   'bg-red-500/[0.18] border-red-500/35 text-red-300',
+  neutral: 'bg-gray-500/[0.18] border-gray-500/30 text-gray-300',
 }
 
 interface PublicPointPreviewCardProps {
@@ -58,7 +58,7 @@ export default function PublicPointPreviewCard({
 
   return (
     <div className="geo-preview-enter rounded-2xl overflow-hidden
-                    bg-gray-900/97 backdrop-blur-xl
+                    bg-gray-950/97 backdrop-blur-xl
                     border border-white/[0.09]
                     shadow-[0_8px_32px_rgba(0,0,0,0.65)]">
 
@@ -74,13 +74,13 @@ export default function PublicPointPreviewCard({
         <div className="flex-1 min-w-0">
           {/* Name + close button */}
           <div className="flex items-start gap-2">
-            <p className="flex-1 text-sm font-semibold text-gray-100 leading-snug line-clamp-1">
+            <p className="flex-1 text-sm font-semibold text-white leading-snug line-clamp-1">
               {point.name}
             </p>
             <button
               onClick={onClose}
-              className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-700/80 border border-gray-600/30
-                         flex items-center justify-center text-gray-400 hover:text-gray-200
+              className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-700/90 border border-white/[0.1]
+                         flex items-center justify-center text-gray-300 hover:text-white
                          active:scale-90 transition-all duration-150"
               aria-label="Cerrar preview"
             >
@@ -92,7 +92,7 @@ export default function PublicPointPreviewCard({
           </div>
 
           {point.description && (
-            <p className="text-xs text-gray-400 mt-0.5 line-clamp-2 leading-snug">
+            <p className="text-xs text-gray-300 mt-0.5 line-clamp-2 leading-snug">
               {point.description}
             </p>
           )}

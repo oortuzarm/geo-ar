@@ -60,10 +60,10 @@ function ChevronDownIcon({ open }: { open: boolean }) {
 type ChipVariant = 'ok' | 'warn' | 'block' | 'neutral'
 
 const CHIP_STYLES: Record<ChipVariant, { wrap: string; text: string; divider: string }> = {
-  ok:      { wrap: 'bg-emerald-500/10 border-emerald-500/25', text: 'text-emerald-400', divider: 'border-emerald-500/20' },
-  warn:    { wrap: 'bg-amber-500/10 border-amber-500/25',     text: 'text-amber-400',   divider: 'border-amber-500/20'   },
-  block:   { wrap: 'bg-red-500/10 border-red-500/25',         text: 'text-red-400',     divider: 'border-red-500/20'     },
-  neutral: { wrap: 'bg-gray-500/10 border-gray-500/20',       text: 'text-gray-500',    divider: 'border-gray-700'       },
+  ok:      { wrap: 'bg-emerald-500/[0.16] border-emerald-500/30', text: 'text-emerald-300', divider: 'border-emerald-500/25' },
+  warn:    { wrap: 'bg-amber-500/[0.16] border-amber-500/30',     text: 'text-amber-300',   divider: 'border-amber-500/25'   },
+  block:   { wrap: 'bg-red-500/[0.16] border-red-500/30',         text: 'text-red-300',     divider: 'border-red-500/25'     },
+  neutral: { wrap: 'bg-gray-500/[0.12] border-gray-500/25',       text: 'text-gray-300',    divider: 'border-gray-600/60'    },
 }
 
 function StatusChip({
@@ -217,10 +217,10 @@ export default function PublicPointCard({
       className={[
         'rounded-xl border overflow-hidden transition-all duration-200 cursor-pointer',
         isSelected && avail.insideRadius
-          ? 'border-brand-500/70 bg-gray-800/80 shadow-lg shadow-brand-950/50 ring-1 ring-brand-500/20'
+          ? 'border-brand-500/70 bg-gray-800/95 shadow-lg shadow-brand-950/50 ring-1 ring-brand-500/20'
           : isSelected
-          ? 'border-brand-500/50 bg-gray-800/75 shadow-md shadow-black/40'
-          : 'border-gray-800/70 bg-gray-900/50 hover:border-gray-700',
+          ? 'border-brand-500/50 bg-gray-800/90 shadow-md shadow-black/40'
+          : 'border-gray-700/50 bg-gray-900/80 hover:border-gray-600/60',
       ].join(' ')}
       onClick={onSelect}
     >
@@ -234,13 +234,13 @@ export default function PublicPointCard({
       <div className="p-3">
         {/* Name + exit button */}
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-gray-100 text-sm leading-snug">{point.name}</h3>
+          <h3 className="font-semibold text-white text-sm leading-snug">{point.name}</h3>
           {isSelected && onExit && (
             <button
               onClick={(e) => { e.stopPropagation(); onExit() }}
               className="flex-shrink-0 w-7 h-7 flex items-center justify-center
-                         rounded-full bg-gray-700/60 hover:bg-gray-600/70
-                         border border-gray-600/40 text-gray-400 hover:text-gray-200
+                         rounded-full bg-gray-700/80 hover:bg-gray-600/90
+                         border border-white/[0.1] text-gray-300 hover:text-white
                          active:scale-90 transition-all duration-150"
               aria-label="Cerrar"
             >
@@ -255,7 +255,7 @@ export default function PublicPointCard({
         {/* Description */}
         {point.description && (
           <div className="mt-1">
-            <p className="text-xs text-gray-400 leading-relaxed">
+            <p className="text-xs text-gray-300 leading-relaxed">
               {descExpanded || !isLongDesc
                 ? point.description
                 : point.description.slice(0, DESCRIPTION_LIMIT)}
@@ -337,8 +337,8 @@ export default function PublicPointCard({
                   onClick={handleNavigate}
                   className="w-full flex items-center justify-center gap-2
                              py-3 px-4 rounded-xl text-sm font-semibold
-                             border border-gray-600/60 text-gray-300
-                             hover:border-gray-500/70 hover:text-gray-100
+                             bg-white/[0.05] border border-white/[0.12] text-gray-200
+                             hover:bg-white/[0.08] hover:text-white
                              active:scale-[0.98] transition-all duration-150"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none"
@@ -372,8 +372,8 @@ export default function PublicPointCard({
               ) : (
                 <button
                   disabled
-                  className="w-full bg-gray-800/60 text-gray-600 font-semibold py-3.5 px-4
-                             rounded-xl text-sm cursor-not-allowed border border-gray-700/30"
+                  className="w-full bg-gray-800/70 text-gray-500 font-semibold py-3.5 px-4
+                             rounded-xl text-sm cursor-not-allowed border border-gray-700/40"
                 >
                   {point.buttonText || 'Acceder al contenido'}
                 </button>

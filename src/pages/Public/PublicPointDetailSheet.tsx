@@ -34,9 +34,9 @@ export default function PublicPointDetailSheet({
         {/* Handle + back */}
         <div className="flex-shrink-0">
           <div className="flex justify-center pt-2 pb-0">
-            <div className="w-9 h-1 rounded-full bg-white/20" />
+            <div className="w-9 h-1 rounded-full bg-white/[0.28]" />
           </div>
-          <div className="flex items-center px-4 py-3 border-b border-white/[0.06]">
+          <div className="flex items-center px-4 py-3 border-b border-white/[0.1]">
             <button
               onClick={onClose}
               className="flex items-center gap-1.5 text-brand-400 hover:text-brand-300

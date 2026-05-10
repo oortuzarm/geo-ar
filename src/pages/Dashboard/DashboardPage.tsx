@@ -14,7 +14,6 @@ import PreviewQRModal from './PreviewQRModal'
 import { useGeoStore } from '../../store/geoStore'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
-import { getCurrentPosition } from '../../hooks/useGeolocation'
 import type { GeoPoint, MapBounds, PoiSearchResult } from '../../types'
 
 export default function DashboardPage() {
@@ -51,6 +50,8 @@ export default function DashboardPage() {
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [poiResults, setPoiResults] = useState<PoiSearchResult[]>([])
+  const [editorUserPos, setEditorUserPos] = useState<{ lat: number; lng: number; accuracy: number } | null>(null)
+  const locationWatchRef = useRef<number | null>(null)
 
   // Load project on mount
   useEffect(() => {
@@ -96,6 +97,12 @@ export default function DashboardPage() {
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
   }, [hasUnsavedChanges])
+
+  // Stop GPS watch when the editor unmounts
+  useEffect(() => () => {
+    if (locationWatchRef.current !== null)
+      navigator.geolocation.clearWatch(locationWatchRef.current)
+  }, [])
 
   function focusPoint(pt: GeoPoint) {
     setMapCenter([pt.latitude, pt.longitude])
@@ -456,17 +463,44 @@ export default function DashboardPage() {
     }
   }
 
-  async function handleMyLocation() {
-    setLocatingUser(true)
-    try {
-      const pos = await getCurrentPosition()
-      setMapCenter([pos.coords.latitude, pos.coords.longitude])
-      setMapZoom(16)
-    } catch {
-      addToast('No se pudo obtener tu ubicación', 'error')
-    } finally {
-      setLocatingUser(false)
+  function handleMyLocation() {
+    // Already have a fix → just re-centre (blue dot stays visible)
+    if (editorUserPos) {
+      setMapCenter([editorUserPos.lat, editorUserPos.lng])
+      return
     }
+    // Watch already started, waiting for first fix → ignore duplicate tap
+    if (locationWatchRef.current !== null) return
+
+    if (!navigator.geolocation) {
+      addToast('Geolocalización no disponible en este dispositivo', 'error')
+      return
+    }
+
+    setLocatingUser(true)
+    let firstFix = true
+
+    locationWatchRef.current = navigator.geolocation.watchPosition(
+      ({ coords }) => {
+        const pos = { lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy }
+        setEditorUserPos(pos)
+        if (firstFix) {
+          firstFix = false
+          setLocatingUser(false)
+          setMapCenter([pos.lat, pos.lng])
+          setMapZoom(16)
+        }
+      },
+      () => {
+        setLocatingUser(false)
+        addToast('No se pudo obtener tu ubicación', 'error')
+        if (locationWatchRef.current !== null) {
+          navigator.geolocation.clearWatch(locationWatchRef.current)
+          locationWatchRef.current = null
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
+    )
   }
 
   if (loading) {
@@ -757,6 +791,7 @@ export default function DashboardPage() {
             poiResults={poiResults}
             onBoundsChange={setMapBounds}
             onPoiCreate={handlePoiCreateFromPopup}
+            userPos={editorUserPos}
           />
         </div>
 

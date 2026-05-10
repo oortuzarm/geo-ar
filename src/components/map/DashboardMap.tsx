@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Popup, useMapEvents, useMap } from 'react-leaflet'
 import { useGeoStore } from '../../store/geoStore'
+import L from 'leaflet'
 import type { Map as LeafletMap } from 'leaflet'
 import { haversineDistance } from '../../features/geolocation/haversine'
 import GeoPointMarker from './GeoPointMarker'
@@ -85,6 +86,53 @@ function BoundsTracker({ onBoundsChange }: BoundsTrackerProps) {
   return null
 }
 
+interface UserPos { lat: number; lng: number; accuracy: number }
+
+function UserLocationLayer({ userPos }: { userPos: UserPos | null }) {
+  const map = useMap()
+  const dotRef  = useRef<L.CircleMarker | null>(null)
+  const haloRef = useRef<L.Circle | null>(null)
+
+  useEffect(() => {
+    if (!userPos) {
+      dotRef.current?.remove();  dotRef.current  = null
+      haloRef.current?.remove(); haloRef.current = null
+      return
+    }
+
+    const { lat, lng, accuracy } = userPos
+    const latlng: L.LatLngExpression = [lat, lng]
+
+    if (dotRef.current && haloRef.current) {
+      dotRef.current.setLatLng(latlng)
+      haloRef.current.setLatLng(latlng)
+      haloRef.current.setRadius(accuracy)
+    } else {
+      haloRef.current = L.circle(latlng, {
+        radius: accuracy,
+        color: '#2196F3', fillColor: '#2196F3',
+        fillOpacity: 0.12, weight: 1.5, opacity: 0.45,
+        interactive: false,
+      }).addTo(map)
+
+      dotRef.current = L.circleMarker(latlng, {
+        radius: 8,
+        color: '#ffffff', weight: 2.5,
+        fillColor: '#2196F3', fillOpacity: 1,
+        interactive: false,
+      }).addTo(map)
+    }
+  }, [userPos, map])
+
+  // Remove layers on unmount
+  useEffect(() => () => {
+    dotRef.current?.remove()
+    haloRef.current?.remove()
+  }, [])
+
+  return null
+}
+
 interface DashboardMapProps {
   points: GeoPoint[]
   selectedPointId: string | null
@@ -94,6 +142,7 @@ interface DashboardMapProps {
   poiResults?: PoiSearchResult[]
   onBoundsChange?: (bounds: MapBounds) => void
   onPoiCreate?: (result: PoiSearchResult) => void
+  userPos?: UserPos | null
 }
 
 export default function DashboardMap({
@@ -105,6 +154,7 @@ export default function DashboardMap({
   poiResults = [],
   onBoundsChange,
   onPoiCreate,
+  userPos = null,
 }: DashboardMapProps) {
   const { mapCenter, mapZoom } = useGeoStore()
 
@@ -123,6 +173,7 @@ export default function DashboardMap({
       <MapViewTracker />
       <ClickHandler onMapClick={onMapClick} />
       {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} />}
+      <UserLocationLayer userPos={userPos} />
 
       {points.map((point) => (
         <GeoPointMarker

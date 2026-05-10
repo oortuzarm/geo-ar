@@ -149,15 +149,19 @@ const LOAD_TIMEOUT_MS = 10_000
  *
  * A didApplyRef prevents any re-application when userLocation, selectedPoint,
  * route state or sheet state change after the initial view has been set.
+ * resetTrigger can be incremented from outside to re-apply the project view
+ * with animation (used by the location toggle button).
  */
 function PublicInitialViewController({
   project,
   points,
   userLocation,
+  resetTrigger,
 }: {
   project: GeoProject
   points: GeoPoint[]
   userLocation: UserLocation | null
+  resetTrigger: number
 }) {
   const map = useMap()
   const didApplyRef = useRef(false)
@@ -176,51 +180,62 @@ function PublicInitialViewController({
     viewMode === 'custom'  ? 'fit_points'    :
                              viewMode
 
+  // Shared view-apply logic; animated=false on initial mount, true on user-triggered return.
+  function applyProjectView(animated: boolean) {
+    if (effectiveMode === 'custom') {
+      map.setView(
+        [project.publicInitialCenterLat!, project.publicInitialCenterLng!],
+        project.publicInitialZoom!,
+        { animate: animated },
+      )
+      return
+    }
+    if (effectiveMode === 'user_location') {
+      if (!userLocation) return
+      map.setView([userLocation.latitude, userLocation.longitude], 15, { animate: animated })
+      return
+    }
+    // fit_points
+    if (points.length === 0) return
+    if (points.length === 1) {
+      map.setView([points[0].latitude, points[0].longitude], 16, { animate: animated })
+    } else {
+      const bounds = L.latLngBounds(
+        points.map((p) => [p.latitude, p.longitude] as [number, number]),
+      )
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16, animate: animated })
+    }
+  }
+
+  // Always-fresh ref so the reset effect never captures a stale closure.
+  const applyProjectViewRef = useRef(applyProjectView)
+  applyProjectViewRef.current = applyProjectView
+
+  // One-time initial application.
   useEffect(() => {
     if (didApplyRef.current) return
-
-    // user_location mode: defer until GPS resolves.
     if (effectiveMode === 'user_location' && !userLocation) return
-
     didApplyRef.current = true
     console.log('[InitialView] mode:', effectiveMode)
-
     if (effectiveMode === 'custom') {
       console.log('[InitialView] applying custom',
         project.publicInitialCenterLat,
         project.publicInitialCenterLng,
         'zoom', project.publicInitialZoom)
-      map.setView(
-        [project.publicInitialCenterLat!, project.publicInitialCenterLng!],
-        project.publicInitialZoom!,
-        { animate: false },
-      )
-      return
-    }
-
-    if (effectiveMode === 'user_location') {
+    } else if (effectiveMode === 'user_location') {
       console.log('[InitialView] applying user_location',
         userLocation!.latitude, userLocation!.longitude)
-      map.setView(
-        [userLocation!.latitude, userLocation!.longitude],
-        15,
-        { animate: true },
-      )
-      return
-    }
-
-    // fit_points
-    if (points.length === 0) return
-    console.log('[InitialView] applying fit_points,', points.length, 'points')
-    if (points.length === 1) {
-      map.setView([points[0].latitude, points[0].longitude], 16, { animate: false })
     } else {
-      const bounds = L.latLngBounds(
-        points.map((p) => [p.latitude, p.longitude] as [number, number]),
-      )
-      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 })
+      console.log('[InitialView] applying fit_points,', points.length, 'points')
     }
+    applyProjectViewRef.current(false)
   }, [map, effectiveMode, userLocation]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // User-triggered return to project view (toggle button).
+  useEffect(() => {
+    if (resetTrigger === 0 || !didApplyRef.current) return
+    applyProjectViewRef.current(true)
+  }, [resetTrigger]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return null
 }
@@ -531,6 +546,15 @@ export default function PublicPage() {
   const [flyToKey, setFlyToKey] = useState<string | null>(null)
   const [flyToTarget, setFlyToTarget] = useState<FlyTarget | null>(null)
   const flyToCounterRef = useRef(0)
+
+  // ── Location toggle state ──────────────────────────────────────────────────
+  // True when the user tapped the location button and the map is centered on
+  // their GPS position (fit_points / custom modes only). While true the button
+  // shows a "return to project view" icon instead of the navigation arrow.
+  const [hasMovedToUserLocation, setHasMovedToUserLocation] = useState(false)
+  // Incrementing this triggers PublicInitialViewController to re-apply the
+  // project's initial view with animation (used when the user returns to it).
+  const [resetViewTrigger, setResetViewTrigger] = useState(0)
 
   // ── Ghost-click suppression ───────────────────────────────────────────────
   // Mobile browsers fire a synthetic click ~300ms after touchend.  When the
@@ -845,6 +869,7 @@ export default function PublicPage() {
     setSelectedPointId(pt.id)
     setAccessError(null)
     setMobileState('preview')
+    setHasMovedToUserLocation(false)
     // Tap from expanded list → close list so the map is visible.
     if (sheetState === 'expanded') setSheetState('hidden')
     flyToCounterRef.current += 1
@@ -863,10 +888,30 @@ export default function PublicPage() {
   }
 
   function handleMyLocation() {
-    if (!userLocation) return
-    flyToCounterRef.current += 1
-    setFlyToKey(`user-${flyToCounterRef.current}`)
-    setFlyToTarget({ lat: userLocation.latitude, lng: userLocation.longitude, zoom: 17 })
+    if (!project) return
+    const viewMode = project.publicInitialViewMode ?? 'fit_points'
+
+    // user_location mode: button always centers on current GPS (no toggle).
+    if (viewMode === 'user_location') {
+      if (!userLocation) return
+      flyToCounterRef.current += 1
+      setFlyToKey(`user-${flyToCounterRef.current}`)
+      setFlyToTarget({ lat: userLocation.latitude, lng: userLocation.longitude, zoom: 17 })
+      return
+    }
+
+    if (hasMovedToUserLocation) {
+      // Second tap: return to the project's initial view.
+      setHasMovedToUserLocation(false)
+      setResetViewTrigger((n) => n + 1)
+    } else {
+      // First tap: fly to the user's GPS position.
+      if (!userLocation) return
+      setHasMovedToUserLocation(true)
+      flyToCounterRef.current += 1
+      setFlyToKey(`user-${flyToCounterRef.current}`)
+      setFlyToTarget({ lat: userLocation.latitude, lng: userLocation.longitude, zoom: 17 })
+    }
   }
 
   async function handleShare() {
@@ -1038,6 +1083,11 @@ export default function PublicPage() {
     ? (points.find((p) => p.id === selectedPointId) ?? null)
     : null
 
+  // True when the button should show "return to project view" instead of the location arrow.
+  const locationButtonReturnsToProject =
+    (project.publicInitialViewMode ?? 'fit_points') !== 'user_location' &&
+    hasMovedToUserLocation
+
 
   // ── Shared card list renderer ──────────────────────────────────────────────
   // cardRefsProp: which ref map to populate (mobile or desktop)
@@ -1088,6 +1138,7 @@ export default function PublicPage() {
             project={project}
             points={points}
             userLocation={userLocation}
+            resetTrigger={resetViewTrigger}
           />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -1151,10 +1202,10 @@ export default function PublicPage() {
           </svg>
         </button>
 
-        {/* My location button */}
+        {/* My location / return-to-project toggle button */}
         <button
           onClick={handleMyLocation}
-          disabled={!userLocation}
+          disabled={!locationButtonReturnsToProject && !userLocation}
           className={[
             'absolute right-4 z-[400]',
             'w-11 h-11 flex items-center justify-center',
@@ -1167,11 +1218,20 @@ export default function PublicPage() {
             : mobileState === 'preview' ? 'bottom-[272px] md:bottom-4'
             :                             'bottom-24 md:bottom-4',
           ].join(' ')}
-          title="Mi ubicación"
+          title={locationButtonReturnsToProject ? 'Volver a vista del proyecto' : 'Mi ubicación'}
         >
-          <svg className="h-5 w-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2 L4 22 L12 17.5 L20 22 Z" />
-          </svg>
+          {locationButtonReturnsToProject ? (
+            /* Fit-to-bounds icon — indicates "zoom out to show all / return to overview" */
+            <svg className="h-5 w-5 text-green-500" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 9V5h4M15 5h4v4M15 19h4v-4M5 15v4h4" />
+            </svg>
+          ) : (
+            /* Navigation arrow — indicates "go to my GPS location" */
+            <svg className="h-5 w-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2 L4 22 L12 17.5 L20 22 Z" />
+            </svg>
+          )}
         </button>
       </div>
 

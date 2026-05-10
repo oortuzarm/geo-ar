@@ -853,15 +853,6 @@ export default function PublicPage() {
     setAccessError(null)
     setMobileState('clean')
     setSheetState('hidden')
-    flyToCounterRef.current += 1
-    setFlyToKey(`exit-${flyToCounterRef.current}`)
-    if (userLocation) {
-      setFlyToTarget({ lat: userLocation.latitude, lng: userLocation.longitude, zoom: 14 })
-    } else if (points.length > 0) {
-      const avgLat = points.reduce((s, p) => s + p.latitude, 0) / points.length
-      const avgLng = points.reduce((s, p) => s + p.longitude, 0) / points.length
-      setFlyToTarget({ lat: avgLat, lng: avgLng, zoom: 13 })
-    }
   }
 
   function handlePointClick(pt: GeoPoint) {

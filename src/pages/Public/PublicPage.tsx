@@ -1324,29 +1324,31 @@ export default function PublicPage() {
                 />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-100 line-clamp-2 leading-snug">
+                <p className="text-sm font-semibold text-white line-clamp-2 leading-snug">
                   {project.title}
                 </p>
-                <div className="flex items-center gap-1.5 mt-1">
+                <div className="flex items-center gap-1.5 mt-1.5">
                   <button
                     onClick={() => handleFilterChange('all')}
                     className={[
-                      'px-2 py-0.5 rounded-full text-xs font-medium transition-all duration-150 active:scale-95',
+                      'px-2.5 py-[3px] rounded-full text-[11px] font-medium',
+                      'ring-1 transition-all duration-150 active:scale-[0.95]',
                       locationFilter === 'all'
-                        ? 'bg-white/[0.12] text-gray-100'
-                        : 'text-gray-500 hover:text-gray-300',
+                        ? 'bg-white/[0.15] text-white ring-white/[0.22]'
+                        : 'bg-white/[0.07] text-white/55 ring-white/[0.1]',
                     ].join(' ')}
                   >
                     {points.length} ubicaciones
                   </button>
-                  <span className="text-gray-700 text-[10px] select-none">·</span>
+                  <span className="text-white/[0.18] text-[9px] select-none">·</span>
                   <button
                     onClick={() => handleFilterChange('available')}
                     className={[
-                      'px-2 py-0.5 rounded-full text-xs font-medium transition-all duration-150 active:scale-95',
+                      'px-2.5 py-[3px] rounded-full text-[11px] font-medium',
+                      'ring-1 transition-all duration-150 active:scale-[0.95]',
                       locationFilter === 'available'
-                        ? 'bg-green-500/[0.15] text-green-400 ring-1 ring-inset ring-green-500/30'
-                        : 'text-gray-500 hover:text-gray-300',
+                        ? 'bg-emerald-500/[0.22] text-emerald-300 ring-emerald-400/[0.35]'
+                        : 'bg-emerald-500/[0.07] text-emerald-400/70 ring-emerald-500/[0.14]',
                     ].join(' ')}
                   >
                     {availablePoints.length} activas

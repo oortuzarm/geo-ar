@@ -22,7 +22,7 @@ import PublicPointPreviewCard from './PublicPointPreviewCard'
 import PublicPointDetailSheet from './PublicPointDetailSheet'
 import Spinner from '../../components/ui/Spinner'
 import ToastContainer from '../../components/ui/Toast'
-import type { GeoProject, GeoPoint, LocationStatus } from '../../types'
+import type { GeoProject, GeoPoint, LocationStatus, UserLocation } from '../../types'
 
 /** Minimum distance in meters the user must move before recalculating the route */
 const ROUTE_RECALC_THRESHOLD_M = 15
@@ -138,22 +138,90 @@ type LoadError = 'not-found' | 'not-published' | 'fetch-error' | 'timeout' | nul
 
 const LOAD_TIMEOUT_MS = 10_000
 
-// Fits the map to show all points exactly once on initial load (fit_points mode).
-function FitBoundsOnLoad({ points }: { points: GeoPoint[] }) {
+/**
+ * Applies the project's publicInitialViewMode exactly once after the map mounts.
+ * Runs inside MapContainer so useMap() is available.
+ *
+ * Priority:
+ *   custom (with valid coords)  → setView to saved center/zoom
+ *   user_location               → wait for GPS, then setView to user position
+ *   fit_points (default)        → fitBounds over all active points
+ *
+ * A didApplyRef prevents any re-application when userLocation, selectedPoint,
+ * route state or sheet state change after the initial view has been set.
+ */
+function PublicInitialViewController({
+  project,
+  points,
+  userLocation,
+}: {
+  project: GeoProject
+  points: GeoPoint[]
+  userLocation: UserLocation | null
+}) {
   const map = useMap()
-  const didFit = useRef(false)
+  const didApplyRef = useRef(false)
+
+  const viewMode = project.publicInitialViewMode ?? 'fit_points'
+
+  const hasCustomView =
+    viewMode === 'custom' &&
+    project.publicInitialCenterLat != null &&
+    project.publicInitialCenterLng != null &&
+    project.publicInitialZoom      != null
+
+  // If custom is requested but incomplete, fall back to fit_points.
+  const effectiveMode =
+    hasCustomView          ? 'custom'        :
+    viewMode === 'custom'  ? 'fit_points'    :
+                             viewMode
+
   useEffect(() => {
-    if (didFit.current || points.length === 0) return
-    didFit.current = true
+    if (didApplyRef.current) return
+
+    // user_location mode: defer until GPS resolves.
+    if (effectiveMode === 'user_location' && !userLocation) return
+
+    didApplyRef.current = true
+    console.log('[InitialView] mode:', effectiveMode)
+
+    if (effectiveMode === 'custom') {
+      console.log('[InitialView] applying custom',
+        project.publicInitialCenterLat,
+        project.publicInitialCenterLng,
+        'zoom', project.publicInitialZoom)
+      map.setView(
+        [project.publicInitialCenterLat!, project.publicInitialCenterLng!],
+        project.publicInitialZoom!,
+        { animate: false },
+      )
+      return
+    }
+
+    if (effectiveMode === 'user_location') {
+      console.log('[InitialView] applying user_location',
+        userLocation!.latitude, userLocation!.longitude)
+      map.setView(
+        [userLocation!.latitude, userLocation!.longitude],
+        15,
+        { animate: true },
+      )
+      return
+    }
+
+    // fit_points
+    if (points.length === 0) return
+    console.log('[InitialView] applying fit_points,', points.length, 'points')
     if (points.length === 1) {
-      map.setView([points[0].latitude, points[0].longitude], 16)
+      map.setView([points[0].latitude, points[0].longitude], 16, { animate: false })
     } else {
       const bounds = L.latLngBounds(
         points.map((p) => [p.latitude, p.longitude] as [number, number]),
       )
       map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 })
     }
-  }, [map, points])
+  }, [map, effectiveMode, userLocation]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return null
 }
 
@@ -957,30 +1025,14 @@ export default function PublicPage() {
   if (loadError) return <ErrorScreen error={loadError} id={id} />
   if (!project)  return <ErrorScreen error="not-found" id={id} />
 
-  const viewMode = project.publicInitialViewMode ?? 'fit_points'
-
-  const hasCustomView =
-    viewMode === 'custom' &&
-    project.publicInitialCenterLat != null &&
-    project.publicInitialCenterLng != null &&
-    project.publicInitialZoom    != null
-
-  // Centroid of all points — used as fallback when user location is unavailable
-  const pointsCentroid: [number, number] = points.length > 0
+  // Fallback center for MapContainer's initial mount prop.
+  // PublicInitialViewController (inside MapContainer) applies the real view once.
+  const mapFallbackCenter: [number, number] = points.length > 0
     ? [
         points.reduce((s, p) => s + p.latitude,  0) / points.length,
         points.reduce((s, p) => s + p.longitude, 0) / points.length,
       ]
     : [-33.4489, -70.6693]
-
-  // Initial center for MapContainer (only applied at mount — MapController handles later navigation)
-  const mapCenter: [number, number] = hasCustomView
-    ? [project.publicInitialCenterLat!, project.publicInitialCenterLng!]
-    : viewMode === 'user_location' && userLocation
-    ? [userLocation.latitude, userLocation.longitude]
-    : pointsCentroid
-
-  const mapInitialZoom = hasCustomView ? project.publicInitialZoom! : 14
 
   const selectedPoint = selectedPointId
     ? (points.find((p) => p.id === selectedPointId) ?? null)
@@ -1030,11 +1082,13 @@ export default function PublicPage() {
           Mobile: absolute inset-0 → fills full viewport behind the sheet.
           Desktop (md:): relative flex-1 → normal flex-column child.      */}
       <div className="absolute inset-0 md:relative md:flex-1">
-        <MapContainer center={mapCenter} zoom={mapInitialZoom} className="w-full h-full">
+        <MapContainer center={mapFallbackCenter} zoom={14} className="w-full h-full">
           <MapController flyKey={flyToKey} flyTarget={flyToTarget} />
-          {viewMode === 'fit_points' && points.length > 0 && (
-            <FitBoundsOnLoad points={points} />
-          )}
+          <PublicInitialViewController
+            project={project}
+            points={points}
+            userLocation={userLocation}
+          />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

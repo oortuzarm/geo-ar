@@ -138,6 +138,35 @@ type LoadError = 'not-found' | 'not-published' | 'fetch-error' | 'timeout' | nul
 
 const LOAD_TIMEOUT_MS = 10_000
 
+type LocationFilter = 'all' | 'available'
+
+/**
+ * Returns true when a point is available right now based on schedule and quota rules.
+ * Does NOT consider geofence / GPS distance — that is checked at activation time.
+ */
+function isPointAvailableNow(point: GeoPoint): boolean {
+  const avail = point.availability
+  if (!avail) return true
+
+  if (avail.scheduleEnabled) {
+    const now      = new Date()
+    const localDay = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][now.getDay()]
+    const hh       = String(now.getHours()).padStart(2, '0')
+    const mm       = String(now.getMinutes()).padStart(2, '0')
+    const time     = `${hh}:${mm}`
+
+    if (avail.scheduleDays?.length && !avail.scheduleDays.includes(localDay)) return false
+    if (avail.scheduleStartTime && time < avail.scheduleStartTime)             return false
+    if (avail.scheduleEndTime   && time >= avail.scheduleEndTime)              return false
+  }
+
+  if (avail.quotaEnabled && avail.quotaLimit != null) {
+    if ((avail.quotaUsed ?? 0) >= avail.quotaLimit) return false
+  }
+
+  return true
+}
+
 /**
  * Applies the project's publicInitialViewMode exactly once after the map mounts.
  * Runs inside MapContainer so useMap() is available.
@@ -558,6 +587,11 @@ export default function PublicPage() {
   // project's initial view with animation (used when the user returns to it).
   const [resetViewTrigger, setResetViewTrigger] = useState(0)
 
+  // ── Point list / map filter ────────────────────────────────────────────────
+  // 'all'       → show every active point (regardless of schedule / quota)
+  // 'available' → show only points currently accessible (schedule + quota pass)
+  const [locationFilter, setLocationFilter] = useState<LocationFilter>('all')
+
   // ── Ghost-click suppression ───────────────────────────────────────────────
   // Mobile browsers fire a synthetic click ~300ms after touchend.  When the
   // compact sheet is tapped and expands, that ghost click can land on a map
@@ -910,6 +944,16 @@ export default function PublicPage() {
     }
   }
 
+  function handleFilterChange(next: LocationFilter) {
+    if (next === locationFilter) return
+    setLocationFilter(next)
+    // Clear any active selection so the UI stays consistent when a selected
+    // point is hidden by the new filter.
+    setSelectedPointId(null)
+    setAccessError(null)
+    setMobileState('clean')
+  }
+
   async function handleShare() {
     const url = window.location.href
     const title = project?.title ?? 'Experiencia GeoAR'
@@ -1084,18 +1128,26 @@ export default function PublicPage() {
     (project.publicInitialViewMode ?? 'fit_points') !== 'user_location' &&
     shouldReturnToProjectView
 
+  // ── Filter-derived point sets ──────────────────────────────────────────────
+  // `points`          = all admin-enabled points (the "ubicaciones" universe)
+  // `availablePoints` = subset currently accessible by schedule + quota rules
+  // `displayedPoints` = what actually renders on the map and in the list
+  const availablePoints = points.filter(isPointAvailableNow)
+  const displayedPoints = locationFilter === 'available' ? availablePoints : points
 
   // ── Shared card list renderer ──────────────────────────────────────────────
   // cardRefsProp: which ref map to populate (mobile or desktop)
   function renderPoints(cardRefsProp: React.MutableRefObject<Record<string, HTMLDivElement | null>>) {
-    if (points.length === 0) {
+    if (displayedPoints.length === 0) {
       return (
         <p className="text-sm text-gray-500 text-center py-6 px-4">
-          Este proyecto no tiene puntos activos aún.
+          {locationFilter === 'available'
+            ? 'No hay experiencias activas en este momento.'
+            : 'Este proyecto no tiene puntos activos aún.'}
         </p>
       )
     }
-    return points.map((pt) => (
+    return displayedPoints.map((pt) => (
       <div key={pt.id} ref={(el) => { cardRefsProp.current[pt.id] = el }}>
         <PublicPointCard
           point={pt}
@@ -1143,7 +1195,7 @@ export default function PublicPage() {
           {userLocation && (
             <UserLocationMarker lat={userLocation.latitude} lng={userLocation.longitude} />
           )}
-          {points.map((pt) => (
+          {displayedPoints.map((pt) => (
             <PublicPointMarker
               key={pt.id}
               point={pt}
@@ -1275,9 +1327,31 @@ export default function PublicPage() {
                 <p className="text-sm font-semibold text-gray-100 line-clamp-2 leading-snug">
                   {project.title}
                 </p>
-                <p className="text-xs text-gray-400 leading-snug mt-0.5">
-                  {`${points.length} experiencia${points.length !== 1 ? 's' : ''} disponible${points.length !== 1 ? 's' : ''}`}
-                </p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <button
+                    onClick={() => handleFilterChange('all')}
+                    className={[
+                      'px-2 py-0.5 rounded-full text-xs font-medium transition-all duration-150 active:scale-95',
+                      locationFilter === 'all'
+                        ? 'bg-white/[0.12] text-gray-100'
+                        : 'text-gray-500 hover:text-gray-300',
+                    ].join(' ')}
+                  >
+                    {points.length} ubicaciones
+                  </button>
+                  <span className="text-gray-700 text-[10px] select-none">·</span>
+                  <button
+                    onClick={() => handleFilterChange('available')}
+                    className={[
+                      'px-2 py-0.5 rounded-full text-xs font-medium transition-all duration-150 active:scale-95',
+                      locationFilter === 'available'
+                        ? 'bg-green-500/[0.15] text-green-400 ring-1 ring-inset ring-green-500/30'
+                        : 'text-gray-500 hover:text-gray-300',
+                    ].join(' ')}
+                  >
+                    {availablePoints.length} activas
+                  </button>
+                </div>
               </div>
               <button
                 onClick={(e) => {
@@ -1415,6 +1489,32 @@ export default function PublicPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1.5 mb-3 -mt-1">
+          <button
+            onClick={() => handleFilterChange('all')}
+            className={[
+              'px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-150 active:scale-95',
+              locationFilter === 'all'
+                ? 'bg-white/[0.08] text-gray-200'
+                : 'text-gray-500 hover:text-gray-300',
+            ].join(' ')}
+          >
+            {points.length} ubicaciones
+          </button>
+          <span className="text-gray-700 text-[10px] select-none">·</span>
+          <button
+            onClick={() => handleFilterChange('available')}
+            className={[
+              'px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-150 active:scale-95',
+              locationFilter === 'available'
+                ? 'bg-green-500/[0.15] text-green-400 ring-1 ring-inset ring-green-500/30'
+                : 'text-gray-500 hover:text-gray-300',
+            ].join(' ')}
+          >
+            {availablePoints.length} activas
           </button>
         </div>
 

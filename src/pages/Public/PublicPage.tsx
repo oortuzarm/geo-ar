@@ -548,10 +548,12 @@ export default function PublicPage() {
   const flyToCounterRef = useRef(0)
 
   // ── Location toggle state ──────────────────────────────────────────────────
-  // True when the user tapped the location button and the map is centered on
-  // their GPS position (fit_points / custom modes only). While true the button
-  // shows a "return to project view" icon instead of the navigation arrow.
-  const [hasMovedToUserLocation, setHasMovedToUserLocation] = useState(false)
+  // True whenever the button should show "return to project view" (⬚) instead
+  // of the navigation arrow (▲). Set by two events:
+  //   • user tapped the location button → map went to GPS
+  //   • user closed a point popup      → map stayed on that area
+  // In both cases the user has "left" the project overview and ⬚ lets them back.
+  const [shouldReturnToProjectView, setShouldReturnToProjectView] = useState(false)
   // Incrementing this triggers PublicInitialViewController to re-apply the
   // project's initial view with animation (used when the user returns to it).
   const [resetViewTrigger, setResetViewTrigger] = useState(0)
@@ -853,6 +855,9 @@ export default function PublicPage() {
     setAccessError(null)
     setMobileState('clean')
     setSheetState('hidden')
+    // Show the ⬚ button so the user can easily return to the project overview.
+    // The map is not moved — this is purely a button-state change.
+    setShouldReturnToProjectView(true)
   }
 
   function handlePointClick(pt: GeoPoint) {
@@ -860,7 +865,7 @@ export default function PublicPage() {
     setSelectedPointId(pt.id)
     setAccessError(null)
     setMobileState('preview')
-    setHasMovedToUserLocation(false)
+    setShouldReturnToProjectView(false)
     // Tap from expanded list → close list so the map is visible.
     if (sheetState === 'expanded') setSheetState('hidden')
     flyToCounterRef.current += 1
@@ -891,14 +896,14 @@ export default function PublicPage() {
       return
     }
 
-    if (hasMovedToUserLocation) {
-      // Second tap: return to the project's initial view.
-      setHasMovedToUserLocation(false)
+    if (shouldReturnToProjectView) {
+      // ⬚ tap: return to the project's initial view.
+      setShouldReturnToProjectView(false)
       setResetViewTrigger((n) => n + 1)
     } else {
-      // First tap: fly to the user's GPS position.
+      // ▲ tap: fly to the user's GPS position.
       if (!userLocation) return
-      setHasMovedToUserLocation(true)
+      setShouldReturnToProjectView(true)
       flyToCounterRef.current += 1
       setFlyToKey(`user-${flyToCounterRef.current}`)
       setFlyToTarget({ lat: userLocation.latitude, lng: userLocation.longitude, zoom: 17 })
@@ -1077,7 +1082,7 @@ export default function PublicPage() {
   // True when the button should show "return to project view" instead of the location arrow.
   const locationButtonReturnsToProject =
     (project.publicInitialViewMode ?? 'fit_points') !== 'user_location' &&
-    hasMovedToUserLocation
+    shouldReturnToProjectView
 
 
   // ── Shared card list renderer ──────────────────────────────────────────────

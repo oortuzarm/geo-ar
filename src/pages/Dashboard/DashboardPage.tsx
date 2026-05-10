@@ -68,6 +68,7 @@ export default function DashboardPage() {
         geoPointsApi.listPoints(id),
       ])
       if (!proj) { navigate('/app'); return }
+      console.log('[InitialView Loaded Project]', proj?.publicInitialViewMode)
       setProject(proj)
       setPoints(pts)
       if (pts.length > 0) {
@@ -397,6 +398,7 @@ export default function DashboardPage() {
       console.log(
         `[Save] payload=${payloadKb} KB | puntos=${currentPoints.length} | imágenes en payload=${imagesInPayload} | imágenes omitidas=${imagesSkipped}`,
       )
+      console.log('[InitialView Save Payload]', projectPayload.publicInitialViewMode)
 
       console.time('[Save] syncProject')
       await geoProjectsApi.syncProject(currentProject.id, projectPayload, pointsPayload)

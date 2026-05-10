@@ -3,6 +3,24 @@ import type { GeoProject, GeoPoint } from '../types'
 import { apiFetch, ApiError } from '../lib/apiFetch'
 import { LocalGeoRepository } from './LocalGeoRepository'
 
+// Rails may return snake_case keys. Map the ones that would otherwise be silently undefined.
+function normalizeProject(raw: Record<string, unknown>): GeoProject {
+  return {
+    ...raw,
+    coverImage:               raw.coverImage               ?? raw.cover_image,
+    shareText:                raw.shareText                ?? raw.share_text,
+    markerImage:              raw.markerImage              ?? raw.marker_image,
+    howToGet:                 raw.howToGet                 ?? raw.how_to_get,
+    geoPointIds:              raw.geoPointIds              ?? raw.geo_point_ids ?? [],
+    createdAt:                raw.createdAt                ?? raw.created_at,
+    updatedAt:                raw.updatedAt                ?? raw.updated_at,
+    publicInitialViewMode:    raw.publicInitialViewMode    ?? raw.public_initial_view_mode,
+    publicInitialCenterLat:   raw.publicInitialCenterLat   ?? raw.public_initial_center_lat,
+    publicInitialCenterLng:   raw.publicInitialCenterLng   ?? raw.public_initial_center_lng,
+    publicInitialZoom:        raw.publicInitialZoom        ?? raw.public_initial_zoom,
+  } as GeoProject
+}
+
 export class RemoteGeoRepository implements IGeoRepository {
   private readonly base: string
   // Local IndexedDB used purely as an offline cache
@@ -18,13 +36,15 @@ export class RemoteGeoRepository implements IGeoRepository {
 
   // ── Projects ────────────────────────────────────────────────────────────────
 
-  listProjects(): Promise<GeoProject[]> {
-    return apiFetch<GeoProject[]>(this.url('/api/geo_projects'))
+  async listProjects(): Promise<GeoProject[]> {
+    const list = await apiFetch<Record<string, unknown>[]>(this.url('/api/geo_projects'))
+    return list.map(normalizeProject)
   }
 
   async fetchProject(id: string): Promise<GeoProject | undefined> {
     try {
-      return await apiFetch<GeoProject>(this.url(`/api/geo_projects/${id}`))
+      const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_projects/${id}`))
+      return normalizeProject(raw)
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) return undefined
       throw err
@@ -33,7 +53,8 @@ export class RemoteGeoRepository implements IGeoRepository {
 
   async fetchPublicProject(id: string): Promise<GeoProject | undefined> {
     try {
-      const proj = await apiFetch<GeoProject>(this.url(`/api/public/geo_projects/${id}`))
+      const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/public/geo_projects/${id}`))
+      const proj = normalizeProject(raw)
       void this.cacheProject(proj)
       return proj
     } catch (err) {
@@ -45,31 +66,34 @@ export class RemoteGeoRepository implements IGeoRepository {
     }
   }
 
-  createProject(data: Partial<GeoProject>): Promise<GeoProject> {
-    return apiFetch<GeoProject>(this.url('/api/geo_projects'), {
+  async createProject(data: Partial<GeoProject>): Promise<GeoProject> {
+    const raw = await apiFetch<Record<string, unknown>>(this.url('/api/geo_projects'), {
       method: 'POST',
       body: JSON.stringify(data),
     })
+    return normalizeProject(raw)
   }
 
-  saveProject(id: string, updates: Partial<GeoProject>): Promise<GeoProject> {
+  async saveProject(id: string, updates: Partial<GeoProject>): Promise<GeoProject> {
     const hasImage = typeof updates.coverImage === 'string' && updates.coverImage.startsWith('data:')
-    return apiFetch<GeoProject>(this.url(`/api/geo_projects/${id}`), {
+    const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_projects/${id}`), {
       method: 'PUT',
       body: JSON.stringify(updates),
       timeout: hasImage ? 30_000 : 15_000,
     })
+    return normalizeProject(raw)
   }
 
-  syncProject(id: string, project: Partial<GeoProject>, points: GeoPoint[]): Promise<GeoProject> {
+  async syncProject(id: string, project: Partial<GeoProject>, points: GeoPoint[]): Promise<GeoProject> {
     const hasImage =
       (typeof project.coverImage === 'string' && project.coverImage.startsWith('data:')) ||
       points.some((p) => typeof p.image === 'string' && p.image.startsWith('data:'))
-    return apiFetch<GeoProject>(this.url(`/api/geo_projects/${id}/sync`), {
+    const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_projects/${id}/sync`), {
       method: 'PATCH',
       body: JSON.stringify({ ...project, geoPoints: points }),
       timeout: hasImage ? 60_000 : 30_000,
     })
+    return normalizeProject(raw)
   }
 
   async removeProject(id: string): Promise<void> {

@@ -109,9 +109,12 @@ function PublicInitialViewSection({ onMarkUnsaved }: { onMarkUnsaved: () => void
 
   if (!project) return null
 
+  console.log('[InitialView Editor Selected]', project.publicInitialViewMode)
+
   const currentMode: PublicInitialViewMode = project.publicInitialViewMode ?? 'fit_points'
 
   function handleModeChange(mode: PublicInitialViewMode) {
+    console.log('[InitialView Update]', mode)
     updateProjectField('publicInitialViewMode', mode)
     onMarkUnsaved()
   }

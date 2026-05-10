@@ -361,10 +361,10 @@ function LocationBadge({ status, onClick }: { status: LocationStatus; onClick: (
   const isActive = status === 'active'
 
   const colorClass =
-    status === 'active'     ? 'text-green-400 border-gray-700' :
-    status === 'requesting' ? 'text-yellow-400 border-gray-700' :
-    status === 'denied'     ? 'text-red-400 border-red-900/40' :
-                              'text-amber-400 border-amber-900/40'
+    status === 'active'     ? 'text-green-300 border-gray-600/70' :
+    status === 'requesting' ? 'text-yellow-300 border-gray-600/70' :
+    status === 'denied'     ? 'text-red-300 border-red-800/60' :
+                              'text-amber-300 border-amber-800/50'
 
   const label =
     status === 'active'      ? 'Ubicación activa' :

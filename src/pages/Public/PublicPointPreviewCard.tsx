@@ -92,7 +92,7 @@ export default function PublicPointPreviewCard({
           </div>
 
           {point.description && (
-            <p className="text-xs text-gray-300 mt-0.5 line-clamp-2 leading-snug">
+            <p className="text-xs text-gray/75 mt-0.5 line-clamp-2 leading-snug">
               {point.description}
             </p>
           )}

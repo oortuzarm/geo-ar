@@ -90,31 +90,20 @@ interface UserPos { lat: number; lng: number; accuracy: number }
 
 function UserLocationLayer({ userPos }: { userPos: UserPos | null }) {
   const map = useMap()
-  const dotRef  = useRef<L.CircleMarker | null>(null)
-  const haloRef = useRef<L.Circle | null>(null)
+  const dotRef = useRef<L.CircleMarker | null>(null)
 
   useEffect(() => {
     if (!userPos) {
-      dotRef.current?.remove();  dotRef.current  = null
-      haloRef.current?.remove(); haloRef.current = null
+      dotRef.current?.remove()
+      dotRef.current = null
       return
     }
 
-    const { lat, lng, accuracy } = userPos
-    const latlng: L.LatLngExpression = [lat, lng]
+    const latlng: L.LatLngExpression = [userPos.lat, userPos.lng]
 
-    if (dotRef.current && haloRef.current) {
+    if (dotRef.current) {
       dotRef.current.setLatLng(latlng)
-      haloRef.current.setLatLng(latlng)
-      haloRef.current.setRadius(accuracy)
     } else {
-      haloRef.current = L.circle(latlng, {
-        radius: accuracy,
-        color: '#2196F3', fillColor: '#2196F3',
-        fillOpacity: 0.12, weight: 1.5, opacity: 0.45,
-        interactive: false,
-      }).addTo(map)
-
       dotRef.current = L.circleMarker(latlng, {
         radius: 8,
         color: '#ffffff', weight: 2.5,
@@ -124,11 +113,7 @@ function UserLocationLayer({ userPos }: { userPos: UserPos | null }) {
     }
   }, [userPos, map])
 
-  // Remove layers on unmount
-  useEffect(() => () => {
-    dotRef.current?.remove()
-    haloRef.current?.remove()
-  }, [])
+  useEffect(() => () => { dotRef.current?.remove() }, [])
 
   return null
 }

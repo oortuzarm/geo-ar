@@ -52,6 +52,10 @@ export default function DashboardPage() {
   const [poiResults, setPoiResults] = useState<PoiSearchResult[]>([])
   const [editorUserPos, setEditorUserPos] = useState<{ lat: number; lng: number; accuracy: number } | null>(null)
   const locationWatchRef = useRef<number | null>(null)
+  const bestReadingRef   = useRef<{ lat: number; lng: number; accuracy: number } | null>(null)
+  const flyDoneRef       = useRef(false)
+  const tier2TimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const tier3TimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Load project on mount
   useEffect(() => {
@@ -98,10 +102,12 @@ export default function DashboardPage() {
     return () => window.removeEventListener('beforeunload', handler)
   }, [hasUnsavedChanges])
 
-  // Stop GPS watch when the editor unmounts
+  // Stop GPS watch and pending timers when the editor unmounts
   useEffect(() => () => {
     if (locationWatchRef.current !== null)
       navigator.geolocation.clearWatch(locationWatchRef.current)
+    if (tier2TimerRef.current) clearTimeout(tier2TimerRef.current)
+    if (tier3TimerRef.current) clearTimeout(tier3TimerRef.current)
   }, [])
 
   function focusPoint(pt: GeoPoint) {
@@ -464,12 +470,12 @@ export default function DashboardPage() {
   }
 
   function handleMyLocation() {
-    // Already have a fix → just re-centre (blue dot stays visible)
-    if (editorUserPos) {
-      setMapCenter([editorUserPos.lat, editorUserPos.lng])
+    // Already locked: just re-centre on the best known position
+    if (flyDoneRef.current && bestReadingRef.current) {
+      setMapCenter([bestReadingRef.current.lat, bestReadingRef.current.lng])
       return
     }
-    // Watch already started, waiting for first fix → ignore duplicate tap
+    // Watch starting but no fix yet: ignore duplicate tap
     if (locationWatchRef.current !== null) return
 
     if (!navigator.geolocation) {
@@ -478,29 +484,67 @@ export default function DashboardPage() {
     }
 
     setLocatingUser(true)
-    let firstFix = true
+
+    // Commit a position: cancel timers, update state, flyTo
+    function commitFix(pos: { lat: number; lng: number; accuracy: number }) {
+      if (flyDoneRef.current) return
+      flyDoneRef.current = true
+      if (tier2TimerRef.current) { clearTimeout(tier2TimerRef.current); tier2TimerRef.current = null }
+      if (tier3TimerRef.current) { clearTimeout(tier3TimerRef.current); tier3TimerRef.current = null }
+      bestReadingRef.current = pos
+      setLocatingUser(false)
+      setEditorUserPos(pos)
+      setMapCenter([pos.lat, pos.lng])
+      setMapZoom(16)
+    }
 
     locationWatchRef.current = navigator.geolocation.watchPosition(
       ({ coords }) => {
         const pos = { lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy }
-        setEditorUserPos(pos)
-        if (firstFix) {
-          firstFix = false
-          setLocatingUser(false)
-          setMapCenter([pos.lat, pos.lng])
-          setMapZoom(16)
+
+        if (flyDoneRef.current) {
+          // Post-lock: silently refine the dot when a strictly better reading arrives
+          if (pos.accuracy < (bestReadingRef.current?.accuracy ?? Infinity)) {
+            bestReadingRef.current = pos
+            setEditorUserPos(pos)
+          }
+          return
         }
+
+        // Pre-lock: keep the best (most precise) reading seen so far
+        if (!bestReadingRef.current || pos.accuracy < bestReadingRef.current.accuracy) {
+          bestReadingRef.current = pos
+        }
+
+        // Tier 1: ≤5 m → use immediately
+        if (pos.accuracy <= 5) commitFix(pos)
       },
       () => {
         setLocatingUser(false)
         addToast('No se pudo obtener tu ubicación', 'error')
+        if (tier2TimerRef.current) { clearTimeout(tier2TimerRef.current); tier2TimerRef.current = null }
+        if (tier3TimerRef.current) { clearTimeout(tier3TimerRef.current); tier3TimerRef.current = null }
         if (locationWatchRef.current !== null) {
           navigator.geolocation.clearWatch(locationWatchRef.current)
           locationWatchRef.current = null
         }
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
     )
+
+    // Tier 2: after 3 s accept ≤10 m if already accumulated
+    tier2TimerRef.current = setTimeout(() => {
+      if (flyDoneRef.current) return
+      if (bestReadingRef.current && bestReadingRef.current.accuracy <= 10)
+        commitFix(bestReadingRef.current)
+    }, 3000)
+
+    // Tier 3: after 8 s use whatever best reading exists (final fallback)
+    tier3TimerRef.current = setTimeout(() => {
+      if (flyDoneRef.current) return
+      if (bestReadingRef.current) commitFix(bestReadingRef.current)
+      // If still no reading at all, the watchPosition error fires at 15 s
+    }, 8000)
   }
 
   if (loading) {
@@ -677,24 +721,32 @@ export default function DashboardPage() {
           </div>
 
           {/* My location button */}
-          <button
-            onClick={handleMyLocation}
-            disabled={locatingUser}
-            className="absolute bottom-8 left-4 z-[1000] bg-gray-900/95 border border-gray-700
-                       rounded-lg p-2.5 shadow-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
-            title="Mi ubicación"
-          >
-            {locatingUser ? (
-              <Spinner size="sm" />
-            ) : (
-              <svg className="h-5 w-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+          <div className="absolute bottom-8 left-4 z-[1000] flex flex-col items-start gap-1.5">
+            {locatingUser && (
+              <div className="bg-gray-900/95 border border-gray-700 rounded-md px-2.5 py-1
+                              text-[11px] text-gray-300 shadow-lg animate-pulse whitespace-nowrap">
+                Buscando ubicación precisa…
+              </div>
             )}
-          </button>
+            <button
+              onClick={handleMyLocation}
+              disabled={locatingUser}
+              className="bg-gray-900/95 border border-gray-700
+                         rounded-lg p-2.5 shadow-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+              title="Mi ubicación"
+            >
+              {locatingUser ? (
+                <Spinner size="sm" />
+              ) : (
+                <svg className="h-5 w-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              )}
+            </button>
+          </div>
 
           {/* Mobile: FAB Agregar punto — hidden while placement mode is active */}
           {!fabPlacementMode && (

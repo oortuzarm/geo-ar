@@ -721,7 +721,10 @@ export default function DashboardPage() {
           </div>
 
           {/* My location button */}
-          <div className="absolute bottom-8 left-4 z-[1000] flex flex-col items-start gap-1.5">
+          <div
+            className="absolute left-4 z-[1000] flex flex-col items-start gap-1.5"
+            style={{ bottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))' }}
+          >
             {locatingUser && (
               <div className="bg-gray-900/95 border border-gray-700 rounded-md px-2.5 py-1
                               text-[11px] text-gray-300 shadow-lg animate-pulse whitespace-nowrap">
@@ -794,7 +797,10 @@ export default function DashboardPage() {
           )}
 
           {/* Mobile: List button */}
-          <div className="lg:hidden absolute bottom-8 right-4 z-[1000]">
+          <div
+            className="lg:hidden absolute right-4 z-[1000]"
+            style={{ bottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))' }}
+          >
             <button
               className="bg-gray-900/95 border border-gray-700 rounded-lg px-3 py-2
                          text-sm font-medium text-gray-300 shadow-lg hover:bg-gray-800 transition-colors"

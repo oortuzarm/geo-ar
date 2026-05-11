@@ -1,4 +1,5 @@
-import { Outlet, NavLink } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../../store/authStore'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -20,23 +21,40 @@ function ChartBarIcon() {
   )
 }
 
+function LogoutIcon() {
+  return (
+    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+    </svg>
+  )
+}
+
 // ── Style helpers ─────────────────────────────────────────────────────────────
 
 const side = {
-  link: 'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150',
+  link:   'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150',
   active: 'bg-gray-800 text-gray-100',
-  idle: 'text-gray-500 hover:text-gray-200 hover:bg-gray-800/60',
+  idle:   'text-gray-500 hover:text-gray-200 hover:bg-gray-800/60',
 }
 
 const bottom = {
-  link: 'flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors leading-none',
+  link:   'flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors leading-none',
   active: 'text-brand-400',
-  idle: 'text-gray-500',
+  idle:   'text-gray-500',
 }
 
 // ── AppShell ──────────────────────────────────────────────────────────────────
 
 export default function AppShell() {
+  const { logout, currentUser } = useAuthStore()
+  const navigate = useNavigate()
+
+  async function handleLogout() {
+    await logout()
+    navigate('/login', { replace: true })
+  }
+
   return (
     <div
       className="flex h-screen bg-gray-950 text-gray-100 overflow-hidden"
@@ -58,7 +76,7 @@ export default function AppShell() {
             </svg>
           </div>
           <div className="min-w-0">
-            <p className="font-bold text-gray-100 text-sm leading-none">GeoAR</p>
+            <p className="font-bold text-gray-100 text-sm leading-none">Ubyca</p>
             <p className="text-[11px] text-gray-500 mt-0.5">Experiencias GPS</p>
           </div>
         </div>
@@ -81,9 +99,20 @@ export default function AppShell() {
           </NavLink>
         </nav>
 
-        {/* Version footer */}
-        <div className="px-5 py-4 border-t border-gray-800">
-          <p className="text-[11px] text-gray-700">GeoAR · v1</p>
+        {/* User + logout footer */}
+        <div className="px-3 py-4 border-t border-gray-800 space-y-1">
+          {currentUser && (
+            <p className="px-3 text-[11px] text-gray-600 truncate" title={currentUser.email}>
+              {currentUser.email}
+            </p>
+          )}
+          <button
+            onClick={handleLogout}
+            className={`w-full ${side.link} ${side.idle}`}
+          >
+            <LogoutIcon />
+            Cerrar sesión
+          </button>
         </div>
       </aside>
 
@@ -114,6 +143,13 @@ export default function AppShell() {
             <ChartBarIcon />
             Métricas
           </NavLink>
+          <button
+            onClick={handleLogout}
+            className={`${bottom.link} ${bottom.idle}`}
+          >
+            <LogoutIcon />
+            Salir
+          </button>
         </nav>
       </div>
     </div>

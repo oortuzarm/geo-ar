@@ -19,6 +19,7 @@ export async function apiFetch<T>(
   try {
     const res = await fetch(url, {
       ...init,
+      credentials: 'include',
       signal: controller.signal,
       headers: { 'Content-Type': 'application/json', ...init.headers },
     })

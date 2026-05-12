@@ -65,11 +65,12 @@ export default function DashboardPage() {
   const desktopTimeoutRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Desktop-only location UI state
-  const [locationPhase, setLocationPhase]         = useState<LocationPhase>('idle')
+  const [locationPhase, setLocationPhase]           = useState<LocationPhase>('idle')
   const [currentGpsAccuracy, setCurrentGpsAccuracy] = useState<number | null>(null)
-  const [locationSource, setLocationSource]       = useState<LocationSource>(null)
-  const [manualAddress, setManualAddress]         = useState('')
-  const [geocoding, setGeocoding]                 = useState(false)
+  const [locationSource, setLocationSource]         = useState<LocationSource>(null)
+  const [showManualChip, setShowManualChip]         = useState(false)
+  const [manualAddress, setManualAddress]           = useState('')
+  const [geocoding, setGeocoding]                   = useState(false)
 
   useEffect(() => () => {
     if (locationWatchRef.current !== null) navigator.geolocation.clearWatch(locationWatchRef.current)
@@ -169,6 +170,7 @@ export default function DashboardPage() {
         const pos = { lat, lng, accuracy: 0 }
         setEditorUserPos(pos)
         setLocationSource('manual')
+        setShowManualChip(true)
         setMapCenter([lat, lng])
         setMapZoom(16)
         setLocationPhase('idle')
@@ -617,6 +619,7 @@ export default function DashboardPage() {
       const pos = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), accuracy: 0 }
       setEditorUserPos(pos)
       setLocationSource('manual')
+      setShowManualChip(true)
       setMapCenter([pos.lat, pos.lng])
       setMapZoom(16)
       setLocationPhase('idle')
@@ -1017,15 +1020,15 @@ export default function DashboardPage() {
           )}
 
           {/* ── Desktop: manual location label ────────────────────────────── */}
-          {locationPhase === 'idle' && locationSource === 'manual' && (
+          {locationPhase === 'idle' && locationSource === 'manual' && showManualChip && (
             <div className="hidden lg:flex absolute bottom-20 left-4 z-[1000] items-center gap-2
                             bg-gray-900/80 border border-gray-700 rounded-lg px-3 py-1.5
                             backdrop-blur-sm">
               <span className="text-xs text-gray-400">Ubicación indicada manualmente</span>
               <button
-                onClick={() => { setEditorUserPos(null); setLocationSource(null) }}
+                onClick={() => setShowManualChip(false)}
                 className="text-gray-500 hover:text-gray-300 transition-colors"
-                aria-label="Quitar ubicación manual"
+                aria-label="Cerrar aviso"
               >
                 <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

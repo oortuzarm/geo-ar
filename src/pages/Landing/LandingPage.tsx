@@ -336,19 +336,14 @@ function HeroSection() {
               style={{ background: 'radial-gradient(ellipse 100% 100% at 50% 100%, rgba(14,165,233,0.22) 0%, transparent 70%)' }} />
 
             {/* iPhone frame */}
-            <div className="relative w-full h-full rounded-[2.6rem]
+            <div className="w-full h-full rounded-[2.6rem]
                             border-[3.5px] border-gray-600/70
                             overflow-hidden
-                            shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.9),0_0_28px_rgba(14,165,233,0.12)]"
-                 style={{ background: '#0a0a0a' }}>
-
-              {/* Real mobile screenshot — scale(1.22) zooms in so overflow-hidden
-                  clips the iOS status bar (top ~5%) and browser bar (bottom ~7%)
-                  transformOrigin at 42% shifts the focal point toward the map/card area */}
+                            shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.9),0_0_28px_rgba(14,165,233,0.12)]">
               <img
                 src="/hero-mobile.jpg"
                 alt="Vista mobile Ubyca"
-                className="absolute inset-0 w-full h-full object-cover select-none"
+                className="w-full h-full object-cover select-none"
                 style={{
                   objectPosition: 'center 50%',
                   transform: 'scale(1.22)',
@@ -356,55 +351,7 @@ function HeroSection() {
                 }}
                 draggable={false}
                 loading="lazy"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
               />
-
-              {/* Coded fallback (visible only when /hero-mobile.jpg is missing) */}
-              <div className="w-full h-full flex flex-col">
-                {/* Status bar */}
-                <div className="relative flex items-center justify-between px-4 pt-3 flex-shrink-0">
-                  <span className="text-[8px] text-white/50 font-semibold">12:21</span>
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-3.5 bg-black rounded-b-2xl" />
-                  <div className="flex items-center gap-1">
-                    <svg className="w-2 h-2 text-white/50" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                    </svg>
-                    <div className="w-3 h-1.5 rounded-[2px] border border-white/30 overflow-hidden">
-                      <div className="h-full w-4/5 bg-green-400 rounded-[1px]" />
-                    </div>
-                  </div>
-                </div>
-                {/* Map area */}
-                <div className="flex-1 relative overflow-hidden">
-                  <MockMap />
-                  {/* GPS dot on map */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <div className="w-16 h-16 rounded-full border border-brand-500/30 bg-brand-500/[0.08]" />
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-                                    w-3 h-3 rounded-full bg-brand-400 border-2 border-white
-                                    shadow-[0_0_10px_#0ea5e9]" />
-                  </div>
-                  {/* Location active badge */}
-                  <div className="absolute top-2.5 left-1/2 -translate-x-1/2
-                                  flex items-center gap-1 bg-black/70 backdrop-blur-sm
-                                  border border-white/10 rounded-full px-2 py-0.5">
-                    <div className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
-                    <span className="text-[7px] text-slate-300 font-semibold">Ubicación activa</span>
-                  </div>
-                </div>
-                {/* Bottom sheet */}
-                <div className="flex-shrink-0 bg-gray-950 rounded-t-2xl
-                                border-t border-white/[0.07] px-3.5 pt-2.5 pb-4">
-                  <div className="w-6 h-0.5 bg-white/15 rounded-full mx-auto mb-2.5" />
-                  <p className="text-[10px] font-black text-white leading-none">20 % de descuento</p>
-                  <p className="text-[8px] text-slate-500 mt-1 mb-2.5 leading-snug line-clamp-2">
-                    Válido exclusivamente en este local.
-                  </p>
-                  <button className="w-full py-1.5 rounded-xl bg-brand-600 text-white text-[9px] font-bold">
-                    Ver detalle
-                  </button>
-                </div>
-              </div>
             </div>
           </motion.div>
         </motion.div>

@@ -342,12 +342,18 @@ function HeroSection() {
                             shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.9),0_0_28px_rgba(14,165,233,0.12)]"
                  style={{ background: '#0a0a0a' }}>
 
-              {/* Real mobile screenshot (drop hero-mobile.jpg in /public when ready) */}
+              {/* Real mobile screenshot — scale(1.22) zooms in so overflow-hidden
+                  clips the iOS status bar (top ~5%) and browser bar (bottom ~7%)
+                  transformOrigin at 42% shifts the focal point toward the map/card area */}
               <img
                 src="/hero-mobile.jpg"
                 alt="Vista mobile Ubyca"
                 className="absolute inset-0 w-full h-full object-cover select-none"
-                style={{ objectPosition: 'center top' }}
+                style={{
+                  objectPosition: 'center 50%',
+                  transform: 'scale(1.22)',
+                  transformOrigin: 'center 42%',
+                }}
                 draggable={false}
                 loading="lazy"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}

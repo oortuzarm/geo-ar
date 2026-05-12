@@ -14,7 +14,7 @@ import PreviewQRModal from './PreviewQRModal'
 import { useGeoStore } from '../../store/geoStore'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
-import { getCurrentPosition } from '../../hooks/useGeolocation'
+// useGeolocation removed — smart watchPosition logic is inline below
 import type { GeoPoint, MapBounds, PoiSearchResult } from '../../types'
 
 export default function DashboardPage() {
@@ -51,6 +51,20 @@ export default function DashboardPage() {
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [poiResults, setPoiResults] = useState<PoiSearchResult[]>([])
+
+  // ── User location (smart watchPosition) ──────────────────────────────────
+  const [editorUserPos, setEditorUserPos] = useState<{ lat: number; lng: number; accuracy: number } | null>(null)
+  const locationWatchRef = useRef<number | null>(null)
+  const bestReadingRef   = useRef<{ lat: number; lng: number; accuracy: number } | null>(null)
+  const flyDoneRef       = useRef(false)
+  const tier2TimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const tier3TimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => {
+    if (locationWatchRef.current !== null) navigator.geolocation.clearWatch(locationWatchRef.current)
+    if (tier2TimerRef.current !== null) clearTimeout(tier2TimerRef.current)
+    if (tier3TimerRef.current !== null) clearTimeout(tier3TimerRef.current)
+  }, [])
 
   // Load project on mount
   useEffect(() => {
@@ -456,17 +470,80 @@ export default function DashboardPage() {
     }
   }
 
-  async function handleMyLocation() {
+  function handleMyLocation() {
+    console.log('[GPS] button clicked')
+    if (!navigator.geolocation) {
+      addToast('Tu navegador no soporta geolocalización', 'error')
+      return
+    }
+
+    // Clear any previous watch + timers
+    if (locationWatchRef.current !== null) navigator.geolocation.clearWatch(locationWatchRef.current)
+    if (tier2TimerRef.current !== null) clearTimeout(tier2TimerRef.current)
+    if (tier3TimerRef.current !== null) clearTimeout(tier3TimerRef.current)
+    flyDoneRef.current = false
+    bestReadingRef.current = null
+
     setLocatingUser(true)
-    try {
-      const pos = await getCurrentPosition()
-      setMapCenter([pos.coords.latitude, pos.coords.longitude])
+    console.log('[GPS] requesting geolocation…')
+
+    function commitFix(pos: { lat: number; lng: number; accuracy: number }) {
+      if (flyDoneRef.current) {
+        // Post-lock refinement: update dot only, no re-fly
+        setEditorUserPos(pos)
+        return
+      }
+      flyDoneRef.current = true
+      console.log('[GPS] committing fix — accuracy:', pos.accuracy, 'm')
+      setEditorUserPos(pos)
+      setMapCenter([pos.lat, pos.lng])
       setMapZoom(16)
-    } catch {
-      addToast('No se pudo obtener tu ubicación', 'error')
-    } finally {
       setLocatingUser(false)
     }
+
+    locationWatchRef.current = navigator.geolocation.watchPosition(
+      (raw) => {
+        const pos = { lat: raw.coords.latitude, lng: raw.coords.longitude, accuracy: raw.coords.accuracy }
+        console.log('[GPS] position received — accuracy:', pos.accuracy, 'm')
+
+        // Always keep the best reading
+        if (!bestReadingRef.current || pos.accuracy < bestReadingRef.current.accuracy) {
+          bestReadingRef.current = pos
+        }
+
+        // Tier 1: ≤5 m → commit immediately
+        if (pos.accuracy <= 5) {
+          if (tier2TimerRef.current !== null) clearTimeout(tier2TimerRef.current)
+          if (tier3TimerRef.current !== null) clearTimeout(tier3TimerRef.current)
+          commitFix(pos)
+          return
+        }
+
+        // Tier 2: ≤10 m → commit after 3 s of no Tier-1
+        if (pos.accuracy <= 10 && !flyDoneRef.current && !tier2TimerRef.current) {
+          tier2TimerRef.current = setTimeout(() => {
+            if (!flyDoneRef.current && bestReadingRef.current) commitFix(bestReadingRef.current)
+          }, 3000)
+        }
+
+        // Tier 3: commit best reading after 8 s regardless of accuracy
+        if (!flyDoneRef.current && !tier3TimerRef.current) {
+          tier3TimerRef.current = setTimeout(() => {
+            if (!flyDoneRef.current && bestReadingRef.current) commitFix(bestReadingRef.current)
+          }, 8000)
+        }
+
+        // Refine dot if already locked
+        if (flyDoneRef.current) setEditorUserPos(pos)
+      },
+      (err) => {
+        console.warn('[GPS] error:', err.code, err.message)
+        setLocatingUser(false)
+        if (err.code === 1) addToast('Permiso de ubicación denegado', 'error')
+        else addToast('No se pudo obtener tu ubicación', 'error')
+      },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
+    )
   }
 
   if (loading) {
@@ -757,6 +834,7 @@ export default function DashboardPage() {
             poiResults={poiResults}
             onBoundsChange={setMapBounds}
             onPoiCreate={handlePoiCreateFromPopup}
+            userPos={editorUserPos}
           />
         </div>
 

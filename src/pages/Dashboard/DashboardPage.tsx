@@ -558,22 +558,27 @@ export default function DashboardPage() {
 
       // If no acceptable fix within 10 s → show failure options
       desktopTimeoutRef.current = setTimeout(() => {
+        // flyDoneRef guards against the rare case a ≤30m fix arrives in the same tick
         if (!flyDoneRef.current) {
           if (locationWatchRef.current !== null) {
             navigator.geolocation.clearWatch(locationWatchRef.current)
-            locationWatchRef.current = null
+            locationWatchRef.current = null   // ← nulled before any late callbacks can check it
           }
           setLocationPhase('failed')
           setLocatingUser(false)
+          setCurrentGpsAccuracy(null)
         }
       }, 10000)
 
       locationWatchRef.current = navigator.geolocation.watchPosition(
         (raw) => {
+          // Guard: ignore callbacks that arrive after we already cancelled the watch
+          if (locationWatchRef.current === null) return
+
           const acc = raw.coords.accuracy
           setCurrentGpsAccuracy(acc)
 
-          // Reject readings worse than 50 m on desktop
+          // Reject readings worse than 50 m — never commit an imprecise fix on desktop
           if (acc > 50) return
 
           const pos = { lat: raw.coords.latitude, lng: raw.coords.longitude, accuracy: acc }
@@ -582,6 +587,8 @@ export default function DashboardPage() {
           // Target ≤ 30 m → commit immediately
           if (acc <= 30) {
             if (desktopTimeoutRef.current !== null) { clearTimeout(desktopTimeoutRef.current); desktopTimeoutRef.current = null }
+            navigator.geolocation.clearWatch(locationWatchRef.current!)
+            locationWatchRef.current = null
             flyDoneRef.current = true
             setEditorUserPos(pos)
             setLocationSource('gps')
@@ -591,16 +598,26 @@ export default function DashboardPage() {
             setCurrentGpsAccuracy(null)
             setLocatingUser(false)
           }
-          // 30 m < acc ≤ 50 m: keep waiting, continue showing accuracy
+          // 30 m < acc ≤ 50 m → keep watching, accuracy shown in acquiring card
         },
         (err) => {
+          // Guard: ignore if we already cancelled the watch from the 10s timer
+          if (locationWatchRef.current === null) return
+
+          locationWatchRef.current = null
           if (desktopTimeoutRef.current !== null) { clearTimeout(desktopTimeoutRef.current); desktopTimeoutRef.current = null }
-          setLocationPhase('idle')
           setLocatingUser(false)
-          if (err.code === 1) addToast('Permiso de ubicación denegado', 'error')
-          else addToast('No se pudo obtener tu ubicación', 'error')
+
+          if (err.code === 1) {
+            // Permission denied — go to 'failed' so user sees manual options
+            setLocationPhase('failed')
+            addToast('Permiso de ubicación denegado', 'error')
+          } else {
+            setLocationPhase('failed')
+          }
         },
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 12000 },
+        // No timeout on watchPosition — our own 10s timer is the sole authority
+        { enableHighAccuracy: true, maximumAge: 0 },
       )
     }
   }

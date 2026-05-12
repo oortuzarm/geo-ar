@@ -253,129 +253,151 @@ function HeroSection() {
           </motion.div>
         </div>
 
-        {/* ── Right: product mockup ──────────────────────────────────────────── */}
+        {/* ── Right: product screenshots ─────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, x: 36 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.9, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
           className="flex-1 w-full min-w-0 relative"
+          style={{ paddingBottom: 48 }}
         >
-          {/* Glow behind mockup */}
-          <div className="absolute -inset-16 pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(14,165,233,0.06) 0%, transparent 70%)' }} />
+          {/* Blue glow behind the whole composition */}
+          <div className="absolute -inset-20 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse 85% 65% at 55% 45%, rgba(14,165,233,0.09) 0%, transparent 68%)' }} />
 
-          {/* Browser chrome */}
-          <div className="relative rounded-2xl overflow-hidden border border-white/[0.09]
-                          shadow-[0_32px_96px_rgba(0,0,0,0.7)]">
-            {/* Title bar */}
-            <div className="h-10 bg-[#0d1117] border-b border-white/[0.06] flex items-center gap-3 px-4 flex-shrink-0">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                <div className="w-3 h-3 rounded-full bg-green-500/60" />
+          {/* ── Desktop screenshot — browser chrome wrapper ─────────────────── */}
+          <div className="relative rounded-2xl overflow-hidden
+                          border border-white/[0.10]
+                          shadow-[0_4px_6px_rgba(0,0,0,0.3),0_24px_80px_rgba(0,0,0,0.65),0_0_0_1px_rgba(14,165,233,0.06)]">
+
+            {/* Browser title bar */}
+            <div className="h-10 bg-[#111827] border-b border-white/[0.06]
+                            flex items-center gap-3 px-4 flex-shrink-0">
+              <div className="flex gap-1.5 flex-shrink-0">
+                <div className="w-3 h-3 rounded-full bg-red-500/70" />
+                <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
+                <div className="w-3 h-3 rounded-full bg-green-500/70" />
               </div>
-              <div className="flex-1 flex justify-center">
-                <div className="bg-white/[0.05] rounded-md px-4 py-0.5 text-[11px] text-slate-500">
-                  app.ubyca.com/project/descuentos
+              <div className="flex-1 flex justify-center min-w-0">
+                <div className="bg-white/[0.05] border border-white/[0.05] rounded-md
+                                px-4 py-1 text-[11px] text-slate-500 truncate max-w-[220px]">
+                  studio.ubyca.com/project/descuentos
                 </div>
               </div>
               <div className="flex items-center gap-1.5 text-[10px] font-semibold flex-shrink-0
-                              text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                              text-emerald-400 bg-emerald-500/10 border border-emerald-500/20
+                              px-2.5 py-1 rounded-full">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 Publicado
               </div>
             </div>
 
-            {/* Real editor screenshot */}
-            <div className="relative bg-[#0d1117] overflow-hidden" style={{ height: 400 }}>
-              {/* Fallback visible when image is missing */}
+            {/* Screenshot body */}
+            <div className="relative bg-[#111827] overflow-hidden" style={{ height: 410 }}>
+              {/* Fallback grid (hidden once image loads) */}
               <div className="absolute inset-0">
                 <MockMap />
               </div>
+
+              {/* Real editor screenshot */}
               <img
-                src="/screenshot-editor.png"
-                alt="Editor geolocalizado Ubyca"
+                src="/hero-desktop.png"
+                alt="Editor Ubyca — dashboard de experiencias geolocalizadas"
                 className="absolute inset-0 w-full h-full object-cover select-none"
-                style={{ objectPosition: '18% top', filter: 'brightness(0.88) saturate(0.9)' }}
+                style={{ objectPosition: 'center center' }}
                 draggable={false}
+                loading="eager"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
               />
-              {/* Edge gradients — blend into the dark frame */}
+
+              {/* Bottom fade — creates depth and lets phone float on top cleanly */}
               <div className="absolute inset-0 pointer-events-none" style={{
-                background: [
-                  'linear-gradient(to right, transparent 45%, rgba(3,6,14,0.80) 100%)',
-                  'linear-gradient(to bottom, transparent 58%, rgba(3,6,14,0.70) 100%)',
-                ].join(', '),
+                background: 'linear-gradient(to bottom, transparent 62%, rgba(5,8,16,0.82) 100%)',
               }} />
 
-              {/* Floating point detail */}
-              <div className="absolute top-3 right-3 bg-gray-950/92 backdrop-blur-xl
-                              border border-white/[0.13] rounded-xl p-3 w-40
-                              shadow-[0_8px_32px_rgba(0,0,0,0.65)]">
-                <div className="flex items-center gap-2 mb-2.5">
-                  <div className="w-2 h-2 rounded-full bg-brand-400 flex-shrink-0
-                                  shadow-[0_0_8px_#38bdf8]" />
-                  <p className="text-[10px] font-bold text-white truncate">Punto activo</p>
-                </div>
-                <div className="space-y-1.5">
-                  {[['Radio', '195m', 'text-white'], ['Visitas', '247', 'text-brand-400'], ['Activ.', '189', 'text-emerald-400']].map(([k, v, cls]) => (
-                    <div key={k} className="flex justify-between text-[10px]">
-                      <span className="text-slate-500">{k}</span>
-                      <span className={`font-semibold ${cls}`}>{v}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Inside-radius chip */}
+              {/* GPS precision chip — matches real screenshot UI */}
               <div className="absolute bottom-3 left-3 flex items-center gap-1.5 backdrop-blur-sm
-                              bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2.5 py-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] font-semibold text-emerald-400">Dentro del área · 42m</span>
+                              bg-sky-500/10 border border-sky-500/20 rounded-full px-2.5 py-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+                <span className="text-[10px] font-semibold text-sky-400">Activación por GPS</span>
               </div>
             </div>
           </div>
 
-          {/* Floating phone mockup */}
+          {/* ── Floating phone mockup ───────────────────────────────────────── */}
           <motion.div
-            animate={{ y: [0, -8, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
-            className="absolute -right-4 xl:-right-8 -bottom-10 z-20 hidden lg:block"
-            style={{ width: 158, height: 316 }}
+            animate={{ y: [0, -9, 0] }}
+            transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+            className="absolute -right-6 xl:-right-10 z-20 hidden lg:block"
+            style={{ width: 172, height: 344, bottom: -8 }}
           >
-            <div className="w-full h-full rounded-[2.2rem] border-[4px] border-gray-700/80
-                            bg-gray-950 overflow-hidden shadow-[0_32px_64px_rgba(0,0,0,0.85)]">
-              {/* Status bar */}
-              <div className="relative flex items-center justify-between px-4 pt-2.5">
-                <span className="text-[8px] text-white/40 font-semibold">9:41</span>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-3 bg-black rounded-b-xl" />
-                <div className="w-3 h-1.5 rounded-[2px] border border-white/25 overflow-hidden">
-                  <div className="h-full w-4/5 bg-green-400 rounded-[1px]" />
+            {/* Glow under the phone */}
+            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-28 h-8 pointer-events-none"
+              style={{ background: 'radial-gradient(ellipse 100% 100% at 50% 100%, rgba(14,165,233,0.22) 0%, transparent 70%)' }} />
+
+            {/* iPhone frame */}
+            <div className="relative w-full h-full rounded-[2.6rem]
+                            border-[3.5px] border-gray-600/70
+                            overflow-hidden
+                            shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.9),0_0_28px_rgba(14,165,233,0.12)]"
+                 style={{ background: '#0a0a0a' }}>
+
+              {/* Real mobile screenshot (drop hero-mobile.jpg in /public when ready) */}
+              <img
+                src="/hero-mobile.jpg"
+                alt="Vista mobile Ubyca"
+                className="absolute inset-0 w-full h-full object-cover select-none"
+                style={{ objectPosition: 'center top' }}
+                draggable={false}
+                loading="lazy"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
+
+              {/* Coded fallback (visible only when /hero-mobile.jpg is missing) */}
+              <div className="w-full h-full flex flex-col">
+                {/* Status bar */}
+                <div className="relative flex items-center justify-between px-4 pt-3 flex-shrink-0">
+                  <span className="text-[8px] text-white/50 font-semibold">12:21</span>
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-3.5 bg-black rounded-b-2xl" />
+                  <div className="flex items-center gap-1">
+                    <svg className="w-2 h-2 text-white/50" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                    </svg>
+                    <div className="w-3 h-1.5 rounded-[2px] border border-white/30 overflow-hidden">
+                      <div className="h-full w-4/5 bg-green-400 rounded-[1px]" />
+                    </div>
+                  </div>
                 </div>
-              </div>
-              {/* Map */}
-              <div className="relative overflow-hidden" style={{ height: 115 }}>
-                <MockMap />
-              </div>
-              {/* Location badge */}
-              <div className="flex justify-center mt-2">
-                <div className="flex items-center gap-1 bg-gray-900/80 border border-white/10 rounded-full px-2 py-0.5">
-                  <div className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
-                  <span className="text-[8px] text-slate-300 font-semibold">Ubicación activa</span>
+                {/* Map area */}
+                <div className="flex-1 relative overflow-hidden">
+                  <MockMap />
+                  {/* GPS dot on map */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <div className="w-16 h-16 rounded-full border border-brand-500/30 bg-brand-500/[0.08]" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+                                    w-3 h-3 rounded-full bg-brand-400 border-2 border-white
+                                    shadow-[0_0_10px_#0ea5e9]" />
+                  </div>
+                  {/* Location active badge */}
+                  <div className="absolute top-2.5 left-1/2 -translate-x-1/2
+                                  flex items-center gap-1 bg-black/70 backdrop-blur-sm
+                                  border border-white/10 rounded-full px-2 py-0.5">
+                    <div className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
+                    <span className="text-[7px] text-slate-300 font-semibold">Ubicación activa</span>
+                  </div>
                 </div>
-              </div>
-              {/* Bottom sheet */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gray-950 rounded-t-2xl
-                              border-t border-white/[0.06] px-3 pt-2.5 pb-4">
-                <div className="w-6 h-0.5 bg-white/15 rounded-full mx-auto mb-2.5" />
-                <p className="text-[10px] font-black text-white">Café Histórico</p>
-                <div className="flex items-center gap-1.5 mt-0.5 mb-2.5">
-                  <span className="text-[8px] text-emerald-400 font-bold">✓ Dentro del área</span>
-                  <span className="text-[8px] text-slate-600">· 42m</span>
+                {/* Bottom sheet */}
+                <div className="flex-shrink-0 bg-gray-950 rounded-t-2xl
+                                border-t border-white/[0.07] px-3.5 pt-2.5 pb-4">
+                  <div className="w-6 h-0.5 bg-white/15 rounded-full mx-auto mb-2.5" />
+                  <p className="text-[10px] font-black text-white leading-none">20 % de descuento</p>
+                  <p className="text-[8px] text-slate-500 mt-1 mb-2.5 leading-snug line-clamp-2">
+                    Válido exclusivamente en este local.
+                  </p>
+                  <button className="w-full py-1.5 rounded-xl bg-brand-600 text-white text-[9px] font-bold">
+                    Ver detalle
+                  </button>
                 </div>
-                <button className="w-full py-1.5 rounded-xl bg-brand-600 text-white text-[9px] font-bold">
-                  Acceder al contenido
-                </button>
               </div>
             </div>
           </motion.div>

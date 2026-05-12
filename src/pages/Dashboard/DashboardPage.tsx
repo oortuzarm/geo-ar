@@ -17,6 +17,9 @@ import { ApiError } from '../../lib/apiFetch'
 // useGeolocation removed — smart watchPosition logic is inline below
 import type { GeoPoint, MapBounds, PoiSearchResult } from '../../types'
 
+type LocationPhase = 'idle' | 'acquiring' | 'failed' | 'manual-map' | 'manual-address'
+type LocationSource = 'gps' | 'manual' | null
+
 export default function DashboardPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -54,16 +57,25 @@ export default function DashboardPage() {
 
   // ── User location (smart watchPosition) ──────────────────────────────────
   const [editorUserPos, setEditorUserPos] = useState<{ lat: number; lng: number; accuracy: number } | null>(null)
-  const locationWatchRef = useRef<number | null>(null)
-  const bestReadingRef   = useRef<{ lat: number; lng: number; accuracy: number } | null>(null)
-  const flyDoneRef       = useRef(false)
-  const tier2TimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const tier3TimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const locationWatchRef    = useRef<number | null>(null)
+  const bestReadingRef      = useRef<{ lat: number; lng: number; accuracy: number } | null>(null)
+  const flyDoneRef          = useRef(false)
+  const tier2TimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const tier3TimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const desktopTimeoutRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Desktop-only location UI state
+  const [locationPhase, setLocationPhase]         = useState<LocationPhase>('idle')
+  const [currentGpsAccuracy, setCurrentGpsAccuracy] = useState<number | null>(null)
+  const [locationSource, setLocationSource]       = useState<LocationSource>(null)
+  const [manualAddress, setManualAddress]         = useState('')
+  const [geocoding, setGeocoding]                 = useState(false)
 
   useEffect(() => () => {
     if (locationWatchRef.current !== null) navigator.geolocation.clearWatch(locationWatchRef.current)
     if (tier2TimerRef.current !== null) clearTimeout(tier2TimerRef.current)
     if (tier3TimerRef.current !== null) clearTimeout(tier3TimerRef.current)
+    if (desktopTimeoutRef.current !== null) clearTimeout(desktopTimeoutRef.current)
   }, [])
 
   // Load project on mount
@@ -152,6 +164,17 @@ export default function DashboardPage() {
 
   const handleMapClick = useCallback(
     async (lat: number, lng: number) => {
+      // Desktop manual location selection intercepts all other click behaviour
+      if (locationPhase === 'manual-map') {
+        const pos = { lat, lng, accuracy: 0 }
+        setEditorUserPos(pos)
+        setLocationSource('manual')
+        setMapCenter([lat, lng])
+        setMapZoom(16)
+        setLocationPhase('idle')
+        return
+      }
+
       if (!project) return
 
       if (selectedPointId) {
@@ -176,7 +199,7 @@ export default function DashboardPage() {
       await openNewPoint(lat, lng)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [project, selectedPointId, isMobile, fabPlacementMode],
+    [project, selectedPointId, isMobile, fabPlacementMode, locationPhase],
   )
 
   async function handleAddPoint() {
@@ -471,79 +494,138 @@ export default function DashboardPage() {
   }
 
   function handleMyLocation() {
-    console.log('[GPS] button clicked')
     if (!navigator.geolocation) {
       addToast('Tu navegador no soporta geolocalización', 'error')
       return
     }
 
-    // Clear any previous watch + timers
+    // Reset all GPS timers and state
     if (locationWatchRef.current !== null) navigator.geolocation.clearWatch(locationWatchRef.current)
-    if (tier2TimerRef.current !== null) clearTimeout(tier2TimerRef.current)
-    if (tier3TimerRef.current !== null) clearTimeout(tier3TimerRef.current)
+    if (tier2TimerRef.current !== null) { clearTimeout(tier2TimerRef.current); tier2TimerRef.current = null }
+    if (tier3TimerRef.current !== null) { clearTimeout(tier3TimerRef.current); tier3TimerRef.current = null }
+    if (desktopTimeoutRef.current !== null) { clearTimeout(desktopTimeoutRef.current); desktopTimeoutRef.current = null }
     flyDoneRef.current = false
     bestReadingRef.current = null
-
     setLocatingUser(true)
-    console.log('[GPS] requesting geolocation…')
 
-    function commitFix(pos: { lat: number; lng: number; accuracy: number }) {
-      if (flyDoneRef.current) {
-        // Post-lock refinement: update dot only, no re-fly
+    if (isMobile) {
+      // ── Mobile: original tiered strategy (unchanged) ─────────────────────
+      function commitFix(pos: { lat: number; lng: number; accuracy: number }) {
+        if (flyDoneRef.current) { setEditorUserPos(pos); return }
+        flyDoneRef.current = true
         setEditorUserPos(pos)
-        return
+        setLocationSource('gps')
+        setMapCenter([pos.lat, pos.lng])
+        setMapZoom(16)
+        setLocatingUser(false)
       }
-      flyDoneRef.current = true
-      console.log('[GPS] committing fix — accuracy:', pos.accuracy, 'm')
+
+      locationWatchRef.current = navigator.geolocation.watchPosition(
+        (raw) => {
+          const pos = { lat: raw.coords.latitude, lng: raw.coords.longitude, accuracy: raw.coords.accuracy }
+          if (!bestReadingRef.current || pos.accuracy < bestReadingRef.current.accuracy) bestReadingRef.current = pos
+
+          if (pos.accuracy <= 5) {
+            if (tier2TimerRef.current !== null) clearTimeout(tier2TimerRef.current)
+            if (tier3TimerRef.current !== null) clearTimeout(tier3TimerRef.current)
+            commitFix(pos); return
+          }
+          if (pos.accuracy <= 10 && !flyDoneRef.current && !tier2TimerRef.current) {
+            tier2TimerRef.current = setTimeout(() => {
+              if (!flyDoneRef.current && bestReadingRef.current) commitFix(bestReadingRef.current)
+            }, 3000)
+          }
+          if (!flyDoneRef.current && !tier3TimerRef.current) {
+            tier3TimerRef.current = setTimeout(() => {
+              if (!flyDoneRef.current && bestReadingRef.current) commitFix(bestReadingRef.current)
+            }, 8000)
+          }
+          if (flyDoneRef.current) setEditorUserPos(pos)
+        },
+        (err) => {
+          setLocatingUser(false)
+          if (err.code === 1) addToast('Permiso de ubicación denegado', 'error')
+          else addToast('No se pudo obtener tu ubicación', 'error')
+        },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
+      )
+    } else {
+      // ── Desktop: strict accuracy thresholds + failure fallback UI ─────────
+      setLocationPhase('acquiring')
+      setCurrentGpsAccuracy(null)
+
+      // If no acceptable fix within 10 s → show failure options
+      desktopTimeoutRef.current = setTimeout(() => {
+        if (!flyDoneRef.current) {
+          if (locationWatchRef.current !== null) {
+            navigator.geolocation.clearWatch(locationWatchRef.current)
+            locationWatchRef.current = null
+          }
+          setLocationPhase('failed')
+          setLocatingUser(false)
+        }
+      }, 10000)
+
+      locationWatchRef.current = navigator.geolocation.watchPosition(
+        (raw) => {
+          const acc = raw.coords.accuracy
+          setCurrentGpsAccuracy(acc)
+
+          // Reject readings worse than 50 m on desktop
+          if (acc > 50) return
+
+          const pos = { lat: raw.coords.latitude, lng: raw.coords.longitude, accuracy: acc }
+          if (!bestReadingRef.current || acc < bestReadingRef.current.accuracy) bestReadingRef.current = pos
+
+          // Target ≤ 30 m → commit immediately
+          if (acc <= 30) {
+            if (desktopTimeoutRef.current !== null) { clearTimeout(desktopTimeoutRef.current); desktopTimeoutRef.current = null }
+            flyDoneRef.current = true
+            setEditorUserPos(pos)
+            setLocationSource('gps')
+            setMapCenter([pos.lat, pos.lng])
+            setMapZoom(16)
+            setLocationPhase('idle')
+            setCurrentGpsAccuracy(null)
+            setLocatingUser(false)
+          }
+          // 30 m < acc ≤ 50 m: keep waiting, continue showing accuracy
+        },
+        (err) => {
+          if (desktopTimeoutRef.current !== null) { clearTimeout(desktopTimeoutRef.current); desktopTimeoutRef.current = null }
+          setLocationPhase('idle')
+          setLocatingUser(false)
+          if (err.code === 1) addToast('Permiso de ubicación denegado', 'error')
+          else addToast('No se pudo obtener tu ubicación', 'error')
+        },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 12000 },
+      )
+    }
+  }
+
+  async function handleGeocodeAddress() {
+    if (!manualAddress.trim()) return
+    setGeocoding(true)
+    try {
+      const params = new URLSearchParams({ q: manualAddress.trim(), format: 'json', limit: '1' })
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
+        headers: { 'Accept-Language': 'es' },
+      })
+      if (!res.ok) throw new Error()
+      const data = await res.json() as Array<{ lat: string; lon: string }>
+      if (!data[0]) { addToast('No se encontró la dirección', 'error'); return }
+      const pos = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), accuracy: 0 }
       setEditorUserPos(pos)
+      setLocationSource('manual')
       setMapCenter([pos.lat, pos.lng])
       setMapZoom(16)
-      setLocatingUser(false)
+      setLocationPhase('idle')
+      setManualAddress('')
+    } catch {
+      addToast('Error al buscar la dirección', 'error')
+    } finally {
+      setGeocoding(false)
     }
-
-    locationWatchRef.current = navigator.geolocation.watchPosition(
-      (raw) => {
-        const pos = { lat: raw.coords.latitude, lng: raw.coords.longitude, accuracy: raw.coords.accuracy }
-        console.log('[GPS] position received — accuracy:', pos.accuracy, 'm')
-
-        // Always keep the best reading
-        if (!bestReadingRef.current || pos.accuracy < bestReadingRef.current.accuracy) {
-          bestReadingRef.current = pos
-        }
-
-        // Tier 1: ≤5 m → commit immediately
-        if (pos.accuracy <= 5) {
-          if (tier2TimerRef.current !== null) clearTimeout(tier2TimerRef.current)
-          if (tier3TimerRef.current !== null) clearTimeout(tier3TimerRef.current)
-          commitFix(pos)
-          return
-        }
-
-        // Tier 2: ≤10 m → commit after 3 s of no Tier-1
-        if (pos.accuracy <= 10 && !flyDoneRef.current && !tier2TimerRef.current) {
-          tier2TimerRef.current = setTimeout(() => {
-            if (!flyDoneRef.current && bestReadingRef.current) commitFix(bestReadingRef.current)
-          }, 3000)
-        }
-
-        // Tier 3: commit best reading after 8 s regardless of accuracy
-        if (!flyDoneRef.current && !tier3TimerRef.current) {
-          tier3TimerRef.current = setTimeout(() => {
-            if (!flyDoneRef.current && bestReadingRef.current) commitFix(bestReadingRef.current)
-          }, 8000)
-        }
-
-        // Refine dot if already locked
-        if (flyDoneRef.current) setEditorUserPos(pos)
-      },
-      (err) => {
-        console.warn('[GPS] error:', err.code, err.message)
-        setLocatingUser(false)
-        if (err.code === 1) addToast('Permiso de ubicación denegado', 'error')
-        else addToast('No se pudo obtener tu ubicación', 'error')
-      },
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
-    )
   }
 
   if (loading) {
@@ -703,7 +785,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* Map area */}
-        <div className="flex-1 relative overflow-hidden min-h-0 min-w-0">
+        <div className={`flex-1 relative overflow-hidden min-h-0 min-w-0${locationPhase === 'manual-map' ? ' cursor-crosshair' : ''}`}>
 
           {/* POI / address search bar
               Mobile: left-14 (56 px) clears the Leaflet zoom controls on the left;
@@ -815,13 +897,140 @@ export default function DashboardPage() {
             </>
           )}
 
-          {points.length === 0 && !fabPlacementMode && (
+          {points.length === 0 && !fabPlacementMode && locationPhase === 'idle' && (
             <div className="absolute bottom-36 lg:bottom-8 left-1/2 -translate-x-1/2 z-[1000]
                            bg-gray-900/90 border border-gray-700 rounded-lg px-4 py-2
                            text-sm text-gray-400 whitespace-nowrap">
               {isMobile
                 ? 'Usa el botón + para agregar el primer punto'
                 : 'Haz clic en el mapa para agregar el primer punto'}
+            </div>
+          )}
+
+          {/* ── Desktop: GPS acquiring status ─────────────────────────────── */}
+          {locationPhase === 'acquiring' && (
+            <div className="hidden lg:flex absolute bottom-20 left-4 z-[1000] flex-col gap-1
+                            bg-gray-900/97 border border-gray-700 rounded-xl px-4 py-3 shadow-lg
+                            backdrop-blur-sm min-w-[220px]">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-brand-400 animate-pulse flex-shrink-0" />
+                <p className="text-sm font-medium text-gray-100">Obteniendo ubicación precisa…</p>
+              </div>
+              {currentGpsAccuracy !== null && (
+                <p className="text-xs text-gray-400 pl-4">
+                  Precisión actual: {Math.round(currentGpsAccuracy)} m
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* ── Desktop: GPS failed — manual fallback options ─────────────── */}
+          {locationPhase === 'failed' && (
+            <div className="hidden lg:flex absolute bottom-20 left-4 z-[1000] flex-col gap-3
+                            bg-gray-900/97 border border-gray-700 rounded-xl px-4 py-4 shadow-lg
+                            backdrop-blur-sm w-72">
+              <p className="text-sm font-medium text-gray-100 leading-snug">
+                No pudimos obtener una ubicación precisa desde este computador.
+              </p>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => setLocationPhase('manual-address')}
+                  className="w-full text-sm bg-brand-600 hover:bg-brand-500 text-white
+                             rounded-lg px-3 py-2 text-center font-medium transition-colors"
+                >
+                  Escribir dirección
+                </button>
+                <button
+                  onClick={() => setLocationPhase('manual-map')}
+                  className="w-full text-sm bg-gray-700 hover:bg-gray-600 text-gray-100
+                             rounded-lg px-3 py-2 text-center font-medium transition-colors"
+                >
+                  Seleccionar en el mapa
+                </button>
+              </div>
+              <button
+                onClick={() => setLocationPhase('idle')}
+                className="text-xs text-gray-500 hover:text-gray-300 transition-colors text-center"
+              >
+                Cancelar
+              </button>
+            </div>
+          )}
+
+          {/* ── Desktop: manual map click instruction ─────────────────────── */}
+          {locationPhase === 'manual-map' && (
+            <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 top-16 z-[1001]
+                            items-center gap-3 bg-gray-900/97 backdrop-blur-sm
+                            border border-brand-600/50 rounded-2xl px-4 py-3
+                            shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+              <p className="text-sm font-medium text-gray-100">
+                Haz clic en el mapa para indicar tu ubicación.
+              </p>
+              <button
+                onClick={() => setLocationPhase('idle')}
+                className="flex-shrink-0 text-gray-400 hover:text-gray-100 transition-colors"
+                aria-label="Cancelar"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* ── Desktop: address geocoder input ───────────────────────────── */}
+          {locationPhase === 'manual-address' && (
+            <div className="hidden lg:flex absolute bottom-20 left-4 z-[1001] flex-col gap-2
+                            bg-gray-900/97 border border-gray-700 rounded-xl px-4 py-3 shadow-lg
+                            backdrop-blur-sm w-72">
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Escribir dirección</p>
+              <input
+                type="text"
+                value={manualAddress}
+                onChange={(e) => setManualAddress(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { void handleGeocodeAddress() } }}
+                placeholder="Ej: Av. Corrientes 1234, Buenos Aires"
+                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2
+                           text-sm text-gray-100 placeholder-gray-500
+                           focus:outline-none focus:border-brand-500 transition-colors"
+                // eslint-disable-next-line jsx-a11y/no-autofocus
+                autoFocus
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { void handleGeocodeAddress() }}
+                  disabled={!manualAddress.trim() || geocoding}
+                  className="flex-1 text-sm bg-brand-600 hover:bg-brand-500 disabled:opacity-50
+                             text-white rounded-lg px-3 py-2 font-medium transition-colors"
+                >
+                  {geocoding ? 'Buscando…' : 'Buscar'}
+                </button>
+                <button
+                  onClick={() => setLocationPhase('idle')}
+                  className="text-sm bg-gray-700 hover:bg-gray-600 text-gray-100
+                             rounded-lg px-3 py-2 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Desktop: manual location label ────────────────────────────── */}
+          {locationPhase === 'idle' && locationSource === 'manual' && (
+            <div className="hidden lg:flex absolute bottom-20 left-4 z-[1000] items-center gap-2
+                            bg-gray-900/80 border border-gray-700 rounded-lg px-3 py-1.5
+                            backdrop-blur-sm">
+              <span className="text-xs text-gray-400">Ubicación indicada manualmente</span>
+              <button
+                onClick={() => { setEditorUserPos(null); setLocationSource(null) }}
+                className="text-gray-500 hover:text-gray-300 transition-colors"
+                aria-label="Quitar ubicación manual"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           )}
 

@@ -105,7 +105,7 @@ export default async function handler(req, res) {
     },
     body: JSON.stringify({
       from: 'Ubyca Contacto <contacto@ubyca.com>',
-      to: ['osvaldo@ubyca.com'],
+      to: [process.env.CONTACT_TO_EMAIL || 'contacto@ubyca.com'],
       reply_to: email.trim(),
       subject: `Nuevo contacto: ${name.trim()}${company?.trim() ? ` — ${company.trim()}` : ''}`,
       html,

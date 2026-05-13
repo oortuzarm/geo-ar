@@ -149,7 +149,7 @@ function ContactSection() {
               </h1>
 
               <p className="text-slate-400 text-base leading-relaxed mb-6">
-                Cuéntanos qué quieres crear. Ubyca te permite crear experiencias
+                Ubyca te permite crear experiencias
                 geolocalizadas donde el contenido se desbloquea en lugares reales.
               </p>
 

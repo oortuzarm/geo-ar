@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import LandingPage     from './pages/Landing/LandingPage'
+import LandingV2Page  from './pages/Landing/LandingV2Page'
 import AppShell        from './pages/Home/AppShell'
 import HomePage        from './pages/Home/HomePage'
 import MetricsPage     from './pages/Metrics/MetricsPage'
@@ -52,6 +53,7 @@ const protectedChildren = [
 // No auth, no app routes — landing page catches everything.
 
 export const landingRouter = createBrowserRouter([
+  { path: '/landing-v2', element: <LandingV2Page /> },
   { path: '*', element: <LandingPage /> },
 ])
 
@@ -73,6 +75,7 @@ export const appRouter = createBrowserRouter([
 
 export const devRouter = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
+  { path: '/landing-v2', element: <LandingV2Page /> },
   ...authRoutes,
   ...publicRoutes,
   {

@@ -49,7 +49,7 @@ function NavBar() {
   const links: [string, string][] = [
     ['Cómo funciona', 'v2-how'],
     ['Casos de uso',  'v2-cases'],
-    ['El concepto',   'v2-concept'],
+    ['Analytics',      'v2-concept'],
   ]
 
   return (
@@ -57,17 +57,13 @@ function NavBar() {
       <div className="border-b border-white/[0.06] bg-[#050810]/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
 
-          <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center
-                            shadow-[0_0_18px_rgba(2,132,199,0.4)]">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-            <span className="font-black text-white text-[17px] tracking-tight">Ubyca</span>
+          <Link to="/" className="flex items-center flex-shrink-0">
+            <img
+              src="/logo-blanco.png"
+              alt="Ubyca"
+              className="h-11 w-auto select-none"
+              draggable={false}
+            />
           </Link>
 
           <nav className="hidden md:flex items-center gap-0.5">
@@ -246,19 +242,13 @@ function HeroSection() {
                   studio.ubyca.com/project/descuentos
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 text-[10px] font-semibold flex-shrink-0
-                              text-emerald-400 bg-emerald-500/10 border border-emerald-500/20
-                              px-2.5 py-1 rounded-full">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Publicado
-              </div>
             </div>
             <div className="relative bg-[#111827] overflow-hidden" style={{ height: 410 }}>
               <img
-                src="/hero-desktop.png"
+                src="/imagen-landing-1.webp"
                 alt="Editor de experiencias geolocalizadas Ubyca"
                 className="absolute inset-0 w-full h-full object-cover select-none"
-                style={{ objectPosition: 'center center' }}
+                style={{ objectPosition: 'center top' }}
                 draggable={false}
                 loading="eager"
               />
@@ -278,7 +268,7 @@ function HeroSection() {
             animate={{ y: [0, -9, 0] }}
             transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
             className="absolute -right-6 xl:-right-10 z-20 hidden lg:block"
-            style={{ width: 172, height: 344, bottom: -8 }}
+            style={{ width: 182, height: 400, bottom: -8 }}
           >
             <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-28 h-8 pointer-events-none"
               style={{ background: 'radial-gradient(ellipse 100% 100% at 50% 100%, rgba(14,165,233,0.22) 0%, transparent 70%)' }} />
@@ -288,7 +278,7 @@ function HeroSection() {
                 src="/hero-mobile.jpg"
                 alt="Vista mobile Ubyca"
                 className="w-full h-full object-cover select-none"
-                style={{ objectPosition: 'center 50%', transform: 'scale(1.22)', transformOrigin: 'center 42%' }}
+                style={{ objectPosition: 'center 50%', transform: 'scale(1)', transformOrigin: 'center 70%' }}
                 draggable={false}
                 loading="lazy"
               />
@@ -428,7 +418,7 @@ function HowItWorksSection() {
           <div className="relative rounded-2xl overflow-hidden border border-white/[0.07]
                           shadow-[0_24px_64px_rgba(0,0,0,0.5)]">
             <img
-              src="/hero-desktop.png"
+              src="/funciona-desktop.webp"
               alt="Editor Ubyca con mapa y puntos geolocalizados"
               className="w-full object-cover select-none"
               style={{ height: 300, objectPosition: 'center 40%' }}
@@ -493,6 +483,13 @@ const USE_CASES = [
     short: 'Entrega información interactiva sobre proyectos, salas de venta o ubicaciones.',
     detail: 'Fichas técnicas, renders o formularios que se activan al llegar al proyecto.',
   },
+  {
+    icon: '📣',
+    accent: '#f97316',
+    title: 'Activaciones de Marca',
+    short: 'Crea campañas físico-digitales conectadas a lugares reales.',
+    detail: 'Experiencias interactivas, lanzamientos y dinámicas geolocalizadas para marcas y audiencias.',
+  },
 ]
 
 function UseCasesSection() {
@@ -531,62 +528,248 @@ function UseCasesSection() {
   )
 }
 
-// ─── Conceptual section ───────────────────────────────────────────────────────
+// ─── Differentials ───────────────────────────────────────────────────────────
 
-function WorldAsInterfaceSection() {
+const DIFFERENTIALS = [
+  {
+    title: 'Sin app nativa',
+    desc: 'Funciona desde el navegador. Sin instalaciones, sin fricción.',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+          d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Solo una URL',
+    desc: 'Un link. Sin QR obligatorio, sin descargas, sin fricción de onboarding.',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+          d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+      </svg>
+    ),
+  },
+  {
+    title: 'GPS verificado',
+    desc: 'Acceso verificado en tiempo real contra la posición física del usuario.',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Métricas reales',
+    desc: 'Activaciones, radios y conversiones visibles en tiempo real.',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Mobile first',
+    desc: 'Diseñado para usarse en movimiento, desde el celular, en el lugar.',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+          d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Activación contextual',
+    desc: 'El contenido correcto, en el momento exacto, en el lugar preciso.',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+          d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    ),
+  },
+]
+
+function DifferentialsSection() {
   return (
-    <section id="v2-concept" className="relative py-32 px-5 overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #050810 0%, #07111f 50%, #050810 100%)' }}>
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 60% 70% at 50% 50%, rgba(14,165,233,0.05) 0%, transparent 65%)',
-      }} />
+    <section className="py-28 px-5"
+      style={{ background: 'linear-gradient(180deg, #050810 0%, #06101f 50%, #050810 100%)' }}>
+      <div className="max-w-6xl mx-auto">
 
-      <div className="relative z-10 max-w-4xl mx-auto text-center">
-        <Reveal>
-          <SectionLabel>El concepto</SectionLabel>
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.04]">
-            El mundo físico<br />
-            <span className="text-brand-400">como interfaz.</span>
+        <Reveal className="text-center mb-14">
+          <SectionLabel>Diferenciales</SectionLabel>
+          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-[1.06]">
+            No es un mapa.{' '}
+            <span className="text-brand-400">Es activación real.</span>
           </h2>
-          <p className="mt-8 text-lg text-slate-400 leading-relaxed max-w-2xl mx-auto">
-            Con Ubyca, cada lugar puede transformarse en un punto de interacción. No solo muestras
-            ubicaciones: activas experiencias, contenido y acciones conectadas al espacio real.
+          <p className="mt-4 text-slate-400 max-w-lg mx-auto">
+            Ubyca no muestra lugares. Activa experiencias cuando alguien llega a ellos.
           </p>
         </Reveal>
 
-        {/* Metrics screenshot */}
-        <Reveal delay={0.2} className="mt-16">
-          <div className="relative rounded-2xl overflow-hidden border border-white/[0.07]
-                          shadow-[0_32px_80px_rgba(0,0,0,0.6),0_0_0_1px_rgba(14,165,233,0.04)]">
-            <img
-              src="/screenshot-metrics.png"
-              alt="Dashboard de métricas Ubyca"
-              className="w-full object-cover select-none"
-              style={{ height: 280, objectPosition: 'center top' }}
-              loading="lazy"
-              draggable={false}
-            />
-            <div className="absolute inset-0 pointer-events-none" style={{
-              background: 'linear-gradient(to bottom, rgba(5,8,16,0.15) 0%, transparent 25%, transparent 65%, rgba(5,8,16,0.9) 100%)',
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {DIFFERENTIALS.map((d, i) => (
+            <Reveal key={d.title} delay={i * 0.055}>
+              <div className="group flex items-start gap-4 p-5 rounded-2xl
+                              border border-white/[0.06] bg-white/[0.01]
+                              hover:border-white/[0.12] hover:bg-white/[0.03]
+                              transition-all duration-200">
+                <div className="flex-shrink-0 w-9 h-9 rounded-xl
+                                bg-brand-500/[0.09] border border-brand-500/[0.18]
+                                flex items-center justify-center text-brand-400
+                                group-hover:bg-brand-500/[0.14] transition-colors duration-200">
+                  {d.icon}
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-white text-sm mb-1 leading-snug">{d.title}</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed">{d.desc}</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+      </div>
+    </section>
+  )
+}
+
+// ─── Metrics section ──────────────────────────────────────────────────────────
+
+function WorldAsInterfaceSection() {
+  return (
+    <section id="v2-concept" className="py-28 px-5 relative overflow-hidden"
+      style={{ background: 'linear-gradient(180deg, #050810 0%, #060c18 55%, #050810 100%)' }}>
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(ellipse 55% 60% at 25% 55%, rgba(14,165,233,0.07) 0%, transparent 65%)',
+      }} />
+
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+
+          {/* ── Screenshot ── */}
+          <Reveal className="flex-1 w-full relative">
+            <div className="absolute -inset-12 pointer-events-none" style={{
+              background: 'radial-gradient(ellipse 75% 60% at 50% 50%, rgba(14,165,233,0.08) 0%, transparent 70%)',
             }} />
-            {/* Stat overlays */}
-            <div className="absolute top-4 left-4 bg-gray-950/90 backdrop-blur-xl
-                            border border-white/10 rounded-xl px-3.5 py-2.5 hidden sm:block">
-              <p className="text-[10px] text-slate-500 mb-0.5">Activaciones hoy</p>
-              <p className="text-lg font-black text-emerald-400">+247</p>
+
+            {/* Browser chrome */}
+            <div className="relative rounded-2xl overflow-hidden border border-white/[0.09]
+                            shadow-[0_32px_96px_rgba(0,0,0,0.7)]">
+              <div className="h-10 bg-[#0d1117] border-b border-white/[0.06] flex items-center gap-3 px-4">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/60" />
+                </div>
+                <div className="flex-1 flex justify-center">
+                  <div className="bg-white/[0.05] rounded-md px-4 py-0.5 text-[11px] text-slate-500">
+                    studio.ubyca.com/project/descuentos/metrics
+                  </div>
+                </div>
+              </div>
+              <div className="relative overflow-hidden" style={{ height: 420 }}>
+                <div className="absolute inset-0 bg-[#0d1117]" />
+                <img
+                  src="/screenshot-metrics.png"
+                  alt="Dashboard de métricas Ubyca"
+                  className="absolute inset-0 w-full h-full object-cover select-none"
+                  style={{ objectPosition: 'center top' }}
+                  draggable={false}
+                  loading="lazy"
+                />
+                <div className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
+                  style={{ background: 'linear-gradient(to bottom, transparent, rgba(9,11,17,0.92))' }} />
+              </div>
             </div>
-            <div className="absolute top-4 right-4 bg-gray-950/90 backdrop-blur-xl
-                            border border-white/10 rounded-xl px-3.5 py-2.5 hidden sm:block">
-              <p className="text-[10px] text-slate-500 mb-0.5">Tasa de activación</p>
-              <p className="text-lg font-black text-brand-400">78%</p>
-            </div>
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
-              <span className="text-[11px] font-semibold text-slate-600">
-                Métricas reales · Ubyca Dashboard
+
+            {/* Floating conversion card */}
+            <motion.div
+              animate={{ y: [0, -7, 0] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -right-5 top-14 hidden lg:block"
+            >
+              <div className="bg-gray-950/95 backdrop-blur-xl border border-white/[0.12]
+                              rounded-2xl px-4 py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-2">Conversión</p>
+                <p className="text-3xl font-black text-emerald-400 leading-none">46%</p>
+                <p className="text-[10px] text-slate-600 mt-1">Excelente · entrada → clic</p>
+              </div>
+            </motion.div>
+
+            {/* Floating insight card */}
+            <motion.div
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+              className="absolute -left-5 bottom-14 hidden lg:block"
+            >
+              <div className="bg-gray-950/95 backdrop-blur-xl border border-white/[0.12]
+                              rounded-2xl px-4 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.6)] max-w-[195px]">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="w-5 h-5 rounded-full bg-brand-500/20 border border-brand-500/30
+                                  flex items-center justify-center flex-shrink-0 text-[10px]">⚡</div>
+                  <p className="text-[10px] font-bold text-white">Insight automático</p>
+                </div>
+                <p className="text-[10px] text-emerald-400 leading-snug">
+                  "Nuevo punto" — 60% conversión, mejor del proyecto
+                </p>
+              </div>
+            </motion.div>
+          </Reveal>
+
+          {/* ── Text ── */}
+          <div className="flex-shrink-0 w-full lg:w-[380px] flex flex-col items-start">
+            <Reveal>
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-widest uppercase
+                               text-brand-400 border border-brand-500/30 bg-brand-500/[0.08] px-3.5 py-1.5 rounded-full">
+                Analytics
               </span>
-            </div>
+              <h2 className="mt-5 text-3xl md:text-4xl font-black text-white leading-tight">
+                Métricas reales.<br />Comportamiento real.
+              </h2>
+              <p className="mt-4 text-slate-400 text-base leading-relaxed">
+                Cada entrada al área, cada clic, cada conversión — en tiempo real. Sin estimaciones, sin supuestos.
+              </p>
+            </Reveal>
+
+            <Reveal delay={0.1}>
+              <div className="mt-8 grid grid-cols-3 gap-3 w-full">
+                {[
+                  { v: '13',  l: 'Entradas al radio', c: 'text-white' },
+                  { v: '6',   l: 'Clics en exp.',     c: 'text-brand-400' },
+                  { v: '46%', l: 'Conversión',         c: 'text-emerald-400' },
+                ].map((s) => (
+                  <div key={s.l} className="p-3.5 rounded-xl border border-white/[0.07] bg-white/[0.02] text-center">
+                    <p className={`text-xl font-black leading-none ${s.c}`}>{s.v}</p>
+                    <p className="text-[10px] text-slate-600 mt-1.5 leading-snug">{s.l}</p>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.15}>
+              <div className="mt-7 space-y-2.5">
+                {[
+                  'Entradas al área de activación por punto',
+                  'Activaciones y clics por contenido',
+                  'Análisis por horarios, días y conversiones',
+                  'Insights automáticos generados en tiempo real',
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-2.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0" />
+                    <span className="text-sm text-slate-400">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
           </div>
-        </Reveal>
+
+        </div>
       </div>
     </section>
   )
@@ -641,16 +824,13 @@ function Footer() {
   return (
     <footer className="border-t border-white/[0.06] bg-[#050810] py-10 px-5">
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center">
-            <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </div>
-          <span className="font-bold text-white text-sm">Ubyca</span>
+        <div className="flex items-center">
+          <img
+            src="/logo-blanco.png"
+            alt="Ubyca"
+            className="h-6 w-auto select-none"
+            draggable={false}
+          />
         </div>
         <p className="text-xs text-slate-700">© 2025 Ubyca · Experiencias GPS</p>
         <Link to="/app" className="text-xs text-slate-600 hover:text-slate-400 transition-colors">
@@ -670,6 +850,7 @@ export default function LandingV2Page() {
       <HeroSection />
       <HowItWorksSection />
       <UseCasesSection />
+      <DifferentialsSection />
       <WorldAsInterfaceSection />
       <FinalCTASection />
       <Footer />

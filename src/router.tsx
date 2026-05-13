@@ -50,11 +50,12 @@ const protectedChildren = [
 ]
 
 // ── Landing-only router (ubyca.com, www.ubyca.com) ───────────────────────────
-// No auth, no app routes — landing page catches everything.
+// LandingV2Page is now the official home. LandingPage kept at /landing-old.
 
 export const landingRouter = createBrowserRouter([
-  { path: '/landing-v2', element: <LandingV2Page /> },
-  { path: '*', element: <LandingPage /> },
+  { path: '/landing-v2',  element: <LandingV2Page /> },
+  { path: '/landing-old', element: <LandingPage /> },
+  { path: '*',            element: <LandingV2Page /> },
 ])
 
 // ── App-only router (studio.ubyca.com) ───────────────────────────────────────
@@ -74,8 +75,9 @@ export const appRouter = createBrowserRouter([
 // Full experience: landing at / plus all app + auth routes.
 
 export const devRouter = createBrowserRouter([
-  { path: '/', element: <LandingPage /> },
-  { path: '/landing-v2', element: <LandingV2Page /> },
+  { path: '/',            element: <LandingV2Page /> },
+  { path: '/landing-v2',  element: <LandingV2Page /> },
+  { path: '/landing-old', element: <LandingPage /> },
   ...authRoutes,
   ...publicRoutes,
   {

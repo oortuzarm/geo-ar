@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import LandingPage     from './pages/Landing/LandingPage'
 import LandingV2Page  from './pages/Landing/LandingV2Page'
+import ContactPage     from './pages/Contact/ContactPage'
 import AppShell        from './pages/Home/AppShell'
 import HomePage        from './pages/Home/HomePage'
 import MetricsPage     from './pages/Metrics/MetricsPage'
@@ -53,6 +54,7 @@ const protectedChildren = [
 // LandingV2Page is now the official home. LandingPage kept at /landing-old.
 
 export const landingRouter = createBrowserRouter([
+  { path: '/contact',     element: <ContactPage /> },
   { path: '/landing-v2',  element: <LandingV2Page /> },
   { path: '/landing-old', element: <LandingPage /> },
   { path: '*',            element: <LandingV2Page /> },
@@ -76,6 +78,7 @@ export const appRouter = createBrowserRouter([
 
 export const devRouter = createBrowserRouter([
   { path: '/',            element: <LandingV2Page /> },
+  { path: '/contact',     element: <ContactPage /> },
   { path: '/landing-v2',  element: <LandingV2Page /> },
   { path: '/landing-old', element: <LandingPage /> },
   ...authRoutes,

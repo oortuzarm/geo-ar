@@ -128,7 +128,7 @@ function ContactSection() {
       }} />
 
       <div className="relative z-10 max-w-6xl mx-auto">
-        <div className="flex flex-col lg:flex-row gap-14 xl:gap-20 items-start">
+        <div className="flex flex-col lg:flex-row gap-14 xl:gap-20 lg:items-center">
 
           {/* ── Left: content ── */}
           <div className="w-full lg:w-[420px] xl:w-[460px] flex-shrink-0">
@@ -171,31 +171,6 @@ function ContactSection() {
               </div>
             </motion.div>
 
-            {/* Product visual */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
-              className="mt-10 hidden lg:block"
-            >
-              <div className="relative rounded-2xl overflow-hidden border border-white/[0.08]
-                              shadow-[0_16px_48px_rgba(0,0,0,0.55),0_0_0_1px_rgba(14,165,233,0.05)]">
-                <div className="absolute inset-0 pointer-events-none" style={{
-                  background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(14,165,233,0.08) 0%, transparent 70%)',
-                }} />
-                <img
-                  src="/imagen-landing-1.webp"
-                  alt="Editor GPS Ubyca"
-                  className="w-full block select-none"
-                  style={{ aspectRatio: '1920 / 916', objectFit: 'cover' }}
-                  draggable={false}
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 pointer-events-none" style={{
-                  background: 'linear-gradient(to bottom, transparent 55%, rgba(5,8,16,0.75) 100%)',
-                }} />
-              </div>
-            </motion.div>
           </div>
 
           {/* ── Right: form ── */}

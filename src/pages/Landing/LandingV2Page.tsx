@@ -76,16 +76,16 @@ function NavBar() {
             ))}
           </nav>
 
-          <Link to="/project/new"
+          <a href="https://www.ubyca.com/contact/"
             className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl
                        bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
                        font-semibold text-sm transition-all duration-150
                        shadow-[0_4px_20px_rgba(2,132,199,0.35)]">
-            Crear experiencia gratis
+            Hablemos
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
             </svg>
-          </Link>
+          </a>
 
           <button onClick={() => setOpen(!open)}
             className="md:hidden w-10 h-10 flex items-center justify-center rounded-lg
@@ -109,11 +109,11 @@ function NavBar() {
             </button>
           ))}
           <div className="pt-2">
-            <Link to="/project/new" onClick={() => setOpen(false)}
+            <a href="https://www.ubyca.com/contact/" onClick={() => setOpen(false)}
               className="flex items-center justify-center gap-2 w-full py-3 rounded-xl
                          bg-brand-600 text-white font-semibold text-sm">
-              Crear experiencia gratis →
-            </Link>
+              Hablemos →
+            </a>
           </div>
         </div>
       )}

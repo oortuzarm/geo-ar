@@ -51,10 +51,11 @@ export default async function handler(req, res) {
   // ── 3. Build meta tags ───────────────────────────────────────────────────────
   const pageUrl    = `${origin}/public/${id}`
   const coverImage = project?.coverImage ?? project?.cover_image
-  const title      = project?.title ?? 'Experiencia GeoAR'
-  const desc       = project?.subtitle
-    ? `Experiencia geolocalizada: ${project.subtitle}`
-    : 'Experiencia geolocalizada en GeoAR'
+  const title      = project?.title ? `${project.title} — Ubyca` : 'Ubyca — Experiencias geolocalizadas'
+  const desc       = project?.shareText?.trim()
+    || (project?.subtitle
+      ? `Experiencia geolocalizada: ${project.subtitle}`
+      : 'Crea puntos geolocalizados, define radios de activación y permite que tus usuarios desbloqueen contenido, rutas, promociones o experiencias al llegar a un lugar específico.')
   const ogImage    = resolveOgImage(coverImage, origin)
 
   const metaBlock = project
@@ -64,7 +65,7 @@ export default async function handler(req, res) {
   // Always inject the debug marker so "View Page Source" confirms the function ran
   html = html.replace(
     '</head>',
-    `  <!-- GeoAR OG SSR active -->\n${metaBlock}\n</head>`,
+    `  <!-- Ubyca OG SSR active -->\n${metaBlock}\n</head>`,
   )
 
   res

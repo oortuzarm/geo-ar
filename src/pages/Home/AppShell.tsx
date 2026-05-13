@@ -75,14 +75,13 @@ export default function AppShell() {
                         border-r border-gray-800 bg-gray-900">
 
         {/* Brand */}
-        <div className="flex flex-col justify-center px-5 h-16 border-b border-gray-800 flex-shrink-0">
+        <div className="flex items-center px-5 h-16 border-b border-gray-800 flex-shrink-0">
           <img
             src="/logo-blanco.png"
             alt="Ubyca"
             className="h-8 w-auto object-contain select-none"
             draggable={false}
           />
-          <p className="text-[10px] text-gray-500 mt-1 leading-none">Experiencias geolocalizadas</p>
         </div>
 
         {/* Navigation */}

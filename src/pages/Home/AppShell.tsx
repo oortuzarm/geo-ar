@@ -79,7 +79,7 @@ export default function AppShell() {
           <img
             src="/logo-blanco.png"
             alt="Ubyca"
-            className="h-8 w-auto object-contain select-none"
+            className="h-10 w-auto object-contain select-none"
             draggable={false}
           />
         </div>

@@ -107,8 +107,12 @@ function ContactSection() {
     setError(null)
     setSending(true)
     try {
-      // TODO: replace with actual API endpoint when available
-      await new Promise((r) => setTimeout(r, 900))
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      if (!res.ok) throw new Error()
       setSent(true)
     } catch {
       setError('No se pudo enviar el mensaje. Escribinos directamente a contacto@ubyca.com')

@@ -549,19 +549,6 @@ export default function MembersPage() {
               </section>
             )}
 
-            {/* Only-owner empty state */}
-            {data.members.length === 1 && data.members[0].role === 'owner'
-              && pendingInvitations.length === 0 && isOwner && (
-              <div className="text-center py-4 text-sm text-gray-500">
-                Sos el único miembro de la organización.{' '}
-                <button
-                  onClick={() => setShowInvite(true)}
-                  className="text-brand-400 hover:text-brand-300 transition-colors"
-                >
-                  Invitá a alguien para colaborar.
-                </button>
-              </div>
-            )}
 
           </div>
         )}

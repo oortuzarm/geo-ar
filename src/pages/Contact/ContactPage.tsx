@@ -1,17 +1,27 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
 // ─── NavBar ───────────────────────────────────────────────────────────────────
 
 function NavBar() {
   const [open, setOpen] = useState(false)
+  const navigate = useNavigate()
 
   const links: [string, string][] = [
-    ['Cómo funciona', '/#v2-how'],
-    ['Casos de uso',  '/#v2-cases'],
-    ['Analytics',     '/#v2-concept'],
+    ['Cómo funciona', 'v2-how'],
+    ['Casos de uso',  'v2-cases'],
+    ['Analytics',     'v2-concept'],
   ]
+
+  function handleNavLink(id: string) {
+    setOpen(false)
+    if (window.location.pathname === '/') {
+      setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }), 80)
+    } else {
+      navigate({ pathname: '/', hash: `#${id}` })
+    }
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -28,16 +38,16 @@ function NavBar() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-0.5">
-            {links.map(([label, href]) => (
-              <a key={href} href={href}
+            {links.map(([label, id]) => (
+              <button key={id} onClick={() => handleNavLink(id)}
                 className="px-4 py-2 rounded-lg text-sm font-medium text-slate-400
                            hover:text-white hover:bg-white/5 transition-all duration-150">
                 {label}
-              </a>
+              </button>
             ))}
           </nav>
 
-          <a href="https://www.ubyca.com/contact/"
+          <Link to="/contact"
             className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl
                        bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
                        font-semibold text-sm transition-all duration-150
@@ -46,7 +56,7 @@ function NavBar() {
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
             </svg>
-          </a>
+          </Link>
 
           <button onClick={() => setOpen(!open)}
             className="md:hidden w-10 h-10 flex items-center justify-center rounded-lg
@@ -62,19 +72,19 @@ function NavBar() {
 
       {open && (
         <div className="md:hidden bg-[#050810]/96 backdrop-blur-xl border-b border-white/[0.06] px-4 py-3 space-y-1">
-          {links.map(([label, href]) => (
-            <a key={href} href={href} onClick={() => setOpen(false)}
+          {links.map(([label, id]) => (
+            <button key={id} onClick={() => handleNavLink(id)}
               className="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium
                          text-slate-400 hover:text-white hover:bg-white/5 transition-all">
               {label}
-            </a>
+            </button>
           ))}
           <div className="pt-2">
-            <a href="https://www.ubyca.com/contact/" onClick={() => setOpen(false)}
+            <Link to="/contact" onClick={() => setOpen(false)}
               className="flex items-center justify-center gap-2 w-full py-3 rounded-xl
                          bg-brand-600 text-white font-semibold text-sm">
               Hablemos →
-            </a>
+            </Link>
           </div>
         </div>
       )}

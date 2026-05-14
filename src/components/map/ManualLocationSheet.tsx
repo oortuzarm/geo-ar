@@ -52,10 +52,10 @@ export default function ManualLocationSheet({ onConfirm, onPickOnMap, onClose }:
             </div>
 
             <h2 className="text-base font-semibold text-gray-100 text-center mb-1">
-              Indicá tu ubicación manualmente
+              Indica tu ubicación manualmente
             </h2>
             <p className="text-sm text-gray-500 text-center leading-relaxed mb-6">
-              No pudimos obtener una ubicación precisa. Podés escribir tu dirección o seleccionarla en el mapa.
+              No pudimos obtener una ubicación precisa. Puedes escribir tu dirección o seleccionarla en el mapa.
             </p>
 
             <div className="space-y-3 mb-4">
@@ -76,7 +76,7 @@ export default function ManualLocationSheet({ onConfirm, onPickOnMap, onClose }:
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-100">Escribir dirección</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Buscá por nombre de calle o lugar</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Busca por nombre de calle o lugar</p>
                 </div>
                 <svg className="ml-auto w-4 h-4 text-gray-600 flex-shrink-0" viewBox="0 0 24 24"
                   fill="none" stroke="currentColor" strokeWidth={2}>
@@ -101,7 +101,7 @@ export default function ManualLocationSheet({ onConfirm, onPickOnMap, onClose }:
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-100">Seleccionar en el mapa</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Tocá o hacé clic sobre el mapa</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Toca o haz clic sobre el mapa</p>
                 </div>
                 <svg className="ml-auto w-4 h-4 text-gray-600 flex-shrink-0" viewBox="0 0 24 24"
                   fill="none" stroke="currentColor" strokeWidth={2}>
@@ -146,7 +146,7 @@ export default function ManualLocationSheet({ onConfirm, onPickOnMap, onClose }:
             </div>
 
             <p className="text-xs text-gray-600 text-center">
-              Escribí al menos 3 caracteres para buscar
+              Escribe al menos 3 caracteres para buscar
             </p>
           </>
         )}

@@ -508,7 +508,7 @@ function LocationSheet({ onRetry, onClose, onManualFallback }: { onRetry: () => 
           /* Fallback for desktop or unknown UA — generic hint */
           <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-4 mb-5">
             <p className="text-sm text-gray-400 leading-relaxed">
-              Abre la configuración de tu navegador, buscá los permisos de este sitio y habilitá el acceso a la ubicación.
+              Abre la configuración de tu navegador, busca los permisos de este sitio y habilita el acceso a la ubicación.
             </p>
           </div>
         )}
@@ -1321,7 +1321,7 @@ export default function PublicPage({ isEmbed = false }: { isEmbed?: boolean } = 
                 <circle cx="12" cy="12" r="3" />
                 <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
               </svg>
-              <span className="text-xs font-medium text-gray-200">Tocá el mapa para seleccionar tu ubicación</span>
+              <span className="text-xs font-medium text-gray-200">Haz clic en el mapa para seleccionar tu ubicación</span>
               <button
                 onClick={() => setMapPickMode(false)}
                 className="ml-1 text-gray-500 hover:text-gray-300 transition-colors"

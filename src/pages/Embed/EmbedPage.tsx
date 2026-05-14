@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { MapContainer, TileLayer, CircleMarker } from 'react-leaflet'
+import { MapContainer, TileLayer, CircleMarker, useMap } from 'react-leaflet'
 import PublicPointMarker from '../../components/map/PublicPointMarker'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { useGeoStore } from '../../store/geoStore'
@@ -19,6 +19,34 @@ function centerOf(points: GeoPoint[]): [number, number] {
   ]
 }
 
+// ── InvalidateMapSize ─────────────────────────────────────────────────────────
+// Inside an iframe the map container may have size 0 at mount time.
+// invalidateSize() forces Leaflet to recompute tile layout.
+
+function InvalidateMapSize() {
+  const map = useMap()
+  useEffect(() => {
+    const t = setTimeout(() => map.invalidateSize(), 150)
+    const onResize = () => map.invalidateSize()
+    window.addEventListener('resize', onResize)
+
+    // ResizeObserver covers iframe resize without a window resize event
+    let ro: ResizeObserver | null = null
+    const container = map.getContainer()
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => map.invalidateSize())
+      ro.observe(container)
+    }
+
+    return () => {
+      clearTimeout(t)
+      window.removeEventListener('resize', onResize)
+      ro?.disconnect()
+    }
+  }, [map])
+  return null
+}
+
 // ── User location dot ─────────────────────────────────────────────────────────
 
 function UserDot({ lat, lng }: { lat: number; lng: number }) {
@@ -35,20 +63,31 @@ function UserDot({ lat, lng }: { lat: number; lng: number }) {
 
 function PointPanel({ point, onClose }: { point: GeoPoint; onClose: () => void }) {
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-[1000] p-3">
-      <div className="bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-2xl p-4
-                      shadow-2xl flex items-start gap-3">
+    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 1000, padding: '12px' }}>
+      <div style={{
+        background: 'rgba(17,24,39,0.96)',
+        border: '1px solid rgba(75,85,99,0.8)',
+        borderRadius: '16px',
+        padding: '16px',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: '12px',
+        backdropFilter: 'blur(8px)',
+      }}>
         {point.image && (
           <img
             src={point.image}
             alt={point.name}
-            className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-gray-800"
+            style={{ width: 56, height: 56, borderRadius: 12, objectFit: 'cover', flexShrink: 0, background: '#374151' }}
           />
         )}
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-100 text-sm leading-tight">{point.name}</p>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontWeight: 600, color: '#f3f4f6', fontSize: 14, lineHeight: 1.3, margin: 0 }}>
+            {point.name}
+          </p>
           {point.description && (
-            <p className="text-xs text-gray-400 mt-1 line-clamp-3 leading-relaxed">
+            <p style={{ fontSize: 12, color: '#9ca3af', marginTop: 4, lineHeight: 1.6, margin: '4px 0 0' }}>
               {point.description}
             </p>
           )}
@@ -56,9 +95,9 @@ function PointPanel({ point, onClose }: { point: GeoPoint; onClose: () => void }
         <button
           onClick={onClose}
           aria-label="Cerrar"
-          className="flex-shrink-0 text-gray-500 hover:text-gray-300 transition-colors mt-0.5"
+          style={{ flexShrink: 0, color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: 2 }}
         >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg width={16} height={16} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -68,6 +107,23 @@ function PointPanel({ point, onClose }: { point: GeoPoint; onClose: () => void }
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
+
+// These inline styles ensure the map fills the iframe regardless of host-page
+// CSS resets or Tailwind dark-mode overrides.
+const ROOT_STYLE: React.CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  width: '100%',
+  height: '100%',
+  overflow: 'hidden',
+  fontFamily: 'system-ui, sans-serif',
+}
+
+const MAP_STYLE: React.CSSProperties = {
+  width: '100%',
+  height: '100%',
+  background: '#e5e7eb', // light gray while tiles load — not black
+}
 
 export default function EmbedPage() {
   const { projectId }  = useParams<{ projectId: string }>()
@@ -112,8 +168,7 @@ export default function EmbedPage() {
   // ── Loading ─────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div style={{ height: '100dvh' }}
-        className="bg-gray-950 flex items-center justify-center">
+      <div style={{ ...ROOT_STYLE, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
         <Spinner size="lg" />
       </div>
     )
@@ -122,13 +177,12 @@ export default function EmbedPage() {
   // ── Error ───────────────────────────────────────────────────────────────────
   if (error || !project) {
     return (
-      <div style={{ height: '100dvh' }}
-        className="bg-gray-950 flex items-center justify-center p-6">
-        <div className="text-center max-w-xs">
-          <p className="text-gray-300 font-medium mb-1">
+      <div style={{ ...ROOT_STYLE, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb', padding: 24 }}>
+        <div style={{ textAlign: 'center', maxWidth: 320 }}>
+          <p style={{ color: '#111827', fontWeight: 600, marginBottom: 8 }}>
             {error === 'not-found' ? 'Experiencia no encontrada' : 'Error al cargar'}
           </p>
-          <p className="text-sm text-gray-500">
+          <p style={{ color: '#6b7280', fontSize: 14 }}>
             {error === 'not-found'
               ? 'Este proyecto no existe o no está publicado.'
               : 'No se pudo cargar la experiencia. Intentá de nuevo más tarde.'}
@@ -140,18 +194,23 @@ export default function EmbedPage() {
 
   // ── Map ─────────────────────────────────────────────────────────────────────
   return (
-    <div style={{ width: '100%', height: '100dvh', position: 'relative', overflow: 'hidden' }}>
+    <div style={ROOT_STYLE}>
       <MapContainer
         center={centerOf(points)}
         zoom={points.length > 0 ? 14 : 13}
-        style={{ width: '100%', height: '100%' }}
+        style={MAP_STYLE}
         zoomControl
-        attributionControl={false}
+        attributionControl
       >
+        {/* Light OSM basemap — clearly visible in any context */}
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           maxZoom={19}
         />
+
+        {/* Recalculate tile grid after iframe layout settles */}
+        <InvalidateMapSize />
 
         {points.map((p) => (
           <PublicPointMarker
@@ -173,15 +232,19 @@ export default function EmbedPage() {
         onClick={() => setGeoActive(true)}
         title="Ubicarme"
         aria-label="Activar mi ubicación"
-        className={[
-          'absolute top-3 right-3 z-[1000] w-9 h-9 rounded-xl flex items-center justify-center',
-          'bg-gray-900/90 backdrop-blur-sm border shadow-lg transition-colors',
-          userLocation
-            ? 'border-brand-500 text-brand-400'
-            : 'border-gray-700 text-gray-400 hover:text-gray-200 hover:border-gray-500',
-        ].join(' ')}
+        style={{
+          position: 'absolute', top: 12, right: 12, zIndex: 1000,
+          width: 36, height: 36, borderRadius: 10,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(255,255,255,0.95)',
+          border: userLocation ? '1.5px solid #0ea5e9' : '1.5px solid #d1d5db',
+          color: userLocation ? '#0ea5e9' : '#6b7280',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+          cursor: 'pointer',
+          transition: 'border-color 0.15s, color 0.15s',
+        }}
       >
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg width={16} height={16} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
             d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -194,8 +257,13 @@ export default function EmbedPage() {
         href="https://ubyca.com"
         target="_blank"
         rel="noopener noreferrer"
-        className="absolute bottom-2 left-2 z-[1000] text-[10px] text-gray-600
-                   hover:text-gray-400 transition-colors bg-gray-950/70 px-2 py-0.5 rounded"
+        style={{
+          position: 'absolute', bottom: 8, left: 8, zIndex: 1000,
+          fontSize: 10, color: '#9ca3af', textDecoration: 'none',
+          background: 'rgba(255,255,255,0.8)',
+          padding: '2px 6px', borderRadius: 4,
+          transition: 'color 0.15s',
+        }}
       >
         Powered by Ubyca
       </a>

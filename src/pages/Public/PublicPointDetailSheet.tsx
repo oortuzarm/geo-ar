@@ -14,16 +14,18 @@ interface PublicPointDetailSheetProps {
   walkingDistanceMeters?: number
   walkingDurationSeconds?: number
   address?:               string
+  isEmbed?:               boolean
 }
 
 export default function PublicPointDetailSheet({
   point, distance, onClose, onActivate,
   isActivating, accessMessage, accessFallbackUrl,
   routeStatus, walkingDistanceMeters, walkingDurationSeconds, address,
+  isEmbed = false,
 }: PublicPointDetailSheetProps) {
   return (
     <div
-      className="md:hidden absolute inset-x-0 bottom-0 z-[1100]"
+      className={`${isEmbed ? '' : 'md:hidden '}absolute inset-x-0 bottom-0 z-[1100]`}
       style={{ height: '82dvh', transition: 'height 0.4s cubic-bezier(0.32,0.72,0,1)' }}
     >
       <div className="h-full flex flex-col rounded-t-[28px] overflow-hidden

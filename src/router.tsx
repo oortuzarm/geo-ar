@@ -32,7 +32,7 @@ const authRoutes = [
 
 const publicRoutes = [
   { path: '/public/:id',                 element: <PublicPage /> },
-  { path: '/embed/:projectId',           element: <EmbedPage /> },
+  { path: '/embed/:id',                  element: <EmbedPage /> },
   { path: '/accept-invitation/:token',   element: <AcceptInvitationPage /> },
 ]
 

@@ -534,7 +534,25 @@ const SHEET_HEIGHT: Record<SheetState, string> = {
   expanded: '90dvh',
 }
 
-export default function PublicPage() {
+// Calls map.invalidateSize() after iframe layout settles, then on every resize.
+function InvalidateMapSize() {
+  const map = useMap()
+  useEffect(() => {
+    const t = setTimeout(() => map.invalidateSize(), 150)
+    const onResize = () => map.invalidateSize()
+    window.addEventListener('resize', onResize)
+    let ro: ResizeObserver | null = null
+    const container = map.getContainer()
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => map.invalidateSize())
+      ro.observe(container)
+    }
+    return () => { clearTimeout(t); window.removeEventListener('resize', onResize); ro?.disconnect() }
+  }, [map])
+  return null
+}
+
+export default function PublicPage({ isEmbed = false }: { isEmbed?: boolean } = {}) {
   const { id } = useParams<{ id: string }>()
   const { userLocation, locationStatus, setUserLocation, addToast } = useGeoStore()
   const [project, setProject] = useState<GeoProject | null>(null)
@@ -749,7 +767,7 @@ export default function PublicPage() {
         const ogImage = resolveOgImage(proj.coverImage)
         const ogDesc = proj.shareText?.trim()
           || `Experiencia geolocalizada${proj.subtitle ? `: ${proj.subtitle}` : ' en Ubyca'}`
-        updatePageMeta(proj.title, ogDesc, ogImage, window.location.href)
+        if (!isEmbed) updatePageMeta(proj.title, ogDesc, ogImage, window.location.href)
 
         setProject(proj)
         setPoints(activePoints)
@@ -770,9 +788,9 @@ export default function PublicPage() {
 
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
-      resetPageMeta()
+      if (!isEmbed) resetPageMeta()
     }
-  }, [id])
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!userLocation) return
@@ -1174,14 +1192,19 @@ export default function PublicPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="bg-gray-950 overflow-hidden relative md:flex md:flex-col" style={{ height: '100dvh' }}>
+    <div
+      className={`bg-gray-950 overflow-hidden relative${isEmbed ? '' : ' md:flex md:flex-col'}`}
+      style={isEmbed ? { position: 'fixed', inset: 0 } : { height: '100dvh' }}
+    >
 
       {/* ── MAP ─────────────────────────────────────────────────────────────
           Mobile: absolute inset-0 → fills full viewport behind the sheet.
-          Desktop (md:): relative flex-1 → normal flex-column child.      */}
-      <div className="absolute inset-0 md:relative md:flex-1">
+          Desktop (md:): relative flex-1 → normal flex-column child.
+          Embed: always absolute inset-0 (force mobile layout).            */}
+      <div className={`absolute inset-0${isEmbed ? '' : ' md:relative md:flex-1'}`}>
         <MapContainer center={mapFallbackCenter} zoom={14} className="w-full h-full">
           <MapController flyKey={flyToKey} flyTarget={flyToTarget} />
+          {isEmbed && <InvalidateMapSize />}
           <PublicInitialViewController
             project={project}
             points={points}
@@ -1239,8 +1262,8 @@ export default function PublicPage() {
             'transition-all duration-150',
             mobileState === 'detail'    ? 'hidden'
             : sheetState === 'expanded' ? 'hidden'
-            : mobileState === 'preview' ? 'bottom-[324px] md:hidden'
-            :                             'bottom-[148px] md:hidden',
+            : mobileState === 'preview' ? (isEmbed ? 'bottom-[324px]' : 'bottom-[324px] md:hidden')
+            :                             (isEmbed ? 'bottom-[148px]' : 'bottom-[148px] md:hidden'),
           ].join(' ')}
           title="Compartir"
         >
@@ -1261,10 +1284,10 @@ export default function PublicPage() {
             'hover:bg-gray-50 active:scale-95 active:shadow-sm',
             'transition-all duration-150',
             'disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100',
-            mobileState === 'detail'    ? 'hidden md:flex md:bottom-4'
-            : sheetState === 'expanded' ? 'hidden md:flex md:bottom-4'
-            : mobileState === 'preview' ? 'bottom-[272px] md:bottom-4'
-            :                             'bottom-24 md:bottom-4',
+            mobileState === 'detail'    ? (isEmbed ? 'hidden' : 'hidden md:flex md:bottom-4')
+            : sheetState === 'expanded' ? (isEmbed ? 'hidden' : 'hidden md:flex md:bottom-4')
+            : mobileState === 'preview' ? (isEmbed ? 'bottom-[272px]' : 'bottom-[272px] md:bottom-4')
+            :                             (isEmbed ? 'bottom-24' : 'bottom-24 md:bottom-4'),
           ].join(' ')}
           title={locationButtonReturnsToProject ? 'Volver a vista del proyecto' : 'Mi ubicación'}
         >
@@ -1291,7 +1314,7 @@ export default function PublicPage() {
           expanded → 90dvh             — full scrollable list              */}
       <div
         ref={sheetRef}
-        className="md:hidden absolute inset-x-0 bottom-0 z-[1000]"
+        className={`${isEmbed ? '' : 'md:hidden '}absolute inset-x-0 bottom-0 z-[1000]`}
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
         style={{
@@ -1396,7 +1419,7 @@ export default function PublicPage() {
           Tapping opens the sheet to peek. Disappears when list is open.    */}
       {sheetState === 'hidden' && mobileState !== 'detail' && (
         <div
-          className="md:hidden absolute right-4 z-[1100]"
+          className={`${isEmbed ? '' : 'md:hidden '}absolute right-4 z-[1100]`}
           style={{ bottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}
         >
           <button
@@ -1429,7 +1452,7 @@ export default function PublicPage() {
           Tapping "Ver detalle" opens the full detail sheet.                */}
       {mobileState === 'preview' && selectedPoint && (
         <div
-          className="md:hidden absolute inset-x-4 z-[1050]"
+          className={`${isEmbed ? '' : 'md:hidden '}absolute inset-x-4 z-[1050]`}
           style={{
             bottom: sheetState !== 'hidden'
               ? 'calc(80px + env(safe-area-inset-bottom, 0px) + 8px)'
@@ -1460,13 +1483,12 @@ export default function PublicPage() {
           walkingDistanceMeters={routeResult?.distanceMeters}
           walkingDurationSeconds={routeResult?.durationSeconds}
           address={selectedPoint.instructions ?? addresses[selectedPoint.id]}
+          isEmbed={isEmbed}
         />
       )}
 
-      {/* ── DESKTOP PANEL (hidden on mobile) ────────────────────────────────
-          Same classic layout as before — untouched for desktop users.      */}
-      <div className="hidden md:block flex-shrink-0 bg-gray-950 border-t border-gray-800
-                      px-4 pt-3 pb-4 max-h-[55vh] overflow-y-auto">
+      {/* ── DESKTOP PANEL (hidden on mobile, always hidden in embed) ─────────*/}
+      <div className={isEmbed ? 'hidden' : 'hidden md:block flex-shrink-0 bg-gray-950 border-t border-gray-800 px-4 pt-3 pb-4 max-h-[55vh] overflow-y-auto'}>
         <div className="flex items-start gap-3 mb-3">
           {project.coverImage && (
             <img

@@ -9,6 +9,7 @@ import MembersPage              from './pages/Members/MembersPage'
 import DashboardPage            from './pages/Dashboard/DashboardPage'
 import PreviewPage              from './pages/Preview/PreviewPage'
 import PublicPage               from './pages/Public/PublicPage'
+import EmbedPage               from './pages/Embed/EmbedPage'
 import LoginPage                from './pages/Auth/LoginPage'
 import RegisterPage             from './pages/Auth/RegisterPage'
 import ForgotPasswordPage       from './pages/Auth/ForgotPasswordPage'
@@ -31,6 +32,7 @@ const authRoutes = [
 
 const publicRoutes = [
   { path: '/public/:id',                 element: <PublicPage /> },
+  { path: '/embed/:projectId',           element: <EmbedPage /> },
   { path: '/accept-invitation/:token',   element: <AcceptInvitationPage /> },
 ]
 

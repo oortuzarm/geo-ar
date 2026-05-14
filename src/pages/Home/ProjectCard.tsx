@@ -41,8 +41,39 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
   const [coverError, setCoverError] = useState<string | null>(null)
   const [togglingStatus, setTogglingStatus] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+  const [embedOpen, setEmbedOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const publicUrl = `${window.location.origin}/public/${project.id}`
+
+  const iframeCode = [
+    `<iframe`,
+    `  src="${window.location.origin}/embed/${project.id}"`,
+    `  width="100%"`,
+    `  height="600"`,
+    `  style="border:0;border-radius:16px;overflow:hidden;"`,
+    `  allow="geolocation"`,
+    `  allowfullscreen`,
+    `></iframe>`,
+  ].join('\n')
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(iframeCode)
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = iframeCode
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.focus()
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2500)
+  }
 
   function handleShare() {
     setShareOpen(true)
@@ -290,6 +321,18 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
         <Button
           variant="ghost"
           size="sm"
+          onClick={() => setEmbedOpen(true)}
+          title="Integrar en sitio web"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+          </svg>
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => onDelete(project.id)}
           title="Eliminar proyecto"
         >
@@ -306,6 +349,100 @@ export default function ProjectCard({ project, onDelete, onUpdate }: ProjectCard
         isOpen={shareOpen}
         onClose={() => setShareOpen(false)}
       />
+
+      {/* ── Embed modal ──────────────────────────────────────────────────── */}
+      {embedOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setEmbedOpen(false)}
+          />
+          <div className="relative bg-gray-900 border border-gray-700 rounded-xl shadow-2xl
+                          w-full max-w-lg animate-slide-up">
+            <div className="p-6">
+
+              {/* Header */}
+              <div className="flex items-start justify-between mb-1">
+                <h3 className="text-base font-semibold text-gray-100">Integrar en sitio web</h3>
+                <button
+                  onClick={() => setEmbedOpen(false)}
+                  aria-label="Cerrar"
+                  className="text-gray-500 hover:text-gray-300 transition-colors -mt-0.5 ml-4"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-sm text-gray-400 mb-4">
+                Copia este código y pégalo en tu sitio web para mostrar este mapa interactivo.
+              </p>
+
+              {/* Code block */}
+              <div className="relative">
+                <textarea
+                  readOnly
+                  value={iframeCode}
+                  rows={8}
+                  onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+                  className="w-full bg-gray-950 border border-gray-700 rounded-lg px-4 py-3
+                             text-xs font-mono text-gray-300 resize-none focus:outline-none
+                             focus:ring-1 focus:ring-brand-500 leading-relaxed"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={handleCopy}
+                  className={[
+                    'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold',
+                    'transition-all duration-150 focus:outline-none focus:ring-2',
+                    'focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-gray-900',
+                    copied
+                      ? 'bg-emerald-700 text-white'
+                      : 'bg-brand-600 hover:bg-brand-500 text-white',
+                  ].join(' ')}
+                >
+                  {copied ? (
+                    <>
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                          d="M5 13l4 4L19 7" />
+                      </svg>
+                      Copiado
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Copiar código
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => window.open(`${window.location.origin}/embed/${project.id}`, '_blank')}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium
+                             bg-gray-800 hover:bg-gray-700 text-gray-200 transition-colors
+                             focus:outline-none focus:ring-2 focus:ring-gray-600
+                             focus:ring-offset-2 focus:ring-offset-gray-900"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  Abrir preview
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

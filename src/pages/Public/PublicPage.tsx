@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import PublicPointMarker from '../../components/map/PublicPointMarker'
 import { geoProjectsApi, geoPointsApi } from '../../services'
@@ -15,6 +15,7 @@ import type { RouteStatus } from './PublicPointCard'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { useGeoStore } from '../../store/geoStore'
 import RoutePolyline from '../../components/map/RoutePolyline'
+import ManualLocationSheet from '../../components/map/ManualLocationSheet'
 import MapController from '../../components/map/MapController'
 import type { FlyTarget } from '../../components/map/MapController'
 import PublicPointCard from './PublicPointCard'
@@ -355,18 +356,33 @@ function ErrorScreen({ error, id }: { error: LoadError; id?: string }) {
   )
 }
 
+// ── Map-click handler for manual location picking ────────────────────────────
+
+function MapPickHandler({ active, onPick }: { active: boolean; onPick: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click: (e) => {
+      if (!active) return
+      onPick(e.latlng.lat, e.latlng.lng)
+    },
+  })
+  return null
+}
+
 // ── Location badge ────────────────────────────────────────────────────────────
 
-function LocationBadge({ status, onClick }: { status: LocationStatus; onClick: () => void }) {
-  const isActive = status === 'active'
+function LocationBadge({ status, accuracy, onClick }: { status: LocationStatus; accuracy?: number; onClick: () => void }) {
+  const lowAccuracy = status === 'active' && accuracy != null && accuracy > 100
+  const isDisabled = status === 'active' && !lowAccuracy
 
   const colorClass =
-    status === 'active'     ? 'text-green-300 border-gray-600/70' :
-    status === 'requesting' ? 'text-yellow-300 border-gray-600/70' :
-    status === 'denied'     ? 'text-red-300 border-red-800/60' :
-                              'text-amber-300 border-amber-800/50'
+    lowAccuracy              ? 'text-amber-300 border-amber-800/50' :
+    status === 'active'      ? 'text-green-300 border-gray-600/70' :
+    status === 'requesting'  ? 'text-yellow-300 border-gray-600/70' :
+    status === 'denied'      ? 'text-red-300 border-red-800/60' :
+                               'text-amber-300 border-amber-800/50'
 
   const label =
+    lowAccuracy              ? 'Precisión baja — indicar ubicación' :
     status === 'active'      ? 'Ubicación activa' :
     status === 'requesting'  ? 'Obteniendo ubicación…' :
     status === 'denied'      ? 'Ubicación bloqueada' :
@@ -375,18 +391,18 @@ function LocationBadge({ status, onClick }: { status: LocationStatus; onClick: (
 
   return (
     <button
-      onClick={isActive ? undefined : onClick}
-      disabled={isActive}
+      onClick={isDisabled ? undefined : onClick}
+      disabled={isDisabled}
       className={[
         'flex items-center gap-1.5 text-xs px-3.5 py-1.5 rounded-full',
         'bg-gray-900/95 border shadow-lg transition-all duration-150',
         colorClass,
-        isActive ? 'cursor-default' : 'cursor-pointer active:scale-95 hover:brightness-110',
+        isDisabled ? 'cursor-default' : 'cursor-pointer active:scale-95 hover:brightness-110',
       ].join(' ')}
     >
       {status === 'requesting' ? (
         <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse flex-shrink-0" />
-      ) : status === 'active' ? (
+      ) : (status === 'active' && !lowAccuracy) ? (
         <span className="w-1.5 h-1.5 rounded-full bg-current flex-shrink-0" />
       ) : (
         <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none"
@@ -443,7 +459,7 @@ function StepList({ steps }: { steps: string[] }) {
 
 // ── Location permission sheet (shown only when status === 'denied') ───────────
 
-function LocationSheet({ onRetry, onClose }: { onRetry: () => void; onClose: () => void }) {
+function LocationSheet({ onRetry, onClose, onManualFallback }: { onRetry: () => void; onClose: () => void; onManualFallback?: () => void }) {
   const platform = detectPlatform()
 
   const platformLabel = platform === 'ios' ? 'iPhone · Safari' : platform === 'android' ? 'Android · Chrome' : null
@@ -506,6 +522,16 @@ function LocationSheet({ onRetry, onClose }: { onRetry: () => void; onClose: () 
         >
           Intentar nuevamente
         </button>
+        {onManualFallback && (
+          <button
+            onClick={() => { onClose(); onManualFallback() }}
+            className="w-full bg-gray-800 hover:bg-gray-700 active:scale-[0.98]
+                       text-gray-200 font-medium py-3 rounded-xl text-sm
+                       transition-all duration-150 mb-2.5 border border-gray-700"
+          >
+            Indicar ubicación manualmente
+          </button>
+        )}
         <button
           onClick={() => window.location.reload()}
           className="w-full text-gray-500 hover:text-gray-300 active:scale-[0.98]
@@ -620,9 +646,13 @@ export default function PublicPage({ isEmbed = false }: { isEmbed?: boolean } = 
 
   // ── Location permission UX ────────────────────────────────────────────────
   // locationActive gates watchPosition — flipped to true after the first success.
-  const [locationActive, setLocationActive] = useState(false)
-  // locationSheet is only shown when status === 'denied'
-  const [locationSheet,  setLocationSheet]  = useState(false)
+  const [locationActive,      setLocationActive]      = useState(false)
+  // locationSheet: mobile-native denied helper (step-by-step browser instructions)
+  const [locationSheet,       setLocationSheet]       = useState(false)
+  // manualLocationSheet: address search + map-pick fallback (works on any device)
+  const [manualLocationSheet, setManualLocationSheet] = useState(false)
+  // mapPickMode: user is clicking/tapping the map to set their location manually
+  const [mapPickMode,         setMapPickMode]         = useState(false)
 
   // Isolate the mobile bottom sheet from Leaflet's tap/click detection.
   // Without this, Leaflet's internal event tracking can receive touch events
@@ -679,9 +709,38 @@ export default function PublicPage({ isEmbed = false }: { isEmbed?: boolean } = 
     )
   }
 
+  function handleManualLocationConfirm(lat: number, lng: number) {
+    // Stop any active GPS watch so it can't override the manual location.
+    // accuracy: 0 signals "exact manual pick" — won't trigger lowAccuracy badge.
+    setLocationActive(false)
+    setUserLocation({ latitude: lat, longitude: lng, accuracy: 0 }, 'active')
+    setManualLocationSheet(false)
+    setMapPickMode(false)
+    flyToCounterRef.current += 1
+    setFlyToKey(`manual-${flyToCounterRef.current}`)
+    setFlyToTarget({ lat, lng, zoom: 16 })
+  }
+
   function handleBadgeClick() {
-    if (locationStatus === 'requesting' || locationStatus === 'active') return
-    if (locationStatus === 'denied') { setLocationSheet(true); return }
+    if (locationStatus === 'requesting') return
+    if (locationStatus === 'active') {
+      // Low accuracy — offer manual
+      if (userLocation && userLocation.accuracy > 100) setManualLocationSheet(true)
+      return
+    }
+    if (locationStatus === 'denied') {
+      // Mobile: show native permission helper; Desktop: go straight to manual
+      if (detectPlatform() === 'other') {
+        setManualLocationSheet(true)
+      } else {
+        setLocationSheet(true)
+      }
+      return
+    }
+    if (locationStatus === 'unavailable') {
+      setManualLocationSheet(true)
+      return
+    }
     requestLocation()
   }
 
@@ -1202,9 +1261,10 @@ export default function PublicPage({ isEmbed = false }: { isEmbed?: boolean } = 
           Desktop (md:): relative flex-1 → normal flex-column child.
           Embed: always absolute inset-0 (force mobile layout).            */}
       <div className={`absolute inset-0${isEmbed ? '' : ' md:relative md:flex-1'}`}>
-        <MapContainer center={mapFallbackCenter} zoom={14} className="w-full h-full">
+        <MapContainer center={mapFallbackCenter} zoom={14} className="w-full h-full" style={mapPickMode ? { cursor: 'crosshair' } : undefined}>
           <MapController flyKey={flyToKey} flyTarget={flyToTarget} />
           {isEmbed && <InvalidateMapSize />}
+          <MapPickHandler active={mapPickMode} onPick={handleManualLocationConfirm} />
           <PublicInitialViewController
             project={project}
             points={points}
@@ -1240,14 +1300,47 @@ export default function PublicPage({ isEmbed = false }: { isEmbed?: boolean } = 
 
         {/* Location badge — interactive button */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400]">
-          <LocationBadge status={locationStatus} onClick={handleBadgeClick} />
+          <LocationBadge status={locationStatus} accuracy={userLocation?.accuracy} onClick={handleBadgeClick} />
         </div>
+
+        {/* Map-pick cursor overlay — crosshair when waiting for tap/click */}
+        {mapPickMode && (
+          <div
+            className="absolute inset-0 z-[450]"
+            style={{ cursor: 'crosshair', pointerEvents: 'none' }}
+          />
+        )}
+
+        {/* Map-pick instruction banner */}
+        {mapPickMode && (
+          <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[500] whitespace-nowrap">
+            <div className="flex items-center gap-2 bg-gray-900/95 border border-gray-700 rounded-full
+                            px-4 py-2 shadow-lg backdrop-blur-sm">
+              <svg className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+              </svg>
+              <span className="text-xs font-medium text-gray-200">Tocá el mapa para seleccionar tu ubicación</span>
+              <button
+                onClick={() => setMapPickMode(false)}
+                className="ml-1 text-gray-500 hover:text-gray-300 transition-colors"
+                aria-label="Cancelar selección"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Location permission sheet (mobile only) */}
         {locationSheet && (
           <LocationSheet
             onRetry={handleLocationRetry}
             onClose={() => setLocationSheet(false)}
+            onManualFallback={() => setManualLocationSheet(true)}
           />
         )}
 
@@ -1546,6 +1639,15 @@ export default function PublicPage({ isEmbed = false }: { isEmbed?: boolean } = 
           {renderPoints(cardRefs)}
         </div>
       </div>
+
+      {/* Manual location fallback — address search or map pick */}
+      {manualLocationSheet && (
+        <ManualLocationSheet
+          onConfirm={handleManualLocationConfirm}
+          onPickOnMap={() => setMapPickMode(true)}
+          onClose={() => setManualLocationSheet(false)}
+        />
+      )}
 
       <ToastContainer />
     </div>

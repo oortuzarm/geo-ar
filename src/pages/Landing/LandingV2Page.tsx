@@ -643,7 +643,7 @@ function DifferentialsSection() {
 
 function WorldAsInterfaceSection() {
   return (
-    <section id="v2-concept" className="py-28 px-5 relative overflow-hidden"
+    <section id="v2-concept" className="py-16 lg:py-28 px-5 relative overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #050810 0%, #060c18 55%, #050810 100%)' }}>
       <div className="absolute inset-0 pointer-events-none" style={{
         background: 'radial-gradient(ellipse 55% 60% at 25% 55%, rgba(14,165,233,0.07) 0%, transparent 65%)',
@@ -652,8 +652,8 @@ function WorldAsInterfaceSection() {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
 
-          {/* ── Screenshot ── */}
-          <Reveal className="flex-1 w-full relative">
+          {/* ── Screenshot — desktop only ── */}
+          <Reveal className="hidden lg:block flex-1 w-full relative">
             <div className="absolute -inset-12 pointer-events-none" style={{
               background: 'radial-gradient(ellipse 75% 60% at 50% 50%, rgba(14,165,233,0.08) 0%, transparent 70%)',
             }} />

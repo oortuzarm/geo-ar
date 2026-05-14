@@ -43,3 +43,17 @@ export function me(): Promise<User> {
 export function logout(): Promise<void> {
   return apiFetch<void>(url('/api/auth/logout'), { method: 'DELETE' })
 }
+
+export function forgotPassword(email: string): Promise<void> {
+  return apiFetch<void>(url('/api/auth/forgot_password'), {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
+}
+
+export function resetPassword(token: string, password: string, passwordConfirmation: string): Promise<void> {
+  return apiFetch<void>(url('/api/auth/reset_password'), {
+    method: 'POST',
+    body: JSON.stringify({ token, password, password_confirmation: passwordConfirmation }),
+  })
+}

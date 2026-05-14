@@ -1,24 +1,28 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
-import LandingPage     from './pages/Landing/LandingPage'
-import LandingV2Page  from './pages/Landing/LandingV2Page'
-import ContactPage     from './pages/Contact/ContactPage'
-import AppShell        from './pages/Home/AppShell'
-import HomePage        from './pages/Home/HomePage'
-import MetricsPage     from './pages/Metrics/MetricsPage'
-import DashboardPage   from './pages/Dashboard/DashboardPage'
-import PreviewPage     from './pages/Preview/PreviewPage'
-import PublicPage      from './pages/Public/PublicPage'
-import LoginPage       from './pages/Auth/LoginPage'
-import RegisterPage    from './pages/Auth/RegisterPage'
-import AdminPage       from './pages/Admin/AdminPage'
-import ProtectedRoute  from './components/auth/ProtectedRoute'
-import AdminRoute      from './components/auth/AdminRoute'
+import LandingPage          from './pages/Landing/LandingPage'
+import LandingV2Page        from './pages/Landing/LandingV2Page'
+import ContactPage          from './pages/Contact/ContactPage'
+import AppShell             from './pages/Home/AppShell'
+import HomePage             from './pages/Home/HomePage'
+import MetricsPage          from './pages/Metrics/MetricsPage'
+import DashboardPage        from './pages/Dashboard/DashboardPage'
+import PreviewPage          from './pages/Preview/PreviewPage'
+import PublicPage           from './pages/Public/PublicPage'
+import LoginPage            from './pages/Auth/LoginPage'
+import RegisterPage         from './pages/Auth/RegisterPage'
+import ForgotPasswordPage   from './pages/Auth/ForgotPasswordPage'
+import ResetPasswordPage    from './pages/Auth/ResetPasswordPage'
+import AdminPage            from './pages/Admin/AdminPage'
+import ProtectedRoute       from './components/auth/ProtectedRoute'
+import AdminRoute           from './components/auth/AdminRoute'
 
 // ── Auth pages (public — redirect to /app if already logged in) ───────────────
 
 const authRoutes = [
-  { path: '/login',    element: <LoginPage /> },
-  { path: '/register', element: <RegisterPage /> },
+  { path: '/login',                 element: <LoginPage /> },
+  { path: '/register',              element: <RegisterPage /> },
+  { path: '/forgot-password',       element: <ForgotPasswordPage /> },
+  { path: '/reset-password/:token', element: <ResetPasswordPage /> },
 ]
 
 // ── Fully public routes (no auth required ever) ───────────────────────────────

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { ApiError } from '../../lib/apiFetch'
+import PasswordInput from '../../components/ui/PasswordInput'
 
 export default function LoginPage() {
   const { isAuthenticated, isInitialized, login } = useAuthStore()
@@ -91,15 +92,14 @@ export default function LoginPage() {
                   ¿Olvidaste tu contraseña?
                 </Link>
               </div>
-              <input
+              <PasswordInput
                 id="password"
-                type="password"
                 autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="bg-gray-800 border border-gray-700 hover:border-gray-600
+                className="w-full bg-gray-800 border border-gray-700 hover:border-gray-600
                            rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500
                            focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
                            transition-colors"

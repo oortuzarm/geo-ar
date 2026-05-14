@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { ApiError } from '../../lib/apiFetch'
+import PasswordInput from '../../components/ui/PasswordInput'
 
 export default function RegisterPage() {
   const { isAuthenticated, isInitialized, register } = useAuthStore()
@@ -91,15 +92,14 @@ export default function RegisterPage() {
               <label htmlFor="password" className="text-xs font-medium text-gray-400 uppercase tracking-wide">
                 Contraseña
               </label>
-              <input
+              <PasswordInput
                 id="password"
-                type="password"
                 autoComplete="new-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mínimo 8 caracteres"
-                className="bg-gray-800 border border-gray-700 hover:border-gray-600
+                className="w-full bg-gray-800 border border-gray-700 hover:border-gray-600
                            rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500
                            focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
                            transition-colors"
@@ -110,15 +110,14 @@ export default function RegisterPage() {
               <label htmlFor="confirm" className="text-xs font-medium text-gray-400 uppercase tracking-wide">
                 Confirmar contraseña
               </label>
-              <input
+              <PasswordInput
                 id="confirm"
-                type="password"
                 autoComplete="new-password"
                 required
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 placeholder="Repetí tu contraseña"
-                className="bg-gray-800 border border-gray-700 hover:border-gray-600
+                className="w-full bg-gray-800 border border-gray-700 hover:border-gray-600
                            rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500
                            focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
                            transition-colors"

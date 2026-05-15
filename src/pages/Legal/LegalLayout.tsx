@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import LandingNavBar from '../../components/landing/LandingNavBar'
 
 interface LegalLayoutProps {
   title: string
@@ -10,30 +11,10 @@ export default function LegalLayout({ title, lastUpdated, children }: LegalLayou
   return (
     <div className="min-h-screen bg-[#050810] text-white">
 
-      {/* Top bar — misma estructura que NavBar de la landing */}
-      <header className="sticky top-0 left-0 right-0 z-50">
-        <div className="border-b border-white/[0.06] bg-[#050810]/80 backdrop-blur-xl">
-          <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-            <Link to="/" className="flex items-center flex-shrink-0">
-              <img
-                src="/logo-blanco.png"
-                alt="Ubyca"
-                className="h-11 w-auto select-none"
-                draggable={false}
-              />
-            </Link>
-            <Link
-              to="/"
-              className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
-            >
-              ← Volver al inicio
-            </Link>
-          </div>
-        </div>
-      </header>
+      <LandingNavBar />
 
       {/* Content */}
-      <main className="max-w-3xl mx-auto px-5 py-14 md:py-20">
+      <main className="max-w-3xl mx-auto px-5 pt-16 py-14 md:py-20">
 
         {/* Page header */}
         <div className="mb-12 md:mb-16 pb-8 border-b border-white/[0.06]">

@@ -1,17 +1,17 @@
 // Per-type size limits (mirror api/upload.js)
 const TYPE_LIMITS: Record<string, number> = {
-  'video/mp4':  100 * 1024 * 1024,
-  'video/webm': 100 * 1024 * 1024,
-  'audio/mpeg':  25 * 1024 * 1024,
-  'audio/wav':   25 * 1024 * 1024,
-  'application/pdf':    25 * 1024 * 1024,
-  'application/msword': 25 * 1024 * 1024,
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document':   25 * 1024 * 1024,
-  'application/vnd.ms-excel':                                                   25 * 1024 * 1024,
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':         25 * 1024 * 1024,
-  'application/vnd.ms-powerpoint':                                              25 * 1024 * 1024,
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 25 * 1024 * 1024,
-  'application/zip':    25 * 1024 * 1024,
+  'video/mp4':  20 * 1024 * 1024,
+  'video/webm': 20 * 1024 * 1024,
+  'audio/mpeg': 20 * 1024 * 1024,
+  'audio/wav':  20 * 1024 * 1024,
+  'application/pdf':    20 * 1024 * 1024,
+  'application/msword': 20 * 1024 * 1024,
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document':   20 * 1024 * 1024,
+  'application/vnd.ms-excel':                                                   20 * 1024 * 1024,
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':         20 * 1024 * 1024,
+  'application/vnd.ms-powerpoint':                                              20 * 1024 * 1024,
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 20 * 1024 * 1024,
+  'application/zip':    20 * 1024 * 1024,
 }
 
 /**

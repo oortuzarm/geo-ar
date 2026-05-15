@@ -4,6 +4,7 @@ import { useWorkspace } from '../../hooks/useWorkspace'
 import { useGeoStore } from '../../store/geoStore'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { deleteMediaFile, isVercelBlobUrl } from '../../lib/deleteMediaFile'
+import { fetchProjectAnalytics } from '../../lib/analytics'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
 import ToastContainer from '../../components/ui/Toast'
@@ -381,6 +382,14 @@ export default function WorkspacePage() {
   const [deleteConfirm,  setDeleteConfirm]  = useState(false)
   const [togglingStatus, setTogglingStatus] = useState(false)
   const [deleting,       setDeleting]       = useState(false)
+  const [totalClicks,    setTotalClicks]    = useState<number | null>(null)
+
+  useEffect(() => {
+    if (!project) return
+    fetchProjectAnalytics(project.id)
+      .then((s) => setTotalClicks(s.clicks))
+      .catch(() => setTotalClicks(0))
+  }, [project?.id])
 
   if (loading || deleting) {
     return (
@@ -510,28 +519,11 @@ export default function WorkspacePage() {
                 </div>
               </div>
 
-              {/* Analytics CTA */}
-              <button
-                onClick={() => navigate(metricsUrl)}
-                className="bg-gray-900/70 border border-white/[0.07] hover:border-brand-500/30
-                           hover:bg-brand-500/5 rounded-2xl px-5 py-5 flex flex-col gap-2
-                           text-left transition-all group cursor-pointer"
-              >
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-medium
-                              leading-none group-hover:text-brand-400 transition-colors">
-                  Analytics
-                </p>
-                <div className="flex items-end justify-between mt-1">
-                  <p className="text-sm text-gray-400 group-hover:text-gray-200 transition-colors">
-                    Ver métricas
-                  </p>
-                  <svg className="h-4 w-4 text-brand-500 group-hover:text-brand-400 transition-colors"
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </button>
+              <KPICard
+                label="Clics en experiencia"
+                value={totalClicks ?? '—'}
+                sub="en total"
+              />
             </div>
 
             {/* ── Map ───────────────────────────────────────────────────── */}

@@ -4,6 +4,7 @@ import Button from '../../components/ui/Button'
 import type { ContentType, GeoPoint, GeoPointAvailability, MediaContentData } from '../../types'
 import { reverseGeocode } from '../../features/geolocation/geocoding'
 import { uploadFile, formatFileSize } from '../../lib/uploadFile'
+import { isVercelBlobUrl } from '../../lib/deleteMediaFile'
 
 interface GeoPointFormProps {
   point: GeoPoint
@@ -11,6 +12,7 @@ interface GeoPointFormProps {
   onDelete: () => void
   onClose: () => void
   onSave: () => void
+  onMediaOrphaned?: (url: string) => void
   hideHeader?: boolean
 }
 
@@ -188,7 +190,7 @@ function isMediaContentData(data: GeoPoint['contentData']): data is MediaContent
   return !!(data && 'file_url' in data && (data as MediaContentData).file_url)
 }
 
-export default function GeoPointForm({ point, onChange, onDelete, onClose, onSave, hideHeader = false }: GeoPointFormProps) {
+export default function GeoPointForm({ point, onChange, onDelete, onClose, onSave, onMediaOrphaned, hideHeader = false }: GeoPointFormProps) {
   const imageFileRef  = useRef<HTMLInputElement>(null)
   const mediaFileRef  = useRef<HTMLInputElement>(null)
   const [showTooltip,    setShowTooltip]    = useState(false)
@@ -249,12 +251,16 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
 
   // When content type changes, reset media state
   function handleContentTypeChange(ct: ContentType) {
-    setContentType(ct)
     if (ct !== contentType) {
+      if (mediaFile && isVercelBlobUrl(mediaFile.url)) {
+        console.log('[MEDIA_CLEANUP_QUEUE]', mediaFile.url)
+        onMediaOrphaned?.(mediaFile.url)
+      }
       setMediaFile(null)
       setUploadState('idle')
       setUploadError(null)
     }
+    setContentType(ct)
   }
 
   // Push all local text state to the parent store in one shot.
@@ -300,6 +306,10 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
+    if (mediaFile && isVercelBlobUrl(mediaFile.url)) {
+      console.log('[MEDIA_CLEANUP_QUEUE]', mediaFile.url)
+      onMediaOrphaned?.(mediaFile.url)
+    }
     setUploadError(null)
     setUploadState('uploading')
     try {
@@ -318,6 +328,10 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
   }
 
   function handleMediaRemove() {
+    if (mediaFile && isVercelBlobUrl(mediaFile.url)) {
+      console.log('[MEDIA_CLEANUP_QUEUE]', mediaFile.url)
+      onMediaOrphaned?.(mediaFile.url)
+    }
     setMediaFile(null)
     setUploadState('idle')
     setUploadError(null)

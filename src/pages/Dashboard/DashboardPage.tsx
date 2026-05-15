@@ -51,19 +51,14 @@ export default function DashboardPage() {
   // Tracks which base64 images were included in the last successful save.
   // Used to skip re-sending unchanged images and keep payloads small.
   const lastSavedImagesRef = useRef<{ coverImage?: string; points: Record<string, string | undefined> } | null>(null)
-  // Tracks the Vercel Blob file_url saved per point at last successful sync.
-  // Used to detect orphaned media assets after the user changes/removes a file.
-  const lastSavedMediaRef = useRef<Record<string, string>>({})
+  // Queue of Vercel Blob URLs orphaned by user actions (type change, file replace, remove).
+  // Flushed safely after a successful project sync.
+  const pendingMediaDeletesRef = useRef<string[]>([])
 
-  function buildMediaSnapshot(pts: GeoPoint[]): Record<string, string> {
-    const snap: Record<string, string> = {}
-    pts.forEach((pt) => {
-      const cd = pt.contentData as MediaContentData | undefined
-      if (pt.contentType !== 'url' && isVercelBlobUrl(cd?.file_url)) {
-        snap[pt.id] = cd!.file_url
-      }
-    })
-    return snap
+  function queueMediaDelete(url: string) {
+    if (!pendingMediaDeletesRef.current.includes(url)) {
+      pendingMediaDeletesRef.current.push(url)
+    }
   }
   const [isPublishing, setIsPublishing] = useState(false)
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
@@ -113,7 +108,6 @@ export default function DashboardPage() {
       console.log('[InitialView Loaded Project]', proj?.publicInitialViewMode)
       setProject(proj)
       setPoints(pts)
-      lastSavedMediaRef.current = buildMediaSnapshot(pts)
       if (pts.length > 0) {
         setMapCenter([pts[0].latitude, pts[0].longitude])
         setMapZoom(14)
@@ -373,7 +367,6 @@ export default function DashboardPage() {
 
     // Optimistic: remove from store immediately
     for (const id of ids) removePoint(id)
-    ids.forEach((id) => delete lastSavedMediaRef.current[id])
 
     // Clear editor panel if the active point was among deleted
     if (selectedPointId && idsSet.has(selectedPointId)) {
@@ -416,7 +409,6 @@ export default function DashboardPage() {
 
     await geoPointsApi.removePoint(deletePointTarget)
     removePoint(deletePointTarget)
-    delete lastSavedMediaRef.current[deletePointTarget]
     const updatedIds = project.geoPointIds.filter((pid) => pid !== deletePointTarget)
     useGeoStore.getState().updateProjectField('geoPointIds', updatedIds)
     await geoProjectsApi.saveProject(project.id, { ...project, geoPointIds: updatedIds })
@@ -504,25 +496,21 @@ export default function DashboardPage() {
         points: Object.fromEntries(currentPoints.map((p) => [p.id, p.image])),
       }
 
-      // Detect orphaned Vercel Blob assets: file_urls that were saved before but are now gone or replaced.
-      const orphanUrls: string[] = []
-      const currentIds = new Set(currentPoints.map((p) => p.id))
-      Object.entries(lastSavedMediaRef.current).forEach(([ptId, prevUrl]) => {
-        if (!currentIds.has(ptId)) {
-          // Point was removed from sync payload — already cleaned by confirmDeletePoint/handleBulkDelete,
-          // but guard here in case it slipped through.
-          orphanUrls.push(prevUrl)
-          return
+      // Safe-flush pending media deletes: only delete URLs no longer referenced by any point.
+      if (pendingMediaDeletesRef.current.length > 0) {
+        const liveUrls = new Set(
+          currentPoints
+            .filter((p) => p.contentType !== 'url')
+            .map((p) => (p.contentData as MediaContentData | undefined)?.file_url ?? '')
+            .filter(Boolean),
+        )
+        const toDelete = pendingMediaDeletesRef.current.filter((url) => !liveUrls.has(url))
+        pendingMediaDeletesRef.current = []
+        if (toDelete.length > 0) {
+          console.log('[MEDIA_CLEANUP_DELETE]', toDelete)
+          toDelete.forEach((url) => void deleteMediaFile(url))
+          console.log('[MEDIA_CLEANUP_DONE]')
         }
-        const pt = currentPoints.find((p) => p.id === ptId)!
-        const cd = pt.contentData as MediaContentData | undefined
-        const newUrl = pt.contentType !== 'url' ? (cd?.file_url ?? '') : ''
-        if (prevUrl !== newUrl) orphanUrls.push(prevUrl)
-      })
-      lastSavedMediaRef.current = buildMediaSnapshot(currentPoints)
-      if (orphanUrls.length > 0) {
-        console.log('[Save] Cleaning orphan media assets:', orphanUrls)
-        orphanUrls.forEach((url) => void deleteMediaFile(url))
       }
 
       setHasUnsavedChanges(false)
@@ -1157,6 +1145,7 @@ export default function DashboardPage() {
                 setSelectedPointId(null)
                 setPointFormOpen(false)
               }}
+              onMediaOrphaned={queueMediaDelete}
             />
           </aside>
         )}
@@ -1268,6 +1257,7 @@ export default function DashboardPage() {
               setMobileEditOpen(false)
               setIsNewMobilePoint(false)
             }}
+            onMediaOrphaned={queueMediaDelete}
             hideHeader
           />
         </div>

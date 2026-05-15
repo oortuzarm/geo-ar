@@ -1,22 +1,26 @@
-// Per-type size limits (mirror api/upload.js)
+import { upload } from '@vercel/blob/client'
+
+// Per-type size limits — enforced client-side before requesting a token.
+// The server-side maximum (api/upload-media.js) mirrors these at 20 MB.
 const TYPE_LIMITS: Record<string, number> = {
-  'video/mp4':  10 * 1024 * 1024,
-  'video/webm': 10 * 1024 * 1024,
-  'audio/mpeg': 10 * 1024 * 1024,
-  'audio/wav':  10 * 1024 * 1024,
-  'application/pdf':    10 * 1024 * 1024,
-  'application/msword': 10 * 1024 * 1024,
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document':   10 * 1024 * 1024,
-  'application/vnd.ms-excel':                                                   10 * 1024 * 1024,
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':         10 * 1024 * 1024,
-  'application/vnd.ms-powerpoint':                                              10 * 1024 * 1024,
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 10 * 1024 * 1024,
-  'application/zip':    10 * 1024 * 1024,
+  'video/mp4':  20 * 1024 * 1024,
+  'video/webm': 20 * 1024 * 1024,
+  'audio/mpeg': 20 * 1024 * 1024,
+  'audio/wav':  20 * 1024 * 1024,
+  'application/pdf':    20 * 1024 * 1024,
+  'application/msword': 20 * 1024 * 1024,
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document':   20 * 1024 * 1024,
+  'application/vnd.ms-excel':                                                   20 * 1024 * 1024,
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':         20 * 1024 * 1024,
+  'application/vnd.ms-powerpoint':                                              20 * 1024 * 1024,
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 20 * 1024 * 1024,
+  'application/zip':    20 * 1024 * 1024,
 }
 
 /**
- * Uploads a media or document File to /api/upload (Vercel Blob) and returns the public URL.
- * Throws a descriptive error on every failure.
+ * Uploads a media or document File directly to Vercel Blob CDN via client upload.
+ * The file body bypasses the serverless function — no 4.5 MB request body limit.
+ * Returns the public CDN URL.
  */
 export async function uploadFile(file: File): Promise<string> {
   const maxBytes = TYPE_LIMITS[file.type]
@@ -25,48 +29,35 @@ export async function uploadFile(file: File): Promise<string> {
   }
 
   if (file.size > maxBytes) {
-    const maxMB = Math.round(maxBytes / (1024 * 1024))
-    throw new Error(`El archivo excede el tamaño máximo permitido de ${maxMB}MB.`)
+    throw new Error('El archivo excede el tamaño máximo permitido de 20MB.')
   }
 
-  let res: Response
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+  const pathname = `media/${Date.now()}-${safeName}`
+
   try {
-    res = await fetch('/api/upload', {
-      method: 'POST',
-      headers: {
-        'content-type': file.type,
-        'x-filename':   encodeURIComponent(file.name),
-      },
-      body: file,
+    const blob = await upload(pathname, file, {
+      access: 'public',
+      handleUploadUrl: '/api/upload-media',
+      contentType: file.type,
     })
-  } catch {
-    throw new Error('No se pudo conectar con el servidor de archivos')
-  }
-
-  let body: { url?: string; error?: string } = {}
-  try {
-    body = await res.json()
-  } catch {
-    throw new Error(`Respuesta inválida del servidor (HTTP ${res.status})`)
-  }
-
-  if (!res.ok) {
-    if (res.status === 413) {
-      throw new Error('El archivo excede el tamaño máximo permitido de 10MB.')
+    return blob.url
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (
+      msg.includes('413') ||
+      msg.toLowerCase().includes('too large') ||
+      msg.toLowerCase().includes('maximum size') ||
+      msg.toLowerCase().includes('exceeds')
+    ) {
+      throw new Error('El archivo excede el tamaño máximo permitido de 20MB.')
     }
-    throw new Error(body.error ?? `Error del servidor (HTTP ${res.status})`)
+    throw new Error(`No se pudo subir el archivo: ${msg}`)
   }
-
-  const { url } = body
-  if (typeof url !== 'string' || !url.startsWith('http')) {
-    throw new Error('El servidor no devolvió una URL válida')
-  }
-
-  return url
 }
 
 export function formatFileSize(bytes: number): string {
-  if (bytes < 1024)                       return `${bytes} B`
-  if (bytes < 1024 * 1024)               return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024)        return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }

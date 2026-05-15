@@ -29,9 +29,9 @@ const CONTENT_TYPES: { type: ContentType; label: string; icon: string }[] = [
 ]
 
 const FILE_CONFIG: Record<Exclude<ContentType, 'url'>, { accept: string; hint: string; maxLabel: string }> = {
-  video: { accept: 'video/mp4,video/webm',        hint: 'Sube un video MP4 o WebM.',          maxLabel: 'Máx 10 MB' },
-  audio: { accept: 'audio/mpeg,audio/wav',         hint: 'Sube un archivo MP3 o WAV.',         maxLabel: 'Máx 10 MB' },
-  file:  { accept: '.pdf,.docx,.xlsx,.pptx,.zip',  hint: 'Sube un PDF, DOCX, XLSX, PPTX o ZIP.', maxLabel: 'Máx 10 MB' },
+  video: { accept: 'video/mp4,video/webm',        hint: 'Sube un video MP4 o WebM.',          maxLabel: 'Máx 20 MB' },
+  audio: { accept: 'audio/mpeg,audio/wav',         hint: 'Sube un archivo MP3 o WAV.',         maxLabel: 'Máx 20 MB' },
+  file:  { accept: '.pdf,.docx,.xlsx,.pptx,.zip',  hint: 'Sube un PDF, DOCX, XLSX, PPTX o ZIP.', maxLabel: 'Máx 20 MB' },
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────

@@ -20,6 +20,7 @@ import PrivacyPolicyPage        from './pages/Legal/PrivacyPolicyPage'
 import TermsAndConditionsPage   from './pages/Legal/TermsAndConditionsPage'
 import ProtectedRoute           from './components/auth/ProtectedRoute'
 import AdminRoute               from './components/auth/AdminRoute'
+import RootLayout               from './components/routing/RootLayout'
 
 // ── Auth pages (public — redirect to /app if already logged in) ───────────────
 
@@ -73,24 +74,34 @@ const protectedChildren = [
 // LandingV2Page is now the official home. LandingPage kept at /landing-old.
 
 export const landingRouter = createBrowserRouter([
-  { path: '/contact',     element: <ContactPage /> },
-  { path: '/landing-v2',  element: <LandingV2Page /> },
-  { path: '/landing-old', element: <LandingPage /> },
-  ...legalRoutes,
-  { path: '*',            element: <LandingV2Page /> },
+  {
+    element: <RootLayout />,
+    children: [
+      { path: '/contact',     element: <ContactPage /> },
+      { path: '/landing-v2',  element: <LandingV2Page /> },
+      { path: '/landing-old', element: <LandingPage /> },
+      ...legalRoutes,
+      { path: '*',            element: <LandingV2Page /> },
+    ],
+  },
 ])
 
 // ── App-only router (studio.ubyca.com) ───────────────────────────────────────
 // Root → /app if authenticated, /login if not (handled by ProtectedRoute).
 
 export const appRouter = createBrowserRouter([
-  { path: '/', element: <Navigate to="/app" replace /> },
-  ...authRoutes,
-  ...publicRoutes,
-  ...legalRoutes,
   {
-    element: <ProtectedRoute />,
-    children: protectedChildren,
+    element: <RootLayout />,
+    children: [
+      { path: '/', element: <Navigate to="/app" replace /> },
+      ...authRoutes,
+      ...publicRoutes,
+      ...legalRoutes,
+      {
+        element: <ProtectedRoute />,
+        children: protectedChildren,
+      },
+    ],
   },
 ])
 
@@ -98,15 +109,20 @@ export const appRouter = createBrowserRouter([
 // Full experience: landing at / plus all app + auth routes.
 
 export const devRouter = createBrowserRouter([
-  { path: '/',            element: <LandingV2Page /> },
-  { path: '/contact',     element: <ContactPage /> },
-  { path: '/landing-v2',  element: <LandingV2Page /> },
-  { path: '/landing-old', element: <LandingPage /> },
-  ...authRoutes,
-  ...publicRoutes,
-  ...legalRoutes,
   {
-    element: <ProtectedRoute />,
-    children: protectedChildren,
+    element: <RootLayout />,
+    children: [
+      { path: '/',            element: <LandingV2Page /> },
+      { path: '/contact',     element: <ContactPage /> },
+      { path: '/landing-v2',  element: <LandingV2Page /> },
+      { path: '/landing-old', element: <LandingPage /> },
+      ...authRoutes,
+      ...publicRoutes,
+      ...legalRoutes,
+      {
+        element: <ProtectedRoute />,
+        children: protectedChildren,
+      },
+    ],
   },
 ])

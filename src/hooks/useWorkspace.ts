@@ -1,25 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { geoProjectsApi, geoPointsApi } from '../services'
 import type { GeoPoint, GeoProject } from '../types'
 
-/**
- * Resolves the user's primary workspace:
- *   - Loads all projects, takes the most recently updated one.
- *   - If no projects exist, silently creates a default one.
- *   - Then loads that project's points.
- *
- * The concept of "workspace" is a UX layer over the existing Project model.
- * Nothing changes in the backend — the first project IS the workspace.
- */
 export function useWorkspace() {
-  const [project, setProject] = useState<GeoProject | null>(null)
-  const [points,  setPoints]  = useState<GeoPoint[]>([])
-  const [loading, setLoading] = useState(true)
+  const [project,    setProject]    = useState<GeoProject | null>(null)
+  const [points,     setPoints]     = useState<GeoPoint[]>([])
+  const [loading,    setLoading]    = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
 
     async function load() {
+      setLoading(true)
       const all = await geoProjectsApi.listProjects()
       const sorted = [...all].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
 
@@ -38,7 +31,17 @@ export function useWorkspace() {
 
     load()
     return () => { cancelled = true }
+  }, [refreshKey])
+
+  const updateProject = useCallback((updated: GeoProject) => {
+    setProject(updated)
   }, [])
 
-  return { project, points, loading }
+  const refresh = useCallback(() => {
+    setProject(null)
+    setPoints([])
+    setRefreshKey((k) => k + 1)
+  }, [])
+
+  return { project, points, loading, updateProject, refresh }
 }

@@ -1,10 +1,16 @@
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWorkspace } from '../../hooks/useWorkspace'
+import { useGeoStore } from '../../store/geoStore'
+import { geoProjectsApi, geoPointsApi } from '../../services'
+import { deleteMediaFile, isVercelBlobUrl } from '../../lib/deleteMediaFile'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
 import ToastContainer from '../../components/ui/Toast'
+import Modal from '../../components/ui/Modal'
+import ShareModal from '../../components/ui/ShareModal'
 import WorkspaceMap from '../../components/map/WorkspaceMap'
-import type { ContentType, GeoPoint } from '../../types'
+import type { ContentType, GeoPoint, MediaContentData } from '../../types'
 
 // ── Content type display config ───────────────────────────────────────────────
 
@@ -113,13 +119,270 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
   )
 }
 
+// ── Workspace actions dropdown ────────────────────────────────────────────────
+
+interface WorkspaceMenuProps {
+  projectId: string
+  projectTitle: string
+  projectStatus: 'active' | 'draft' | 'inactive'
+  onShare: () => void
+  onEmbed: () => void
+  onToggleStatus: () => void
+  onDelete: () => void
+  onPreview: () => void
+  togglingStatus: boolean
+}
+
+function WorkspaceMenu({
+  projectId, projectTitle: _t, projectStatus,
+  onShare, onEmbed, onToggleStatus, onDelete, onPreview,
+  togglingStatus,
+}: WorkspaceMenuProps) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    if (open) document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [open])
+
+  const item = 'flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 hover:text-gray-100 transition-colors text-left'
+
+  function act(fn: () => void) {
+    setOpen(false)
+    fn()
+  }
+
+  void projectId
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium
+                   text-gray-400 hover:text-gray-100 hover:bg-gray-800 transition-colors"
+        title="Acciones del workspace"
+      >
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+        </svg>
+        <span className="hidden sm:inline">Workspace</span>
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-1 w-56 bg-gray-900 border border-gray-700 rounded-xl
+                        shadow-2xl py-1 z-50">
+
+          <button className={item} onClick={() => act(onShare)}>
+            <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            Compartir
+          </button>
+
+          <button className={item} onClick={() => act(onEmbed)}>
+            <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+            Integrar en sitio web
+          </button>
+
+          <button className={item} onClick={() => act(onPreview)}>
+            <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            Ver público
+          </button>
+
+          <div className="border-t border-gray-800 my-1" />
+
+          <button
+            className={`${item} ${togglingStatus ? 'opacity-50 pointer-events-none' : ''}`}
+            onClick={() => act(onToggleStatus)}
+          >
+            {projectStatus === 'active' ? (
+              <>
+                <svg className="h-4 w-4 flex-shrink-0 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+                <span className="text-amber-400">Pasar a borrador</span>
+              </>
+            ) : (
+              <>
+                <svg className="h-4 w-4 flex-shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span className="text-emerald-400">Publicar</span>
+              </>
+            )}
+          </button>
+
+          <div className="border-t border-gray-800 my-1" />
+
+          <button
+            className={`${item} text-red-400 hover:text-red-300 hover:bg-red-500/10`}
+            onClick={() => act(onDelete)}
+          >
+            <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Eliminar workspace
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Embed modal ───────────────────────────────────────────────────────────────
+
+function EmbedModal({
+  projectId,
+  onClose,
+}: {
+  projectId: string
+  onClose: () => void
+}) {
+  const [copied, setCopied] = useState(false)
+
+  const iframeCode = [
+    `<iframe`,
+    `  src="${window.location.origin}/embed/${projectId}"`,
+    `  width="100%"`,
+    `  height="600"`,
+    `  style="border:0;border-radius:16px;overflow:hidden;"`,
+    `  allow="geolocation"`,
+    `  allowfullscreen`,
+    `></iframe>`,
+  ].join('\n')
+
+  async function handleCopy() {
+    try { await navigator.clipboard.writeText(iframeCode) }
+    catch {
+      const ta = document.createElement('textarea')
+      ta.value = iframeCode
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.focus(); ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2500)
+  }
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-lg">
+        <div className="p-6">
+          <div className="flex items-start justify-between mb-1">
+            <h3 className="text-base font-semibold text-gray-100">Integrar en sitio web</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-300 transition-colors -mt-0.5 ml-4"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <p className="text-sm text-gray-400 mb-4">
+            Copia este código y pégalo en tu sitio web para mostrar este mapa interactivo.
+          </p>
+          <div className="relative">
+            <textarea
+              readOnly
+              value={iframeCode}
+              rows={8}
+              onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+              className="w-full bg-gray-950 border border-gray-700 rounded-lg px-4 py-3
+                         text-xs font-mono text-gray-300 resize-none focus:outline-none
+                         focus:ring-1 focus:ring-brand-500 leading-relaxed"
+            />
+          </div>
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={handleCopy}
+              className={[
+                'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold',
+                'transition-all duration-150 focus:outline-none focus:ring-2',
+                'focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-gray-900',
+                copied
+                  ? 'bg-emerald-700 text-white'
+                  : 'bg-brand-600 hover:bg-brand-500 text-white',
+              ].join(' ')}
+            >
+              {copied ? (
+                <>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Copiado
+                </>
+              ) : (
+                <>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copiar código
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => window.open(`${window.location.origin}/embed/${projectId}`, '_blank')}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium
+                         bg-gray-800 hover:bg-gray-700 text-gray-200 transition-colors
+                         focus:outline-none focus:ring-2 focus:ring-gray-600
+                         focus:ring-offset-2 focus:ring-offset-gray-900"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              Abrir preview
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function WorkspacePage() {
-  const navigate = useNavigate()
-  const { project, points, loading } = useWorkspace()
+  const navigate   = useNavigate()
+  const { addToast } = useGeoStore()
+  const { project, points, loading, updateProject, refresh } = useWorkspace()
 
-  if (loading) {
+  const [shareOpen,      setShareOpen]      = useState(false)
+  const [embedOpen,      setEmbedOpen]      = useState(false)
+  const [deleteConfirm,  setDeleteConfirm]  = useState(false)
+  const [togglingStatus, setTogglingStatus] = useState(false)
+  const [deleting,       setDeleting]       = useState(false)
+
+  if (loading || deleting) {
     return (
       <div className="flex justify-center items-center py-32">
         <Spinner size="lg" />
@@ -132,6 +395,39 @@ export default function WorkspacePage() {
   const activeCount = points.filter((p) => p.active).length
   const editorUrl   = `/project/${project.id}`
   const metricsUrl  = `/app/metrics?projectId=${project.id}`
+  const publicUrl   = `${window.location.origin}/public/${project.id}`
+
+  async function handleToggleStatus() {
+    const nextStatus = project!.status === 'active' ? 'draft' : 'active'
+    setTogglingStatus(true)
+    try {
+      const updated = await geoProjectsApi.saveProject(project!.id, { status: nextStatus })
+      updateProject(updated)
+    } catch { /* silent */ }
+    finally { setTogglingStatus(false) }
+  }
+
+  async function handleDeleteConfirmed() {
+    setDeleteConfirm(false)
+    setDeleting(true)
+    let orphanUrls: string[] = []
+    try {
+      const pts = await geoPointsApi.listPoints(project!.id)
+      orphanUrls = pts.flatMap((pt) => {
+        if (pt.contentType === 'url') return []
+        const cd = pt.contentData as MediaContentData | undefined
+        return isVercelBlobUrl(cd?.file_url) ? [cd!.file_url] : []
+      })
+    } catch { /* non-critical */ }
+    try {
+      await geoProjectsApi.removeProject(project!.id)
+      if (orphanUrls.length > 0) orphanUrls.forEach((url) => void deleteMediaFile(url))
+      refresh()
+    } catch {
+      addToast('Error al eliminar el workspace', 'error')
+      setDeleting(false)
+    }
+  }
 
   return (
     <div className="text-gray-100">
@@ -151,12 +447,25 @@ export default function WorkspacePage() {
           </div>
           <h1 className="hidden md:block font-bold text-gray-100">Ubicaciones</h1>
 
-          <Button onClick={() => navigate(editorUrl)}>
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Nueva ubicación
-          </Button>
+          <div className="flex items-center gap-2">
+            <WorkspaceMenu
+              projectId={project.id}
+              projectTitle={project.title}
+              projectStatus={project.status}
+              togglingStatus={togglingStatus}
+              onShare={() => setShareOpen(true)}
+              onEmbed={() => setEmbedOpen(true)}
+              onPreview={() => window.open(publicUrl, '_blank')}
+              onToggleStatus={handleToggleStatus}
+              onDelete={() => setDeleteConfirm(true)}
+            />
+            <Button onClick={() => navigate(editorUrl)}>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Nueva ubicación
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -173,7 +482,7 @@ export default function WorkspacePage() {
               <KPICard
                 label="Ubicaciones"
                 value={points.length}
-                sub={points.length === 1 ? 'en total' : 'en total'}
+                sub="en total"
               />
 
               <KPICard
@@ -388,6 +697,33 @@ export default function WorkspacePage() {
           </>
         )}
       </main>
+
+      {/* ── Modals ─────────────────────────────────────────────────────────── */}
+
+      <ShareModal
+        url={publicUrl}
+        title={project.title}
+        isOpen={shareOpen}
+        onClose={() => setShareOpen(false)}
+      />
+
+      {embedOpen && (
+        <EmbedModal
+          projectId={project.id}
+          onClose={() => setEmbedOpen(false)}
+        />
+      )}
+
+      <Modal
+        open={deleteConfirm}
+        title="¿Eliminar workspace?"
+        description="Se eliminarán todas las ubicaciones asociadas. Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setDeleteConfirm(false)}
+        danger
+      />
 
       <ToastContainer />
     </div>

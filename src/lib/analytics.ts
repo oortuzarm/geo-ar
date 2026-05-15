@@ -27,6 +27,19 @@ function alreadyFiredToday(key: string): boolean {
   return false
 }
 
+// In-memory cooldown for click events — resets on page reload.
+// Prevents accidental double-taps (<500ms) but allows real repeated clicks.
+const _lastClickAt = new Map<string, number>()
+const CLICK_COOLDOWN_MS = 500
+
+function isClickOnCooldown(key: string): boolean {
+  const now  = Date.now()
+  const last = _lastClickAt.get(key) ?? 0
+  if (now - last < CLICK_COOLDOWN_MS) return true
+  _lastClickAt.set(key, now)
+  return false
+}
+
 // ── Internal POST ──────────────────────────────────────────────────────────
 //
 // Rails backend requirements for temporal + geographic analytics:
@@ -87,12 +100,13 @@ export function trackRadiusEnter(
 }
 
 /**
- * Fires once per (projectId, pointId, calendar day, browser).
+ * Fires on every real click — not deduplicated across time.
+ * Only suppresses clicks within a 500ms window to prevent accidental double-taps.
  * Call when the user taps "Ir a experiencia" / custom button text.
  */
 export function trackPointClick(projectId: string, pointId: string): void {
-  const key = `analytics:point_click:${projectId}:${pointId}:${todayStr()}`
-  if (alreadyFiredToday(key)) return
+  const key = `${projectId}:${pointId}`
+  if (isClickOnCooldown(key)) return
   postEvent('point_click', projectId, pointId)
 }
 

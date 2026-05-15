@@ -619,11 +619,19 @@ function HorariosTab({ projectId }: { projectId: string }) {
 
 // ── Left widget ───────────────────────────────────────────────────────────────
 
-function LeftWidget({ byPoint, projectId }: { byPoint: PointAnalytics[] | null; projectId: string }) {
+function LeftWidget({ byPoint, projectId, pointFilterActive = false }: {
+  byPoint: PointAnalytics[] | null
+  projectId: string
+  pointFilterActive?: boolean
+}) {
   const [tab, setTab]       = useState<LeftTab>('actividad')
   const [subTab, setSubTab] = useState<SubTab>('entradas')
   const [fade, setFade]     = useState(true)
   const [barsMounted, setBarsMounted] = useState(false)
+
+  useEffect(() => {
+    if (pointFilterActive && (tab === 'publico' || tab === 'horarios')) setTab('actividad')
+  }, [pointFilterActive]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function switchTab(next: LeftTab) {
     if (next === tab) return
@@ -642,12 +650,15 @@ function LeftWidget({ byPoint, projectId }: { byPoint: PointAnalytics[] | null; 
     return () => clearTimeout(t)
   }, [tab, subTab])
 
-  const TABS: { id: LeftTab; label: string; tooltip: string }[] = [
+  const allTabs: { id: LeftTab; label: string; tooltip: string }[] = [
     { id: 'actividad',  label: 'Actividad',  tooltip: 'Muestra la cantidad de entradas al radio y clics registrados por punto.' },
     { id: 'conversion', label: 'Conversión', tooltip: 'Porcentaje de usuarios que hicieron clic en la experiencia después de entrar al radio de activación.' },
     { id: 'publico',    label: 'Público',    tooltip: 'Distribución geográfica de las personas que ingresaron al radio de activación.' },
     { id: 'horarios',   label: 'Horarios',   tooltip: 'Horarios y días en que los usuarios ingresaron físicamente a los radios de activación.' },
   ]
+  const TABS = pointFilterActive
+    ? allTabs.filter((t) => t.id !== 'publico' && t.id !== 'horarios')
+    : allTabs
 
   const sorted = byPoint ?? []
   const byEnt  = [...sorted].sort((a, b) => b.radiusEntries - a.radiusEntries).slice(0, 6)
@@ -1082,11 +1093,22 @@ export default function MetricsPage() {
   const [projects,     setProjects]     = useState<GeoProject[]>([])
   const [projLoading,  setProjLoading]  = useState(true)
   const [selectedId,   setSelectedId]   = useState<string>(searchParams.get('projectId') ?? '')
+  const [pointId,      setPointId]      = useState<string>(searchParams.get('pointId') ?? '')
   const [summary,      setSummary]      = useState<ProjectAnalytics | null>(null)
   const [byPoint,      setByPoint]      = useState<PointAnalytics[] | null>(null)
   const [dataLoading,  setDataLoading]  = useState(false)
   const [error,        setError]        = useState(false)
   const fetchedForRef = useRef<string | null>(null)
+
+  // ── Point filter derived values ────────────────────────────────────────────
+  const pointFilter: PointAnalytics | null =
+    pointId && byPoint ? (byPoint.find((p) => p.pointId === pointId) ?? null) : null
+
+  const displaySummary: ProjectAnalytics | null = pointFilter
+    ? { radiusEntries: pointFilter.radiusEntries, clicks: pointFilter.clicks, conversion: pointFilter.conversion }
+    : summary
+
+  const displayByPoint = pointFilter ? [pointFilter] : byPoint
 
   useEffect(() => {
     geoProjectsApi.listProjects()
@@ -1111,15 +1133,21 @@ export default function MetricsPage() {
   function selectProject(id: string) {
     fetchedForRef.current = null
     setSelectedId(id)
+    setPointId('')
     setSearchParams(id ? { projectId: id } : {})
+  }
+
+  function clearPointFilter() {
+    setPointId('')
+    setSearchParams(selectedId ? { projectId: selectedId } : {})
   }
 
   const selected = projects.find(p => p.id === selectedId)
 
-  const convQuality = summary
-    ? summary.conversion >= 30 ? 'Excelente'
-    : summary.conversion >= 15 ? 'Saludable'
-    : summary.radiusEntries > 5 ? 'Mejorable'
+  const convQuality = displaySummary
+    ? displaySummary.conversion >= 30 ? 'Excelente'
+    : displaySummary.conversion >= 15 ? 'Saludable'
+    : displaySummary.radiusEntries > 5 ? 'Mejorable'
     : '—'
     : ''
 
@@ -1233,26 +1261,45 @@ export default function MetricsPage() {
         )}
 
         {/* ── Dashboard ───────────────────────────────────────────────────── */}
-        {summary && !dataLoading && (
+        {summary && displaySummary && !dataLoading && (
           <div className="space-y-5 animate-fade-in">
 
             {/* Project heading */}
             {selected && (
               <div>
                 <h2 className="text-2xl font-bold text-gray-100 leading-snug">{selected.title}</h2>
-                <p className="text-sm text-gray-500 mt-0.5">Todo el período · datos acumulados</p>
+                {pointFilter ? (
+                  <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs
+                                     font-medium bg-brand-500/10 border border-brand-500/20 text-brand-300">
+                      <svg className="h-3 w-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      </svg>
+                      Ubicación: {pointFilter.pointName}
+                    </span>
+                    <button
+                      onClick={clearPointFilter}
+                      className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                    >
+                      Ver proyecto completo →
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 mt-0.5">Todo el período · datos acumulados</p>
+                )}
               </div>
             )}
 
             {/* Hero — left widget + right chart */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 h-auto lg:h-[280px]">
               <div className="lg:col-span-2 min-h-[260px] lg:min-h-0">
-                <LeftWidget byPoint={byPoint} projectId={selectedId} />
+                <LeftWidget byPoint={displayByPoint} projectId={selectedId} pointFilterActive={!!pointFilter} />
               </div>
               <div className="lg:col-span-3 min-h-[260px] lg:min-h-0
                               bg-gray-900/70 border border-white/[0.07] rounded-2xl px-5 pt-5 pb-4">
-                {byPoint && byPoint.length > 0
-                  ? <RightChart byPoint={byPoint} />
+                {displayByPoint && displayByPoint.length > 0
+                  ? <RightChart byPoint={displayByPoint} />
                   : (
                     <div className="h-full flex flex-col items-center justify-center gap-3 text-center">
                       <svg className="w-10 h-10 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1270,29 +1317,29 @@ export default function MetricsPage() {
             <div className="grid grid-cols-3 gap-4">
               <KPICard
                 label="Entradas al radio"
-                value={summary.radiusEntries}
+                value={displaySummary!.radiusEntries}
                 sub="veces que un usuario entró al área de activación"
               />
               <KPICard
                 label='Clics en experiencia'
-                value={summary.clicks}
+                value={displaySummary!.clicks}
                 sub='activaciones del botón "Ir a experiencia"'
               />
               <KPICard
                 label="Conversión"
-                value={`${summary.conversion}%`}
+                value={`${displaySummary!.conversion}%`}
                 sub={`${convQuality} · entrada → clic`}
                 accent
               />
             </div>
 
             {/* Insights */}
-            {byPoint !== null && (
-              <InsightsSection summary={summary} byPoint={byPoint} />
+            {displayByPoint !== null && !pointFilter && (
+              <InsightsSection summary={displaySummary!} byPoint={displayByPoint} />
             )}
 
             {/* Points list */}
-            {byPoint !== null && <PointsSection byPoint={byPoint} />}
+            {displayByPoint !== null && <PointsSection byPoint={displayByPoint} />}
 
           </div>
         )}

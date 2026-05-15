@@ -403,7 +403,6 @@ export default function WorkspacePage() {
 
   const activeCount = points.filter((p) => p.active).length
   const editorUrl   = `/project/${project.id}`
-  const metricsUrl  = `/app/metrics?projectId=${project.id}`
   const publicUrl   = `${window.location.origin}/public/${project.id}`
 
   async function handleToggleStatus() {
@@ -621,7 +620,7 @@ export default function WorkspacePage() {
                           </td>
                           <td className="px-4 py-3 text-right">
                             <button
-                              onClick={() => navigate(metricsUrl)}
+                              onClick={() => navigate(`/app/metrics?projectId=${project.id}&pointId=${point.id}`)}
                               className="text-xs text-brand-400 hover:text-brand-300 transition-colors
                                          px-2 py-1 rounded hover:bg-brand-500/10"
                             >
@@ -660,7 +659,7 @@ export default function WorkspacePage() {
                         </div>
                       </div>
                       <button
-                        onClick={() => navigate(metricsUrl)}
+                        onClick={() => navigate(`/app/metrics?projectId=${project.id}&pointId=${point.id}`)}
                         className="flex-shrink-0 text-xs text-brand-400 hover:text-brand-300
                                    transition-colors px-2 py-1.5 rounded hover:bg-brand-500/10"
                       >

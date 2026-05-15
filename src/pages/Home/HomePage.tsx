@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { geoProjectsApi } from '../../services'
-import type { GeoProject } from '../../types'
+import { geoProjectsApi, geoPointsApi } from '../../services'
+import type { GeoProject, MediaContentData } from '../../types'
+import { deleteMediaFile, isVercelBlobUrl } from '../../lib/deleteMediaFile'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
 import ToastContainer from '../../components/ui/Toast'
@@ -41,19 +42,39 @@ export default function HomePage() {
     setProjectToDelete(id)
   }
 
-  // Optimistic delete — card disappears immediately; restored on API failure
-  function confirmDelete() {
+  // Optimistic delete — card disappears immediately; restored on API failure.
+  // Fetches points first so we can clean up any Vercel Blob media assets after delete.
+  async function confirmDelete() {
     const id = projectToDelete
     if (!id) return
     setProjectToDelete(null)
     const snapshot = projects.find((p) => p.id === id)
-    setProjects((prev) => prev.filter((p) => p.id !== id))
-    geoProjectsApi.removeProject(id)
-      .then(() => addToast('Proyecto eliminado', 'success'))
-      .catch(() => {
-        if (snapshot) setProjects((prev) => [snapshot, ...prev])
-        addToast('Error al eliminar el proyecto', 'error')
+
+    // Collect media file_urls for all points in this project (before deletion).
+    let orphanUrls: string[] = []
+    try {
+      const pts = await geoPointsApi.listPoints(id)
+      orphanUrls = pts.flatMap((pt) => {
+        if (pt.contentType === 'url') return []
+        const cd = pt.contentData as MediaContentData | undefined
+        return isVercelBlobUrl(cd?.file_url) ? [cd!.file_url] : []
       })
+    } catch { /* non-critical — proceed with delete even if points can't be fetched */ }
+
+    // Optimistic removal from UI
+    setProjects((prev) => prev.filter((p) => p.id !== id))
+
+    try {
+      await geoProjectsApi.removeProject(id)
+      addToast('Proyecto eliminado', 'success')
+      if (orphanUrls.length > 0) {
+        console.log('[DeleteProject] Cleaning orphan media assets:', orphanUrls)
+        orphanUrls.forEach((url) => void deleteMediaFile(url))
+      }
+    } catch {
+      if (snapshot) setProjects((prev) => [snapshot, ...prev])
+      addToast('Error al eliminar el proyecto', 'error')
+    }
   }
 
   function handleUpdate(updated: GeoProject) {

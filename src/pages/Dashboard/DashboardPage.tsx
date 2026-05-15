@@ -14,8 +14,9 @@ import PreviewQRModal from './PreviewQRModal'
 import { useGeoStore } from '../../store/geoStore'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
+import { deleteMediaFile, isVercelBlobUrl } from '../../lib/deleteMediaFile'
 // useGeolocation removed — smart watchPosition logic is inline below
-import type { GeoPoint, MapBounds, PoiSearchResult } from '../../types'
+import type { GeoPoint, MapBounds, MediaContentData, PoiSearchResult } from '../../types'
 
 type LocationPhase = 'idle' | 'acquiring' | 'failed' | 'manual-map' | 'manual-address'
 type LocationSource = 'gps' | 'manual' | null
@@ -50,6 +51,20 @@ export default function DashboardPage() {
   // Tracks which base64 images were included in the last successful save.
   // Used to skip re-sending unchanged images and keep payloads small.
   const lastSavedImagesRef = useRef<{ coverImage?: string; points: Record<string, string | undefined> } | null>(null)
+  // Tracks the Vercel Blob file_url saved per point at last successful sync.
+  // Used to detect orphaned media assets after the user changes/removes a file.
+  const lastSavedMediaRef = useRef<Record<string, string>>({})
+
+  function buildMediaSnapshot(pts: GeoPoint[]): Record<string, string> {
+    const snap: Record<string, string> = {}
+    pts.forEach((pt) => {
+      const cd = pt.contentData as MediaContentData | undefined
+      if (pt.contentType !== 'url' && isVercelBlobUrl(cd?.file_url)) {
+        snap[pt.id] = cd!.file_url
+      }
+    })
+    return snap
+  }
   const [isPublishing, setIsPublishing] = useState(false)
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
@@ -98,6 +113,7 @@ export default function DashboardPage() {
       console.log('[InitialView Loaded Project]', proj?.publicInitialViewMode)
       setProject(proj)
       setPoints(pts)
+      lastSavedMediaRef.current = buildMediaSnapshot(pts)
       if (pts.length > 0) {
         setMapCenter([pts[0].latitude, pts[0].longitude])
         setMapZoom(14)
@@ -345,8 +361,19 @@ export default function DashboardPage() {
     if (!project) return
     const idsSet = new Set(ids)
 
+    // Capture orphan URLs BEFORE optimistic removal (store still has the points)
+    const orphanUrls: string[] = []
+    ids.forEach((id) => {
+      const pt = useGeoStore.getState().points.find((p) => p.id === id)
+      const cd = pt?.contentData as MediaContentData | undefined
+      if (pt?.contentType !== 'url' && isVercelBlobUrl(cd?.file_url)) {
+        orphanUrls.push(cd!.file_url)
+      }
+    })
+
     // Optimistic: remove from store immediately
     for (const id of ids) removePoint(id)
+    ids.forEach((id) => delete lastSavedMediaRef.current[id])
 
     // Clear editor panel if the active point was among deleted
     if (selectedPointId && idsSet.has(selectedPointId)) {
@@ -369,6 +396,10 @@ export default function DashboardPage() {
         `${ids.length} punto${ids.length !== 1 ? 's' : ''} eliminado${ids.length !== 1 ? 's' : ''}`,
         'success',
       )
+      if (orphanUrls.length > 0) {
+        console.log('[BulkDelete] Cleaning orphan media assets:', orphanUrls)
+        orphanUrls.forEach((url) => void deleteMediaFile(url))
+      }
     } catch {
       addToast('Error al eliminar los puntos', 'error')
     }
@@ -376,8 +407,16 @@ export default function DashboardPage() {
 
   async function confirmDeletePoint() {
     if (!deletePointTarget || !project) return
+    // Capture orphan URL before deletion (store still has the point at this moment)
+    const ptToDelete = useGeoStore.getState().points.find((p) => p.id === deletePointTarget)
+    const deletedCd  = ptToDelete?.contentData as MediaContentData | undefined
+    const orphanUrl  = ptToDelete?.contentType !== 'url' && isVercelBlobUrl(deletedCd?.file_url)
+      ? deletedCd!.file_url
+      : undefined
+
     await geoPointsApi.removePoint(deletePointTarget)
     removePoint(deletePointTarget)
+    delete lastSavedMediaRef.current[deletePointTarget]
     const updatedIds = project.geoPointIds.filter((pid) => pid !== deletePointTarget)
     useGeoStore.getState().updateProjectField('geoPointIds', updatedIds)
     await geoProjectsApi.saveProject(project.id, { ...project, geoPointIds: updatedIds })
@@ -387,6 +426,10 @@ export default function DashboardPage() {
       setPointFormOpen(false)
     }
     addToast('Punto eliminado', 'success')
+    if (orphanUrl) {
+      console.log('[DeletePoint] Cleaning orphan media:', orphanUrl)
+      void deleteMediaFile(orphanUrl)
+    }
   }
 
   async function handleSave() {
@@ -459,6 +502,27 @@ export default function DashboardPage() {
       lastSavedImagesRef.current = {
         coverImage: currentProject.coverImage,
         points: Object.fromEntries(currentPoints.map((p) => [p.id, p.image])),
+      }
+
+      // Detect orphaned Vercel Blob assets: file_urls that were saved before but are now gone or replaced.
+      const orphanUrls: string[] = []
+      const currentIds = new Set(currentPoints.map((p) => p.id))
+      Object.entries(lastSavedMediaRef.current).forEach(([ptId, prevUrl]) => {
+        if (!currentIds.has(ptId)) {
+          // Point was removed from sync payload — already cleaned by confirmDeletePoint/handleBulkDelete,
+          // but guard here in case it slipped through.
+          orphanUrls.push(prevUrl)
+          return
+        }
+        const pt = currentPoints.find((p) => p.id === ptId)!
+        const cd = pt.contentData as MediaContentData | undefined
+        const newUrl = pt.contentType !== 'url' ? (cd?.file_url ?? '') : ''
+        if (prevUrl !== newUrl) orphanUrls.push(prevUrl)
+      })
+      lastSavedMediaRef.current = buildMediaSnapshot(currentPoints)
+      if (orphanUrls.length > 0) {
+        console.log('[Save] Cleaning orphan media assets:', orphanUrls)
+        orphanUrls.forEach((url) => void deleteMediaFile(url))
       }
 
       setHasUnsavedChanges(false)

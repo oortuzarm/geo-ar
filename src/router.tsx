@@ -16,6 +16,8 @@ import ForgotPasswordPage       from './pages/Auth/ForgotPasswordPage'
 import ResetPasswordPage        from './pages/Auth/ResetPasswordPage'
 import AcceptInvitationPage     from './pages/Auth/AcceptInvitationPage'
 import AdminPage                from './pages/Admin/AdminPage'
+import PrivacyPolicyPage        from './pages/Legal/PrivacyPolicyPage'
+import TermsAndConditionsPage   from './pages/Legal/TermsAndConditionsPage'
 import ProtectedRoute           from './components/auth/ProtectedRoute'
 import AdminRoute               from './components/auth/AdminRoute'
 
@@ -26,6 +28,13 @@ const authRoutes = [
   { path: '/register',              element: <RegisterPage /> },
   { path: '/forgot-password',       element: <ForgotPasswordPage /> },
   { path: '/reset-password/:token', element: <ResetPasswordPage /> },
+]
+
+// ── Legal pages (fully public, served on all domains) ────────────────────────
+
+const legalRoutes = [
+  { path: '/privacy_policy',        element: <PrivacyPolicyPage /> },
+  { path: '/terms_and_conditions',  element: <TermsAndConditionsPage /> },
 ]
 
 // ── Fully public routes (no auth required ever) ───────────────────────────────
@@ -67,6 +76,7 @@ export const landingRouter = createBrowserRouter([
   { path: '/contact',     element: <ContactPage /> },
   { path: '/landing-v2',  element: <LandingV2Page /> },
   { path: '/landing-old', element: <LandingPage /> },
+  ...legalRoutes,
   { path: '*',            element: <LandingV2Page /> },
 ])
 
@@ -77,6 +87,7 @@ export const appRouter = createBrowserRouter([
   { path: '/', element: <Navigate to="/app" replace /> },
   ...authRoutes,
   ...publicRoutes,
+  ...legalRoutes,
   {
     element: <ProtectedRoute />,
     children: protectedChildren,
@@ -93,6 +104,7 @@ export const devRouter = createBrowserRouter([
   { path: '/landing-old', element: <LandingPage /> },
   ...authRoutes,
   ...publicRoutes,
+  ...legalRoutes,
   {
     element: <ProtectedRoute />,
     children: protectedChildren,

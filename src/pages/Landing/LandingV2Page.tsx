@@ -823,7 +823,7 @@ function FinalCTASection() {
 function Footer() {
   return (
     <footer className="border-t border-white/[0.06] bg-[#050810] py-10 px-5">
-      <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 flex-wrap">
+      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-5">
         <div className="flex items-center">
           <img
             src="/logo-blanco.png"
@@ -832,10 +832,18 @@ function Footer() {
             draggable={false}
           />
         </div>
-        <p className="text-xs text-slate-700">© 2025 Ubyca · Experiencias GPS</p>
-        <Link to="/app" className="text-xs text-slate-600 hover:text-slate-400 transition-colors">
-          Abrir aplicación →
-        </Link>
+        <p className="text-xs text-slate-700 order-last sm:order-none">© 2025 Ubyca · Experiencias GPS</p>
+        <div className="flex items-center gap-5 flex-wrap justify-center">
+          <Link to="/terms_and_conditions" className="text-xs text-slate-600 hover:text-slate-400 transition-colors">
+            Términos y Condiciones
+          </Link>
+          <Link to="/privacy_policy" className="text-xs text-slate-600 hover:text-slate-400 transition-colors">
+            Política de Privacidad
+          </Link>
+          <Link to="/app" className="text-xs text-slate-600 hover:text-slate-400 transition-colors">
+            Abrir aplicación →
+          </Link>
+        </div>
       </div>
     </footer>
   )

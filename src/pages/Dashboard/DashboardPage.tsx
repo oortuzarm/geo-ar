@@ -439,6 +439,18 @@ export default function DashboardPage() {
       )
       console.log('[InitialView Save Payload]', projectPayload.publicInitialViewMode)
 
+      // Temporary: log content fields of each point to verify payload shape
+      pointsPayload.forEach((pt) => {
+        if (pt.contentType && pt.contentType !== 'url') {
+          console.log('[Save][DEBUG] content point:', {
+            id: pt.id,
+            contentType: pt.contentType,
+            lookiarUrl: pt.lookiarUrl,
+            contentData: pt.contentData,
+          })
+        }
+      })
+
       console.time('[Save] syncProject')
       await geoProjectsApi.syncProject(currentProject.id, projectPayload, pointsPayload)
       console.timeEnd('[Save] syncProject')

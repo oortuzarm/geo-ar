@@ -71,16 +71,30 @@ function postEvent(
   pointId: string,
   location?: { latitude: number; longitude: number } | null,
 ): void {
-  void apiFetch<void>(`${API_BASE}/api/analytics_events`, {
-    method: 'POST',
-    body: JSON.stringify({
-      projectId,
-      pointId,
-      eventType,
-      sessionId: getAnalyticsSessionId(),
-      ...(location && { latitude: location.latitude, longitude: location.longitude }),
-    }),
-  }).catch(() => { /* analytics are non-critical — never throw */ })
+  const url  = `${API_BASE}/api/analytics_events`
+  const body = JSON.stringify({
+    projectId,
+    pointId,
+    eventType,
+    sessionId: getAnalyticsSessionId(),
+    ...(location && { latitude: location.latitude, longitude: location.longitude }),
+  })
+
+  console.log(`[ANALYTICS_CLICK_SENT] eventType=${eventType} pointId=${pointId}`)
+
+  // keepalive:true lets the request survive page navigation (critical for URL-type experiences
+  // that call window.location.href immediately after firing this event).
+  void fetch(url, {
+    method:      'POST',
+    credentials: 'include',
+    keepalive:   true,
+    headers:     { 'Content-Type': 'application/json' },
+    body,
+  })
+    .then((res) => {
+      console.log(`[ANALYTICS_CLICK_RESPONSE] eventType=${eventType} status=${res.status}`)
+    })
+    .catch(() => { /* analytics are non-critical — never throw */ })
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────
@@ -106,7 +120,11 @@ export function trackRadiusEnter(
  */
 export function trackPointClick(projectId: string, pointId: string): void {
   const key = `${projectId}:${pointId}`
-  if (isClickOnCooldown(key)) return
+  console.log(`[ANALYTICS_CLICK_ATTEMPT] pointId=${pointId} t=${Date.now()}`)
+  if (isClickOnCooldown(key)) {
+    console.log(`[ANALYTICS_CLICK_ATTEMPT] blocked — within 500ms cooldown`)
+    return
+  }
   postEvent('point_click', projectId, pointId)
 }
 

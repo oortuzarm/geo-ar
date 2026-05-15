@@ -3,7 +3,9 @@ import LandingPage              from './pages/Landing/LandingPage'
 import LandingV2Page            from './pages/Landing/LandingV2Page'
 import ContactPage              from './pages/Contact/ContactPage'
 import AppShell                 from './pages/Home/AppShell'
+import WorkspacePage            from './pages/Home/WorkspacePage'
 import HomePage                 from './pages/Home/HomePage'
+import SettingsPage             from './pages/Settings/SettingsPage'
 import MetricsPage              from './pages/Metrics/MetricsPage'
 import MembersPage              from './pages/Members/MembersPage'
 import DashboardPage            from './pages/Dashboard/DashboardPage'
@@ -53,9 +55,12 @@ const protectedChildren = [
     path: '/app',
     element: <AppShell />,
     children: [
-      { index: true,     element: <HomePage /> },
-      { path: 'metrics', element: <MetricsPage /> },
-      { path: 'members', element: <MembersPage /> },
+      { index: true,        element: <WorkspacePage /> },
+      { path: 'metrics',    element: <MetricsPage /> },
+      { path: 'members',    element: <MembersPage /> },
+      { path: 'settings',   element: <SettingsPage /> },
+      // Legacy multi-project view — kept accessible but not linked from the sidebar
+      { path: 'projects',   element: <HomePage /> },
     ],
   },
   { path: '/project/new',         element: <DashboardPage /> },

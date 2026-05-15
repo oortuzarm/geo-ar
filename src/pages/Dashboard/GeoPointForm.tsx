@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Input, Textarea } from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
-import type { GeoPoint, GeoPointAvailability } from '../../types'
+import type { ContentType, GeoPoint, GeoPointAvailability, MediaContentData } from '../../types'
 import { reverseGeocode } from '../../features/geolocation/geocoding'
+import { uploadFile, formatFileSize } from '../../lib/uploadFile'
 
 interface GeoPointFormProps {
   point: GeoPoint
@@ -17,6 +18,23 @@ const RADIUS_TOOLTIP =
   'El radio de activación define la distancia máxima desde el punto geolocalizado dentro de la cual esta experiencia puede activarse. Si el usuario está fuera de este radio, la experiencia no se mostrará.'
 
 const WEEK_DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+
+// ─── Content type config ──────────────────────────────────────────────────────
+
+const CONTENT_TYPES: { type: ContentType; label: string; icon: string }[] = [
+  { type: 'url',   label: 'URL',                icon: '🔗' },
+  { type: 'video', label: 'Video',              icon: '🎬' },
+  { type: 'audio', label: 'Audio',              icon: '🎵' },
+  { type: 'file',  label: 'Archivo descargable', icon: '📄' },
+]
+
+const FILE_CONFIG: Record<Exclude<ContentType, 'url'>, { accept: string; hint: string; maxLabel: string }> = {
+  video: { accept: 'video/mp4,video/webm',        hint: 'Sube un video MP4 o WebM.',          maxLabel: 'Máx 100 MB' },
+  audio: { accept: 'audio/mpeg,audio/wav',         hint: 'Sube un archivo MP3 o WAV.',         maxLabel: 'Máx 25 MB'  },
+  file:  { accept: '.pdf,.docx,.xlsx,.pptx,.zip',  hint: 'Sube un PDF, DOCX, XLSX, PPTX o ZIP.', maxLabel: 'Máx 25 MB' },
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
   return (
@@ -164,28 +182,36 @@ function AvailabilityRules({
   )
 }
 
+// ─── Main form ────────────────────────────────────────────────────────────────
+
+function isMediaContentData(data: GeoPoint['contentData']): data is MediaContentData {
+  return !!(data && 'file_url' in data && (data as MediaContentData).file_url)
+}
+
 export default function GeoPointForm({ point, onChange, onDelete, onClose, onSave, hideHeader = false }: GeoPointFormProps) {
-  const fileRef = useRef<HTMLInputElement>(null)
-  const [showTooltip, setShowTooltip] = useState(false)
-  const [imageError, setImageError] = useState<string | null>(null)
-  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const imageFileRef  = useRef<HTMLInputElement>(null)
+  const mediaFileRef  = useRef<HTMLInputElement>(null)
+  const [showTooltip,    setShowTooltip]    = useState(false)
+  const [imageError,     setImageError]     = useState<string | null>(null)
+  const [advancedOpen,   setAdvancedOpen]   = useState(false)
 
   // ── Local state for text fields ───────────────────────────────────────────
-  // Decoupled from the parent store so every keystroke doesn't trigger a
-  // full re-render of DashboardPage + Leaflet map. Parent is notified on
-  // blur (lightweight) and on explicit save/close (flush all).
-  // The component is mounted with key={selectedPointId} in the parent, so
-  // useState initializers run fresh whenever a different point is selected.
   const [name,        setName]        = useState(point.name)
   const [lookiarUrl,  setLookiarUrl]  = useState(point.lookiarUrl ?? '')
   const [description, setDescription] = useState(point.description ?? '')
   const [buttonText,  setButtonText]  = useState(point.buttonText ?? '')
 
-  // ── Address: auto-geocoded + optional manual override ────────────────────
-  // addressCustom:  what's in the input (persisted via point.instructions)
-  // addressAuto:    live reverse-geocoded string (never persisted directly)
-  // addressFetching: true while a geocoding request is in flight
-  // addressEditedRef: true when user has manually typed; suppresses auto-fill
+  // ── Content type state ────────────────────────────────────────────────────
+  const [contentType,   setContentType]   = useState<ContentType>(point.contentType ?? 'url')
+  // Uploaded file info (for video/audio/file types)
+  const initialMedia = isMediaContentData(point.contentData)
+    ? { url: point.contentData.file_url, fileName: point.contentData.file_name, mimeType: point.contentData.mime_type, size: 0 }
+    : null
+  const [mediaFile,     setMediaFile]     = useState<{ url: string; fileName: string; mimeType: string; size: number } | null>(initialMedia)
+  const [uploadState,   setUploadState]   = useState<'idle' | 'uploading' | 'done' | 'error'>('idle')
+  const [uploadError,   setUploadError]   = useState<string | null>(null)
+
+  // ── Address state ─────────────────────────────────────────────────────────
   const [addressCustom,   setAddressCustom]   = useState(point.instructions ?? '')
   const [addressAuto,     setAddressAuto]     = useState<string | null>(null)
   const [addressFetching, setAddressFetching] = useState(false)
@@ -196,8 +222,6 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
     if (geoTimerRef.current) clearTimeout(geoTimerRef.current)
     let cancelled = false
 
-    // Immediately clear stale address so the loading placeholder shows right away.
-    // Skip when the user has manually edited — never touch their custom text.
     if (!addressEditedRef.current) {
       setAddressCustom('')
       setAddressFetching(true)
@@ -210,16 +234,11 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           setAddressAuto(addr)
           if (!addressEditedRef.current) {
             setAddressCustom(addr)
-            // Commit immediately so navigating back (without blur) still shows the address
             onChange({ instructions: addr || undefined })
           }
         })
-        .catch(() => {
-          if (!cancelled) setAddressAuto(null)
-        })
-        .finally(() => {
-          if (!cancelled) setAddressFetching(false)
-        })
+        .catch(() => { if (!cancelled) setAddressAuto(null) })
+        .finally(() => { if (!cancelled) setAddressFetching(false) })
     }, 800)
 
     return () => {
@@ -228,12 +247,30 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
     }
   }, [point.latitude, point.longitude])
 
+  // When content type changes, reset media state
+  function handleContentTypeChange(ct: ContentType) {
+    setContentType(ct)
+    if (ct !== contentType) {
+      setMediaFile(null)
+      setUploadState('idle')
+      setUploadError(null)
+    }
+  }
+
   // Push all local text state to the parent store in one shot.
-  // Called before closing or saving to ensure nothing is lost.
   function flush() {
+    const contentData =
+      contentType === 'url'
+        ? { url: lookiarUrl }
+        : mediaFile
+          ? { file_url: mediaFile.url, file_name: mediaFile.fileName, mime_type: mediaFile.mimeType }
+          : { file_url: '', file_name: '', mime_type: '' }
+
     onChange({
       name,
-      lookiarUrl,
+      contentType,
+      contentData,
+      lookiarUrl:   contentType === 'url' ? lookiarUrl : undefined,
       description:  description    || undefined,
       instructions: addressCustom  || undefined,
       buttonText:   buttonText     || undefined,
@@ -243,6 +280,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
   function handleSaveClick()  { flush(); onSave()  }
   function handleCloseClick() { flush(); onClose() }
 
+  // ── Image upload (base64, existing behavior) ──────────────────────────────
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -256,6 +294,37 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
     reader.onload = () => onChange({ image: reader.result as string })
     reader.readAsDataURL(file)
   }
+
+  // ── Media upload (Vercel Blob via uploadFile) ─────────────────────────────
+  async function handleMediaFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    setUploadError(null)
+    setUploadState('uploading')
+    try {
+      const url = await uploadFile(file)
+      setMediaFile({ url, fileName: file.name, mimeType: file.type, size: file.size })
+      setUploadState('done')
+      // Commit immediately so a blur/save isn't required
+      onChange({
+        contentType,
+        contentData: { file_url: url, file_name: file.name, mime_type: file.type },
+      })
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Error al subir el archivo')
+      setUploadState('error')
+    }
+  }
+
+  function handleMediaRemove() {
+    setMediaFile(null)
+    setUploadState('idle')
+    setUploadError(null)
+    onChange({ contentData: { file_url: '', file_name: '', mime_type: '' } })
+  }
+
+  const isSaving = uploadState === 'uploading'
 
   return (
     <div className="flex flex-col h-full">
@@ -286,7 +355,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
 
-        {/* Text fields — local state, committed to parent on blur */}
+        {/* Nombre */}
         <Input
           label="Nombre del punto*"
           placeholder="Ej: Entrada principal"
@@ -295,22 +364,129 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           onBlur={() => onChange({ name })}
         />
 
-        <Input
-          label="URL del contenido*"
-          placeholder="Ej: https://tusitio.com"
-          value={lookiarUrl}
-          onChange={(e) => setLookiarUrl(e.target.value)}
-          onBlur={() => onChange({ lookiarUrl })}
-          hint="Agrega cualquier enlace: experiencias, promociones o contenido digital."
-        />
+        {/* ── Tipo de contenido ──────────────────────────────────────────── */}
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Tipo de contenido
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            {CONTENT_TYPES.map(({ type, label, icon }) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => handleContentTypeChange(type)}
+                className={[
+                  'flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all',
+                  contentType === type
+                    ? 'border-brand-500 bg-brand-500/10 text-brand-400'
+                    : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:border-gray-600 hover:text-gray-300',
+                ].join(' ')}
+              >
+                <span className="text-base leading-none">{icon}</span>
+                <span className="truncate">{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
-        {/* ── Availability rules ─────────────────────────────────────────── */}
+        {/* ── Contenido: URL ──────────────────────────────────────────────── */}
+        {contentType === 'url' && (
+          <Input
+            label="URL del contenido*"
+            placeholder="Ej: https://tusitio.com"
+            value={lookiarUrl}
+            onChange={(e) => setLookiarUrl(e.target.value)}
+            onBlur={() => onChange({ lookiarUrl, contentData: { url: lookiarUrl } })}
+            hint="Agrega cualquier enlace: experiencias, promociones o contenido digital."
+          />
+        )}
+
+        {/* ── Contenido: Video / Audio / Archivo ─────────────────────────── */}
+        {(contentType === 'video' || contentType === 'audio' || contentType === 'file') && (() => {
+          const cfg = FILE_CONFIG[contentType]
+          return (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                {contentType === 'video' ? 'Video del contenido*'
+                  : contentType === 'audio' ? 'Audio del contenido*'
+                  : 'Archivo descargable*'}
+              </span>
+
+              {/* Idle / Error: click to upload */}
+              {(uploadState === 'idle' || uploadState === 'error') && !mediaFile && (
+                <div
+                  className="border-2 border-dashed border-gray-700 rounded-lg p-4 text-center
+                             hover:border-gray-600 transition-colors cursor-pointer"
+                  onClick={() => mediaFileRef.current?.click()}
+                >
+                  <p className="text-xs text-gray-400">{cfg.hint}</p>
+                  <p className="text-xs text-gray-600 mt-0.5">{cfg.maxLabel}</p>
+                  {uploadError && (
+                    <p className="text-xs text-red-400 mt-2">{uploadError}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Uploading */}
+              {uploadState === 'uploading' && (
+                <div className="border border-gray-700 rounded-lg px-4 py-3 flex items-center gap-3">
+                  <svg className="h-4 w-4 text-brand-400 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  <span className="text-xs text-gray-400">Subiendo archivo…</span>
+                </div>
+              )}
+
+              {/* Done: show file info */}
+              {mediaFile && uploadState !== 'uploading' && (
+                <div className="border border-gray-700 rounded-lg px-3 py-2.5 flex items-start gap-2.5">
+                  <span className="text-base flex-shrink-0 mt-0.5">
+                    {contentType === 'video' ? '🎬' : contentType === 'audio' ? '🎵' : '📄'}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-gray-200 truncate">{mediaFile.fileName}</p>
+                    {mediaFile.size > 0 && (
+                      <p className="text-xs text-gray-500">{formatFileSize(mediaFile.size)}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => mediaFileRef.current?.click()}
+                      className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+                    >
+                      Reemplazar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleMediaRemove}
+                      className="text-xs text-gray-600 hover:text-red-400 transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <input
+                ref={mediaFileRef}
+                type="file"
+                accept={cfg.accept}
+                className="hidden"
+                onChange={handleMediaFileSelect}
+              />
+            </div>
+          )
+        })()}
+
+        {/* ── Reglas de disponibilidad ───────────────────────────────────── */}
         <AvailabilityRules
           availability={point.availability}
           onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
         />
 
-        {/* Coordinates — inside collapsible section; drag the marker to reposition */}
+        {/* Coordenadas — dentro de sección colapsable */}
         <div>
           <button
             type="button"
@@ -354,7 +530,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           )}
         </div>
 
-        {/* Activation radius — committed immediately for live circle update */}
+        {/* Radio de activación */}
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-1">
             <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
@@ -399,13 +575,13 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           </div>
         </div>
 
-        {/* Point image */}
+        {/* Imagen de portada */}
         <div className="flex flex-col gap-1">
           <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">Imagen de portada</span>
           <div
             className="border-2 border-dashed border-gray-700 rounded-lg p-3 text-center
                        hover:border-gray-600 transition-colors cursor-pointer"
-            onClick={() => fileRef.current?.click()}
+            onClick={() => imageFileRef.current?.click()}
           >
             {point.image ? (
               <div className="relative">
@@ -422,13 +598,11 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
               </>
             )}
           </div>
-          {imageError && (
-            <p className="text-xs text-red-400">{imageError}</p>
-          )}
-          <input ref={fileRef} type="file" accept=".jpg,.jpeg,.png" className="hidden" onChange={handleImageUpload} />
+          {imageError && <p className="text-xs text-red-400">{imageError}</p>}
+          <input ref={imageFileRef} type="file" accept=".jpg,.jpeg,.png" className="hidden" onChange={handleImageUpload} />
         </div>
 
-        {/* Text areas — local state, committed on blur */}
+        {/* Descripción */}
         <div>
           <Textarea
             label="Descripción"
@@ -446,9 +620,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           </p>
         </div>
 
-        {/* Address: auto-filled from reverse geocoding, editable manually.
-            Placeholder switches to "Obteniendo dirección…" while fetching so
-            the user never sees a stale address during an in-progress geocode. */}
+        {/* Dirección (auto-geocodificada) */}
         <Input
           label="Dirección del punto"
           placeholder={
@@ -482,8 +654,14 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
       </div>
 
       <div className="px-4 pb-4">
-        <Button variant="primary" size="sm" className="w-full" onClick={handleSaveClick}>
-          Guardar
+        <Button
+          variant="primary"
+          size="sm"
+          className="w-full"
+          onClick={handleSaveClick}
+          disabled={isSaving}
+        >
+          {isSaving ? 'Subiendo archivo…' : 'Guardar'}
         </Button>
       </div>
     </div>

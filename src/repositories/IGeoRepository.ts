@@ -1,4 +1,4 @@
-import type { GeoProject, GeoPoint } from '../types'
+import type { GeoProject, GeoPoint, AccessResponse } from '../types'
 
 export interface IGeoRepository {
   // Projects (authenticated)
@@ -20,5 +20,5 @@ export interface IGeoRepository {
 
   // Points (public — lookiarUrl excluded from payload)
   listPublicPoints(projectId: string): Promise<GeoPoint[]>
-  requestPointAccess(projectId: string, pointId: string, lat: number, lng: number, accessMode?: string): Promise<{ url: string }>
+  requestPointAccess(projectId: string, pointId: string, lat: number, lng: number, accessMode?: string): Promise<AccessResponse>
 }

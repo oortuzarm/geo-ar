@@ -1,5 +1,5 @@
 import type { IGeoRepository } from './IGeoRepository'
-import type { GeoProject, GeoPoint } from '../types'
+import type { GeoProject, GeoPoint, AccessResponse } from '../types'
 import { apiFetch, ApiError } from '../lib/apiFetch'
 import { LocalGeoRepository } from './LocalGeoRepository'
 
@@ -142,7 +142,7 @@ export class RemoteGeoRepository implements IGeoRepository {
     return apiFetch<GeoPoint[]>(this.url(`/api/public/geo_projects/${projectId}/geo_points`))
   }
 
-  requestPointAccess(projectId: string, pointId: string, lat: number, lng: number, accessMode?: string): Promise<{ url: string }> {
+  requestPointAccess(projectId: string, pointId: string, lat: number, lng: number, accessMode?: string): Promise<AccessResponse> {
     // Send the browser's local time and day so the backend can validate the
     // schedule using the same clock as the frontend (avoids UTC vs local-time divergence).
     const now = new Date()
@@ -151,7 +151,7 @@ export class RemoteGeoRepository implements IGeoRepository {
     const localTime = `${hh}:${mm}`
     const localDay  = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][now.getDay()]
 
-    return apiFetch<{ url: string }>(
+    return apiFetch<AccessResponse>(
       this.url(`/api/public/geo_projects/${projectId}/geo_points/${pointId}/access`),
       { method: 'POST', body: JSON.stringify({ latitude: lat, longitude: lng, localTime, localDay, accessMode }) },
     )

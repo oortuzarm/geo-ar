@@ -1,13 +1,42 @@
-// Vercel Serverless Function — receives a raw image body and stores it in Vercel Blob.
-// Returns { url } — a permanent public URL safe for og:image.
+// Vercel Serverless Function — receives a raw file body and stores it in Vercel Blob.
+// Returns { url } — a permanent public CDN URL.
 //
-// Requires env var: BLOB_READ_WRITE_TOKEN (Vercel dashboard → Storage → Blob → token)
-// Body: raw file bytes (content-type must be image/*)
+// Requires env var: BLOB_READ_WRITE_TOKEN
+// Body: raw file bytes
 // Headers:
-//   content-type : image/jpeg | image/png | image/webp
+//   content-type : one of the ALLOWED_TYPES below
 //   x-filename   : URI-encoded original filename (optional)
 
 import { put } from '@vercel/blob'
+
+// Per content-type: max size in bytes and Blob folder prefix.
+const ALLOWED_TYPES = {
+  // Images (existing — backward compatible)
+  'image/jpeg': { maxBytes: 4.5 * 1024 * 1024, folder: 'covers' },
+  'image/png':  { maxBytes: 4.5 * 1024 * 1024, folder: 'covers' },
+  'image/webp': { maxBytes: 4.5 * 1024 * 1024, folder: 'covers' },
+  // Video
+  'video/mp4':  { maxBytes: 100 * 1024 * 1024, folder: 'media' },
+  'video/webm': { maxBytes: 100 * 1024 * 1024, folder: 'media' },
+  // Audio
+  'audio/mpeg': { maxBytes: 25 * 1024 * 1024, folder: 'media' },
+  'audio/wav':  { maxBytes: 25 * 1024 * 1024, folder: 'media' },
+  // Documents / files
+  'application/pdf':                                                                      { maxBytes: 25 * 1024 * 1024, folder: 'media' },
+  'application/msword':                                                                   { maxBytes: 25 * 1024 * 1024, folder: 'media' },
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document':             { maxBytes: 25 * 1024 * 1024, folder: 'media' },
+  'application/vnd.ms-excel':                                                             { maxBytes: 25 * 1024 * 1024, folder: 'media' },
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':                  { maxBytes: 25 * 1024 * 1024, folder: 'media' },
+  'application/vnd.ms-powerpoint':                                                       { maxBytes: 25 * 1024 * 1024, folder: 'media' },
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation':          { maxBytes: 25 * 1024 * 1024, folder: 'media' },
+  'application/zip':                                                                      { maxBytes: 25 * 1024 * 1024, folder: 'media' },
+}
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -22,8 +51,18 @@ export default async function handler(req, res) {
   }
 
   const contentType = (req.headers['content-type'] ?? '').split(';')[0].trim()
-  if (!contentType.startsWith('image/')) {
-    res.status(400).json({ error: `Invalid content-type: "${contentType}". Must be image/*` })
+  const typeConfig  = ALLOWED_TYPES[contentType]
+
+  if (!typeConfig) {
+    res.status(400).json({ error: `Tipo no permitido: "${contentType}"` })
+    return
+  }
+
+  // Early size check via Content-Length header (avoids reading the full body first).
+  const declaredSize = parseInt(req.headers['content-length'] ?? '0', 10)
+  if (declaredSize > typeConfig.maxBytes) {
+    const maxMB = (typeConfig.maxBytes / (1024 * 1024)).toFixed(0)
+    res.status(413).json({ error: `El archivo supera el límite de ${maxMB} MB` })
     return
   }
 
@@ -32,29 +71,30 @@ export default async function handler(req, res) {
     buffer = await readBody(req)
   } catch (e) {
     console.error('[upload] Body read error:', e.message)
-    res.status(400).json({ error: 'Could not read request body' })
+    res.status(400).json({ error: 'No se pudo leer el archivo' })
     return
   }
 
   if (buffer.length === 0) {
-    res.status(400).json({ error: 'Empty body — no file received' })
+    res.status(400).json({ error: 'Archivo vacío' })
     return
   }
 
-  if (buffer.length > 4.5 * 1024 * 1024) {
-    res.status(413).json({ error: 'File too large (max 4.5 MB)' })
+  if (buffer.length > typeConfig.maxBytes) {
+    const maxMB = (typeConfig.maxBytes / (1024 * 1024)).toFixed(0)
+    res.status(413).json({ error: `El archivo supera el límite de ${maxMB} MB` })
     return
   }
 
   let safeName
   try {
-    const rawName = req.headers['x-filename'] || `cover-${Date.now()}.jpg`
+    const rawName = req.headers['x-filename'] || `file-${Date.now()}`
     safeName = decodeURIComponent(rawName).replace(/[^a-zA-Z0-9._-]/g, '_')
   } catch {
-    safeName = `cover-${Date.now()}.jpg`
+    safeName = `file-${Date.now()}`
   }
 
-  const pathname = `covers/${Date.now()}-${safeName}`
+  const pathname = `${typeConfig.folder}/${Date.now()}-${safeName}`
   console.log(`[upload] Storing ${pathname} (${buffer.length} B, ${contentType})`)
 
   try {
@@ -63,7 +103,7 @@ export default async function handler(req, res) {
     res.status(200).json({ url: blob.url })
   } catch (e) {
     console.error('[upload] Blob put failed:', e.message)
-    res.status(500).json({ error: `Blob upload failed: ${e.message}` })
+    res.status(500).json({ error: `Error al guardar el archivo: ${e.message}` })
   }
 }
 

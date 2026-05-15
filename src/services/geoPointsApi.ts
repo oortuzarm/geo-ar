@@ -12,7 +12,7 @@
  *   DELETE /api/geo-points/:id
  */
 
-import type { GeoPoint } from '../types'
+import type { GeoPoint, AccessResponse } from '../types'
 import { repository } from '../repositories'
 
 export function listPoints(geoProjectId: string): Promise<GeoPoint[]> {
@@ -43,6 +43,6 @@ export function requestPointAccess(
   lat: number,
   lng: number,
   accessMode?: string,
-): Promise<{ url: string }> {
+): Promise<AccessResponse> {
   return repository.requestPointAccess(projectId, pointId, lat, lng, accessMode)
 }

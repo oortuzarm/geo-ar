@@ -28,10 +28,15 @@ export class LocalGeoRepository implements IGeoRepository {
     return pointsStore.getPointsByProject(projectId)
   }
 
-  async requestPointAccess(projectId: string, pointId: string, _lat: number, _lng: number, _accessMode?: string): Promise<{ url: string }> {
+  async requestPointAccess(projectId: string, pointId: string, _lat: number, _lng: number, _accessMode?: string) {
     const points = await pointsStore.getPointsByProject(projectId)
     const point  = points.find((p) => p.id === pointId)
     if (!point) throw new Error('Punto no encontrado')
-    return { url: point.lookiarUrl ?? '' }
+    const ct = point.contentType ?? 'url'
+    if (ct !== 'url' && point.contentData && 'file_url' in point.contentData) {
+      const d = point.contentData as import('../types').MediaContentData
+      return { success: true as const, content_type: ct as 'video' | 'audio' | 'file', file_url: d.file_url, file_name: d.file_name, mime_type: d.mime_type }
+    }
+    return { success: true as const, content_type: 'url' as const, url: point.lookiarUrl ?? '' }
   }
 }

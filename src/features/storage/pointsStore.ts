@@ -20,6 +20,8 @@ export async function createPoint(data: Partial<GeoPoint> & { geoProjectId: stri
     geoProjectId: data.geoProjectId,
     name: data.name ?? 'Nuevo punto',
     lookiarUrl: data.lookiarUrl ?? '',
+    contentType: data.contentType ?? 'url',
+    contentData: data.contentData ?? { url: '' },
     latitude: data.latitude ?? 0,
     longitude: data.longitude ?? 0,
     activationRadius: data.activationRadius ?? 50,

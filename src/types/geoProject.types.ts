@@ -30,11 +30,36 @@ export interface GeoPointAvailability {
   quotaUsed?: number          // reserved for future backend tracking
 }
 
+// ── Content types ─────────────────────────────────────────────────────────────
+
+export type ContentType = 'url' | 'video' | 'audio' | 'file'
+
+export interface UrlContentData {
+  url: string
+}
+
+export interface MediaContentData {
+  file_url:  string
+  file_name: string
+  mime_type: string
+}
+
+export type ContentData = UrlContentData | MediaContentData
+
+// Discriminated union returned by the /access endpoint after validation.
+export type AccessResponse =
+  | { success: true; content_type: 'url';                       url: string }
+  | { success: true; content_type: 'video' | 'audio' | 'file'; file_url: string; file_name: string; mime_type: string }
+
+// ── GeoPoint ──────────────────────────────────────────────────────────────────
+
 export interface GeoPoint {
   id: string
   geoProjectId: string
   name: string
-  lookiarUrl?: string
+  lookiarUrl?: string      // legacy field — kept for backward compat
+  contentType?: ContentType
+  contentData?: ContentData // excluded from public API; only returned after /access
   latitude: number
   longitude: number
   activationRadius: number

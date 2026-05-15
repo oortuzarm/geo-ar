@@ -23,7 +23,7 @@ import PublicPointPreviewCard from './PublicPointPreviewCard'
 import PublicPointDetailSheet from './PublicPointDetailSheet'
 import Spinner from '../../components/ui/Spinner'
 import ToastContainer from '../../components/ui/Toast'
-import type { GeoProject, GeoPoint, LocationStatus, UserLocation } from '../../types'
+import type { GeoProject, GeoPoint, LocationStatus, UserLocation, AccessResponse } from '../../types'
 
 /** Minimum distance in meters the user must move before recalculating the route */
 const ROUTE_RECALC_THRESHOLD_M = 15
@@ -578,6 +578,114 @@ function InvalidateMapSize() {
   return null
 }
 
+// ─── Unlocked content panel ───────────────────────────────────────────────────
+
+function UnlockedContentPanel({ content, onClose }: { content: AccessResponse; onClose: () => void }) {
+  const isUrl   = content.content_type === 'url'
+  const isVideo = content.content_type === 'video'
+  const isAudio = content.content_type === 'audio'
+  const isFile  = content.content_type === 'file'
+
+  function handleDownload() {
+    if (isFile || isAudio || isVideo) {
+      const a = document.createElement('a')
+      a.href = content.file_url
+      a.download = content.file_name || 'archivo'
+      a.target = '_blank'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    }
+  }
+
+  if (isUrl) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-[2000] bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[#0a1020] border border-white/[0.08] rounded-t-2xl md:rounded-2xl
+                   w-full md:max-w-2xl max-h-[92dvh] flex flex-col overflow-hidden
+                   shadow-[0_-24px_64px_rgba(0,0,0,0.6)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-base">{isVideo ? '🎬' : isAudio ? '🎵' : '📄'}</span>
+            <span className="text-sm font-semibold text-white">
+              {isVideo ? 'Video' : isAudio ? 'Audio' : 'Archivo descargable'}
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-full
+                       text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+            aria-label="Cerrar"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-4 flex flex-col gap-4 min-h-0">
+
+          {isVideo && (
+            <video
+              controls
+              src={content.file_url}
+              className="w-full rounded-xl bg-black max-h-[55dvh]"
+              preload="metadata"
+            />
+          )}
+
+          {isAudio && (
+            <div className="flex flex-col items-center gap-4 py-6">
+              <div className="w-20 h-20 rounded-2xl bg-brand-500/10 border border-brand-500/25 flex items-center justify-center">
+                <span className="text-4xl">🎵</span>
+              </div>
+              <p className="text-sm font-medium text-gray-300 text-center max-w-xs truncate">
+                {content.file_name}
+              </p>
+              <audio controls src={content.file_url} className="w-full max-w-sm" preload="metadata" />
+            </div>
+          )}
+
+          {isFile && (
+            <div className="flex flex-col items-center gap-5 py-8">
+              <div className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                <span className="text-4xl">📄</span>
+              </div>
+              <p className="text-sm font-medium text-gray-300 text-center max-w-xs truncate">
+                {content.file_name}
+              </p>
+              <a
+                href={content.file_url}
+                download={content.file_name}
+                onClick={handleDownload}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl
+                           bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
+                           font-semibold text-sm transition-all duration-150
+                           shadow-[0_4px_20px_rgba(2,132,199,0.35)]"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Descargar archivo
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function PublicPage({ isEmbed = false }: { isEmbed?: boolean } = {}) {
   const { id } = useParams<{ id: string }>()
   const { userLocation, locationStatus, setUserLocation, addToast } = useGeoStore()
@@ -619,6 +727,11 @@ export default function PublicPage({ isEmbed = false }: { isEmbed?: boolean } = 
   const [flyToKey, setFlyToKey] = useState<string | null>(null)
   const [flyToTarget, setFlyToTarget] = useState<FlyTarget | null>(null)
   const flyToCounterRef = useRef(0)
+
+  // ── Unlocked media content (video / audio / file) ────────────────────────
+  // Set by handleActivate when the backend returns a non-URL content type.
+  // Cleared when the user closes the media panel.
+  const [unlockedContent, setUnlockedContent] = useState<AccessResponse | null>(null)
 
   // ── Location toggle state ──────────────────────────────────────────────────
   // True whenever the button should show "return to project view" (⬚) instead
@@ -1079,12 +1192,12 @@ export default function PublicPage({ isEmbed = false }: { isEmbed?: boolean } = 
     const isOpen = point.accessMode === 'open'
 
     if (!userLocation) {
-      if (isOpen && point.lookiarUrl) {
+      if (isOpen && point.lookiarUrl && (!point.contentType || point.contentType === 'url')) {
         trackPointClick(id!, point.id)
         window.location.href = point.lookiarUrl
         return
       }
-      addToast('Activá tu ubicación para acceder a la experiencia.', 'error')
+      addToast('Activa tu ubicación para acceder a la experiencia.', 'error')
       return
     }
 
@@ -1107,31 +1220,45 @@ export default function PublicPage({ isEmbed = false }: { isEmbed?: boolean } = 
         userLocation.longitude,
         point.accessMode,
       )
-      console.log('[Access] ✓ Respuesta completa del backend:', JSON.stringify(raw))
+      console.log('[Access] ✓ Respuesta del backend:', JSON.stringify(raw))
 
       const r = raw as Record<string, unknown>
-      const resolvedUrl =
-        (typeof r.url          === 'string' && r.url)          ||
-        (typeof r.redirect_url === 'string' && r.redirect_url) ||
-        (typeof r.target_url   === 'string' && r.target_url)   ||
-        (typeof r.contentUrl   === 'string' && r.contentUrl)   ||
-        (typeof r.content_url  === 'string' && r.content_url)  ||
-        ''
+      const contentType = (typeof r.content_type === 'string' ? r.content_type : null) ?? 'url'
 
-      console.log('[Access] URL resuelta:', resolvedUrl || '(vacía)')
-
-      if (!resolvedUrl || !resolvedUrl.startsWith('http')) {
-        const msg = 'No se encontró una URL válida para esta experiencia.'
-        console.warn('[Access] URL inválida o vacía — no se redirige. Campo "url" recibido:', r.url)
-        setAccessError({ pointId: point.id, message: msg })
-        addToast(msg, 'error')
+      if (contentType !== 'url') {
+        // Media content (video / audio / file) — render inline panel
+        const fileUrl = typeof r.file_url === 'string' ? r.file_url : ''
+        if (!fileUrl || !fileUrl.startsWith('http')) {
+          const msg = 'No se encontró el archivo para esta experiencia.'
+          setAccessError({ pointId: point.id, message: msg })
+          addToast(msg, 'error')
+        } else {
+          setAccessError(null)
+          setUnlockedContent(raw as AccessResponse)
+        }
       } else {
-        window.location.href = resolvedUrl
+        // URL type — redirect (existing behavior)
+        const resolvedUrl =
+          (typeof r.url          === 'string' && r.url)          ||
+          (typeof r.redirect_url === 'string' && r.redirect_url) ||
+          (typeof r.target_url   === 'string' && r.target_url)   ||
+          ''
+
+        console.log('[Access] URL resuelta:', resolvedUrl || '(vacía)')
+
+        if (!resolvedUrl || !resolvedUrl.startsWith('http')) {
+          const msg = 'No se encontró una URL válida para esta experiencia.'
+          console.warn('[Access] URL inválida o vacía:', r.url)
+          setAccessError({ pointId: point.id, message: msg })
+          addToast(msg, 'error')
+        } else {
+          window.location.href = resolvedUrl
+        }
       }
     } catch (err) {
       console.error('[Access] ✗ Error recibido:', err)
 
-      if (isOpen) {
+      if (isOpen && (!point.contentType || point.contentType === 'url')) {
         if (point.lookiarUrl) {
           console.warn('[Access] Open mode — backend rechazó, navegando por lookiarUrl')
           window.location.href = point.lookiarUrl
@@ -1646,6 +1773,14 @@ export default function PublicPage({ isEmbed = false }: { isEmbed?: boolean } = 
           onConfirm={handleManualLocationConfirm}
           onPickOnMap={() => setMapPickMode(true)}
           onClose={() => setManualLocationSheet(false)}
+        />
+      )}
+
+      {/* Unlocked media content panel (video / audio / file) */}
+      {unlockedContent && unlockedContent.content_type !== 'url' && (
+        <UnlockedContentPanel
+          content={unlockedContent}
+          onClose={() => setUnlockedContent(null)}
         />
       )}
 

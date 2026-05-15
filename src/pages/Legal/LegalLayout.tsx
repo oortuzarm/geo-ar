@@ -10,23 +10,25 @@ export default function LegalLayout({ title, lastUpdated, children }: LegalLayou
   return (
     <div className="min-h-screen bg-[#050810] text-white">
 
-      {/* Top bar */}
-      <header className="border-b border-white/[0.06] px-5 py-5 sticky top-0 z-50 bg-[#050810]/95 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
-          <Link to="/">
-            <img
-              src="/logo-blanco.png"
-              alt="Ubyca"
-              className="h-6 w-auto select-none"
-              draggable={false}
-            />
-          </Link>
-          <Link
-            to="/"
-            className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
-          >
-            ← Volver al inicio
-          </Link>
+      {/* Top bar — misma estructura que NavBar de la landing */}
+      <header className="sticky top-0 left-0 right-0 z-50">
+        <div className="border-b border-white/[0.06] bg-[#050810]/80 backdrop-blur-xl">
+          <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
+            <Link to="/" className="flex items-center flex-shrink-0">
+              <img
+                src="/logo-blanco.png"
+                alt="Ubyca"
+                className="h-11 w-auto select-none"
+                draggable={false}
+              />
+            </Link>
+            <Link
+              to="/"
+              className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              ← Volver al inicio
+            </Link>
+          </div>
         </div>
       </header>
 

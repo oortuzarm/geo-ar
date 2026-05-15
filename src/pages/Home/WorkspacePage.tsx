@@ -563,17 +563,11 @@ export default function WorkspacePage() {
 
             {/* ── Locations table ───────────────────────────────────────── */}
             <section className="pb-6">
-              <div className="flex items-center justify-between mb-4">
+              <div className="mb-4">
                 <SectionLabel>
                   Ubicaciones{' '}
                   <span className="text-gray-700 normal-case font-normal">({points.length})</span>
                 </SectionLabel>
-                <button
-                  onClick={() => navigate(editorUrl)}
-                  className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
-                >
-                  Gestionar en editor →
-                </button>
               </div>
 
               {/* Desktop table */}
@@ -633,23 +627,14 @@ export default function WorkspacePage() {
                           <td className="px-4 py-3 text-gray-400 text-xs tabular-nums">
                             {point.activationRadius} m
                           </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center justify-end gap-1">
-                              <button
-                                onClick={() => navigate(editorUrl)}
-                                className="text-xs text-gray-400 hover:text-gray-100 transition-colors
-                                           px-2 py-1 rounded hover:bg-gray-700/50"
-                              >
-                                Editar
-                              </button>
-                              <button
-                                onClick={() => navigate(metricsUrl)}
-                                className="text-xs text-brand-400 hover:text-brand-300 transition-colors
-                                           px-2 py-1 rounded hover:bg-brand-500/10"
-                              >
-                                Analytics
-                              </button>
-                            </div>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              onClick={() => navigate(metricsUrl)}
+                              className="text-xs text-brand-400 hover:text-brand-300 transition-colors
+                                         px-2 py-1 rounded hover:bg-brand-500/10"
+                            >
+                              Analytics
+                            </button>
                           </td>
                         </tr>
                       )
@@ -683,11 +668,11 @@ export default function WorkspacePage() {
                         </div>
                       </div>
                       <button
-                        onClick={() => navigate(editorUrl)}
+                        onClick={() => navigate(metricsUrl)}
                         className="flex-shrink-0 text-xs text-brand-400 hover:text-brand-300
                                    transition-colors px-2 py-1.5 rounded hover:bg-brand-500/10"
                       >
-                        Editar
+                        Analytics
                       </button>
                     </div>
                   )

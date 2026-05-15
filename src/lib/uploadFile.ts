@@ -1,17 +1,17 @@
 // Per-type size limits (mirror api/upload.js)
 const TYPE_LIMITS: Record<string, number> = {
-  'video/mp4':  20 * 1024 * 1024,
-  'video/webm': 20 * 1024 * 1024,
-  'audio/mpeg': 20 * 1024 * 1024,
-  'audio/wav':  20 * 1024 * 1024,
-  'application/pdf':    20 * 1024 * 1024,
-  'application/msword': 20 * 1024 * 1024,
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document':   20 * 1024 * 1024,
-  'application/vnd.ms-excel':                                                   20 * 1024 * 1024,
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':         20 * 1024 * 1024,
-  'application/vnd.ms-powerpoint':                                              20 * 1024 * 1024,
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 20 * 1024 * 1024,
-  'application/zip':    20 * 1024 * 1024,
+  'video/mp4':  10 * 1024 * 1024,
+  'video/webm': 10 * 1024 * 1024,
+  'audio/mpeg': 10 * 1024 * 1024,
+  'audio/wav':  10 * 1024 * 1024,
+  'application/pdf':    10 * 1024 * 1024,
+  'application/msword': 10 * 1024 * 1024,
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document':   10 * 1024 * 1024,
+  'application/vnd.ms-excel':                                                   10 * 1024 * 1024,
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':         10 * 1024 * 1024,
+  'application/vnd.ms-powerpoint':                                              10 * 1024 * 1024,
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 10 * 1024 * 1024,
+  'application/zip':    10 * 1024 * 1024,
 }
 
 /**
@@ -26,7 +26,7 @@ export async function uploadFile(file: File): Promise<string> {
 
   if (file.size > maxBytes) {
     const maxMB = Math.round(maxBytes / (1024 * 1024))
-    throw new Error(`El archivo supera el límite de ${maxMB} MB`)
+    throw new Error(`El archivo excede el tamaño máximo permitido de ${maxMB}MB.`)
   }
 
   let res: Response
@@ -51,6 +51,9 @@ export async function uploadFile(file: File): Promise<string> {
   }
 
   if (!res.ok) {
+    if (res.status === 413) {
+      throw new Error('El archivo excede el tamaño máximo permitido de 10MB.')
+    }
     throw new Error(body.error ?? `Error del servidor (HTTP ${res.status})`)
   }
 

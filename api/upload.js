@@ -16,20 +16,20 @@ const ALLOWED_TYPES = {
   'image/png':  { maxBytes: 4.5 * 1024 * 1024, folder: 'covers' },
   'image/webp': { maxBytes: 4.5 * 1024 * 1024, folder: 'covers' },
   // Video
-  'video/mp4':  { maxBytes: 20 * 1024 * 1024, folder: 'media' },
-  'video/webm': { maxBytes: 20 * 1024 * 1024, folder: 'media' },
+  'video/mp4':  { maxBytes: 10 * 1024 * 1024, folder: 'media' },
+  'video/webm': { maxBytes: 10 * 1024 * 1024, folder: 'media' },
   // Audio
-  'audio/mpeg': { maxBytes: 20 * 1024 * 1024, folder: 'media' },
-  'audio/wav':  { maxBytes: 20 * 1024 * 1024, folder: 'media' },
+  'audio/mpeg': { maxBytes: 10 * 1024 * 1024, folder: 'media' },
+  'audio/wav':  { maxBytes: 10 * 1024 * 1024, folder: 'media' },
   // Documents / files
-  'application/pdf':                                                                      { maxBytes: 20 * 1024 * 1024, folder: 'media' },
-  'application/msword':                                                                   { maxBytes: 20 * 1024 * 1024, folder: 'media' },
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document':             { maxBytes: 20 * 1024 * 1024, folder: 'media' },
-  'application/vnd.ms-excel':                                                             { maxBytes: 20 * 1024 * 1024, folder: 'media' },
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':                  { maxBytes: 20 * 1024 * 1024, folder: 'media' },
-  'application/vnd.ms-powerpoint':                                                       { maxBytes: 20 * 1024 * 1024, folder: 'media' },
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation':          { maxBytes: 20 * 1024 * 1024, folder: 'media' },
-  'application/zip':                                                                      { maxBytes: 20 * 1024 * 1024, folder: 'media' },
+  'application/pdf':                                                                      { maxBytes: 10 * 1024 * 1024, folder: 'media' },
+  'application/msword':                                                                   { maxBytes: 10 * 1024 * 1024, folder: 'media' },
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document':             { maxBytes: 10 * 1024 * 1024, folder: 'media' },
+  'application/vnd.ms-excel':                                                             { maxBytes: 10 * 1024 * 1024, folder: 'media' },
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':                  { maxBytes: 10 * 1024 * 1024, folder: 'media' },
+  'application/vnd.ms-powerpoint':                                                       { maxBytes: 10 * 1024 * 1024, folder: 'media' },
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation':          { maxBytes: 10 * 1024 * 1024, folder: 'media' },
+  'application/zip':                                                                      { maxBytes: 10 * 1024 * 1024, folder: 'media' },
 }
 
 export const config = {

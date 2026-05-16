@@ -152,19 +152,22 @@ export async function deleteAdminUser(id: string): Promise<void> {
 
 function normalizePlan(raw: Record<string, unknown>): AdminPlan {
   return {
-    id:             raw.id                                                as string,
-    name:           raw.name                                              as string,
-    priceMonthly:   (raw.priceMonthly   ?? raw.price_monthly   ?? 0)    as number,
-    discountAnnual: (raw.discountAnnual ?? raw.discount_annual ?? 0)    as number,
-    locationLimit:  (raw.locationLimit  ?? raw.location_limit  ?? null) as number | null,
-    trialEnabled:   (raw.trialEnabled   ?? raw.trial_enabled   ?? false) as boolean,
-    trialDays:      (raw.trialDays      ?? raw.trial_days      ?? 0)    as number,
-    isVisible:      (raw.isVisible      ?? raw.is_visible      ?? true)  as boolean,
-    isRecommended:  (raw.isRecommended  ?? raw.is_recommended  ?? false) as boolean,
-    isCustom:       (raw.isCustom       ?? raw.is_custom       ?? false) as boolean,
-    sortOrder:      (raw.sortOrder      ?? raw.sort_order      ?? 0)    as number,
-    createdAt:      (raw.createdAt      ?? raw.created_at      ?? '')   as string,
-    updatedAt:      (raw.updatedAt      ?? raw.updated_at      ?? '')   as string,
+    id:                    raw.id                                                              as string,
+    name:                  raw.name                                                            as string,
+    slug:                  (raw.slug ?? '')                                                    as string,
+    monthlyPrice:          (raw.monthlyPrice          ?? raw.monthly_price          ?? 0)     as number,
+    annualDiscountPercent: (raw.annualDiscountPercent ?? raw.annual_discount_percent ?? 0)    as number,
+    yearlyPriceComputed:   (raw.yearlyPriceComputed   ?? raw.yearly_price_computed  ?? null)  as number | null,
+    locationLimit:         (raw.locationLimit          ?? raw.location_limit         ?? null)  as number | null,
+    hasTrial:              (raw.hasTrial               ?? raw.has_trial              ?? false) as boolean,
+    trialDays:             (raw.trialDays              ?? raw.trial_days             ?? null)  as number | null,
+    isVisible:             (raw.isVisible              ?? raw.is_visible             ?? true)  as boolean,
+    isRecommended:         (raw.isRecommended          ?? raw.is_recommended         ?? false) as boolean,
+    applyToExistingUsers:  (raw.applyToExistingUsers   ?? raw.apply_to_existing_users ?? false) as boolean,
+    isCustom:              (raw.isCustom               ?? raw.is_custom              ?? false) as boolean,
+    sortOrder:             (raw.sortOrder              ?? raw.sort_order             ?? 0)     as number,
+    createdAt:             (raw.createdAt              ?? raw.created_at             ?? '')    as string,
+    updatedAt:             (raw.updatedAt              ?? raw.updated_at             ?? '')    as string,
   }
 }
 

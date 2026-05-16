@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
+import { ApiError } from '../../lib/apiFetch'
 import {
   getAdminPlans, createAdminPlan, updateAdminPlan, deleteAdminPlan,
 } from '../../services/adminApi'
@@ -14,6 +15,28 @@ function calcAnnual(monthly: number, discountPct: number): number {
 
 function fmtUSD(n: number): string {
   return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function toSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+}
+
+function extractApiErrors(err: unknown): string {
+  if (err instanceof ApiError) {
+    try {
+      const body = JSON.parse(err.message) as Record<string, unknown>
+      if (Array.isArray(body.errors)) return (body.errors as string[]).join(' · ')
+      if (typeof body.error === 'string') return body.error
+    } catch { /* not JSON */ }
+    return err.message || `Error ${err.status}`
+  }
+  return 'Error inesperado. Intentá de nuevo.'
 }
 
 // ── Shared UI atoms (consistent with AdminPage style) ─────────────────────────
@@ -99,48 +122,51 @@ function TextInput({ value, onChange, placeholder, type = 'text', min, max, step
 // ── Plan form state ───────────────────────────────────────────────────────────
 
 const EMPTY_FORM = {
-  name:          '',
-  priceMonthly:  '',
-  discountAnnual:'0',
-  unlimited:     false,
-  locationLimit: '',
-  trialEnabled:  false,
-  trialDays:     '7',
-  isVisible:     true,
-  isRecommended: false,
-  isCustom:      false,
-  sortOrder:     '0',
+  name:                 '',
+  slug:                 '',
+  monthlyPrice:         '',
+  annualDiscountPercent:'0',
+  unlimited:            false,
+  locationLimit:        '',
+  hasTrial:             false,
+  trialDays:            '7',
+  isVisible:            true,
+  isRecommended:        false,
+  isCustom:             false,
+  sortOrder:            '0',
 }
 type PlanForm = typeof EMPTY_FORM
 
 function planToForm(p: AdminPlan): PlanForm {
   return {
-    name:          p.name,
-    priceMonthly:  String(p.priceMonthly),
-    discountAnnual:String(p.discountAnnual),
-    unlimited:     p.locationLimit === null,
-    locationLimit: p.locationLimit === null ? '' : String(p.locationLimit),
-    trialEnabled:  p.trialEnabled,
-    trialDays:     String(p.trialDays),
-    isVisible:     p.isVisible,
-    isRecommended: p.isRecommended,
-    isCustom:      p.isCustom,
-    sortOrder:     String(p.sortOrder),
+    name:                 p.name,
+    slug:                 p.slug,
+    monthlyPrice:         String(p.monthlyPrice),
+    annualDiscountPercent:String(p.annualDiscountPercent),
+    unlimited:            p.locationLimit === null,
+    locationLimit:        p.locationLimit === null ? '' : String(p.locationLimit),
+    hasTrial:             p.hasTrial,
+    trialDays:            String(p.trialDays ?? 7),
+    isVisible:            p.isVisible,
+    isRecommended:        p.isRecommended,
+    isCustom:             p.isCustom,
+    sortOrder:            String(p.sortOrder),
   }
 }
 
 function formToPayload(f: PlanForm): CreatePlanPayload {
   return {
-    name:          f.name.trim(),
-    priceMonthly:  parseFloat(f.priceMonthly)   || 0,
-    discountAnnual:parseFloat(f.discountAnnual)  || 0,
-    locationLimit: f.unlimited ? null : (parseInt(f.locationLimit) || 0),
-    trialEnabled:  f.trialEnabled,
-    trialDays:     parseInt(f.trialDays) || 7,
-    isVisible:     f.isVisible,
-    isRecommended: f.isRecommended,
-    isCustom:      f.isCustom,
-    sortOrder:     parseInt(f.sortOrder) || 0,
+    name:                 f.name.trim(),
+    slug:                 f.slug.trim(),
+    monthlyPrice:         parseFloat(f.monthlyPrice)          || 0,
+    annualDiscountPercent:parseFloat(f.annualDiscountPercent)  || 0,
+    locationLimit:        f.unlimited ? null : (parseInt(f.locationLimit) || 0),
+    hasTrial:             f.hasTrial,
+    trialDays:            f.hasTrial ? (parseInt(f.trialDays) || 7) : null,
+    isVisible:            f.isVisible,
+    isRecommended:        f.isRecommended,
+    isCustom:             f.isCustom,
+    sortOrder:            parseInt(f.sortOrder) || 0,
   }
 }
 
@@ -155,30 +181,42 @@ interface PlanFormModalProps {
 
 function PlanFormModal({ plan, saving, onSave, onClose }: PlanFormModalProps) {
   const [form, setForm] = useState<PlanForm>(() => plan ? planToForm(plan) : EMPTY_FORM)
+  // Track if the slug was manually edited so we stop auto-updating it
+  const [slugEdited, setSlugEdited] = useState(!!plan)
 
-  const monthly  = parseFloat(form.priceMonthly)   || 0
-  const discount = parseFloat(form.discountAnnual)  || 0
+  const monthly  = parseFloat(form.monthlyPrice)          || 0
+  const discount = parseFloat(form.annualDiscountPercent)  || 0
   const annual   = calcAnnual(monthly, discount)
 
   function set<K extends keyof PlanForm>(key: K, val: PlanForm[K]) {
     setForm(f => ({ ...f, [key]: val }))
   }
 
+  function handleNameChange(v: string) {
+    set('name', v)
+    if (!slugEdited) set('slug', toSlug(v))
+  }
+
+  function handleSlugChange(v: string) {
+    setSlugEdited(true)
+    set('slug', v.toLowerCase().replace(/[^a-z0-9_-]/g, '').replace(/-+/g, '-'))
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.name.trim()) return
+    if (!form.name.trim() || !form.slug.trim()) return
     onSave(formToPayload(form))
   }
 
   useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape' && !saving) onClose() }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [saving, onClose])
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={!saving ? onClose : undefined} />
       <div className="relative w-full max-w-lg bg-gray-900 border border-gray-700 rounded-2xl
                       shadow-2xl max-h-[90vh] flex flex-col">
 
@@ -189,7 +227,8 @@ function PlanFormModal({ plan, saving, onSave, onClose }: PlanFormModalProps) {
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-200 transition-colors"
+            disabled={saving}
+            className="text-gray-500 hover:text-gray-200 transition-colors disabled:opacity-50"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -205,9 +244,22 @@ function PlanFormModal({ plan, saving, onSave, onClose }: PlanFormModalProps) {
             <FieldLabel>Nombre del plan *</FieldLabel>
             <TextInput
               value={form.name}
-              onChange={v => set('name', v)}
+              onChange={handleNameChange}
               placeholder="Ej: Starter, Pro, Enterprise…"
             />
+          </div>
+
+          {/* Slug */}
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel>Slug *</FieldLabel>
+            <TextInput
+              value={form.slug}
+              onChange={handleSlugChange}
+              placeholder="starter-pro"
+            />
+            <span className="text-[11px] text-gray-600">
+              Solo minúsculas, números, guiones y guiones bajos. Se autogenera desde el nombre.
+            </span>
           </div>
 
           {/* Pricing block */}
@@ -218,8 +270,8 @@ function PlanFormModal({ plan, saving, onSave, onClose }: PlanFormModalProps) {
                 <FieldLabel>Precio mensual (USD)</FieldLabel>
                 <TextInput
                   type="number" min={0} step={0.01}
-                  value={form.priceMonthly}
-                  onChange={v => set('priceMonthly', v)}
+                  value={form.monthlyPrice}
+                  onChange={v => set('monthlyPrice', v)}
                   placeholder="0.00"
                 />
               </div>
@@ -227,8 +279,8 @@ function PlanFormModal({ plan, saving, onSave, onClose }: PlanFormModalProps) {
                 <FieldLabel>Descuento anual (%)</FieldLabel>
                 <TextInput
                   type="number" min={0} max={100} step={1}
-                  value={form.discountAnnual}
-                  onChange={v => set('discountAnnual', v)}
+                  value={form.annualDiscountPercent}
+                  onChange={v => set('annualDiscountPercent', v)}
                   placeholder="0"
                 />
               </div>
@@ -267,11 +319,11 @@ function PlanFormModal({ plan, saving, onSave, onClose }: PlanFormModalProps) {
           <div className="flex flex-col gap-3">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Trial</p>
             <Toggle
-              checked={form.trialEnabled}
-              onChange={v => set('trialEnabled', v)}
+              checked={form.hasTrial}
+              onChange={v => set('hasTrial', v)}
               label="Trial gratuito habilitado"
             />
-            {form.trialEnabled && (
+            {form.hasTrial && (
               <div className="flex flex-col gap-1.5">
                 <FieldLabel>Días de trial</FieldLabel>
                 <TextInput
@@ -307,18 +359,23 @@ function PlanFormModal({ plan, saving, onSave, onClose }: PlanFormModalProps) {
           <div className="flex gap-3 pt-1 pb-1">
             <button
               type="submit"
-              disabled={saving || !form.name.trim()}
+              disabled={saving || !form.name.trim() || !form.slug.trim()}
               className="flex-1 px-4 py-2 bg-brand-600 hover:bg-brand-700 disabled:bg-brand-800
                          disabled:text-brand-400 text-white text-sm font-medium rounded-lg
-                         transition-colors cursor-pointer disabled:cursor-not-allowed"
+                         transition-colors cursor-pointer disabled:cursor-not-allowed
+                         flex items-center justify-center gap-2"
             >
+              {saving && (
+                <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              )}
               {saving ? 'Guardando…' : plan ? 'Guardar cambios' : 'Crear plan'}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm
-                         font-medium rounded-lg transition-colors cursor-pointer"
+              disabled={saving}
+              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-300
+                         text-sm font-medium rounded-lg transition-colors cursor-pointer"
             >
               Cancelar
             </button>
@@ -360,8 +417,12 @@ function DeletePlanDialog({ plan, deleting, onConfirm, onClose }: {
             disabled={deleting}
             className="flex-1 px-4 py-2 bg-red-700 hover:bg-red-600 disabled:bg-red-900
                        disabled:text-red-400 text-white text-sm font-medium rounded-lg
-                       transition-colors cursor-pointer disabled:cursor-not-allowed"
+                       transition-colors cursor-pointer disabled:cursor-not-allowed
+                       flex items-center justify-center gap-2"
           >
+            {deleting && (
+              <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+            )}
             {deleting ? 'Eliminando…' : 'Eliminar'}
           </button>
           <button
@@ -384,11 +445,11 @@ export default function AdminPlansPage() {
   const { currentUser, logout } = useAuthStore()
   const navigate = useNavigate()
 
-  const [plans,   setPlans]   = useState<AdminPlan[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState<string | null>(null)
-  const [saving,  setSaving]  = useState(false)
-  const [deleting,setDeleting]= useState(false)
+  const [plans,    setPlans]    = useState<AdminPlan[]>([])
+  const [loading,  setLoading]  = useState(true)
+  const [error,    setError]    = useState<string | null>(null)
+  const [saving,   setSaving]   = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const [formOpen,     setFormOpen]     = useState(false)
   const [editTarget,   setEditTarget]   = useState<AdminPlan | null>(null)
@@ -405,7 +466,7 @@ export default function AdminPlansPage() {
 
   useEffect(() => {
     if (!toast) return
-    const t = setTimeout(() => setToast(null), 3500)
+    const t = setTimeout(() => setToast(null), 5000)
     return () => clearTimeout(t)
   }, [toast])
 
@@ -442,8 +503,8 @@ export default function AdminPlansPage() {
         setToast({ msg: `Plan "${created.name}" creado.`, type: 'success' })
       }
       closeForm()
-    } catch {
-      setToast({ msg: 'No se pudo guardar el plan. Intenta de nuevo.', type: 'error' })
+    } catch (err) {
+      setToast({ msg: extractApiErrors(err), type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -457,8 +518,8 @@ export default function AdminPlansPage() {
       setPlans(prev => prev.filter(p => p.id !== deleteTarget.id))
       setToast({ msg: `Plan "${deleteTarget.name}" eliminado.`, type: 'success' })
       setDeleteTarget(null)
-    } catch {
-      setToast({ msg: 'No se pudo eliminar el plan.', type: 'error' })
+    } catch (err) {
+      setToast({ msg: extractApiErrors(err), type: 'error' })
     } finally {
       setDeleting(false)
     }
@@ -468,8 +529,8 @@ export default function AdminPlansPage() {
     try {
       const updated = await updateAdminPlan(plan.id, { [field]: !plan[field] })
       setPlans(prev => prev.map(p => p.id === updated.id ? updated : p))
-    } catch {
-      setToast({ msg: 'No se pudo actualizar el plan.', type: 'error' })
+    } catch (err) {
+      setToast({ msg: extractApiErrors(err), type: 'error' })
     }
   }
 
@@ -602,31 +663,32 @@ export default function AdminPlansPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-800/60">
                   {sorted.map(plan => {
-                    const annual = calcAnnual(plan.priceMonthly, plan.discountAnnual)
+                    const annual = calcAnnual(plan.monthlyPrice, plan.annualDiscountPercent)
                     return (
                       <tr key={plan.id} className="hover:bg-gray-800/30 transition-colors">
 
-                        {/* Name + badges */}
+                        {/* Name + slug + badges */}
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-medium text-gray-100">{plan.name}</span>
-                            {plan.isCustom     && <Badge color="purple">Personalizado</Badge>}
+                            {plan.isCustom && <Badge color="purple">Personalizado</Badge>}
                           </div>
+                          <span className="text-[11px] text-gray-600 font-mono">{plan.slug}</span>
                         </td>
 
                         {/* Monthly price */}
                         <td className="px-4 py-3 text-right tabular-nums text-gray-300 whitespace-nowrap">
-                          ${fmtUSD(plan.priceMonthly)}
+                          ${fmtUSD(plan.monthlyPrice)}
                           <span className="text-gray-600 text-[11px] ml-0.5">/mes</span>
                         </td>
 
                         {/* Annual price */}
                         <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">
-                          {plan.discountAnnual > 0 ? (
+                          {plan.annualDiscountPercent > 0 ? (
                             <span className="text-gray-300">
                               ${fmtUSD(annual)}
                               <span className="ml-1.5 text-emerald-400 text-[11px]">
-                                -{plan.discountAnnual}%
+                                -{plan.annualDiscountPercent}%
                               </span>
                             </span>
                           ) : (
@@ -644,7 +706,7 @@ export default function AdminPlansPage() {
 
                         {/* Trial */}
                         <td className="px-4 py-3 text-center">
-                          {plan.trialEnabled
+                          {plan.hasTrial
                             ? <Badge color="amber">{plan.trialDays}d</Badge>
                             : <span className="text-gray-600 text-xs">—</span>
                           }
@@ -751,7 +813,7 @@ export default function AdminPlansPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           )}
-          {toast.msg}
+          <span className="leading-snug">{toast.msg}</span>
         </div>
       )}
     </div>

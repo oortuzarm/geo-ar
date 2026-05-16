@@ -1022,7 +1022,7 @@ export default function DashboardPage() {
             <div className="hidden lg:flex absolute bottom-20 left-4 z-[1000] flex-col gap-3
                             bg-gray-900/97 border border-gray-700 rounded-xl px-4 py-4 shadow-lg
                             backdrop-blur-sm w-72">
-              <p className="text-sm font-medium text-gray-100 leading-snug">
+              <p className="text-sm font-medium text-gray-700 leading-snug">
                 No pudimos obtener una ubicación precisa desde este computador.
               </p>
               <div className="flex flex-col gap-2">

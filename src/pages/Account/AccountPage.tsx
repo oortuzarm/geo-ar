@@ -185,7 +185,7 @@ function SeguridadTab() {
 
   function validate(): boolean {
     const next: PasswordErrors = {}
-    if (!form.current)              next.current = 'Ingresá tu contraseña actual.'
+    if (!form.current)              next.current = 'Ingresa tu contraseña actual.'
     if (form.next.length < 8)       next.next    = 'La nueva contraseña debe tener al menos 8 caracteres.'
     if (form.next !== form.confirm) next.confirm = 'Las contraseñas no coinciden.'
     setErrors(next)
@@ -209,7 +209,7 @@ function SeguridadTab() {
       <Card>
         <div className="mb-5">
           <h2 className="text-base font-semibold text-gray-100">Cambiar contraseña</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Usá una contraseña segura de al menos 8 caracteres.</p>
+          <p className="text-xs text-gray-500 mt-0.5">Usa una contraseña segura de al menos 8 caracteres.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -326,7 +326,7 @@ function DangerZone() {
 
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-              Escribí ELIMINAR para confirmar
+              Escribe ELIMINAR para confirmar
             </label>
             <input
               value={deleteText}

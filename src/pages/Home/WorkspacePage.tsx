@@ -117,31 +117,6 @@ function StatusToggle({
   )
 }
 
-function EmptyState({ onAdd }: { onAdd: () => void }) {
-  return (
-    <div className="text-center py-20">
-      <div className="w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
-        <svg className="h-8 w-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      </div>
-      <h2 className="text-lg font-semibold text-gray-300 mb-2">Sin ubicaciones aún</h2>
-      <p className="text-gray-500 mb-6 text-sm">
-        Crea tu primera ubicación en el editor de mapa.
-      </p>
-      <Button onClick={onAdd}>
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
-        Nueva ubicación
-      </Button>
-    </div>
-  )
-}
-
 // ── Workspace actions dropdown ────────────────────────────────────────────────
 
 interface WorkspaceMenuProps {
@@ -576,114 +551,117 @@ export default function WorkspacePage() {
       {/* ── Main ───────────────────────────────────────────────────────────── */}
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
 
-        {points.length === 0 ? (
-          <EmptyState onAdd={() => navigate(editorUrl)} />
-        ) : (
-          <>
-            {/* ── KPI strip ─────────────────────────────────────────────── */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {/* ── KPI strip ─────────────────────────────────────────────── */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
 
-              <KPICard
-                label="Ubicaciones"
-                value={points.length}
-                sub="en total"
-              />
+            <KPICard
+              label="Ubicaciones"
+              value={points.length}
+              sub="en total"
+            />
 
-              <KPICard
-                label="Activas"
-                value={activeCount}
-                sub={`de ${points.length} habilitadas`}
-              />
+            <KPICard
+              label="Activas"
+              value={activeCount}
+              sub={`de ${points.length} habilitadas`}
+            />
 
-              {/* Estado */}
-              <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl px-5 py-5 flex flex-col gap-2">
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-medium leading-none">
-                  Estado
-                </p>
-                <div className="flex items-center mt-1">
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border ${
-                    project.status === 'active'
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                      : 'bg-gray-700/40 text-gray-400 border-gray-600/30'
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                      project.status === 'active' ? 'bg-emerald-400' : 'bg-gray-500'
-                    }`} />
-                    {project.status === 'active' ? 'Publicado' : 'Borrador'}
-                  </span>
-                </div>
+            {/* Estado */}
+            <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl px-5 py-5 flex flex-col gap-2">
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-medium leading-none">
+                Estado
+              </p>
+              <div className="flex items-center mt-1">
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border ${
+                  project.status === 'active'
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                    : 'bg-gray-700/40 text-gray-400 border-gray-600/30'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                    project.status === 'active' ? 'bg-emerald-400' : 'bg-gray-500'
+                  }`} />
+                  {project.status === 'active' ? 'Publicado' : 'Borrador'}
+                </span>
               </div>
-
-              <KPICard
-                label="Clics en experiencia"
-                value={totalClicks ?? '—'}
-                sub="en total"
-              />
             </div>
 
-            {/* ── Map ───────────────────────────────────────────────────── */}
-            <section>
-              <div className="flex items-center justify-between mb-3">
-                <SectionLabel>Mapa</SectionLabel>
-                <button
-                  onClick={() => navigate(editorUrl)}
-                  className="text-xs text-brand-400 hover:text-brand-300 transition-colors
-                             flex items-center gap-1"
-                >
-                  Ir al editor
-                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
-                      d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-              <div
-                className="rounded-2xl overflow-hidden border border-gray-800"
-                style={{ height: '320px' }}
+            <KPICard
+              label="Clics en experiencia"
+              value={totalClicks ?? 0}
+              sub="en total"
+            />
+          </div>
+
+          {/* ── Map ───────────────────────────────────────────────────── */}
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <SectionLabel>Mapa</SectionLabel>
+              <button
+                onClick={() => navigate(editorUrl)}
+                className="text-xs text-brand-400 hover:text-brand-300 transition-colors
+                           flex items-center gap-1"
               >
-                <WorkspaceMap
-                  points={points}
-                  onMarkerClick={() => navigate(editorUrl)}
-                />
-              </div>
-            </section>
+                Ir al editor
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                    d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+            <div
+              className="rounded-2xl overflow-hidden border border-gray-800"
+              style={{ height: '320px' }}
+            >
+              <WorkspaceMap
+                points={points}
+                onMarkerClick={() => navigate(editorUrl)}
+              />
+            </div>
+          </section>
 
-            {/* ── Locations table ───────────────────────────────────────── */}
-            <section className="pb-6">
-              <div className="mb-4">
-                <SectionLabel>
-                  Ubicaciones{' '}
-                  <span className="text-gray-700 normal-case font-normal">({points.length})</span>
-                </SectionLabel>
-              </div>
+          {/* ── Locations table ───────────────────────────────────────── */}
+          <section className="pb-6">
+            <div className="mb-4">
+              <SectionLabel>
+                Ubicaciones{' '}
+                <span className="text-gray-700 normal-case font-normal">({points.length})</span>
+              </SectionLabel>
+            </div>
 
-              {/* Desktop table */}
-              <div className="hidden md:block rounded-2xl border border-gray-800 overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-800 bg-gray-900/60">
-                      <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide w-8">
-                        #
-                      </th>
-                      <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
-                        Nombre
-                      </th>
-                      <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
-                        Tipo
-                      </th>
-                      <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
-                        Estado
-                      </th>
-                      <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
-                        Radio
-                      </th>
-                      <th className="text-right px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
-                        Acciones
-                      </th>
+            {/* Desktop table */}
+            <div className="hidden md:block rounded-2xl border border-gray-800 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-800 bg-gray-900/60">
+                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide w-8">
+                      #
+                    </th>
+                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                      Nombre
+                    </th>
+                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                      Tipo
+                    </th>
+                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                      Estado
+                    </th>
+                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                      Radio
+                    </th>
+                    <th className="text-right px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {points.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-600">
+                        Aún no tenés ubicaciones creadas.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {points.map((point, idx) => {
+                  ) : (
+                    points.map((point, idx) => {
                       const ct         = point.contentType ?? 'url'
                       const isActive   = activeOverrides[point.id] !== undefined
                         ? activeOverrides[point.id]
@@ -733,12 +711,18 @@ export default function WorkspacePage() {
                           </td>
                         </tr>
                       )
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-              {/* Mobile cards */}
+            {/* Mobile: empty message or cards */}
+            {points.length === 0 ? (
+              <p className="md:hidden text-sm text-gray-600 text-center py-10">
+                Aún no tenés ubicaciones creadas.
+              </p>
+            ) : (
               <div className="md:hidden space-y-2">
                 {points.map((point) => {
                   const ct         = point.contentType ?? 'url'
@@ -779,9 +763,8 @@ export default function WorkspacePage() {
                   )
                 })}
               </div>
-            </section>
-          </>
-        )}
+            )}
+          </section>
       </main>
 
       {/* ── Modals ─────────────────────────────────────────────────────────── */}

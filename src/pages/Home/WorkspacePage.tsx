@@ -86,12 +86,32 @@ function ContentTypeBadge({ ct }: { ct: ContentType }) {
   )
 }
 
-function StatusDot({ active }: { active: boolean }) {
+function StatusToggle({
+  active, disabled, onToggle,
+}: {
+  active: boolean
+  disabled: boolean
+  onToggle: () => void
+}) {
   return (
-    <span className={`inline-flex items-center gap-1.5 text-xs ${active ? 'text-emerald-400' : 'text-gray-500'}`}>
-      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${active ? 'bg-emerald-400' : 'bg-gray-600'}`} />
+    <button
+      onClick={onToggle}
+      disabled={disabled}
+      title={active ? 'Cambiar a inactiva' : 'Cambiar a activa'}
+      className={[
+        'inline-flex items-center gap-1.5 text-xs rounded-full px-2 py-0.5 border',
+        'transition-all duration-150 cursor-pointer select-none',
+        disabled ? 'opacity-50 cursor-not-allowed' : 'hover:ring-1',
+        active
+          ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/15 hover:ring-emerald-500/30'
+          : 'text-gray-500 border-gray-600/30 bg-gray-700/10 hover:bg-gray-700/30 hover:ring-gray-600/40',
+      ].join(' ')}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+        disabled ? 'animate-pulse' : ''
+      } ${active ? 'bg-emerald-400' : 'bg-gray-600'}`} />
       {active ? 'Activa' : 'Inactiva'}
-    </span>
+    </button>
   )
 }
 
@@ -377,12 +397,15 @@ export default function WorkspacePage() {
   const { addToast } = useGeoStore()
   const { project, points, loading, updateProject, refresh } = useWorkspace()
 
-  const [shareOpen,      setShareOpen]      = useState(false)
-  const [embedOpen,      setEmbedOpen]      = useState(false)
-  const [deleteConfirm,  setDeleteConfirm]  = useState(false)
-  const [togglingStatus, setTogglingStatus] = useState(false)
-  const [deleting,       setDeleting]       = useState(false)
-  const [totalClicks,    setTotalClicks]    = useState<number | null>(null)
+  const [shareOpen,       setShareOpen]      = useState(false)
+  const [embedOpen,       setEmbedOpen]      = useState(false)
+  const [deleteConfirm,   setDeleteConfirm]  = useState(false)
+  const [togglingStatus,  setTogglingStatus] = useState(false)
+  const [deleting,        setDeleting]       = useState(false)
+  const [totalClicks,     setTotalClicks]    = useState<number | null>(null)
+  const [togglingPointId, setTogglingPointId] = useState<string | null>(null)
+  // Optimistic active overrides: pointId → bool. Cleared after server round-trip.
+  const [activeOverrides, setActiveOverrides] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     if (!project) return
@@ -401,7 +424,9 @@ export default function WorkspacePage() {
 
   if (!project) return null
 
-  const activeCount = points.filter((p) => p.active).length
+  const activeCount = points.filter((p) =>
+    activeOverrides[p.id] !== undefined ? activeOverrides[p.id] : p.active
+  ).length
   const editorUrl   = `/project/${project.id}`
   const publicUrl   = `${window.location.origin}/public/${project.id}`
 
@@ -413,6 +438,28 @@ export default function WorkspacePage() {
       updateProject(updated)
     } catch { /* silent */ }
     finally { setTogglingStatus(false) }
+  }
+
+  async function handleTogglePoint(point: GeoPoint) {
+    if (togglingPointId) return
+    const nextActive = !(activeOverrides[point.id] ?? point.active)
+    setTogglingPointId(point.id)
+    setActiveOverrides((prev) => ({ ...prev, [point.id]: nextActive }))
+    try {
+      await geoPointsApi.savePoint(point.id, { active: nextActive })
+      // Sync hook state so KPIs and map stay consistent
+      refresh()
+    } catch {
+      // Revert optimistic update
+      setActiveOverrides((prev) => {
+        const next = { ...prev }
+        delete next[point.id]
+        return next
+      })
+      addToast('No se pudo actualizar el estado de la ubicación', 'error')
+    } finally {
+      setTogglingPointId(null)
+    }
   }
 
   async function handleDeleteConfirmed() {
@@ -588,7 +635,11 @@ export default function WorkspacePage() {
                   </thead>
                   <tbody>
                     {points.map((point, idx) => {
-                      const ct = point.contentType ?? 'url'
+                      const ct         = point.contentType ?? 'url'
+                      const isActive   = activeOverrides[point.id] !== undefined
+                        ? activeOverrides[point.id]
+                        : point.active
+                      const isToggling = togglingPointId === point.id
                       return (
                         <tr
                           key={point.id}
@@ -601,7 +652,7 @@ export default function WorkspacePage() {
                             <div className="flex items-center gap-3">
                               <PointThumbnail point={point} />
                               <span className={`font-medium truncate max-w-[200px] ${
-                                point.active ? 'text-gray-100' : 'text-gray-500'
+                                isActive ? 'text-gray-100' : 'text-gray-500'
                               }`}>
                                 {point.name || (
                                   <em className="font-normal text-gray-600 not-italic">Sin nombre</em>
@@ -613,7 +664,11 @@ export default function WorkspacePage() {
                             <ContentTypeBadge ct={ct} />
                           </td>
                           <td className="px-4 py-3">
-                            <StatusDot active={point.active} />
+                            <StatusToggle
+                              active={isActive}
+                              disabled={isToggling || !!togglingPointId}
+                              onToggle={() => handleTogglePoint(point)}
+                            />
                           </td>
                           <td className="px-4 py-3 text-gray-400 text-xs tabular-nums">
                             {point.activationRadius} m
@@ -637,7 +692,11 @@ export default function WorkspacePage() {
               {/* Mobile cards */}
               <div className="md:hidden space-y-2">
                 {points.map((point) => {
-                  const ct = point.contentType ?? 'url'
+                  const ct         = point.contentType ?? 'url'
+                  const isActive   = activeOverrides[point.id] !== undefined
+                    ? activeOverrides[point.id]
+                    : point.active
+                  const isToggling = togglingPointId === point.id
                   return (
                     <div
                       key={point.id}
@@ -647,15 +706,17 @@ export default function WorkspacePage() {
                       <PointThumbnail point={point} />
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-medium truncate ${
-                          point.active ? 'text-gray-100' : 'text-gray-500'
+                          isActive ? 'text-gray-100' : 'text-gray-500'
                         }`}>
                           {point.name || 'Sin nombre'}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
                           <ContentTypeBadge ct={ct} />
-                          <span className="text-[11px] text-gray-600 tabular-nums">
-                            {point.activationRadius} m
-                          </span>
+                          <StatusToggle
+                            active={isActive}
+                            disabled={isToggling || !!togglingPointId}
+                            onToggle={() => handleTogglePoint(point)}
+                          />
                         </div>
                       </div>
                       <button

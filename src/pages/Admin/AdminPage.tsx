@@ -3,9 +3,12 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import {
   getAdminUsers, getAdminProjects, getAdminMetrics,
+  getAdminPlans,
   deleteAdminProject, deleteAdminUser,
+  updateAdminUserSubscription,
+  type UpdateSubscriptionPayload,
 } from '../../services/adminApi'
-import type { AdminUser, AdminProject, AdminMetrics } from '../../types/admin.types'
+import type { AdminUser, AdminProject, AdminMetrics, AdminPlan } from '../../types/admin.types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -111,6 +114,25 @@ function RoleBadge({ role }: { role: string }) {
         : 'bg-brand-500/15  text-brand-300  border-brand-500/25'
     }`}>
       {role === 'admin' ? 'Admin' : 'Usuario'}
+    </span>
+  )
+}
+
+function SubscriptionBadge({ status }: { status: AdminUser['subscriptionStatus'] }) {
+  if (!status) return <span className="text-gray-600 text-xs">—</span>
+  const map: Record<string, string> = {
+    trial:    'bg-amber-500/15   text-amber-300   border-amber-500/25',
+    active:   'bg-emerald-500/15 text-emerald-300 border-emerald-500/25',
+    expired:  'bg-red-500/15     text-red-300     border-red-500/25',
+    canceled: 'bg-gray-500/15   text-gray-400    border-gray-500/25',
+  }
+  const label: Record<string, string> = {
+    trial: 'Trial', active: 'Activo', expired: 'Vencido', canceled: 'Cancelado',
+  }
+  return (
+    <span className={`inline-flex px-2 py-0.5 rounded-full border text-[11px] font-medium
+                      leading-none whitespace-nowrap ${map[status] ?? map.canceled}`}>
+      {label[status] ?? status}
     </span>
   )
 }
@@ -305,6 +327,144 @@ function DeleteUserDialog({
   )
 }
 
+// ── Manage subscription dialog ────────────────────────────────────────────────
+
+function ManageSubscriptionDialog({
+  row, plans, saving, onSave, onCancel,
+}: {
+  row: AdminUserRow
+  plans: AdminPlan[]
+  saving: boolean
+  onSave: (payload: UpdateSubscriptionPayload) => void
+  onCancel: () => void
+}) {
+  const [planId,      setPlanId]      = useState(row.planId ?? '')
+  const [status,      setStatus]      = useState<string>(row.subscriptionStatus ?? 'trial')
+  const [customLimit, setCustomLimit] = useState(
+    row.customLocationLimit !== null ? String(row.customLocationLimit) : ''
+  )
+  const [trialEndsAt, setTrialEndsAt] = useState(
+    row.trialEndsAt ? row.trialEndsAt.slice(0, 10) : ''
+  )
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape' && !saving) onCancel() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [saving, onCancel])
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    onSave({
+      planId: planId || null,
+      subscriptionStatus: status as UpdateSubscriptionPayload['subscriptionStatus'],
+      customLocationLimit: customLimit !== '' ? Number(customLimit) : null,
+      trialEndsAt: trialEndsAt ? new Date(trialEndsAt).toISOString() : null,
+    })
+  }
+
+  const field = 'w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 appearance-none'
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={() => { if (!saving) onCancel() }}
+      />
+      <div className="relative bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-9 h-9 rounded-lg bg-brand-500/15 border border-brand-500/25
+                            flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-100">Suscripción</h3>
+              <p className="text-xs text-gray-500 truncate max-w-[260px]">{row.email}</p>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1">Plan</label>
+            <select value={planId} onChange={(e) => setPlanId(e.target.value)} className={field}>
+              <option value="">Sin plan</option>
+              {plans.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1">Estado</label>
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className={field}>
+              <option value="trial">Trial</option>
+              <option value="active">Activo</option>
+              <option value="expired">Vencido</option>
+              <option value="canceled">Cancelado</option>
+            </select>
+          </div>
+
+          {status === 'trial' && (
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1">Fin del trial</label>
+              <input
+                type="date"
+                value={trialEndsAt}
+                onChange={(e) => setTrialEndsAt(e.target.value)}
+                className={field}
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1">
+              Límite personalizado{' '}
+              <span className="text-gray-600 font-normal">(vacío = usa el del plan)</span>
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={customLimit}
+              onChange={(e) => setCustomLimit(e.target.value)}
+              placeholder="Ej: 100"
+              className={`${field} placeholder-gray-600`}
+            />
+          </div>
+
+          <div className="flex gap-3 pt-1">
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={saving}
+              className="flex-1 py-2 rounded-lg text-sm font-medium bg-gray-800 hover:bg-gray-700
+                         text-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 py-2 rounded-lg text-sm font-semibold bg-brand-600 hover:bg-brand-500
+                         text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed
+                         flex items-center justify-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Guardando…
+                </>
+              ) : 'Guardar'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 // ── Metric card ───────────────────────────────────────────────────────────────
 
 interface MetricCardProps {
@@ -352,7 +512,7 @@ function Skeleton({ className = '' }: { className?: string }) {
 
 function UsersTable({
   rows, deletingWorkspaceId, deletingUserId,
-  onViewWorkspace, onDeleteWorkspace, onDeleteUser,
+  onViewWorkspace, onDeleteWorkspace, onDeleteUser, onManageSubscription,
 }: {
   rows: AdminUserRow[]
   deletingWorkspaceId: string | null
@@ -360,6 +520,7 @@ function UsersTable({
   onViewWorkspace: (row: AdminUserRow) => void
   onDeleteWorkspace: (row: AdminUserRow) => void
   onDeleteUser: (row: AdminUserRow) => void
+  onManageSubscription: (row: AdminUserRow) => void
 }) {
   const [search,       setSearch]       = useState('')
   const [roleFilter,   setRoleFilter]   = useState('all')
@@ -403,7 +564,7 @@ function UsersTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-800/60">
-              {['Email', 'Rol', 'Workspace', 'Ubicaciones', 'Estado', 'Registro', 'Modificado', ''].map((h, i) => (
+              {['Email', 'Rol', 'Workspace', 'Ubicaciones', 'Estado', 'Plan', 'Registro', 'Modificado', ''].map((h, i) => (
                 <th key={i}
                   className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   {h}
@@ -413,7 +574,7 @@ function UsersTable({
           </thead>
           <tbody className="divide-y divide-gray-800/50">
             {filtered.length === 0
-              ? <EmptyRow cols={8} message="No se encontraron usuarios." />
+              ? <EmptyRow cols={9} message="No se encontraron usuarios." />
               : filtered.map((row) => {
                 const ws             = row.workspace
                 const isDeletingWs   = deletingWorkspaceId === ws?.id
@@ -457,6 +618,16 @@ function UsersTable({
                       <UserStatusBadge status={row.status} />
                     </td>
 
+                    {/* Plan */}
+                    <td className="px-5 py-3 whitespace-nowrap">
+                      <div className="flex flex-col gap-1">
+                        {row.planName && (
+                          <span className="text-xs text-gray-300">{row.planName}</span>
+                        )}
+                        <SubscriptionBadge status={row.subscriptionStatus} />
+                      </div>
+                    </td>
+
                     {/* Registro */}
                     <td className="px-5 py-3 text-gray-400 whitespace-nowrap">
                       {fmtDate(row.createdAt)}
@@ -470,6 +641,24 @@ function UsersTable({
                     {/* Acciones */}
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-1">
+
+                        {/* Gestionar suscripción */}
+                        <button
+                          onClick={() => { if (!anyDeleting) onManageSubscription(row) }}
+                          disabled={anyDeleting}
+                          title="Gestionar suscripción"
+                          className={[
+                            'w-7 h-7 rounded-md flex items-center justify-center transition-colors',
+                            anyDeleting
+                              ? 'text-gray-700 cursor-not-allowed'
+                              : 'text-brand-500/70 hover:text-brand-400 hover:bg-brand-500/10 cursor-pointer',
+                          ].join(' ')}
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </button>
 
                         {/* Ver workspace */}
                         <button
@@ -559,6 +748,7 @@ export default function AdminPage() {
   const [users,    setUsers]    = useState<AdminUser[]>([])
   const [projects, setProjects] = useState<AdminProject[]>([])
   const [metrics,  setMetrics]  = useState<AdminMetrics | null>(null)
+  const [plans,    setPlans]    = useState<AdminPlan[]>([])
 
   const [loadingUsers,    setLoadingUsers]    = useState(true)
   const [loadingProjects, setLoadingProjects] = useState(true)
@@ -569,8 +759,10 @@ export default function AdminPage() {
 
   const [deleteWorkspaceTarget, setDeleteWorkspaceTarget] = useState<AdminUserRow | null>(null)
   const [deleteUserTarget,      setDeleteUserTarget]      = useState<AdminUserRow | null>(null)
+  const [manageSubTarget,       setManageSubTarget]       = useState<AdminUserRow | null>(null)
   const [deletingWorkspaceId,   setDeletingWorkspaceId]   = useState<string | null>(null)
   const [deletingUserId,        setDeletingUserId]        = useState<string | null>(null)
+  const [savingSubscription,    setSavingSubscription]    = useState(false)
   const [refreshing,            setRefreshing]            = useState(false)
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
 
@@ -589,6 +781,8 @@ export default function AdminPage() {
       .then(setProjects)
       .catch(() => setErrorProjects('No se pudieron cargar los workspaces.'))
       .finally(() => setLoadingProjects(false))
+
+    getAdminPlans().then(setPlans).catch(() => null)
   }, [])
 
   useEffect(() => {
@@ -684,6 +878,24 @@ export default function AdminPage() {
       setToast({ msg: 'No se pudo eliminar el usuario. Intentá de nuevo.', type: 'error' })
     } finally {
       setDeletingUserId(null)
+    }
+  }
+
+  async function handleSaveSubscription(payload: UpdateSubscriptionPayload) {
+    if (!manageSubTarget) return
+    const row = manageSubTarget
+    setSavingSubscription(true)
+    try {
+      await updateAdminUserSubscription(row.id, payload)
+      // Refresh users to pick up new plan/status
+      const freshUsers = await getAdminUsers()
+      setUsers(freshUsers)
+      setManageSubTarget(null)
+      setToast({ msg: `Suscripción de ${row.email} actualizada.`, type: 'success' })
+    } catch {
+      setToast({ msg: 'No se pudo actualizar la suscripción. Intentá de nuevo.', type: 'error' })
+    } finally {
+      setSavingSubscription(false)
     }
   }
 
@@ -854,11 +1066,23 @@ export default function AdminPage() {
               onViewWorkspace={handleViewWorkspace}
               onDeleteWorkspace={(row) => setDeleteWorkspaceTarget(row)}
               onDeleteUser={(row) => setDeleteUserTarget(row)}
+              onManageSubscription={(row) => setManageSubTarget(row)}
             />
           )}
         </section>
 
       </main>
+
+      {/* ── Manage subscription dialog ── */}
+      {manageSubTarget && (
+        <ManageSubscriptionDialog
+          row={manageSubTarget}
+          plans={plans}
+          saving={savingSubscription}
+          onSave={handleSaveSubscription}
+          onCancel={() => setManageSubTarget(null)}
+        />
+      )}
 
       {/* ── Delete workspace dialog ── */}
       {deleteWorkspaceTarget?.workspace && (

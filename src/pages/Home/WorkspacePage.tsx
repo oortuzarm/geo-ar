@@ -14,6 +14,8 @@ import Modal from '../../components/ui/Modal'
 import ShareModal from '../../components/ui/ShareModal'
 import PreviewQRModal from '../Dashboard/PreviewQRModal'
 import WorkspaceMap from '../../components/map/WorkspaceMap'
+import UpgradeModal from '../../components/subscription/UpgradeModal'
+import { useSubscription } from '../../hooks/useSubscription'
 import type { ContentType, GeoPoint, MediaContentData } from '../../types'
 
 // ── Content type display config ───────────────────────────────────────────────
@@ -376,9 +378,12 @@ export default function WorkspacePage() {
   const { currentUser } = useAuthStore()
   const { project, points, loading, updateProject, refresh } = useWorkspace()
 
+  const subscription = useSubscription()
+
   const [shareOpen,       setShareOpen]      = useState(false)
   const [embedOpen,       setEmbedOpen]      = useState(false)
   const [previewOpen,     setPreviewOpen]    = useState(false)
+  const [upgradeOpen,     setUpgradeOpen]    = useState(false)
   const [deleteConfirm,   setDeleteConfirm]  = useState(false)
   const [togglingStatus,  setTogglingStatus] = useState(false)
   const [deleting,        setDeleting]       = useState(false)
@@ -407,8 +412,9 @@ export default function WorkspacePage() {
   const activeCount = points.filter((p) =>
     activeOverrides[p.id] !== undefined ? activeOverrides[p.id] : p.active
   ).length
-  const editorUrl   = `/project/${project.id}`
-  const publicUrl   = `${window.location.origin}/public/${project.id}`
+  const editorUrl = `/project/${project.id}`
+  const publicUrl = `${window.location.origin}/public/${project.id}`
+  const atLimit   = !subscription.canAddLocation(points.length)
 
   async function handleToggleStatus() {
     const p = project!
@@ -548,7 +554,10 @@ export default function WorkspacePage() {
               onToggleStatus={handleToggleStatus}
               onDelete={() => setDeleteConfirm(true)}
             />
-            <Button onClick={() => navigate(editorUrl)}>
+            <Button
+              onClick={() => { if (atLimit) { setUpgradeOpen(true); return }; navigate(editorUrl) }}
+              title={atLimit ? 'Límite de ubicaciones alcanzado' : undefined}
+            >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
@@ -560,6 +569,56 @@ export default function WorkspacePage() {
 
       {/* ── Main ───────────────────────────────────────────────────────────── */}
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+
+          {/* ── Trial banner ──────────────────────────────────────────── */}
+          {subscription.isTrialActive && (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-amber-500/20 bg-amber-500/5">
+              <svg className="h-4 w-4 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-amber-300 flex-1">
+                Te quedan{' '}
+                <span className="font-semibold">
+                  {subscription.trialDaysLeft} {subscription.trialDaysLeft === 1 ? 'día' : 'días'}
+                </span>{' '}
+                de prueba.{' '}
+                <button
+                  onClick={() => setUpgradeOpen(true)}
+                  className="underline hover:text-amber-200 transition-colors"
+                >
+                  Ver planes
+                </button>
+              </p>
+            </div>
+          )}
+
+          {/* ── Subscription strip ────────────────────────────────────── */}
+          {(subscription.planName || subscription.limit !== null) && (
+            <div className="flex items-center gap-4 flex-wrap">
+              {subscription.planName && (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full border text-xs
+                                 font-medium bg-brand-500/10 text-brand-400 border-brand-500/20">
+                  {subscription.planName}
+                </span>
+              )}
+              {subscription.limit !== null && (
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <div className="flex-1 bg-gray-800 rounded-full h-1.5 overflow-hidden min-w-[80px]">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        atLimit ? 'bg-red-500' : 'bg-brand-500'
+                      }`}
+                      style={{ width: `${Math.min(100, (points.length / subscription.limit) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-gray-500 tabular-nums whitespace-nowrap">
+                    {points.length} / {subscription.limit} ubicaciones
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* ── KPI strip ─────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -797,6 +856,13 @@ export default function WorkspacePage() {
         <EmbedModal
           projectId={project.id}
           onClose={() => setEmbedOpen(false)}
+        />
+      )}
+
+      {upgradeOpen && (
+        <UpgradeModal
+          onClose={() => setUpgradeOpen(false)}
+          reason={atLimit ? 'limit' : subscription.status === 'expired' ? 'expired' : 'general'}
         />
       )}
 

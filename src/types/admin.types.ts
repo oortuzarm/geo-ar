@@ -1,12 +1,18 @@
 export interface AdminUser {
-  id:            string
-  email:         string
-  role:          'user' | 'admin'
-  status:        'active' | 'suspended'
-  projectsCount: number
-  pointsCount:   number
-  createdAt:     string
-  updatedAt:     string
+  id:                     string
+  email:                  string
+  role:                   'user' | 'admin'
+  status:                 'active' | 'suspended'
+  subscriptionStatus:     'trial' | 'active' | 'expired' | 'canceled' | null
+  trialEndsAt:            string | null
+  planId:                 string | null
+  planName:               string | null
+  customLocationLimit:    number | null
+  effectiveLocationLimit: number | null
+  projectsCount:          number
+  pointsCount:            number
+  createdAt:              string
+  updatedAt:              string
 }
 
 export interface AdminProject {

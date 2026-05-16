@@ -74,14 +74,20 @@ const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
 
 function normalizeUser(raw: Record<string, unknown>): AdminUser {
   return {
-    id:            raw.id            as string,
-    email:         raw.email         as string,
-    role:          raw.role          as AdminUser['role'],
-    status:        raw.status        as AdminUser['status'],
-    projectsCount: (raw.projectsCount ?? raw.projects_count ?? 0) as number,
-    pointsCount:   (raw.pointsCount   ?? raw.points_count   ?? 0) as number,
-    createdAt:     (raw.createdAt     ?? raw.created_at     ?? '') as string,
-    updatedAt:     (raw.updatedAt     ?? raw.updated_at     ?? '') as string,
+    id:                     raw.id                                                                   as string,
+    email:                  raw.email                                                                as string,
+    role:                   raw.role                                                                 as AdminUser['role'],
+    status:                 raw.status                                                               as AdminUser['status'],
+    subscriptionStatus:     (raw.subscriptionStatus    ?? raw.subscription_status    ?? null)        as AdminUser['subscriptionStatus'],
+    trialEndsAt:            (raw.trialEndsAt           ?? raw.trial_ends_at          ?? null)        as string | null,
+    planId:                 (raw.planId                ?? raw.plan_id                ?? null)        as string | null,
+    planName:               (raw.planName              ?? raw.plan_name              ?? null)        as string | null,
+    customLocationLimit:    (raw.customLocationLimit   ?? raw.custom_location_limit  ?? null)        as number | null,
+    effectiveLocationLimit: (raw.effectiveLocationLimit ?? raw.effective_location_limit ?? null)     as number | null,
+    projectsCount:          (raw.projectsCount         ?? raw.projects_count         ?? 0)          as number,
+    pointsCount:            (raw.pointsCount           ?? raw.points_count           ?? 0)          as number,
+    createdAt:              (raw.createdAt             ?? raw.created_at             ?? '')         as string,
+    updatedAt:              (raw.updatedAt             ?? raw.updated_at             ?? '')         as string,
   }
 }
 
@@ -194,4 +200,27 @@ export async function updateAdminPlan(id: string, payload: UpdatePlanPayload): P
 
 export async function deleteAdminPlan(id: string): Promise<void> {
   await apiFetch<void>(`${BASE}/api/admin/plans/${id}`, { method: 'DELETE' })
+}
+
+// ── User subscriptions ────────────────────────────────────────────────────────
+//
+// PATCH /api/admin/users/:userId/subscription
+// Body: { planId?, subscriptionStatus?, customLocationLimit?, trialStartsAt?, trialEndsAt? }
+
+export interface UpdateSubscriptionPayload {
+  planId?:              string | null
+  subscriptionStatus?:  'trial' | 'active' | 'expired' | 'canceled'
+  customLocationLimit?: number | null
+  trialStartsAt?:       string | null
+  trialEndsAt?:         string | null
+}
+
+export async function updateAdminUserSubscription(
+  userId: string,
+  payload: UpdateSubscriptionPayload,
+): Promise<void> {
+  await apiFetch<unknown>(`${BASE}/api/admin/users/${userId}/subscription`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
 }

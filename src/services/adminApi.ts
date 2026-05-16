@@ -135,3 +135,7 @@ export async function getAdminMetrics(): Promise<AdminMetrics> {
 export async function deleteAdminProject(id: string): Promise<void> {
   await apiFetch<void>(`${BASE}/api/geo_projects/${id}`, { method: 'DELETE' })
 }
+
+export async function deleteAdminUser(id: string): Promise<void> {
+  await apiFetch<void>(`${BASE}/api/admin/users/${id}`, { method: 'DELETE' })
+}

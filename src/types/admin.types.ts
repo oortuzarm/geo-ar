@@ -32,3 +32,34 @@ export interface AdminMetrics {
   totalOrphanProjects:    number
   totalPoints:            number
 }
+
+export interface AdminPlan {
+  id:             string
+  name:           string
+  priceMonthly:   number
+  discountAnnual: number
+  locationLimit:  number | null  // null = unlimited
+  trialEnabled:   boolean
+  trialDays:      number
+  isVisible:      boolean
+  isRecommended:  boolean
+  isCustom:       boolean
+  sortOrder:      number
+  createdAt:      string
+  updatedAt:      string
+}
+
+export interface CreatePlanPayload {
+  name:           string
+  priceMonthly:   number
+  discountAnnual: number
+  locationLimit:  number | null
+  trialEnabled:   boolean
+  trialDays:      number
+  isVisible:      boolean
+  isRecommended:  boolean
+  isCustom:       boolean
+  sortOrder:      number
+}
+
+export type UpdatePlanPayload = Partial<CreatePlanPayload>

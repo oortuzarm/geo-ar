@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import {
   getAdminUsers, getAdminProjects, getAdminMetrics,
@@ -749,6 +749,20 @@ export default function AdminPage() {
               </svg>
             </div>
             <span className="font-semibold text-gray-100 text-sm">Panel administrador</span>
+          </div>
+
+          {/* Nav tabs */}
+          <div className="flex items-center gap-1 ml-4">
+            <button className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-100">
+              Usuarios
+            </button>
+            <Link
+              to="/admin/plans"
+              className="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400
+                         hover:text-gray-200 hover:bg-gray-800 transition-colors"
+            >
+              Planes
+            </Link>
           </div>
 
           <div className="flex-1" />

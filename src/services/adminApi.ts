@@ -66,7 +66,7 @@
  */
 
 import { apiFetch } from '../lib/apiFetch'
-import type { AdminUser, AdminProject, AdminMetrics } from '../types/admin.types'
+import type { AdminUser, AdminProject, AdminMetrics, AdminPlan, CreatePlanPayload, UpdatePlanPayload } from '../types/admin.types'
 
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
 
@@ -138,4 +138,57 @@ export async function deleteAdminProject(id: string): Promise<void> {
 
 export async function deleteAdminUser(id: string): Promise<void> {
   await apiFetch<void>(`${BASE}/api/admin/users/${id}`, { method: 'DELETE' })
+}
+
+// ── Plans ─────────────────────────────────────────────────────────────────────
+//
+// Expected Rails routes (under namespace :api, namespace :admin):
+//   resources :plans, only: %i[index create update destroy]
+//
+// GET    /api/admin/plans
+// POST   /api/admin/plans
+// PATCH  /api/admin/plans/:id
+// DELETE /api/admin/plans/:id
+
+function normalizePlan(raw: Record<string, unknown>): AdminPlan {
+  return {
+    id:             raw.id                                                as string,
+    name:           raw.name                                              as string,
+    priceMonthly:   (raw.priceMonthly   ?? raw.price_monthly   ?? 0)    as number,
+    discountAnnual: (raw.discountAnnual ?? raw.discount_annual ?? 0)    as number,
+    locationLimit:  (raw.locationLimit  ?? raw.location_limit  ?? null) as number | null,
+    trialEnabled:   (raw.trialEnabled   ?? raw.trial_enabled   ?? false) as boolean,
+    trialDays:      (raw.trialDays      ?? raw.trial_days      ?? 0)    as number,
+    isVisible:      (raw.isVisible      ?? raw.is_visible      ?? true)  as boolean,
+    isRecommended:  (raw.isRecommended  ?? raw.is_recommended  ?? false) as boolean,
+    isCustom:       (raw.isCustom       ?? raw.is_custom       ?? false) as boolean,
+    sortOrder:      (raw.sortOrder      ?? raw.sort_order      ?? 0)    as number,
+    createdAt:      (raw.createdAt      ?? raw.created_at      ?? '')   as string,
+    updatedAt:      (raw.updatedAt      ?? raw.updated_at      ?? '')   as string,
+  }
+}
+
+export async function getAdminPlans(): Promise<AdminPlan[]> {
+  const raw = await apiFetch<Record<string, unknown>[]>(`${BASE}/api/admin/plans`)
+  return raw.map(normalizePlan)
+}
+
+export async function createAdminPlan(payload: CreatePlanPayload): Promise<AdminPlan> {
+  const raw = await apiFetch<Record<string, unknown>>(`${BASE}/api/admin/plans`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+  return normalizePlan(raw)
+}
+
+export async function updateAdminPlan(id: string, payload: UpdatePlanPayload): Promise<AdminPlan> {
+  const raw = await apiFetch<Record<string, unknown>>(`${BASE}/api/admin/plans/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
+  return normalizePlan(raw)
+}
+
+export async function deleteAdminPlan(id: string): Promise<void> {
+  await apiFetch<void>(`${BASE}/api/admin/plans/${id}`, { method: 'DELETE' })
 }

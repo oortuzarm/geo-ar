@@ -18,6 +18,7 @@ import ForgotPasswordPage       from './pages/Auth/ForgotPasswordPage'
 import ResetPasswordPage        from './pages/Auth/ResetPasswordPage'
 import AcceptInvitationPage     from './pages/Auth/AcceptInvitationPage'
 import AdminPage                from './pages/Admin/AdminPage'
+import AdminPlansPage          from './pages/Admin/AdminPlansPage'
 import AccountPage              from './pages/Account/AccountPage'
 import PrivacyPolicyPage        from './pages/Legal/PrivacyPolicyPage'
 import TermsAndConditionsPage   from './pages/Legal/TermsAndConditionsPage'
@@ -72,7 +73,8 @@ const protectedChildren = [
   {
     element: <AdminRoute />,
     children: [
-      { path: '/admin', element: <AdminPage /> },
+      { path: '/admin',       element: <AdminPage /> },
+      { path: '/admin/plans', element: <AdminPlansPage /> },
     ],
   },
 ]

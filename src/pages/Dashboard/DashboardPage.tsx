@@ -628,6 +628,14 @@ export default function DashboardPage() {
             navigator.geolocation.clearWatch(locationWatchRef.current)
             locationWatchRef.current = null   // ← nulled before any late callbacks can check it
           }
+          // If we received any coordinates (even imprecise), fly there before showing the fallback
+          const best = bestReadingRef.current
+          if (best) {
+            setEditorUserPos(best)
+            setLocationSource('gps')
+            setMapCenter([best.lat, best.lng])
+            setMapZoom(15)
+          }
           setLocationPhase('failed')
           setLocatingUser(false)
           setCurrentGpsAccuracy(null)
@@ -642,11 +650,12 @@ export default function DashboardPage() {
           const acc = raw.coords.accuracy
           setCurrentGpsAccuracy(acc)
 
-          // Reject readings worse than 50 m — never commit an imprecise fix on desktop
-          if (acc > 50) return
-
           const pos = { lat: raw.coords.latitude, lng: raw.coords.longitude, accuracy: acc }
+          // Always keep the best reading so the timeout can use it even if accuracy is poor
           if (!bestReadingRef.current || acc < bestReadingRef.current.accuracy) bestReadingRef.current = pos
+
+          // Don't commit imprecise fix immediately on desktop — keep watching for better signal
+          if (acc > 50) return
 
           // Target ≤ 30 m → commit immediately
           if (acc <= 30) {

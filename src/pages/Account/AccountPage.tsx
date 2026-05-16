@@ -90,12 +90,13 @@ function profileFromApi(p: UserProfile): ProfileForm {
 }
 
 interface PerfilTabProps {
-  profile:    UserProfile | null
-  loading:    boolean
-  loadError:  string | null
+  profile:        UserProfile | null
+  loading:        boolean
+  loadError:      string | null
+  onProfileSaved: (p: UserProfile) => void
 }
 
-function PerfilTab({ profile, loading, loadError }: PerfilTabProps) {
+function PerfilTab({ profile, loading, loadError, onProfileSaved }: PerfilTabProps) {
   const [form,    setForm]    = useState<ProfileForm>({
     firstName: '', lastName: '', company: '', jobTitle: '', country: '',
   })
@@ -119,7 +120,8 @@ function PerfilTab({ profile, loading, loadError }: PerfilTabProps) {
     setSaving(true)
     setSaveErr(null)
     try {
-      await updateAccount(form)
+      const updated = await updateAccount(form)
+      onProfileSaved(updated)
       setSaved(true)
     } catch {
       setSaveErr('No se pudieron guardar los cambios. Intenta de nuevo.')
@@ -489,6 +491,7 @@ export default function AccountPage() {
               profile={profile}
               loading={profileLoading}
               loadError={profileError}
+              onProfileSaved={setProfile}
             />
           )}
           {tab === 'seguridad' && <SeguridadTab />}

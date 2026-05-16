@@ -405,7 +405,6 @@ export default function WorkspacePage() {
   const [deleteConfirm,   setDeleteConfirm]  = useState(false)
   const [togglingStatus,  setTogglingStatus] = useState(false)
   const [deleting,        setDeleting]       = useState(false)
-  const [creating,        setCreating]       = useState(false)
   const [totalClicks,     setTotalClicks]    = useState<number | null>(null)
   const [togglingPointId, setTogglingPointId] = useState<string | null>(null)
   // Optimistic active overrides: pointId → bool. Cleared after server round-trip.
@@ -418,7 +417,7 @@ export default function WorkspacePage() {
       .catch(() => setTotalClicks(0))
   }, [project?.id])
 
-  if (loading || deleting || creating) {
+  if (loading || deleting) {
     return (
       <div className="flex justify-center items-center py-32">
         <Spinner size="lg" />
@@ -426,51 +425,7 @@ export default function WorkspacePage() {
     )
   }
 
-  // ── No workspace yet — show empty state, create on demand ─────────────────
-  if (!project) {
-    console.log('[WORKSPACE_EMPTY_STATE] Rendering no-workspace UI for userId=', currentUser?.id)
-
-    async function handleCreateAndNavigate() {
-      console.log('[WORKSPACE_CREATED_ON_DEMAND] userId=', currentUser?.id)
-      setCreating(true)
-      try {
-        const newProject = await geoProjectsApi.createProject({ title: 'Mi Workspace' })
-        navigate(`/project/${newProject.id}`)
-      } catch {
-        addToast('No se pudo crear el workspace. Intentá de nuevo.', 'error')
-        setCreating(false)
-      }
-      // No finally reset here: on success we navigate away; on error it's reset above.
-    }
-
-    return (
-      <div className="text-gray-100">
-        <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10">
-          <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-            <div className="flex items-center md:hidden">
-              <img
-                src="/logo-blanco.png"
-                alt="Ubyca"
-                className="h-8 w-auto object-contain select-none"
-                draggable={false}
-              />
-            </div>
-            <h1 className="hidden md:block font-bold text-gray-100">Ubicaciones</h1>
-            <Button onClick={handleCreateAndNavigate}>
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Nueva ubicación
-            </Button>
-          </div>
-        </header>
-        <main className="max-w-5xl mx-auto px-6 py-8">
-          <EmptyState onAdd={handleCreateAndNavigate} />
-        </main>
-        <ToastContainer />
-      </div>
-    )
-  }
+  if (!project) return null
 
   const activeCount = points.filter((p) =>
     activeOverrides[p.id] !== undefined ? activeOverrides[p.id] : p.active
@@ -488,6 +443,12 @@ export default function WorkspacePage() {
         { currentUserId: currentUser.id, currentUserRole: currentUser.role,
           projectUserId: p.userId, projectId: p.id })
       addToast('Este workspace no pertenece al usuario autenticado.', 'error')
+      return
+    }
+
+    // Require at least one location before publishing.
+    if (nextStatus === 'active' && points.length === 0) {
+      addToast('Agrega al menos una ubicación antes de publicar el workspace.', 'error')
       return
     }
 

@@ -22,8 +22,6 @@ export function useWorkspace() {
 
       console.log('[WORKSPACE_LOAD_USER] userId=', currentUserId,
         'email=', currentUserEmail, 'role=', currentUserRole)
-      console.log('[WORKSPACE_CANDIDATES]',
-        all.map((p) => ({ id: p.id, userId: p.userId, status: p.status })))
 
       // ── Project selection strategy ───────────────────────────────────────
       //
@@ -34,8 +32,9 @@ export function useWorkspace() {
       // Priority 2: projects where userId is absent (null/undefined).
       //   Backend didn't include userId — trust that the response is already scoped.
       //
-      // No match → show empty state. NEVER auto-create a workspace here.
-      // Workspace creation happens on demand when the user takes a real action.
+      // No match → auto-create the user's own workspace.
+      // Every user must have exactly 1 workspace; creation is safe because the
+      // backend session always associates the new project with current_user.
 
       const owned = currentUserId
         ? all.filter((p) => p.userId === currentUserId)
@@ -50,30 +49,24 @@ export function useWorkspace() {
       if (owned.length > 0) {
         candidates = owned
       } else if (noOwnerInfo.length > 0) {
+        // Backend didn't return userId — trust that the response is already scoped.
         console.warn('[WORKSPACE_MISSING_USER_ID]',
           'Backend did not return userId — assuming response is already scoped to current user.',
           { ambiguousCount: noOwnerInfo.length, totalCount: all.length })
         candidates = noOwnerInfo
       } else {
-        // No own project found — either new user or admin seeing only other users' projects.
-        const skipped = all.filter((p) => p.userId && p.userId !== currentUserId)
-        console.log('[WORKSPACE_AUTO_CREATE_BLOCKED]',
-          'No workspace found for current user. Showing empty state instead of auto-creating.',
-          { currentUserId, totalFromAPI: all.length, skippedOtherUsers: skipped.length })
         candidates = []
       }
 
       const sorted = [...candidates].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-      const workspace = sorted[0] ?? null
+      let workspace = sorted[0] ?? null
 
       if (!workspace) {
-        console.log('[WORKSPACE_EMPTY_STATE] No workspace for userId=', currentUserId)
-        if (!cancelled) {
-          setProject(null)
-          setPoints([])
-          setLoading(false)
-        }
-        return
+        // No own workspace found — auto-create one.
+        const skippedOthers = all.filter((p) => p.userId && p.userId !== currentUserId).length
+        console.log('[WORKSPACE_CREATED_ON_DEMAND] Auto-creating workspace.',
+          { currentUserId, totalFromAPI: all.length, skippedOtherUsers: skippedOthers })
+        workspace = await geoProjectsApi.createProject({ title: 'Mi Workspace' })
       }
 
       console.log('[WORKSPACE_SELECTED] id=', workspace.id,

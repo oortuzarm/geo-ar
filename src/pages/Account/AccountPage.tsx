@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { InputHTMLAttributes, FormEvent } from 'react'
 import { Input } from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
 import PasswordInput from '../../components/ui/PasswordInput'
-import { useAuthStore } from '../../store/authStore'
+import { getAccount, updateAccount } from '../../services/accountApi'
+import type { UserProfile } from '../../types/account.types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -13,7 +14,7 @@ interface ProfileForm {
   firstName: string
   lastName:  string
   company:   string
-  position:  string
+  jobTitle:  string
   country:   string
 }
 
@@ -50,6 +51,10 @@ function SavedBadge() {
   )
 }
 
+function Skeleton({ className = '' }: { className?: string }) {
+  return <div className={`animate-pulse bg-gray-800 rounded-md ${className}`} />
+}
+
 // Password field — matches Input component style, wraps PasswordInput toggle
 function PasswordField({
   id, label, error, ...rest
@@ -74,29 +79,61 @@ function PasswordField({
 
 // ── Perfil tab ────────────────────────────────────────────────────────────────
 
-function PerfilTab({ email }: { email: string }) {
-  const [form, setForm] = useState<ProfileForm>({
-    firstName: '',
-    lastName:  '',
-    company:   '',
-    position:  '',
-    country:   '',
+function profileFromApi(p: UserProfile): ProfileForm {
+  return {
+    firstName: p.firstName ?? '',
+    lastName:  p.lastName  ?? '',
+    company:   p.company   ?? '',
+    jobTitle:  p.jobTitle  ?? '',
+    country:   p.country   ?? '',
+  }
+}
+
+interface PerfilTabProps {
+  profile:    UserProfile | null
+  loading:    boolean
+  loadError:  string | null
+}
+
+function PerfilTab({ profile, loading, loadError }: PerfilTabProps) {
+  const [form,    setForm]    = useState<ProfileForm>({
+    firstName: '', lastName: '', company: '', jobTitle: '', country: '',
   })
-  const [saving, setSaving] = useState(false)
-  const [saved,  setSaved]  = useState(false)
+  const [saving,  setSaving]  = useState(false)
+  const [saved,   setSaved]   = useState(false)
+  const [saveErr, setSaveErr] = useState<string | null>(null)
+
+  // Populate form once the profile arrives
+  useEffect(() => {
+    if (profile) setForm(profileFromApi(profile))
+  }, [profile])
 
   function set(key: keyof ProfileForm, value: string) {
     setForm(f => ({ ...f, [key]: value }))
     setSaved(false)
+    setSaveErr(null)
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setSaving(true)
-    // TODO: call profile update API
-    await new Promise(r => setTimeout(r, 800))
-    setSaving(false)
-    setSaved(true)
+    setSaveErr(null)
+    try {
+      await updateAccount(form)
+      setSaved(true)
+    } catch {
+      setSaveErr('No se pudieron guardar los cambios. Intenta de nuevo.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loadError) {
+    return (
+      <Card>
+        <p className="text-sm text-red-400">{loadError}</p>
+      </Card>
+    )
   }
 
   return (
@@ -106,65 +143,82 @@ function PerfilTab({ email }: { email: string }) {
         <p className="text-xs text-gray-500 mt-0.5">Tu perfil dentro de Ubyca.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            label="Nombre"
-            placeholder="Juan"
-            value={form.firstName}
-            onChange={e => set('firstName', e.target.value)}
-          />
-          <Input
-            label="Apellido"
-            placeholder="Pérez"
-            value={form.lastName}
-            onChange={e => set('lastName', e.target.value)}
-          />
+      {loading ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Skeleton className="h-16" />
+            <Skeleton className="h-16" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Skeleton className="h-16" />
+            <Skeleton className="h-16" />
+          </div>
+          <Skeleton className="h-16" />
+          <Skeleton className="h-16" />
         </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Nombre"
+              placeholder="Tu nombre"
+              value={form.firstName}
+              onChange={e => set('firstName', e.target.value)}
+            />
+            <Input
+              label="Apellido"
+              placeholder="Tu apellido"
+              value={form.lastName}
+              onChange={e => set('lastName', e.target.value)}
+            />
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Empresa"
+              placeholder="Tu empresa"
+              value={form.company}
+              onChange={e => set('company', e.target.value)}
+            />
+            <Input
+              label="Cargo"
+              placeholder="Tu cargo"
+              value={form.jobTitle}
+              onChange={e => set('jobTitle', e.target.value)}
+            />
+          </div>
+
           <Input
-            label="Empresa"
-            placeholder="Acme Corp"
-            value={form.company}
-            onChange={e => set('company', e.target.value)}
+            label="País"
+            placeholder="Tu país"
+            value={form.country}
+            onChange={e => set('country', e.target.value)}
           />
-          <Input
-            label="Cargo"
-            placeholder="Product Manager"
-            value={form.position}
-            onChange={e => set('position', e.target.value)}
-          />
-        </div>
 
-        <Input
-          label="País"
-          placeholder="Argentina"
-          value={form.country}
-          onChange={e => set('country', e.target.value)}
-        />
+          {/* Email — always read-only */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              Email
+            </label>
+            <input
+              readOnly
+              value={profile?.email ?? ''}
+              className="bg-gray-800/40 border border-gray-700/40 rounded-md px-3 py-2
+                         text-sm text-gray-500 cursor-not-allowed select-none"
+            />
+            <p className="text-xs text-gray-600">El email no puede modificarse desde aquí.</p>
+          </div>
 
-        {/* Email — always read-only */}
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Email
-          </label>
-          <input
-            readOnly
-            value={email}
-            className="bg-gray-800/40 border border-gray-700/40 rounded-md px-3 py-2
-                       text-sm text-gray-500 cursor-not-allowed select-none"
-          />
-          <p className="text-xs text-gray-600">El email no puede modificarse desde aquí.</p>
-        </div>
+          {saveErr && <p className="text-xs text-red-400">{saveErr}</p>}
 
-        <div className="pt-1 flex items-center gap-4">
-          <Button type="submit" loading={saving}>
-            Guardar cambios
-          </Button>
-          {saved && <SavedBadge />}
-        </div>
-      </form>
+          <div className="pt-1 flex items-center gap-4">
+            <Button type="submit" loading={saving}>
+              Guardar cambios
+            </Button>
+            {saved && <SavedBadge />}
+          </div>
+        </form>
+      )}
     </Card>
   )
 }
@@ -196,7 +250,7 @@ function SeguridadTab() {
     e.preventDefault()
     if (!validate()) return
     setSaving(true)
-    // TODO: call change-password API
+    // TODO: implement PATCH /api/auth/change_password
     await new Promise(r => setTimeout(r, 800))
     setSaving(false)
     setSaved(true)
@@ -284,7 +338,7 @@ function DangerZone() {
 
   function handleDelete() {
     if (!confirmed) return
-    // TODO: call delete-account API and log out
+    // TODO: implement DELETE /api/account and logout
     console.log('[ACCOUNT_DELETE] User confirmed account deletion — not yet implemented.')
   }
 
@@ -370,8 +424,17 @@ function DangerZone() {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function AccountPage() {
-  const { currentUser } = useAuthStore()
-  const [tab, setTab]   = useState<Tab>('perfil')
+  const [tab, setTab]    = useState<Tab>('perfil')
+  const [profile,      setProfile]      = useState<UserProfile | null>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
+  const [profileError,   setProfileError]   = useState<string | null>(null)
+
+  useEffect(() => {
+    getAccount()
+      .then(setProfile)
+      .catch(() => setProfileError('No se pudo cargar el perfil. Recarga la página.'))
+      .finally(() => setProfileLoading(false))
+  }, [])
 
   const TABS: { id: Tab; label: string }[] = [
     { id: 'perfil',    label: 'Perfil'    },
@@ -421,7 +484,13 @@ export default function AccountPage() {
 
         {/* Tab content — key forces remount so fade-in re-fires on tab switch */}
         <div key={tab} className="animate-fade-in">
-          {tab === 'perfil'    && <PerfilTab email={currentUser?.email ?? ''} />}
+          {tab === 'perfil' && (
+            <PerfilTab
+              profile={profile}
+              loading={profileLoading}
+              loadError={profileError}
+            />
+          )}
           {tab === 'seguridad' && <SeguridadTab />}
         </div>
 

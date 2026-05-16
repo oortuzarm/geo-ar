@@ -12,6 +12,7 @@ import Spinner from '../../components/ui/Spinner'
 import ToastContainer from '../../components/ui/Toast'
 import Modal from '../../components/ui/Modal'
 import ShareModal from '../../components/ui/ShareModal'
+import PreviewQRModal from '../Dashboard/PreviewQRModal'
 import WorkspaceMap from '../../components/map/WorkspaceMap'
 import type { ContentType, GeoPoint, MediaContentData } from '../../types'
 
@@ -377,6 +378,7 @@ export default function WorkspacePage() {
 
   const [shareOpen,       setShareOpen]      = useState(false)
   const [embedOpen,       setEmbedOpen]      = useState(false)
+  const [previewOpen,     setPreviewOpen]    = useState(false)
   const [deleteConfirm,   setDeleteConfirm]  = useState(false)
   const [togglingStatus,  setTogglingStatus] = useState(false)
   const [deleting,        setDeleting]       = useState(false)
@@ -527,6 +529,14 @@ export default function WorkspacePage() {
           <h1 className="hidden md:block font-bold text-gray-100">Ubicaciones</h1>
 
           <div className="flex items-center gap-2 relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hidden md:inline-flex"
+              onClick={() => setPreviewOpen(true)}
+            >
+              Previsualizar
+            </Button>
             <WorkspaceMenu
               projectId={project.id}
               projectTitle={project.title}
@@ -768,6 +778,13 @@ export default function WorkspacePage() {
       </main>
 
       {/* ── Modals ─────────────────────────────────────────────────────────── */}
+
+      <PreviewQRModal
+        projectId={project.id}
+        projectTitle={project.title}
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+      />
 
       <ShareModal
         url={publicUrl}

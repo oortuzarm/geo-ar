@@ -7,6 +7,7 @@ import {
   deleteAdminProject, deleteAdminUser,
   updateAdminUserSubscription,
   type UpdateSubscriptionPayload,
+  type SubscriptionSaveResponse,
 } from '../../services/adminApi'
 import type { AdminUser, AdminProject, AdminMetrics, AdminPlan } from '../../types/admin.types'
 
@@ -346,6 +347,16 @@ function ManageSubscriptionDialog({
   const [trialEndsAt, setTrialEndsAt] = useState(
     row.trialEndsAt ? row.trialEndsAt.slice(0, 10) : ''
   )
+
+  useEffect(() => {
+    console.log('[MANAGE_SUB_DIALOG_OPEN]', {
+      userId: row.id, email: row.email,
+      planId: row.planId, planName: row.planName,
+      subscriptionStatus: row.subscriptionStatus,
+      plansLoaded: plans.length,
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape' && !saving) onCancel() }
@@ -884,14 +895,40 @@ export default function AdminPage() {
   async function handleSaveSubscription(payload: UpdateSubscriptionPayload) {
     if (!manageSubTarget) return
     const row = manageSubTarget
+    console.log('[ADMIN_SUBSCRIPTION_SAVE_PAYLOAD]', { userId: row.id, email: row.email, payload })
     setSavingSubscription(true)
     try {
-      await updateAdminUserSubscription(row.id, payload)
-      // Refresh users to pick up new plan/status
-      const freshUsers = await getAdminUsers()
-      setUsers(freshUsers)
+      const subResp: SubscriptionSaveResponse = await updateAdminUserSubscription(row.id, payload)
+
+      // Immediate targeted update from the PATCH response — no waiting for a follow-up GET.
+      setUsers((prev) => {
+        const next = prev.map((u) => {
+          if (u.id !== row.id) return u
+          const updated: AdminUser = {
+            ...u,
+            planId:                subResp.planId,
+            planName:              subResp.planName,
+            subscriptionStatus:    subResp.subscriptionStatus,
+            trialEndsAt:           subResp.trialEndsAt,
+            customLocationLimit:   subResp.customLocationLimit,
+            effectiveLocationLimit: subResp.effectiveLocationLimit,
+          }
+          console.log('[ADMIN_USER_NORMALIZED]', updated)
+          return updated
+        })
+        return next
+      })
+
       setManageSubTarget(null)
       setToast({ msg: `Suscripción de ${row.email} actualizada.`, type: 'success' })
+
+      // Background full refresh for consistency (don't await — don't block the UI)
+      getAdminUsers()
+        .then((freshUsers) => {
+          console.log('[ADMIN_USERS_REFRESHED]', freshUsers.map((u) => ({ id: u.id, planId: u.planId, planName: u.planName })))
+          setUsers(freshUsers)
+        })
+        .catch(() => null)
     } catch {
       setToast({ msg: 'No se pudo actualizar la suscripción. Intentá de nuevo.', type: 'error' })
     } finally {
@@ -1076,6 +1113,7 @@ export default function AdminPage() {
       {/* ── Manage subscription dialog ── */}
       {manageSubTarget && (
         <ManageSubscriptionDialog
+          key={manageSubTarget.id}
           row={manageSubTarget}
           plans={plans}
           saving={savingSubscription}

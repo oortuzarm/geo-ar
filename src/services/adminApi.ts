@@ -122,7 +122,10 @@ function normalizeMetrics(raw: Record<string, unknown>): AdminMetrics {
 
 export async function getAdminUsers(): Promise<AdminUser[]> {
   const raw = await apiFetch<Record<string, unknown>[]>(`${BASE}/api/admin/users`)
-  return raw.map(normalizeUser)
+  const users = raw.map(normalizeUser)
+  console.log('[ADMIN_USERS_RAW_SAMPLE]', raw[0])
+  console.log('[ADMIN_USERS_NORMALIZED_SAMPLE]', users[0])
+  return users
 }
 
 export async function getAdminProjects(): Promise<AdminProject[]> {
@@ -215,12 +218,35 @@ export interface UpdateSubscriptionPayload {
   trialEndsAt?:         string | null
 }
 
+// Shape returned by PATCH /api/admin/users/:userId/subscription
+export interface SubscriptionSaveResponse {
+  userId:                string
+  planId:                string | null
+  planName:              string | null
+  planSlug:              string | null
+  subscriptionStatus:    'trial' | 'active' | 'expired' | 'canceled' | null
+  trialEndsAt:           string | null
+  customLocationLimit:   number | null
+  effectiveLocationLimit: number | null
+}
+
 export async function updateAdminUserSubscription(
   userId: string,
   payload: UpdateSubscriptionPayload,
-): Promise<void> {
-  await apiFetch<unknown>(`${BASE}/api/admin/users/${userId}/subscription`, {
-    method: 'PATCH',
-    body: JSON.stringify(payload),
-  })
+): Promise<SubscriptionSaveResponse> {
+  const raw = await apiFetch<Record<string, unknown>>(
+    `${BASE}/api/admin/users/${userId}/subscription`,
+    { method: 'PATCH', body: JSON.stringify(payload) },
+  )
+  console.log('[ADMIN_SUBSCRIPTION_SAVE_RESPONSE]', raw)
+  return {
+    userId:                (raw.userId                ?? raw.user_id                ?? userId)     as string,
+    planId:                (raw.planId                ?? raw.plan_id                ?? null)       as string | null,
+    planName:              (raw.planName              ?? raw.plan_name              ?? null)       as string | null,
+    planSlug:              (raw.planSlug              ?? raw.plan_slug              ?? null)       as string | null,
+    subscriptionStatus:    (raw.subscriptionStatus    ?? raw.subscription_status    ?? null)       as SubscriptionSaveResponse['subscriptionStatus'],
+    trialEndsAt:           (raw.trialEndsAt           ?? raw.trial_ends_at          ?? null)       as string | null,
+    customLocationLimit:   (raw.customLocationLimit   ?? raw.custom_location_limit  ?? null)       as number | null,
+    effectiveLocationLimit: (raw.effectiveLocationLimit ?? raw.effective_location_limit ?? null)   as number | null,
+  }
 }

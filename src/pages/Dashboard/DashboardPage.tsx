@@ -1007,7 +1007,7 @@ export default function DashboardPage() {
                             backdrop-blur-sm min-w-[220px]">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-brand-400 animate-pulse flex-shrink-0" />
-                <p className="text-sm font-medium text-gray-100">Obteniendo ubicación precisa…</p>
+                <p className="text-sm font-medium text-gray-700">Obteniendo ubicación precisa…</p>
               </div>
               {currentGpsAccuracy !== null && (
                 <p className="text-xs text-gray-400 pl-4">

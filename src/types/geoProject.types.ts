@@ -2,6 +2,7 @@ export type PublicInitialViewMode = 'fit_points' | 'user_location' | 'custom'
 
 export interface GeoProject {
   id: string
+  userId?: string | null  // Owner — normalized from user_id; may be absent on old backends
   title: string
   subtitle?: string
   description?: string

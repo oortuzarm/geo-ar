@@ -7,6 +7,7 @@ import { LocalGeoRepository } from './LocalGeoRepository'
 function normalizeProject(raw: Record<string, unknown>): GeoProject {
   return {
     ...raw,
+    userId:                   (raw.userId                  ?? raw.user_id                  ?? null) as string | null,
     coverImage:               raw.coverImage               ?? raw.cover_image,
     shareText:                raw.shareText                ?? raw.share_text,
     markerImage:              raw.markerImage              ?? raw.marker_image,

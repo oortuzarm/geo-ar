@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import { useGeoStore } from '../../store/geoStore'
+import { useAuthStore } from '../../store/authStore'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { deleteMediaFile, isVercelBlobUrl } from '../../lib/deleteMediaFile'
 import { fetchProjectAnalytics } from '../../lib/analytics'
@@ -396,6 +397,7 @@ function EmbedModal({
 export default function WorkspacePage() {
   const navigate   = useNavigate()
   const { addToast } = useGeoStore()
+  const { currentUser } = useAuthStore()
   const { project, points, loading, updateProject, refresh } = useWorkspace()
 
   const [shareOpen,       setShareOpen]      = useState(false)
@@ -432,10 +434,23 @@ export default function WorkspacePage() {
   const publicUrl   = `${window.location.origin}/public/${project.id}`
 
   async function handleToggleStatus() {
-    const nextStatus = project!.status === 'active' ? 'draft' : 'active'
+    const p = project!
+    const nextStatus = p.status === 'active' ? 'draft' : 'active'
+
+    // Guard: never mutate a workspace that belongs to another user
+    if (currentUser && p.userId && p.userId !== currentUser.id) {
+      console.error('[WORKSPACE_OWNERSHIP_MISMATCH] BLOCKED status toggle',
+        { currentUserId: currentUser.id, projectUserId: p.userId, projectId: p.id })
+      addToast('Error: este workspace no te pertenece', 'error')
+      return
+    }
+
+    console.log('[WORKSPACE_STATUS_UPDATE] currentUserId=', currentUser?.id,
+      'projectId=', p.id, 'projectUserId=', p.userId, 'nextStatus=', nextStatus)
+
     setTogglingStatus(true)
     try {
-      const updated = await geoProjectsApi.saveProject(project!.id, { status: nextStatus })
+      const updated = await geoProjectsApi.saveProject(p.id, { status: nextStatus })
       updateProject(updated)
     } catch { /* silent */ }
     finally { setTogglingStatus(false) }
@@ -464,8 +479,19 @@ export default function WorkspacePage() {
   }
 
   async function handleDeleteConfirmed() {
-    const projectId = project!.id
-    console.log('[WORKSPACE_DELETE_START] projectId=', projectId)
+    const p = project!
+
+    // Guard: never delete a workspace that belongs to another user
+    if (currentUser && p.userId && p.userId !== currentUser.id) {
+      console.error('[WORKSPACE_OWNERSHIP_MISMATCH] BLOCKED delete',
+        { currentUserId: currentUser.id, projectUserId: p.userId, projectId: p.id })
+      addToast('Error: este workspace no te pertenece', 'error')
+      setDeleteConfirm(false)
+      return
+    }
+
+    const projectId = p.id
+    console.log('[WORKSPACE_DELETE_START] projectId=', projectId, 'userId=', p.userId)
     setDeleteConfirm(false)
     setDeleting(true)
 

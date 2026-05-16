@@ -597,15 +597,32 @@ export default function AdminPage() {
     return () => clearTimeout(t)
   }, [toast])
 
-  // Merge users + projects into unified rows
-  const projectByUserId = useMemo(
-    () => new Map(projects.filter((p) => p.userId !== null).map((p) => [p.userId!, p])),
-    [projects],
-  )
-  const mergedRows = useMemo<AdminUserRow[]>(
-    () => users.map((u) => ({ ...u, workspace: projectByUserId.get(u.id) ?? null })),
-    [users, projectByUserId],
-  )
+  // Merge users + projects into unified rows.
+  // When a user has multiple projects, pick the most recently updated one —
+  // this matches the dashboard's useWorkspace logic (sorted[0] by updatedAt desc).
+  const projectByUserId = useMemo(() => {
+    const map = new Map<string, AdminProject>()
+    for (const p of projects) {
+      if (p.userId === null) continue
+      const existing = map.get(p.userId)
+      if (!existing || p.updatedAt > existing.updatedAt) {
+        map.set(p.userId, p)
+      }
+    }
+    return map
+  }, [projects])
+
+  const mergedRows = useMemo<AdminUserRow[]>(() => {
+    const rows = users.map((u) => ({ ...u, workspace: projectByUserId.get(u.id) ?? null }))
+    rows.forEach((r) => {
+      if (r.workspace) {
+        console.log('[WORKSPACE_STATUS_ADMIN] userId=', r.id,
+          'id=', r.workspace.id, 'status=', r.workspace.status,
+          'updatedAt=', r.workspace.updatedAt)
+      }
+    })
+    return rows
+  }, [users, projectByUserId])
 
   async function handleLogout() {
     await logout()

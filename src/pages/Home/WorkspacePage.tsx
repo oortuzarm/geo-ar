@@ -157,7 +157,7 @@ function WorkspaceMenu({
   void projectId
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium
@@ -172,8 +172,8 @@ function WorkspaceMenu({
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-1 w-56 bg-gray-900 border border-gray-700 rounded-xl
-                        shadow-2xl py-1 z-50">
+        <div className="absolute right-0 top-full mt-1 w-56 bg-gray-900 border border-gray-700 rounded-xl
+                        shadow-2xl py-1 z-50 origin-top-right">
 
           <button className={item} onClick={() => act(onShare)}>
             <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -526,7 +526,7 @@ export default function WorkspacePage() {
           </div>
           <h1 className="hidden md:block font-bold text-gray-100">Ubicaciones</h1>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative">
             <WorkspaceMenu
               projectId={project.id}
               projectTitle={project.title}

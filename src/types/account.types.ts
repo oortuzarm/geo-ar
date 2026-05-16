@@ -15,3 +15,9 @@ export interface UpdateProfilePayload {
   jobTitle?:  string
   country?:   string
 }
+
+export interface UpdatePasswordPayload {
+  currentPassword:      string
+  password:             string
+  passwordConfirmation: string
+}

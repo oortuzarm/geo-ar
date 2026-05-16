@@ -1,5 +1,5 @@
 import { apiFetch } from '../lib/apiFetch'
-import type { UserProfile, UpdateProfilePayload } from '../types/account.types'
+import type { UserProfile, UpdateProfilePayload, UpdatePasswordPayload } from '../types/account.types'
 
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
 
@@ -17,6 +17,17 @@ export function updateAccount(payload: UpdateProfilePayload): Promise<UserProfil
       company:   payload.company,
       jobTitle:  payload.jobTitle,
       country:   payload.country,
+    }),
+  })
+}
+
+export function updatePassword(payload: UpdatePasswordPayload): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>(`${BASE}/api/account/password`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      currentPassword:      payload.currentPassword,
+      password:             payload.password,
+      passwordConfirmation: payload.passwordConfirmation,
     }),
   })
 }

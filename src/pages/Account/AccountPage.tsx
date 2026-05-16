@@ -3,7 +3,7 @@ import type { InputHTMLAttributes, FormEvent } from 'react'
 import { Input } from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
 import PasswordInput from '../../components/ui/PasswordInput'
-import { getAccount, updateAccount } from '../../services/accountApi'
+import { getAccount, updateAccount, updatePassword } from '../../services/accountApi'
 import type { UserProfile } from '../../types/account.types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -40,13 +40,13 @@ function Card({ children, className = '' }: { children: React.ReactNode; classNa
   )
 }
 
-function SavedBadge() {
+function SavedBadge({ message = 'Cambios guardados' }: { message?: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 animate-fade-in">
       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
       </svg>
-      Cambios guardados
+      {message}
     </span>
   )
 }
@@ -228,15 +228,17 @@ function PerfilTab({ profile, loading, loadError, onProfileSaved }: PerfilTabPro
 // ── Seguridad tab ─────────────────────────────────────────────────────────────
 
 function SeguridadTab() {
-  const [form,   setForm]   = useState<PasswordForm>({ current: '', next: '', confirm: '' })
-  const [errors, setErrors] = useState<PasswordErrors>({})
-  const [saving, setSaving] = useState(false)
-  const [saved,  setSaved]  = useState(false)
+  const [form,     setForm]     = useState<PasswordForm>({ current: '', next: '', confirm: '' })
+  const [errors,   setErrors]   = useState<PasswordErrors>({})
+  const [saving,   setSaving]   = useState(false)
+  const [saved,    setSaved]    = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
 
   function set(key: keyof PasswordForm, value: string) {
     setForm(f => ({ ...f, [key]: value }))
     setErrors(e => ({ ...e, [key]: undefined }))
     setSaved(false)
+    setApiError(null)
   }
 
   function validate(): boolean {
@@ -252,11 +254,26 @@ function SeguridadTab() {
     e.preventDefault()
     if (!validate()) return
     setSaving(true)
-    // TODO: implement PATCH /api/auth/change_password
-    await new Promise(r => setTimeout(r, 800))
-    setSaving(false)
-    setSaved(true)
-    setForm({ current: '', next: '', confirm: '' })
+    setApiError(null)
+    try {
+      await updatePassword({
+        currentPassword:      form.current,
+        password:             form.next,
+        passwordConfirmation: form.confirm,
+      })
+      setSaved(true)
+      setForm({ current: '', next: '', confirm: '' })
+    } catch (err: unknown) {
+      const raw = (err as { message?: string })?.message ?? ''
+      let msg = 'No se pudo actualizar la contraseña. Intenta de nuevo.'
+      try {
+        const parsed = JSON.parse(raw) as { error?: string }
+        if (parsed.error) msg = parsed.error
+      } catch { /* raw was not JSON */ }
+      setApiError(msg)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -297,11 +314,13 @@ function SeguridadTab() {
             autoComplete="new-password"
           />
 
+          {apiError && <p className="text-xs text-red-400">{apiError}</p>}
+
           <div className="pt-1 flex items-center gap-4">
             <Button type="submit" loading={saving}>
               Actualizar contraseña
             </Button>
-            {saved && <SavedBadge />}
+            {saved && <SavedBadge message="Contraseña actualizada correctamente." />}
           </div>
         </form>
       </Card>

@@ -140,14 +140,14 @@ function DeleteConfirmDialog({
               </svg>
             </div>
             <div>
-              <h3 className="text-base font-semibold text-gray-100">Eliminar proyecto</h3>
+              <h3 className="text-base font-semibold text-gray-100">Eliminar workspace</h3>
               <p className="text-xs text-gray-500 mt-0.5">Esta acción no se puede deshacer</p>
             </div>
           </div>
 
           {/* Body */}
           <p className="text-sm text-gray-300 mb-1">
-            ¿Seguro que querés eliminar este proyecto?
+            ¿Seguro que querés eliminar este workspace?
           </p>
           <p className="text-sm font-semibold text-gray-100 mb-1 truncate">
             {project.title || <span className="italic text-gray-500">Sin nombre</span>}
@@ -281,7 +281,7 @@ function UsersTable({ users }: { users: AdminUser[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-800/60">
-              {['Email', 'Rol', 'Estado', 'Proyectos', 'Puntos', 'Registro'].map((h) => (
+              {['Email', 'Rol', 'Estado', 'Workspace', 'Ubicaciones', 'Registro'].map((h) => (
                 <th key={h}
                   className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   {h}
@@ -367,7 +367,7 @@ function ProjectsTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-800/60">
-              {['Nombre', 'Estado', 'Usuario', 'Puntos', 'Creado', 'Modificado', ''].map((h, i) => (
+              {['Nombre', 'Estado', 'Usuario', 'Ubicaciones', 'Creado', 'Modificado', ''].map((h, i) => (
                 <th key={i}
                   className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   {h}
@@ -377,7 +377,7 @@ function ProjectsTable({
           </thead>
           <tbody className="divide-y divide-gray-800/50">
             {filtered.length === 0
-              ? <EmptyRow cols={7} message="No se encontraron proyectos." />
+              ? <EmptyRow cols={7} message="No se encontraron workspaces." />
               : filtered.map((p) => {
                 const isDeleting = deletingId === p.id
                 return (
@@ -401,7 +401,7 @@ function ProjectsTable({
                       <button
                         onClick={() => onDelete(p)}
                         disabled={!!deletingId}
-                        title="Eliminar proyecto"
+                        title="Eliminar workspace"
                         className={[
                           'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium',
                           'border transition-colors',
@@ -475,7 +475,7 @@ export default function AdminPage() {
 
     getAdminProjects()
       .then(setProjects)
-      .catch(() => setErrorProjects('No se pudieron cargar los proyectos.'))
+      .catch(() => setErrorProjects('No se pudieron cargar los workspaces.'))
       .finally(() => setLoadingProjects(false))
   }, [])
 
@@ -500,7 +500,7 @@ export default function AdminPage() {
       setProjects(fresh)
       setMetrics(freshMetrics)
     } catch {
-      setToast({ msg: 'No se pudieron actualizar los proyectos.', type: 'error' })
+      setToast({ msg: 'No se pudieron actualizar los workspaces.', type: 'error' })
     } finally {
       setRefreshingProjects(false)
     }
@@ -516,9 +516,9 @@ export default function AdminPage() {
       setProjects((prev) => prev.filter((p) => p.id !== target.id))
       // Refresh metrics to keep KPIs in sync
       getAdminMetrics().then(setMetrics).catch(() => null)
-      setToast({ msg: `Proyecto "${target.title || 'Sin nombre'}" eliminado.`, type: 'success' })
+      setToast({ msg: `Workspace "${target.title || 'Sin nombre'}" eliminado.`, type: 'success' })
     } catch {
-      setToast({ msg: 'No se pudo eliminar el proyecto. Intentá de nuevo.', type: 'error' })
+      setToast({ msg: 'No se pudo eliminar el workspace. Intentá de nuevo.', type: 'error' })
     } finally {
       setDeletingId(null)
     }
@@ -629,10 +629,10 @@ export default function AdminPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <MetricCard label="Usuarios totales"       value={metrics.totalUsers}             icon={UserIcon}      />
             <MetricCard label="Usuarios activos"       value={metrics.totalActiveUsers}       icon={ActiveIcon}    accent="green"  />
-            <MetricCard label="Proyectos totales"      value={metrics.totalProjects}          icon={FolderIcon}    />
-            <MetricCard label="Proyectos publicados"   value={metrics.totalPublishedProjects} icon={PublishedIcon} accent="green"  />
-            <MetricCard label="Proyectos huérfanos"    value={metrics.totalOrphanProjects}    icon={OrphanIcon}    accent={metrics.totalOrphanProjects > 0 ? 'amber' : 'default'} />
-            <MetricCard label="Puntos totales"         value={metrics.totalPoints}            icon={PointsIcon}    accent="purple" />
+            <MetricCard label="Workspaces totales"      value={metrics.totalProjects}          icon={FolderIcon}    />
+            <MetricCard label="Workspaces publicados"  value={metrics.totalPublishedProjects} icon={PublishedIcon} accent="green"  />
+            <MetricCard label="Workspaces huérfanos"   value={metrics.totalOrphanProjects}    icon={OrphanIcon}    accent={metrics.totalOrphanProjects > 0 ? 'amber' : 'default'} />
+            <MetricCard label="Ubicaciones totales"    value={metrics.totalPoints}            icon={PointsIcon}    accent="purple" />
           </div>
         ) : null}
 
@@ -654,7 +654,7 @@ export default function AdminPage() {
         {/* ── Projects section ── */}
         <section className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">Proyectos</h2>
+            <h2 className="text-sm font-semibold text-white">Workspaces</h2>
             <button
               onClick={refreshProjects}
               disabled={refreshingProjects || loadingProjects}

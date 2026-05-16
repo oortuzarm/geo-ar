@@ -165,9 +165,10 @@ export async function fetchProjectAnalyticsByPoint(projectId: string): Promise<P
   return []
 }
 
-export async function fetchProjectAnalyticsByHour(projectId: string): Promise<HourBucket[]> {
+export async function fetchProjectAnalyticsByHour(projectId: string, pointId?: string): Promise<HourBucket[]> {
   try {
-    const data = await apiFetch<unknown>(`${API_BASE}/api/geo_projects/${projectId}/analytics_by_hour`)
+    const qs   = pointId ? `?point_id=${encodeURIComponent(pointId)}` : ''
+    const data = await apiFetch<unknown>(`${API_BASE}/api/geo_projects/${projectId}/analytics_by_hour${qs}`)
     if (Array.isArray(data)) return data as HourBucket[]
     if (data && typeof data === 'object') {
       const d = (data as Record<string, unknown>).data
@@ -177,9 +178,10 @@ export async function fetchProjectAnalyticsByHour(projectId: string): Promise<Ho
   return []
 }
 
-export async function fetchProjectAnalyticsByDay(projectId: string): Promise<DayBucket[]> {
+export async function fetchProjectAnalyticsByDay(projectId: string, pointId?: string): Promise<DayBucket[]> {
   try {
-    const data = await apiFetch<unknown>(`${API_BASE}/api/geo_projects/${projectId}/analytics_by_day`)
+    const qs   = pointId ? `?point_id=${encodeURIComponent(pointId)}` : ''
+    const data = await apiFetch<unknown>(`${API_BASE}/api/geo_projects/${projectId}/analytics_by_day${qs}`)
     if (Array.isArray(data)) return data as DayBucket[]
     if (data && typeof data === 'object') {
       const d = (data as Record<string, unknown>).data
@@ -189,10 +191,11 @@ export async function fetchProjectAnalyticsByDay(projectId: string): Promise<Day
   return []
 }
 
-export async function fetchProjectGeoDistribution(projectId: string): Promise<GeoDistribution> {
+export async function fetchProjectGeoDistribution(projectId: string, pointId?: string): Promise<GeoDistribution> {
   const empty: GeoDistribution = { countries: [], cities: [], communes: [] }
   try {
-    const data = await apiFetch<unknown>(`${API_BASE}/api/geo_projects/${projectId}/analytics_geo`)
+    const qs   = pointId ? `?point_id=${encodeURIComponent(pointId)}` : ''
+    const data = await apiFetch<unknown>(`${API_BASE}/api/geo_projects/${projectId}/analytics_geo${qs}`)
     if (data && typeof data === 'object') {
       const d = data as Record<string, unknown>
       return {

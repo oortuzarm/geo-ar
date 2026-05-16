@@ -399,7 +399,7 @@ const PUBLIC_SUBTABS: { id: PublicSubTab; label: string }[] = [
   { id: 'comuna', label: 'Comuna' },
 ]
 
-function PublicTab({ projectId }: { projectId: string }) {
+function PublicTab({ projectId, pointId }: { projectId: string; pointId?: string }) {
   const [sub, setSub]         = useState<PublicSubTab>('pais')
   const [fade, setFade]       = useState(true)
   const [mounted, setMounted] = useState(false)
@@ -408,10 +408,10 @@ function PublicTab({ projectId }: { projectId: string }) {
 
   useEffect(() => {
     setLoading(true)
-    fetchProjectGeoDistribution(projectId)
+    fetchProjectGeoDistribution(projectId, pointId)
       .then(setGeo)
       .finally(() => setLoading(false))
-  }, [projectId])
+  }, [projectId, pointId])
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 150)
@@ -491,7 +491,7 @@ const HORARIOS_SUBTABS: { id: HorariosSubTab; label: string }[] = [
   { id: 'dias',  label: 'Días'  },
 ]
 
-function HorariosTab({ projectId }: { projectId: string }) {
+function HorariosTab({ projectId, pointId }: { projectId: string; pointId?: string }) {
   const [sub, setSub]         = useState<HorariosSubTab>('horas')
   const [fade, setFade]       = useState(true)
   const [mounted, setMounted] = useState(false)
@@ -502,12 +502,12 @@ function HorariosTab({ projectId }: { projectId: string }) {
   useEffect(() => {
     setLoading(true)
     Promise.all([
-      fetchProjectAnalyticsByHour(projectId),
-      fetchProjectAnalyticsByDay(projectId),
+      fetchProjectAnalyticsByHour(projectId, pointId),
+      fetchProjectAnalyticsByDay(projectId, pointId),
     ])
       .then(([h, d]) => { setHours(h); setDays(d) })
       .finally(() => setLoading(false))
-  }, [projectId])
+  }, [projectId, pointId])
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 150)
@@ -619,9 +619,10 @@ function HorariosTab({ projectId }: { projectId: string }) {
 
 // ── Left widget ───────────────────────────────────────────────────────────────
 
-function LeftWidget({ byPoint, projectId }: {
+function LeftWidget({ byPoint, projectId, pointId }: {
   byPoint: PointAnalytics[] | null
   projectId: string
+  pointId?: string
 }) {
   const [tab, setTab]       = useState<LeftTab>('actividad')
   const [subTab, setSubTab] = useState<SubTab>('entradas')
@@ -767,10 +768,10 @@ function LeftWidget({ byPoint, projectId }: {
         )}
 
         {/* ── Público ── */}
-        {tab === 'publico' && <PublicTab projectId={projectId} />}
+        {tab === 'publico' && <PublicTab projectId={projectId} pointId={pointId} />}
 
         {/* ── Horarios ── */}
-        {tab === 'horarios' && <HorariosTab projectId={projectId} />}
+        {tab === 'horarios' && <HorariosTab projectId={projectId} pointId={pointId} />}
       </div>
     </div>
   )
@@ -1286,7 +1287,7 @@ export default function MetricsPage() {
             {/* Hero — left widget + right chart */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 h-auto lg:h-[280px]">
               <div className="lg:col-span-2 min-h-[260px] lg:min-h-0">
-                <LeftWidget byPoint={displayByPoint} projectId={selectedId} />
+                <LeftWidget byPoint={displayByPoint} projectId={selectedId} pointId={pointId || undefined} />
               </div>
               <div className="lg:col-span-3 min-h-[260px] lg:min-h-0
                               bg-gray-900/70 border border-white/[0.07] rounded-2xl px-5 pt-5 pb-4">

@@ -281,7 +281,7 @@ function UsersTable({ users }: { users: AdminUser[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-800/60">
-              {['Email', 'Rol', 'Estado', 'Workspace', 'Ubicaciones', 'Registro'].map((h) => (
+              {['Email', 'Rol', 'Estado', 'Ubicaciones', 'Registro'].map((h) => (
                 <th key={h}
                   className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   {h}
@@ -291,7 +291,7 @@ function UsersTable({ users }: { users: AdminUser[] }) {
           </thead>
           <tbody className="divide-y divide-gray-800/50">
             {filtered.length === 0
-              ? <EmptyRow cols={6} message="No se encontraron usuarios." />
+              ? <EmptyRow cols={5} message="No se encontraron usuarios." />
               : filtered.map((u) => (
                 <tr key={u.id} className="hover:bg-gray-800/30 transition-colors">
                   <td className="px-5 py-3 font-medium text-gray-200 max-w-[220px] truncate">
@@ -299,7 +299,6 @@ function UsersTable({ users }: { users: AdminUser[] }) {
                   </td>
                   <td className="px-5 py-3"><RoleBadge role={u.role} /></td>
                   <td className="px-5 py-3"><StatusBadge status={u.status} /></td>
-                  <td className="px-5 py-3 text-gray-300 tabular-nums">{u.projectsCount}</td>
                   <td className="px-5 py-3 text-gray-300 tabular-nums">{u.pointsCount}</td>
                   <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{fmtDate(u.createdAt)}</td>
                 </tr>
@@ -538,12 +537,6 @@ export default function AdminPage() {
         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   )
-  const FolderIcon = (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-        d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
-    </svg>
-  )
   const PublishedIcon = (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
@@ -617,8 +610,8 @@ export default function AdminPage() {
 
         {/* ── Metrics ── */}
         {loadingMetrics ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {Array.from({ length: 6 }).map((_, i) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            {Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-[76px] rounded-xl" />
             ))}
           </div>
@@ -626,13 +619,12 @@ export default function AdminPage() {
           <p className="text-sm text-red-400 bg-red-950/30 border border-red-800/40
                         rounded-xl px-4 py-3">{errorMetrics}</p>
         ) : metrics ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <MetricCard label="Usuarios totales"       value={metrics.totalUsers}             icon={UserIcon}      />
-            <MetricCard label="Usuarios activos"       value={metrics.totalActiveUsers}       icon={ActiveIcon}    accent="green"  />
-            <MetricCard label="Workspaces totales"      value={metrics.totalProjects}          icon={FolderIcon}    />
-            <MetricCard label="Workspaces publicados"  value={metrics.totalPublishedProjects} icon={PublishedIcon} accent="green"  />
-            <MetricCard label="Workspaces huérfanos"   value={metrics.totalOrphanProjects}    icon={OrphanIcon}    accent={metrics.totalOrphanProjects > 0 ? 'amber' : 'default'} />
-            <MetricCard label="Ubicaciones totales"    value={metrics.totalPoints}            icon={PointsIcon}    accent="purple" />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            <MetricCard label="Usuarios totales"      value={metrics.totalUsers}             icon={UserIcon}      />
+            <MetricCard label="Usuarios activos"      value={metrics.totalActiveUsers}       icon={ActiveIcon}    accent="green"  />
+            <MetricCard label="Ws. publicados"        value={metrics.totalPublishedProjects} icon={PublishedIcon} accent="green"  />
+            <MetricCard label="Ws. huérfanos"         value={metrics.totalOrphanProjects}    icon={OrphanIcon}    accent={metrics.totalOrphanProjects > 0 ? 'amber' : 'default'} />
+            <MetricCard label="Ubicaciones totales"   value={metrics.totalPoints}            icon={PointsIcon}    accent="purple" />
           </div>
         ) : null}
 

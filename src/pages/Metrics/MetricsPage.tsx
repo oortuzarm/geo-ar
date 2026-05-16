@@ -619,19 +619,14 @@ function HorariosTab({ projectId }: { projectId: string }) {
 
 // ── Left widget ───────────────────────────────────────────────────────────────
 
-function LeftWidget({ byPoint, projectId, pointFilterActive = false }: {
+function LeftWidget({ byPoint, projectId }: {
   byPoint: PointAnalytics[] | null
   projectId: string
-  pointFilterActive?: boolean
 }) {
   const [tab, setTab]       = useState<LeftTab>('actividad')
   const [subTab, setSubTab] = useState<SubTab>('entradas')
   const [fade, setFade]     = useState(true)
   const [barsMounted, setBarsMounted] = useState(false)
-
-  useEffect(() => {
-    if (pointFilterActive && (tab === 'publico' || tab === 'horarios')) setTab('actividad')
-  }, [pointFilterActive]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function switchTab(next: LeftTab) {
     if (next === tab) return
@@ -650,15 +645,12 @@ function LeftWidget({ byPoint, projectId, pointFilterActive = false }: {
     return () => clearTimeout(t)
   }, [tab, subTab])
 
-  const allTabs: { id: LeftTab; label: string; tooltip: string }[] = [
+  const TABS: { id: LeftTab; label: string; tooltip: string }[] = [
     { id: 'actividad',  label: 'Actividad',  tooltip: 'Muestra la cantidad de entradas al radio y clics registrados por punto.' },
     { id: 'conversion', label: 'Conversión', tooltip: 'Porcentaje de usuarios que hicieron clic en la experiencia después de entrar al radio de activación.' },
     { id: 'publico',    label: 'Público',    tooltip: 'Distribución geográfica de las personas que ingresaron al radio de activación.' },
     { id: 'horarios',   label: 'Horarios',   tooltip: 'Horarios y días en que los usuarios ingresaron físicamente a los radios de activación.' },
   ]
-  const TABS = pointFilterActive
-    ? allTabs.filter((t) => t.id !== 'publico' && t.id !== 'horarios')
-    : allTabs
 
   const sorted = byPoint ?? []
   const byEnt  = [...sorted].sort((a, b) => b.radiusEntries - a.radiusEntries).slice(0, 6)
@@ -1294,7 +1286,7 @@ export default function MetricsPage() {
             {/* Hero — left widget + right chart */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 h-auto lg:h-[280px]">
               <div className="lg:col-span-2 min-h-[260px] lg:min-h-0">
-                <LeftWidget byPoint={displayByPoint} projectId={selectedId} pointFilterActive={!!pointFilter} />
+                <LeftWidget byPoint={displayByPoint} projectId={selectedId} />
               </div>
               <div className="lg:col-span-3 min-h-[260px] lg:min-h-0
                               bg-gray-900/70 border border-white/[0.07] rounded-2xl px-5 pt-5 pb-4">

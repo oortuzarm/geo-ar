@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react' // useRef used by DeleteConfirmDialog
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
-import { getAdminUsers, getAdminProjects, getAdminMetrics } from '../../services/adminApi'
+import { getAdminUsers, getAdminProjects, getAdminMetrics, deleteAdminProject } from '../../services/adminApi'
 import type { AdminUser, AdminProject, AdminMetrics } from '../../types/admin.types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -98,6 +98,94 @@ function EmptyRow({ cols, message }: { cols: number; message: string }) {
         {message}
       </td>
     </tr>
+  )
+}
+
+// ── Delete confirmation dialog ────────────────────────────────────────────────
+
+function DeleteConfirmDialog({
+  project, deleting, onConfirm, onCancel,
+}: {
+  project: AdminProject
+  deleting: boolean
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  const overlayRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !deleting) onCancel()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [deleting, onCancel])
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div
+        ref={overlayRef}
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={() => { if (!deleting) onCancel() }}
+      />
+      <div className="relative bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md">
+        <div className="p-6">
+          {/* Icon */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-red-500/15 border border-red-500/25
+                            flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-gray-100">Eliminar proyecto</h3>
+              <p className="text-xs text-gray-500 mt-0.5">Esta acción no se puede deshacer</p>
+            </div>
+          </div>
+
+          {/* Body */}
+          <p className="text-sm text-gray-300 mb-1">
+            ¿Seguro que querés eliminar este proyecto?
+          </p>
+          <p className="text-sm font-semibold text-gray-100 mb-1 truncate">
+            {project.title || <span className="italic text-gray-500">Sin nombre</span>}
+          </p>
+          {project.pointsCount > 0 && (
+            <p className="text-xs text-amber-400 mt-2">
+              Se eliminarán también las {project.pointsCount} ubicaciones asociadas.
+            </p>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={onCancel}
+              disabled={deleting}
+              className="flex-1 py-2 rounded-lg text-sm font-medium bg-gray-800 hover:bg-gray-700
+                         text-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={deleting}
+              className="flex-1 py-2 rounded-lg text-sm font-semibold bg-red-600 hover:bg-red-500
+                         text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed
+                         flex items-center justify-center gap-2"
+            >
+              {deleting ? (
+                <>
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Eliminando…
+                </>
+              ) : 'Eliminar'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -226,7 +314,13 @@ function UsersTable({ users }: { users: AdminUser[] }) {
 
 // ── Projects table ────────────────────────────────────────────────────────────
 
-function ProjectsTable({ projects }: { projects: AdminProject[] }) {
+function ProjectsTable({
+  projects, deletingId, onDelete,
+}: {
+  projects: AdminProject[]
+  deletingId: string | null
+  onDelete: (p: AdminProject) => void
+}) {
   const [search,       setSearch]       = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [orphanOnly,   setOrphanOnly]   = useState(false)
@@ -273,8 +367,8 @@ function ProjectsTable({ projects }: { projects: AdminProject[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-800/60">
-              {['Nombre', 'Estado', 'Usuario', 'Puntos', 'Creado', 'Modificado'].map((h) => (
-                <th key={h}
+              {['Nombre', 'Estado', 'Usuario', 'Puntos', 'Creado', 'Modificado', ''].map((h, i) => (
+                <th key={i}
                   className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   {h}
                 </th>
@@ -283,26 +377,55 @@ function ProjectsTable({ projects }: { projects: AdminProject[] }) {
           </thead>
           <tbody className="divide-y divide-gray-800/50">
             {filtered.length === 0
-              ? <EmptyRow cols={6} message="No se encontraron proyectos." />
-              : filtered.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-800/30 transition-colors">
-                  <td className="px-5 py-3">
-                    <span className="font-medium text-gray-200 max-w-[200px] block truncate">
-                      {p.title || <span className="text-gray-500 italic">Sin nombre</span>}
-                    </span>
-                    {p.isOrphan && (
-                      <span className="text-[10px] text-amber-400 font-medium">Sin propietario</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-3"><StatusBadge status={p.status} /></td>
-                  <td className="px-5 py-3 text-gray-400 max-w-[180px] truncate">
-                    {p.userEmail ?? <span className="text-gray-600 italic">—</span>}
-                  </td>
-                  <td className="px-5 py-3 text-gray-300 tabular-nums">{p.pointsCount}</td>
-                  <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{fmtDate(p.createdAt)}</td>
-                  <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{fmtDate(p.updatedAt)}</td>
-                </tr>
-              ))
+              ? <EmptyRow cols={7} message="No se encontraron proyectos." />
+              : filtered.map((p) => {
+                const isDeleting = deletingId === p.id
+                return (
+                  <tr key={p.id} className="hover:bg-gray-800/30 transition-colors">
+                    <td className="px-5 py-3">
+                      <span className="font-medium text-gray-200 max-w-[200px] block truncate">
+                        {p.title || <span className="text-gray-500 italic">Sin nombre</span>}
+                      </span>
+                      {p.isOrphan && (
+                        <span className="text-[10px] text-amber-400 font-medium">Sin propietario</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3"><StatusBadge status={p.status} /></td>
+                    <td className="px-5 py-3 text-gray-400 max-w-[180px] truncate">
+                      {p.userEmail ?? <span className="text-gray-600 italic">—</span>}
+                    </td>
+                    <td className="px-5 py-3 text-gray-300 tabular-nums">{p.pointsCount}</td>
+                    <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{fmtDate(p.createdAt)}</td>
+                    <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{fmtDate(p.updatedAt)}</td>
+                    <td className="px-5 py-3 text-right whitespace-nowrap">
+                      <button
+                        onClick={() => onDelete(p)}
+                        disabled={!!deletingId}
+                        title="Eliminar proyecto"
+                        className={[
+                          'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium',
+                          'border transition-colors',
+                          isDeleting
+                            ? 'bg-red-500/10 border-red-500/20 text-red-400 cursor-wait'
+                            : deletingId
+                            ? 'opacity-40 cursor-not-allowed border-gray-700 text-gray-500'
+                            : 'border-red-500/20 text-red-400 hover:bg-red-500/10 hover:border-red-500/35 cursor-pointer',
+                        ].join(' ')}
+                      >
+                        {isDeleting ? (
+                          <span className="w-3 h-3 rounded-full border-2 border-red-400/30 border-t-red-400 animate-spin" />
+                        ) : (
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        )}
+                        {isDeleting ? 'Eliminando…' : 'Eliminar'}
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })
             }
           </tbody>
         </table>
@@ -334,6 +457,10 @@ export default function AdminPage() {
   const [errorProjects, setErrorProjects] = useState<string | null>(null)
   const [errorMetrics,  setErrorMetrics]  = useState<string | null>(null)
 
+  const [deleteTarget, setDeleteTarget] = useState<AdminProject | null>(null)
+  const [deletingId,   setDeletingId]   = useState<string | null>(null)
+  const [toast,        setToast]        = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
+
   useEffect(() => {
     getAdminMetrics()
       .then(setMetrics)
@@ -354,6 +481,30 @@ export default function AdminPage() {
   async function handleLogout() {
     await logout()
     navigate('/login', { replace: true })
+  }
+
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 3500)
+    return () => clearTimeout(t)
+  }, [toast])
+
+  async function handleDeleteConfirmed() {
+    if (!deleteTarget) return
+    const target = deleteTarget
+    setDeleteTarget(null)
+    setDeletingId(target.id)
+    try {
+      await deleteAdminProject(target.id)
+      setProjects((prev) => prev.filter((p) => p.id !== target.id))
+      // Refresh metrics to keep KPIs in sync
+      getAdminMetrics().then(setMetrics).catch(() => null)
+      setToast({ msg: `Proyecto "${target.title || 'Sin nombre'}" eliminado.`, type: 'success' })
+    } catch {
+      setToast({ msg: 'No se pudo eliminar el proyecto. Intentá de nuevo.', type: 'error' })
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   // ── Icons ─────────────────────────────────────────────────────────────────
@@ -494,11 +645,48 @@ export default function AdminPage() {
           ) : errorProjects ? (
             <p className="px-5 py-6 text-sm text-red-400">{errorProjects}</p>
           ) : (
-            <ProjectsTable projects={projects} />
+            <ProjectsTable
+              projects={projects}
+              deletingId={deletingId}
+              onDelete={(p) => setDeleteTarget(p)}
+            />
           )}
         </Section>
 
       </main>
+
+      {/* ── Delete confirmation dialog ── */}
+      {deleteTarget && (
+        <DeleteConfirmDialog
+          project={deleteTarget}
+          deleting={deletingId === deleteTarget.id}
+          onConfirm={handleDeleteConfirmed}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {/* ── Toast notification ── */}
+      {toast && (
+        <div className={[
+          'fixed bottom-5 right-5 z-[10000] flex items-center gap-3',
+          'px-4 py-3 rounded-xl border shadow-2xl text-sm font-medium',
+          'animate-fade-in max-w-sm',
+          toast.type === 'success'
+            ? 'bg-emerald-900/90 border-emerald-700/50 text-emerald-200'
+            : 'bg-red-900/90 border-red-700/50 text-red-200',
+        ].join(' ')}>
+          {toast.type === 'success' ? (
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
+          {toast.msg}
+        </div>
+      )}
     </div>
   )
 }

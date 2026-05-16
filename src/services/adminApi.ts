@@ -128,3 +128,7 @@ export async function getAdminMetrics(): Promise<AdminMetrics> {
   const raw = await apiFetch<Record<string, unknown>>(`${BASE}/api/admin/metrics`)
   return normalizeMetrics(raw)
 }
+
+export async function deleteAdminProject(id: string): Promise<void> {
+  await apiFetch<void>(`${BASE}/api/geo_projects/${id}`, { method: 'DELETE' })
+}

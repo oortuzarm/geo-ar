@@ -120,11 +120,20 @@ function normalizeMetrics(raw: Record<string, unknown>): AdminMetrics {
   }
 }
 
-export async function getAdminUsers(): Promise<AdminUser[]> {
-  const raw = await apiFetch<Record<string, unknown>[]>(`${BASE}/api/admin/users`)
+export async function getAdminUsers(opts: { cacheBust?: boolean } = {}): Promise<AdminUser[]> {
+  const url = opts.cacheBust
+    ? `${BASE}/api/admin/users?_t=${Date.now()}`
+    : `${BASE}/api/admin/users`
+  const raw = await apiFetch<Record<string, unknown>[]>(url, {
+    headers: opts.cacheBust ? { 'Cache-Control': 'no-cache' } : {},
+  })
+  console.log('[ADMIN_USERS_REFRESHED_RAW]', raw.slice(0, 3).map((u) => ({
+    id: u.id, email: u.email, planId: u.planId ?? u.plan_id, planName: u.planName ?? u.plan_name, subscriptionStatus: u.subscriptionStatus ?? u.subscription_status,
+  })))
   const users = raw.map(normalizeUser)
-  console.log('[ADMIN_USERS_RAW_SAMPLE]', raw[0])
-  console.log('[ADMIN_USERS_NORMALIZED_SAMPLE]', users[0])
+  console.log('[ADMIN_USERS_REFRESHED_NORMALIZED]', users.slice(0, 3).map((u) => ({
+    id: u.id, planId: u.planId, planName: u.planName, subscriptionStatus: u.subscriptionStatus,
+  })))
   return users
 }
 

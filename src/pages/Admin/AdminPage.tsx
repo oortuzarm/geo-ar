@@ -922,11 +922,32 @@ export default function AdminPage() {
       setManageSubTarget(null)
       setToast({ msg: `Suscripción de ${row.email} actualizada.`, type: 'success' })
 
-      // Background full refresh for consistency (don't await — don't block the UI)
-      getAdminUsers()
+      // Snapshot the authoritative subscription data from the PATCH response.
+      // The background GET might return stale/cached data for this user's plan fields,
+      // so we always prefer the PATCH response for those fields on the updated user.
+      const savedSub = {
+        planId:                subResp.planId,
+        planName:              subResp.planName,
+        subscriptionStatus:    subResp.subscriptionStatus,
+        trialEndsAt:           subResp.trialEndsAt,
+        customLocationLimit:   subResp.customLocationLimit,
+        effectiveLocationLimit: subResp.effectiveLocationLimit,
+      }
+      const updatedUserId = row.id
+
+      // Background full refresh with cache-busting (don't await — don't block the UI)
+      getAdminUsers({ cacheBust: true })
         .then((freshUsers) => {
-          console.log('[ADMIN_USERS_REFRESHED]', freshUsers.map((u) => ({ id: u.id, planId: u.planId, planName: u.planName })))
-          setUsers(freshUsers)
+          const merged = freshUsers.map((u) => {
+            if (u.id !== updatedUserId) return u
+            // Always use the PATCH response's subscription fields for the updated user —
+            // the GET might be cached/stale and return null for planId/planName.
+            return { ...u, ...savedSub }
+          })
+          console.log('[ADMIN_USERS_MERGED_AFTER_REFRESH]', merged.map((u) => ({
+            id: u.id, planId: u.planId, planName: u.planName, subscriptionStatus: u.subscriptionStatus,
+          })))
+          setUsers(merged)
         })
         .catch(() => null)
     } catch {

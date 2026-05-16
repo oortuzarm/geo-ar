@@ -965,26 +965,27 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
 
 // ── KPI card (LookiAR style) ──────────────────────────────────────────────────
 
-function KPICard({ label, value, sub, accent }: {
-  label: string; value: string | number; sub?: string; accent?: boolean
+function KPICard({ label, value, sub, accent, className = '' }: {
+  label: string; value: string | number; sub?: string; accent?: boolean; className?: string
 }) {
   return (
     <div className={[
-      'rounded-2xl border px-5 py-5 flex flex-col gap-3',
+      'rounded-2xl border px-4 py-4 sm:px-5 sm:py-5 flex flex-col gap-2 sm:gap-3 min-w-0 overflow-hidden',
       'transition-all duration-200 hover:scale-[1.01] cursor-default',
       accent
         ? 'bg-brand-600/8 border-brand-500/20 hover:border-brand-500/35 hover:bg-brand-600/12'
         : 'bg-gray-900/70 border-white/[0.07] hover:border-white/[0.14]',
+      className,
     ].join(' ')}>
-      <p className="text-xs text-gray-500 uppercase tracking-wider font-medium leading-none">
+      <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider font-medium leading-none">
         {label}
       </p>
-      <p className={`text-[2.625rem] font-bold tabular-nums leading-none ${
+      <p className={`text-3xl sm:text-[2.625rem] font-bold tabular-nums leading-none break-all ${
         accent ? 'text-brand-300' : 'text-gray-100'
       }`}>
         {value}
       </p>
-      {sub && <p className="text-[11px] text-gray-600 leading-snug">{sub}</p>}
+      {sub && <p className="text-[10px] sm:text-[11px] text-gray-600 leading-snug">{sub}</p>}
     </div>
   )
 }
@@ -1128,7 +1129,7 @@ export default function MetricsPage() {
     : ''
 
   return (
-    <div className="text-gray-100 min-h-full">
+    <div className="text-gray-100 min-h-full overflow-x-hidden">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm sticky top-0 z-20">
@@ -1159,7 +1160,7 @@ export default function MetricsPage() {
       </header>
 
       {/* ── Body ─────────────────────────────────────────────────────────── */}
-      <div className="max-w-6xl mx-auto px-6 py-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
 
         {/* Loading */}
         {(workspaceLoading || dataLoading) && <PageSkeleton />}
@@ -1230,15 +1231,15 @@ export default function MetricsPage() {
               </div>
             </div>
 
-            {/* KPI cards */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* KPI cards — 2-col on mobile (accent card full-width), 3-col on sm+ */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
               <KPICard
                 label="Entradas al radio"
                 value={displaySummary!.radiusEntries}
                 sub="veces que un usuario entró al área de activación"
               />
               <KPICard
-                label='Clics en experiencia'
+                label="Clics en experiencia"
                 value={displaySummary!.clicks}
                 sub='activaciones del botón "Ir a experiencia"'
               />
@@ -1247,6 +1248,7 @@ export default function MetricsPage() {
                 value={`${displaySummary!.conversion}%`}
                 sub={`${convQuality} · entrada → clic`}
                 accent
+                className="col-span-2 sm:col-span-1"
               />
             </div>
 

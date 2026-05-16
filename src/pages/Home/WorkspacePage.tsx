@@ -437,16 +437,18 @@ export default function WorkspacePage() {
     const p = project!
     const nextStatus = p.status === 'active' ? 'draft' : 'active'
 
-    // Guard: never mutate a workspace that belongs to another user
+    // Block regardless of role — in /app, only the owner may modify their workspace.
     if (currentUser && p.userId && p.userId !== currentUser.id) {
-      console.error('[WORKSPACE_OWNERSHIP_MISMATCH] BLOCKED status toggle',
-        { currentUserId: currentUser.id, projectUserId: p.userId, projectId: p.id })
-      addToast('Error: este workspace no te pertenece', 'error')
+      console.error('[WORKSPACE_STATUS_UPDATE_BLOCKED]',
+        { currentUserId: currentUser.id, currentUserRole: currentUser.role,
+          projectUserId: p.userId, projectId: p.id })
+      addToast('Este workspace no pertenece al usuario autenticado.', 'error')
       return
     }
 
     console.log('[WORKSPACE_STATUS_UPDATE] currentUserId=', currentUser?.id,
-      'projectId=', p.id, 'projectUserId=', p.userId, 'nextStatus=', nextStatus)
+      'role=', currentUser?.role, 'projectId=', p.id,
+      'projectUserId=', p.userId, 'nextStatus=', nextStatus)
 
     setTogglingStatus(true)
     try {
@@ -481,11 +483,12 @@ export default function WorkspacePage() {
   async function handleDeleteConfirmed() {
     const p = project!
 
-    // Guard: never delete a workspace that belongs to another user
+    // Block regardless of role — in /app, only the owner may delete their workspace.
     if (currentUser && p.userId && p.userId !== currentUser.id) {
-      console.error('[WORKSPACE_OWNERSHIP_MISMATCH] BLOCKED delete',
-        { currentUserId: currentUser.id, projectUserId: p.userId, projectId: p.id })
-      addToast('Error: este workspace no te pertenece', 'error')
+      console.error('[WORKSPACE_STATUS_UPDATE_BLOCKED] delete blocked',
+        { currentUserId: currentUser.id, currentUserRole: currentUser.role,
+          projectUserId: p.userId, projectId: p.id })
+      addToast('Este workspace no pertenece al usuario autenticado.', 'error')
       setDeleteConfirm(false)
       return
     }

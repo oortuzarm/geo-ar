@@ -457,9 +457,10 @@ export default function AdminPage() {
   const [errorProjects, setErrorProjects] = useState<string | null>(null)
   const [errorMetrics,  setErrorMetrics]  = useState<string | null>(null)
 
-  const [deleteTarget, setDeleteTarget] = useState<AdminProject | null>(null)
-  const [deletingId,   setDeletingId]   = useState<string | null>(null)
-  const [toast,        setToast]        = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
+  const [deleteTarget,       setDeleteTarget]       = useState<AdminProject | null>(null)
+  const [deletingId,         setDeletingId]         = useState<string | null>(null)
+  const [toast,              setToast]              = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
+  const [refreshingProjects, setRefreshingProjects] = useState(false)
 
   useEffect(() => {
     getAdminMetrics()
@@ -488,6 +489,22 @@ export default function AdminPage() {
     const t = setTimeout(() => setToast(null), 3500)
     return () => clearTimeout(t)
   }, [toast])
+
+  async function refreshProjects() {
+    setRefreshingProjects(true)
+    try {
+      const [fresh, freshMetrics] = await Promise.all([
+        getAdminProjects(),
+        getAdminMetrics(),
+      ])
+      setProjects(fresh)
+      setMetrics(freshMetrics)
+    } catch {
+      setToast({ msg: 'No se pudieron actualizar los proyectos.', type: 'error' })
+    } finally {
+      setRefreshingProjects(false)
+    }
+  }
 
   async function handleDeleteConfirmed() {
     if (!deleteTarget) return
@@ -635,7 +652,31 @@ export default function AdminPage() {
         </Section>
 
         {/* ── Projects section ── */}
-        <Section title="Proyectos">
+        <section className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-white">Proyectos</h2>
+            <button
+              onClick={refreshProjects}
+              disabled={refreshingProjects || loadingProjects}
+              title="Actualizar lista desde el servidor"
+              className={[
+                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium',
+                'border border-gray-700 text-gray-400 transition-colors',
+                refreshingProjects || loadingProjects
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:border-gray-600 hover:text-gray-200 hover:bg-gray-800 cursor-pointer',
+              ].join(' ')}
+            >
+              <svg
+                className={`w-3.5 h-3.5 ${refreshingProjects ? 'animate-spin' : ''}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {refreshingProjects ? 'Actualizando…' : 'Actualizar'}
+            </button>
+          </div>
           {loadingProjects ? (
             <div className="p-5 space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -651,7 +692,7 @@ export default function AdminPage() {
               onDelete={(p) => setDeleteTarget(p)}
             />
           )}
-        </Section>
+        </section>
 
       </main>
 

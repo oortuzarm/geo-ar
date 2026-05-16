@@ -121,7 +121,10 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
 
 export async function getAdminProjects(): Promise<AdminProject[]> {
   const raw = await apiFetch<Record<string, unknown>[]>(`${BASE}/api/admin/projects`)
-  return raw.map(normalizeProject)
+  const projects = raw.map(normalizeProject)
+  console.log('[ADMIN_PROJECTS_FETCH] count=', projects.length)
+  console.log('[ADMIN_PROJECTS_FETCH_IDS]', projects.map((p) => p.id))
+  return projects
 }
 
 export async function getAdminMetrics(): Promise<AdminMetrics> {

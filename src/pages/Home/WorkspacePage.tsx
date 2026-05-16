@@ -5,6 +5,7 @@ import { useGeoStore } from '../../store/geoStore'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { deleteMediaFile, isVercelBlobUrl } from '../../lib/deleteMediaFile'
 import { fetchProjectAnalytics } from '../../lib/analytics'
+import { ApiError } from '../../lib/apiFetch'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
 import ToastContainer from '../../components/ui/Toast'
@@ -463,23 +464,36 @@ export default function WorkspacePage() {
   }
 
   async function handleDeleteConfirmed() {
+    const projectId = project!.id
+    console.log('[WORKSPACE_DELETE_START] projectId=', projectId)
     setDeleteConfirm(false)
     setDeleting(true)
+
+    // Collect Vercel Blob URLs to clean up after deletion (non-critical)
     let orphanUrls: string[] = []
     try {
-      const pts = await geoPointsApi.listPoints(project!.id)
+      const pts = await geoPointsApi.listPoints(projectId)
       orphanUrls = pts.flatMap((pt) => {
         if (pt.contentType === 'url') return []
         const cd = pt.contentData as MediaContentData | undefined
         return isVercelBlobUrl(cd?.file_url) ? [cd!.file_url] : []
       })
-    } catch { /* non-critical */ }
+    } catch { /* non-critical — proceed with delete even if listing fails */ }
+
     try {
-      await geoProjectsApi.removeProject(project!.id)
+      await geoProjectsApi.removeProject(projectId)
       if (orphanUrls.length > 0) orphanUrls.forEach((url) => void deleteMediaFile(url))
+      console.log('[WORKSPACE_DELETE_SUCCESS] projectId=', projectId)
+      addToast('Workspace eliminado correctamente', 'success')
       refresh()
-    } catch {
-      addToast('Error al eliminar el workspace', 'error')
+    } catch (err) {
+      const detail = err instanceof ApiError
+        ? `(${err.status}) ${err.message}`
+        : String(err)
+      console.error('[WORKSPACE_DELETE_ERROR] projectId=', projectId, err)
+      addToast(`No se pudo eliminar el workspace: ${detail}`, 'error')
+    } finally {
+      // Always reset deleting — without this the component stays frozen on <Spinner /> after success
       setDeleting(false)
     }
   }

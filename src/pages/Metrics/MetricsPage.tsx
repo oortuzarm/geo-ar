@@ -16,8 +16,7 @@ import type {
   GeoBucket,
   GeoDistribution,
 } from '../../lib/analytics'
-import { geoProjectsApi } from '../../services'
-import type { GeoProject } from '../../types'
+import { useWorkspace } from '../../hooks/useWorkspace'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -1083,15 +1082,14 @@ function PointsSection({ byPoint }: { byPoint: PointAnalytics[] }) {
 
 export default function MetricsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [projects,     setProjects]     = useState<GeoProject[]>([])
-  const [projLoading,  setProjLoading]  = useState(true)
-  const [selectedId,   setSelectedId]   = useState<string>(searchParams.get('projectId') ?? '')
-  const [pointId,      setPointId]      = useState<string>(searchParams.get('pointId') ?? '')
-  const [summary,      setSummary]      = useState<ProjectAnalytics | null>(null)
-  const [byPoint,      setByPoint]      = useState<PointAnalytics[] | null>(null)
-  const [dataLoading,  setDataLoading]  = useState(false)
-  const [error,        setError]        = useState(false)
-  const fetchedForRef = useRef<string | null>(null)
+  const { project, loading: workspaceLoading } = useWorkspace()
+  const selectedId = project?.id ?? ''
+  const [pointId,     setPointId]     = useState<string>(searchParams.get('pointId') ?? '')
+  const [summary,     setSummary]     = useState<ProjectAnalytics | null>(null)
+  const [byPoint,     setByPoint]     = useState<PointAnalytics[] | null>(null)
+  const [dataLoading, setDataLoading] = useState(false)
+  const [error,       setError]       = useState(false)
+  const [retryKey,    setRetryKey]    = useState(0)
 
   // ── Point filter derived values ────────────────────────────────────────────
   const pointFilter: PointAnalytics | null =
@@ -1104,38 +1102,23 @@ export default function MetricsPage() {
   const displayByPoint = pointFilter ? [pointFilter] : byPoint
 
   useEffect(() => {
-    geoProjectsApi.listProjects()
-      .then(list => setProjects(list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))))
-      .finally(() => setProjLoading(false))
-  }, [])
-
-  useEffect(() => {
     if (!selectedId) return
-    if (fetchedForRef.current === selectedId && summary !== null) return
-    fetchedForRef.current = selectedId
+    let cancelled = false
     setDataLoading(true); setError(false); setSummary(null); setByPoint(null)
     Promise.all([
       fetchProjectAnalytics(selectedId),
       fetchProjectAnalyticsByPoint(selectedId).catch(() => null),
     ])
-      .then(([s, bp]) => { setSummary(s); setByPoint(bp) })
-      .catch(() => setError(true))
-      .finally(() => setDataLoading(false))
-  }, [selectedId]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  function selectProject(id: string) {
-    fetchedForRef.current = null
-    setSelectedId(id)
-    setPointId('')
-    setSearchParams(id ? { projectId: id } : {})
-  }
+      .then(([s, bp]) => { if (!cancelled) { setSummary(s); setByPoint(bp) } })
+      .catch(() => { if (!cancelled) setError(true) })
+      .finally(() => { if (!cancelled) setDataLoading(false) })
+    return () => { cancelled = true }
+  }, [selectedId, retryKey])
 
   function clearPointFilter() {
     setPointId('')
-    setSearchParams(selectedId ? { projectId: selectedId } : {})
+    setSearchParams({})
   }
-
-  const selected = projects.find(p => p.id === selectedId)
 
   const convQuality = displaySummary
     ? displaySummary.conversion >= 30 ? 'Excelente'
@@ -1164,25 +1147,8 @@ export default function MetricsPage() {
           {/* Desktop title */}
           <h1 className="hidden md:block text-xl font-bold text-gray-100 shrink-0">Métricas</h1>
 
-          {/* Project selector */}
-          {!projLoading && projects.length > 0 && (
-            <select
-              value={selectedId}
-              onChange={e => selectProject(e.target.value)}
-              className="ml-auto bg-gray-800 border border-gray-700 rounded-xl px-3 py-1.5
-                         text-sm text-gray-300 max-w-[240px] w-full
-                         focus:outline-none focus:ring-2 focus:ring-brand-500/50
-                         transition-all cursor-pointer"
-            >
-              <option value="">Elegir proyecto…</option>
-              {projects.map(p => (
-                <option key={p.id} value={p.id}>{p.title}</option>
-              ))}
-            </select>
-          )}
-
           {/* Period badge */}
-          <div className="flex items-center gap-2 shrink-0 bg-gray-800 border border-gray-700/60 rounded-xl px-3 py-1.5">
+          <div className="ml-auto flex items-center gap-2 shrink-0 bg-gray-800 border border-gray-700/60 rounded-xl px-3 py-1.5">
             <svg className="w-3.5 h-3.5 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1195,57 +1161,15 @@ export default function MetricsPage() {
       {/* ── Body ─────────────────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-6 py-6">
 
-        {/* Loading projects */}
-        {projLoading && (
-          <div className="flex justify-center py-20">
-            <div className="w-5 h-5 rounded-full border-2 border-brand-400/30 border-t-brand-400 animate-spin" />
-          </div>
-        )}
-
-        {/* No projects */}
-        {!projLoading && projects.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
-            <p className="text-gray-500">No hay proyectos. Crea uno en la sección Proyectos.</p>
-          </div>
-        )}
-
-        {/* Pick a project */}
-        {!projLoading && projects.length > 0 && !selectedId && (
-          <div className="flex flex-col items-center justify-center py-24 gap-5 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-gray-800 border border-gray-700/40 flex items-center justify-center">
-              <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-300 mb-1">Seleccioná un proyecto</p>
-              <p className="text-sm text-gray-600">Elegí un proyecto para ver sus métricas.</p>
-            </div>
-            <select
-              defaultValue=""
-              onChange={e => e.target.value && selectProject(e.target.value)}
-              className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2
-                         text-sm text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500/50
-                         cursor-pointer transition-all"
-            >
-              <option value="" disabled>Elegir proyecto…</option>
-              {projects.map(p => (
-                <option key={p.id} value={p.id}>{p.title}</option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* Loading data */}
-        {selectedId && dataLoading && <PageSkeleton />}
+        {/* Loading */}
+        {(workspaceLoading || dataLoading) && <PageSkeleton />}
 
         {/* Error */}
-        {selectedId && error && !dataLoading && (
+        {!workspaceLoading && selectedId && error && !dataLoading && (
           <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
             <p className="text-sm text-gray-500">No se pudieron cargar las métricas.</p>
             <button
-              onClick={() => { fetchedForRef.current = null; selectProject(selectedId) }}
+              onClick={() => setRetryKey(k => k + 1)}
               className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
             >
               Reintentar
@@ -1254,13 +1178,13 @@ export default function MetricsPage() {
         )}
 
         {/* ── Dashboard ───────────────────────────────────────────────────── */}
-        {summary && displaySummary && !dataLoading && (
+        {summary && displaySummary && !dataLoading && !workspaceLoading && (
           <div className="space-y-5 animate-fade-in">
 
             {/* Project heading */}
-            {selected && (
+            {project && (
               <div>
-                <h2 className="text-2xl font-bold text-gray-100 leading-snug">{selected.title}</h2>
+                <h2 className="text-2xl font-bold text-gray-100 leading-snug">{project.title}</h2>
                 {pointFilter ? (
                   <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs

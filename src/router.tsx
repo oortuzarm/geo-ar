@@ -18,6 +18,7 @@ import ForgotPasswordPage       from './pages/Auth/ForgotPasswordPage'
 import ResetPasswordPage        from './pages/Auth/ResetPasswordPage'
 import AcceptInvitationPage     from './pages/Auth/AcceptInvitationPage'
 import AdminPage                from './pages/Admin/AdminPage'
+import AccountPage              from './pages/Account/AccountPage'
 import PrivacyPolicyPage        from './pages/Legal/PrivacyPolicyPage'
 import TermsAndConditionsPage   from './pages/Legal/TermsAndConditionsPage'
 import ProtectedRoute           from './components/auth/ProtectedRoute'
@@ -58,6 +59,7 @@ const protectedChildren = [
       { index: true,        element: <WorkspacePage /> },
       { path: 'metrics',    element: <MetricsPage /> },
       { path: 'members',    element: <MembersPage /> },
+      { path: 'account',    element: <AccountPage /> },
       { path: 'settings',   element: <SettingsPage /> },
       // Legacy multi-project view — kept accessible but not linked from the sidebar
       { path: 'projects',   element: <HomePage /> },

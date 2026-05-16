@@ -27,16 +27,15 @@ export function useWorkspace() {
 
       // ── Project selection strategy ───────────────────────────────────────
       //
-      // Priority 1: projects where userId === currentUserId (explicit ownership match).
-      //   This is always correct — filters out other users' workspaces even when the
-      //   backend returns all projects (e.g. because the session user is an admin).
+      // Priority 1: projects where userId === currentUserId (explicit ownership).
+      //   Filters out other users' workspaces even when the backend returns all
+      //   projects (e.g. admin session hitting a non-scoped endpoint).
       //
       // Priority 2: projects where userId is absent (null/undefined).
-      //   The backend didn't include userId — trust that it scoped the response.
-      //   Log a warning because this is ambiguous.
+      //   Backend didn't include userId — trust that the response is already scoped.
       //
-      // If neither priority finds any project → create a fresh one.
-      // Never fall back to projects owned by a different user.
+      // No match → show empty state. NEVER auto-create a workspace here.
+      // Workspace creation happens on demand when the user takes a real action.
 
       const owned = currentUserId
         ? all.filter((p) => p.userId === currentUserId)
@@ -56,20 +55,25 @@ export function useWorkspace() {
           { ambiguousCount: noOwnerInfo.length, totalCount: all.length })
         candidates = noOwnerInfo
       } else {
-        // Backend returned projects but ALL belong to other users.
-        // This happens when an admin hits GET /api/geo_projects and gets every project.
+        // No own project found — either new user or admin seeing only other users' projects.
         const skipped = all.filter((p) => p.userId && p.userId !== currentUserId)
-        console.warn('[WORKSPACE_NO_OWN_PROJECT]',
-          'No project found for current user. Creating one.',
-          { currentUserId, skippedOtherUsers: skipped.length })
+        console.log('[WORKSPACE_AUTO_CREATE_BLOCKED]',
+          'No workspace found for current user. Showing empty state instead of auto-creating.',
+          { currentUserId, totalFromAPI: all.length, skippedOtherUsers: skipped.length })
         candidates = []
       }
 
       const sorted = [...candidates].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+      const workspace = sorted[0] ?? null
 
-      let workspace = sorted[0]
       if (!workspace) {
-        workspace = await geoProjectsApi.createProject({ title: 'Mi Workspace' })
+        console.log('[WORKSPACE_EMPTY_STATE] No workspace for userId=', currentUserId)
+        if (!cancelled) {
+          setProject(null)
+          setPoints([])
+          setLoading(false)
+        }
+        return
       }
 
       console.log('[WORKSPACE_SELECTED] id=', workspace.id,

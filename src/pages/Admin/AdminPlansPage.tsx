@@ -124,6 +124,7 @@ function TextInput({ value, onChange, placeholder, type = 'text', min, max, step
 const EMPTY_FORM = {
   name:                 '',
   slug:                 '',
+  customPricing:        false,   // true = "Contact sales" / "Custom", monthlyPrice forced to 0
   monthlyPrice:         '',
   annualDiscountPercent:'0',
   unlimited:            false,
@@ -141,6 +142,7 @@ function planToForm(p: AdminPlan): PlanForm {
   return {
     name:                 p.name,
     slug:                 p.slug,
+    customPricing:        p.isCustom && p.monthlyPrice === 0,
     monthlyPrice:         String(p.monthlyPrice),
     annualDiscountPercent:String(p.annualDiscountPercent),
     unlimited:            p.locationLimit === null,
@@ -158,14 +160,14 @@ function formToPayload(f: PlanForm): CreatePlanPayload {
   return {
     name:                 f.name.trim(),
     slug:                 f.slug.trim(),
-    monthlyPrice:         parseFloat(f.monthlyPrice)          || 0,
-    annualDiscountPercent:parseFloat(f.annualDiscountPercent)  || 0,
+    monthlyPrice:         f.customPricing ? 0 : (parseFloat(f.monthlyPrice) || 0),
+    annualDiscountPercent:f.customPricing ? 0 : (parseFloat(f.annualDiscountPercent) || 0),
     locationLimit:        f.unlimited ? null : (parseInt(f.locationLimit) || 0),
     hasTrial:             f.hasTrial,
     trialDays:            f.hasTrial ? (parseInt(f.trialDays) || 7) : null,
     isVisible:            f.isVisible,
     isRecommended:        f.isRecommended,
-    isCustom:             f.isCustom,
+    isCustom:             f.customPricing || f.isCustom,
     sortOrder:            parseInt(f.sortOrder) || 0,
   }
 }
@@ -265,33 +267,55 @@ function PlanFormModal({ plan, saving, onSave, onClose }: PlanFormModalProps) {
           {/* Pricing block */}
           <div className="rounded-xl border border-gray-800 bg-gray-800/30 p-4 space-y-3">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Pricing</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel>Precio mensual (USD)</FieldLabel>
-                <TextInput
-                  type="number" min={0} step={0.01}
-                  value={form.monthlyPrice}
-                  onChange={v => set('monthlyPrice', v)}
-                  placeholder="0.00"
-                />
+            <Toggle
+              checked={form.customPricing}
+              onChange={v => setForm(f => ({
+                ...f,
+                customPricing: v,
+                ...(v ? { monthlyPrice: '0', annualDiscountPercent: '0', isCustom: true } : {}),
+              }))}
+              label="Precio personalizado (contactar ventas)"
+            />
+            {form.customPricing ? (
+              <div className="flex items-center gap-2 rounded-lg bg-gray-800 px-3 py-2.5">
+                <span className="text-xs text-gray-500">El precio visible será</span>
+                <span className="inline-flex px-2 py-0.5 rounded-full border text-[11px] font-medium
+                                 leading-none bg-purple-500/15 text-purple-300 border-purple-500/25">
+                  Custom
+                </span>
+                <span className="text-xs text-gray-600">· requiere contacto con ventas</span>
               </div>
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel>Descuento anual (%)</FieldLabel>
-                <TextInput
-                  type="number" min={0} max={100} step={1}
-                  value={form.annualDiscountPercent}
-                  onChange={v => set('annualDiscountPercent', v)}
-                  placeholder="0"
-                />
-              </div>
-            </div>
-            {/* Calculated annual */}
-            <div className="flex items-center justify-between rounded-lg bg-gray-800 px-3 py-2.5">
-              <span className="text-xs text-gray-500">Precio anual calculado</span>
-              <span className="text-sm font-semibold text-gray-100 tabular-nums">
-                ${fmtUSD(annual)} <span className="text-gray-500 font-normal text-xs">USD/año</span>
-              </span>
-            </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <FieldLabel>Precio mensual (USD)</FieldLabel>
+                    <TextInput
+                      type="number" min={0} step={0.01}
+                      value={form.monthlyPrice}
+                      onChange={v => set('monthlyPrice', v)}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <FieldLabel>Descuento anual (%)</FieldLabel>
+                    <TextInput
+                      type="number" min={0} max={100} step={1}
+                      value={form.annualDiscountPercent}
+                      onChange={v => set('annualDiscountPercent', v)}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+                {/* Calculated annual */}
+                <div className="flex items-center justify-between rounded-lg bg-gray-800 px-3 py-2.5">
+                  <span className="text-xs text-gray-500">Precio anual calculado</span>
+                  <span className="text-sm font-semibold text-gray-100 tabular-nums">
+                    ${fmtUSD(annual)} <span className="text-gray-500 font-normal text-xs">USD/año</span>
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Limits */}
@@ -678,13 +702,21 @@ export default function AdminPlansPage() {
 
                         {/* Monthly price */}
                         <td className="px-4 py-3 text-right tabular-nums text-gray-300 whitespace-nowrap">
-                          ${fmtUSD(plan.monthlyPrice)}
-                          <span className="text-gray-600 text-[11px] ml-0.5">/mes</span>
+                          {plan.isCustom && plan.monthlyPrice === 0 ? (
+                            <Badge color="purple">Custom</Badge>
+                          ) : (
+                            <>
+                              ${fmtUSD(plan.monthlyPrice)}
+                              <span className="text-gray-600 text-[11px] ml-0.5">/mes</span>
+                            </>
+                          )}
                         </td>
 
                         {/* Annual price */}
                         <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">
-                          {plan.annualDiscountPercent > 0 ? (
+                          {plan.isCustom && plan.monthlyPrice === 0 ? (
+                            <span className="text-gray-600">—</span>
+                          ) : plan.annualDiscountPercent > 0 ? (
                             <span className="text-gray-300">
                               ${fmtUSD(annual)}
                               <span className="ml-1.5 text-emerald-400 text-[11px]">

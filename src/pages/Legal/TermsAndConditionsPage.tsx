@@ -149,7 +149,27 @@ export default function TermsAndConditionsPage() {
         </Body>
       </Section>
 
-      <Section number="8" title="Propiedad intelectual">
+      <Section number="8" title="Reembolsos y cancelaciones">
+        <Body>
+          Las suscripciones pueden cancelarse en cualquier momento desde la cuenta del usuario o mediante
+          contacto con Ubyca.
+        </Body>
+        <Body>
+          Salvo disposición legal obligatoria, los pagos ya procesados no son reembolsables, incluyendo:
+        </Body>
+        <BulletList items={[
+          'Suscripciones activas',
+          'Renovaciones automáticas',
+          'Servicios utilizados parcial o totalmente',
+          'Funcionalidades o planes ya habilitados',
+        ]} />
+        <Body>
+          La cancelación de una suscripción evitará futuros cobros, pero no generará devolución proporcional
+          por períodos ya pagados.
+        </Body>
+      </Section>
+
+      <Section number="9" title="Propiedad intelectual">
         <Body>
           Todos los derechos sobre la Plataforma, incluyendo software, diseño, interfaz, marca, código,
           arquitectura y documentación, pertenecen a Ubyca o sus licenciantes.
@@ -159,7 +179,7 @@ export default function TermsAndConditionsPage() {
         </Body>
       </Section>
 
-      <Section number="9" title="Limitación de responsabilidad">
+      <Section number="10" title="Limitación de responsabilidad">
         <Body>
           En la máxima medida permitida por la ley, Ubyca no será responsable por:
         </Body>
@@ -176,7 +196,7 @@ export default function TermsAndConditionsPage() {
         <Body>El usuario utiliza la Plataforma bajo su propio riesgo.</Body>
       </Section>
 
-      <Section number="10" title="Suspensión o cancelación">
+      <Section number="11" title="Suspensión o cancelación">
         <Body>Ubyca podrá suspender o cancelar cuentas cuando:</Body>
         <BulletList items={[
           'Existan incumplimientos de estos términos',
@@ -186,7 +206,7 @@ export default function TermsAndConditionsPage() {
         ]} />
       </Section>
 
-      <Section number="11" title="Integraciones y terceros">
+      <Section number="12" title="Integraciones y terceros">
         <Body>
           La Plataforma puede integrarse con servicios externos.
         </Body>
@@ -196,14 +216,14 @@ export default function TermsAndConditionsPage() {
         </Body>
       </Section>
 
-      <Section number="12" title="Modificaciones de la Plataforma">
+      <Section number="13" title="Modificaciones de la Plataforma">
         <Body>
           Ubyca podrá modificar, actualizar o discontinuar funcionalidades en cualquier momento, sin
           obligación de mantener compatibilidad permanente.
         </Body>
       </Section>
 
-      <Section number="13" title="Ley aplicable">
+      <Section number="14" title="Ley aplicable">
         <Body>
           Estos términos se regirán conforme a las leyes de la República de Chile.
         </Body>
@@ -212,7 +232,7 @@ export default function TermsAndConditionsPage() {
         </Body>
       </Section>
 
-      <Section number="14" title="Contacto">
+      <Section number="15" title="Contacto">
         <div className="mt-1">
           <a
             href="mailto:contacto@ubyca.com"

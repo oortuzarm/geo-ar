@@ -484,6 +484,25 @@ export default function PlansPage() {
           </div>
         )}
 
+        {/* ── Disclaimer ───────────────────────────────────────────────────── */}
+        {!loading && !error && plans.length > 0 && (
+          <div className="pt-2 space-y-1.5 text-xs text-gray-600 leading-relaxed">
+            <p>* Todos los precios son sin impuestos.</p>
+            <p>
+              Si representas a una institución educativa,{' '}
+              <a
+                href="https://www.ubyca.com/contact/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-gray-400 underline underline-offset-2 transition-colors"
+              >
+                contáctanos
+              </a>
+              {' '}para acceder a precios preferenciales.
+            </p>
+          </div>
+        )}
+
         {/* ── Included features ────────────────────────────────────────────── */}
         {!loading && (
           <section className="space-y-8">

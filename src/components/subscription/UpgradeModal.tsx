@@ -75,12 +75,14 @@ export default function UpgradeModal({ onClose, reason = 'general' }: UpgradeMod
             Ver planes
           </button>
           <a
-            href="mailto:hola@ubyca.com?subject=Consulta%20sobre%20planes"
+            href="https://www.ubyca.com/contact/"
+            target="_blank"
+            rel="noopener noreferrer"
             onClick={onClose}
             className="w-full py-2.5 px-4 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm
                        font-medium rounded-lg transition-colors text-center block"
           >
-            Contactar ventas
+            Hablar con nosotros
           </a>
         </div>
       </div>

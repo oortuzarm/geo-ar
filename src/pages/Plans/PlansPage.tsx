@@ -167,7 +167,9 @@ function PlanCard({ plan, billing, isCurrent, onUpgrade }: PlanCardProps) {
         </button>
       ) : isCustom ? (
         <a
-          href="mailto:hola@ubyca.com?subject=Consulta%20sobre%20plan%20Enterprise"
+          href="https://www.ubyca.com/contact/"
+          target="_blank"
+          rel="noopener noreferrer"
           className="w-full py-2.5 rounded-xl text-sm font-semibold text-center block
                      bg-gray-800 hover:bg-gray-700 text-gray-200 transition-colors border border-gray-700"
         >

@@ -9,7 +9,7 @@ interface UpgradeModalProps {
 const COPY: Record<NonNullable<UpgradeModalProps['reason']>, { title: string; body: string }> = {
   limit: {
     title: 'Límite de ubicaciones alcanzado',
-    body:  'Alcanzaste el límite de ubicaciones de tu plan. Actualizá para agregar más.',
+    body:  'Alcanzaste el límite de ubicaciones de tu plan. Actualiza para agregar más.',
   },
   expired: {
     title: 'Tu período de prueba venció',
@@ -17,7 +17,7 @@ const COPY: Record<NonNullable<UpgradeModalProps['reason']>, { title: string; bo
   },
   general: {
     title: 'Actualizar plan',
-    body:  'Actualizá tu plan para acceder a más funciones y ubicaciones.',
+    body:  'Actualiza tu plan para acceder a más funciones y ubicaciones.',
   },
 }
 

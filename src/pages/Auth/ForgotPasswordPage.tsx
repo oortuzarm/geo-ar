@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
       setSent(true)
     } catch (err) {
       if (err instanceof ApiError && err.status >= 500) {
-        setError('Error del servidor. Intentá de nuevo en unos minutos.')
+        setError('Error del servidor. Intenta de nuevo en unos minutos.')
       } else if (!(err instanceof ApiError)) {
         setError('No se pudo conectar con el servidor.')
       } else {
@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
             <>
               <h2 className="text-lg font-semibold text-white mb-1">Recuperar contraseña</h2>
               <p className="text-sm text-gray-500 mb-5">
-                Ingresá tu email y te enviaremos un link para restablecer tu contraseña.
+                Ingresa tu email y te enviaremos un link para restablecer tu contraseña.
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">

@@ -9,7 +9,7 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 export async function uploadImage(file: File): Promise<string> {
   if (!ALLOWED_TYPES.includes(file.type)) {
     throw new Error(
-      `Tipo no permitido: "${file.type || 'desconocido'}". Usá JPG, PNG o WEBP.`,
+      `Tipo no permitido: "${file.type || 'desconocido'}". Usa JPG, PNG o WEBP.`,
     )
   }
 

@@ -865,7 +865,7 @@ export default function AdminPage() {
       getAdminMetrics().then(setMetrics).catch(() => null)
       setToast({ msg: `Workspace "${ws.title || 'Sin nombre'}" eliminado.`, type: 'success' })
     } catch {
-      setToast({ msg: 'No se pudo eliminar el workspace. Intentá de nuevo.', type: 'error' })
+      setToast({ msg: 'No se pudo eliminar el workspace. Intenta de nuevo.', type: 'error' })
     } finally {
       setDeletingWorkspaceId(null)
     }
@@ -886,7 +886,7 @@ export default function AdminPage() {
       getAdminMetrics().then(setMetrics).catch(() => null)
       setToast({ msg: `Usuario "${row.email}" eliminado.`, type: 'success' })
     } catch {
-      setToast({ msg: 'No se pudo eliminar el usuario. Intentá de nuevo.', type: 'error' })
+      setToast({ msg: 'No se pudo eliminar el usuario. Intenta de nuevo.', type: 'error' })
     } finally {
       setDeletingUserId(null)
     }
@@ -951,7 +951,7 @@ export default function AdminPage() {
         })
         .catch(() => null)
     } catch {
-      setToast({ msg: 'No se pudo actualizar la suscripción. Intentá de nuevo.', type: 'error' })
+      setToast({ msg: 'No se pudo actualizar la suscripción. Intenta de nuevo.', type: 'error' })
     } finally {
       setSavingSubscription(false)
     }

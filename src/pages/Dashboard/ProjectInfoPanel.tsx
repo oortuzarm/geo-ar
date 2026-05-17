@@ -82,7 +82,7 @@ export default function ProjectInfoPanel({ onClose, onSave }: ProjectInfoPanelPr
             Texto para compartir
           </label>
           <p className="text-xs text-gray-500 -mt-0.5">
-            Este mensaje aparece cuando compartís el link del proyecto.
+            Este mensaje aparece cuando compartes el link del proyecto.
           </p>
           <div className="relative">
             <textarea

@@ -37,7 +37,7 @@ function deriveInsights(summary: ProjectAnalytics, byPoint: PointAnalytics[]): I
   if (total === 0) {
     pool.push({
       id: 'no-data', tag: 'neutral',
-      text: 'Aún no hay datos de actividad. Compartí el link público para comenzar a registrar entradas.',
+      text: 'Aún no hay datos de actividad. Comparte el link público para comenzar a registrar entradas.',
     })
     return pool
   }

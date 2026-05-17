@@ -79,11 +79,11 @@ export default function AcceptInvitationPage() {
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 404 || err.status === 410) {
-          setError('El link de invitación expiró. Pedí que te envíen uno nuevo.')
+          setError('El link de invitación expiró. Pide que te envíen uno nuevo.')
         } else if (err.status === 422) {
-          setError('Los datos ingresados no son válidos. Revisá el formulario.')
+          setError('Los datos ingresados no son válidos. Revisa el formulario.')
         } else {
-          setError('Error del servidor. Intentá de nuevo en unos minutos.')
+          setError('Error del servidor. Intenta de nuevo en unos minutos.')
         }
       } else {
         setError('No se pudo conectar con el servidor.')
@@ -218,7 +218,7 @@ export default function AcceptInvitationPage() {
 
               <h2 className="text-lg font-semibold text-white mb-1">Crear tu cuenta</h2>
               <p className="text-sm text-gray-500 mb-5">
-                Configurá tu contraseña para acceder al dashboard.
+                Configura tu contraseña para acceder al dashboard.
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">

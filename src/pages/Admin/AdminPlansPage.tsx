@@ -36,7 +36,7 @@ function extractApiErrors(err: unknown): string {
     } catch { /* not JSON */ }
     return err.message || `Error ${err.status}`
   }
-  return 'Error inesperado. Intentá de nuevo.'
+  return 'Error inesperado. Intenta de nuevo.'
 }
 
 // ── Shared UI atoms (consistent with AdminPage style) ─────────────────────────

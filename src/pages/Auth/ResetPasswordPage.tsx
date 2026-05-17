@@ -41,9 +41,9 @@ export default function ResetPasswordPage() {
         if (err.status === 422 || err.status === 400) {
           setError('El link de recuperación es inválido o ya fue utilizado.')
         } else if (err.status === 410 || err.status === 404) {
-          setError('El link de recuperación expiró. Solicitá uno nuevo.')
+          setError('El link de recuperación expiró. Solicita uno nuevo.')
         } else {
-          setError('Error del servidor. Intentá de nuevo en unos minutos.')
+          setError('Error del servidor. Intenta de nuevo en unos minutos.')
         }
       } else {
         setError('No se pudo conectar con el servidor.')
@@ -96,7 +96,7 @@ export default function ResetPasswordPage() {
             <>
               <h2 className="text-lg font-semibold text-white mb-1">Nueva contraseña</h2>
               <p className="text-sm text-gray-500 mb-5">
-                Elegí una contraseña nueva para tu cuenta.
+                Elige una contraseña nueva para tu cuenta.
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">

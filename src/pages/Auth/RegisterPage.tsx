@@ -40,7 +40,7 @@ export default function RegisterPage() {
         if (err.status === 422) {
           setError('Ese email ya está registrado o los datos son inválidos.')
         } else {
-          setError('Error al crear la cuenta. Intentá de nuevo.')
+          setError('Error al crear la cuenta. Intenta de nuevo.')
         }
       } else {
         setError('No se pudo conectar con el servidor.')

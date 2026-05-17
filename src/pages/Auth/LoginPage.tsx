@@ -30,9 +30,9 @@ export default function LoginPage() {
         if (err.status === 401 || err.status === 422) {
           setError('Email o contraseña incorrectos.')
         } else if (err.status === 403) {
-          setError('Tu cuenta está suspendida. Contactá al administrador.')
+          setError('Tu cuenta está suspendida. Contacta al administrador.')
         } else {
-          setError('Error al iniciar sesión. Intentá de nuevo.')
+          setError('Error al iniciar sesión. Intenta de nuevo.')
         }
       } else {
         setError('No se pudo conectar con el servidor.')

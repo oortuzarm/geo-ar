@@ -39,7 +39,7 @@ function ComingSoonModal({ onClose }: { onClose: () => void }) {
         </div>
         <p className="text-sm text-gray-400 leading-relaxed">
           Los pagos en línea estarán disponibles muy pronto. Para activar tu plan ahora,
-          contactá a nuestro equipo.
+          contacta a nuestro equipo.
         </p>
         <div className="flex flex-col gap-2">
           <a
@@ -270,7 +270,7 @@ export default function PlansPage() {
     setError(null)
     getPlans()
       .then(setPlans)
-      .catch(() => setError('No se pudieron cargar los planes. Intentá de nuevo.'))
+      .catch(() => setError('No se pudieron cargar los planes. Intenta de nuevo.'))
       .finally(() => setLoading(false))
   }
 
@@ -310,7 +310,7 @@ export default function PlansPage() {
         {/* Hero */}
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-100 mb-3">
-            Elegí el plan que mejor se adapta
+            Elige el plan ideal para tu proyecto
           </h2>
           <p className="text-gray-500 text-base max-w-md mx-auto">
             Todos los planes incluyen acceso completo a las funciones. Sin contratos. Sin sorpresas.

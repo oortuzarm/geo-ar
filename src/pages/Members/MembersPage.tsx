@@ -81,7 +81,7 @@ function InviteModal({ onClose, onSuccess }: InviteModalProps) {
       if (err instanceof ApiError) {
         if (err.status === 422) setError('El email ya es miembro o ya tiene una invitación pendiente.')
         else if (err.status === 403) setError('No tienes permisos para invitar miembros.')
-        else setError('No se pudo enviar la invitación. Intentá de nuevo.')
+        else setError('No se pudo enviar la invitación. Intenta de nuevo.')
       } else {
         setError('No se pudo conectar con el servidor.')
       }
@@ -191,7 +191,7 @@ export default function MembersPage() {
       if (err instanceof ApiError && err.status === 403) {
         setForbidden(true)
       } else {
-        setPageError('No se pudo cargar la lista de miembros. Intentá de nuevo.')
+        setPageError('No se pudo cargar la lista de miembros. Intenta de nuevo.')
       }
     } finally {
       setLoading(false)

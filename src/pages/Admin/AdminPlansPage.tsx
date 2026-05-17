@@ -142,7 +142,7 @@ function planToForm(p: AdminPlan): PlanForm {
   return {
     name:                 p.name,
     slug:                 p.slug,
-    customPricing:        p.isCustom && p.monthlyPrice === 0,
+    customPricing:        p.isCustom && Number(p.monthlyPrice) === 0,
     monthlyPrice:         String(p.monthlyPrice),
     annualDiscountPercent:String(p.annualDiscountPercent),
     unlimited:            p.locationLimit === null,
@@ -702,7 +702,7 @@ export default function AdminPlansPage() {
 
                         {/* Monthly price */}
                         <td className="px-4 py-3 text-right tabular-nums text-gray-300 whitespace-nowrap">
-                          {plan.isCustom && plan.monthlyPrice === 0 ? (
+                          {plan.isCustom && Number(plan.monthlyPrice) === 0 ? (
                             <Badge color="purple">Custom</Badge>
                           ) : (
                             <>
@@ -714,7 +714,7 @@ export default function AdminPlansPage() {
 
                         {/* Annual price */}
                         <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">
-                          {plan.isCustom && plan.monthlyPrice === 0 ? (
+                          {plan.isCustom && Number(plan.monthlyPrice) === 0 ? (
                             <span className="text-gray-600">—</span>
                           ) : plan.annualDiscountPercent > 0 ? (
                             <span className="text-gray-300">

@@ -223,12 +223,14 @@ export default function TermsAndConditionsPage() {
         </Body>
       </Section>
 
-      <Section number="14" title="Ley aplicable">
+      <Section number="14" title="Ley aplicable y jurisdicción">
         <Body>
-          Estos términos se regirán conforme a las leyes de la República de Chile.
+          Estos Términos y Condiciones se regirán e interpretarán conforme a las leyes de la República de Chile.
         </Body>
         <Body>
-          Cualquier controversia será sometida a los tribunales competentes de Santiago de Chile.
+          Cualquier controversia, conflicto o reclamación relacionada con el uso de la Plataforma será sometida
+          a la jurisdicción de los tribunales competentes de Santiago de Chile, salvo que la legislación aplicable
+          del país de residencia del usuario establezca lo contrario.
         </Body>
       </Section>
 

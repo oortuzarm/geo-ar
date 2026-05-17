@@ -14,6 +14,8 @@ import PreviewQRModal from './PreviewQRModal'
 import { useGeoStore } from '../../store/geoStore'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
+import { useSubscription } from '../../hooks/useSubscription'
+import UpgradeModal from '../../components/subscription/UpgradeModal'
 import { deleteMediaFile, isVercelBlobUrl } from '../../lib/deleteMediaFile'
 // useGeolocation removed — smart watchPosition logic is inline below
 import type { GeoPoint, MapBounds, MediaContentData, PoiSearchResult } from '../../types'
@@ -43,6 +45,9 @@ export default function DashboardPage() {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [leftTab, setLeftTab] = useState<'points' | 'project'>('points')
+  const [upgradeOpen, setUpgradeOpen] = useState(false)
+
+  const subscription = useSubscription()
 
   // Ref-based guard so async continuations read the live value, not a stale closure.
   const isSavingRef   = useRef(false)
@@ -151,6 +156,10 @@ export default function DashboardPage() {
   // Shared helper — creates a point and opens the mobile editor (or desktop panel).
   async function openNewPoint(lat: number, lng: number) {
     if (!project) return
+    if (!subscription.canAddLocation(useGeoStore.getState().points.length)) {
+      setUpgradeOpen(true)
+      return
+    }
     setHasUnsavedChanges(true)
     const currentProject = useGeoStore.getState().project!
     const newPoint = await geoPointsApi.createPoint({
@@ -216,6 +225,10 @@ export default function DashboardPage() {
 
   async function handleAddPoint() {
     if (!project) return
+    if (!subscription.canAddLocation(useGeoStore.getState().points.length)) {
+      setUpgradeOpen(true)
+      return
+    }
     setHasUnsavedChanges(true)
     const center = useGeoStore.getState().mapCenter
     const currentPoints = useGeoStore.getState().points
@@ -238,6 +251,10 @@ export default function DashboardPage() {
 
   async function createPointAt(lat: number, lng: number, name?: string): Promise<GeoPoint> {
     if (!project) throw new Error('no project')
+    if (!subscription.canAddLocation(useGeoStore.getState().points.length)) {
+      setUpgradeOpen(true)
+      throw new Error('location limit reached')
+    }
     setHasUnsavedChanges(true)
     const currentProject = useGeoStore.getState().project!
     const newPoint = await geoPointsApi.createPoint({
@@ -1290,6 +1307,12 @@ export default function DashboardPage() {
         onCancel={() => setDeletePointTarget(null)}
         danger
       />
+      {upgradeOpen && (
+        <UpgradeModal
+          onClose={() => setUpgradeOpen(false)}
+          reason="limit"
+        />
+      )}
       <ToastContainer />
     </div>
   )

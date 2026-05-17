@@ -255,7 +255,7 @@ function Footer() {
             draggable={false}
           />
         </Link>
-        <p className="text-xs text-slate-700 order-last sm:order-none">© 2025 Ubyca · Experiencias GPS</p>
+        <p className="text-xs text-slate-700 order-last sm:order-none">©2026 - Ubyca | Todos los derechos reservados</p>
         <div className="flex items-center gap-5">
           <Link to="/terms_and_conditions" className="text-xs text-slate-600 hover:text-slate-400 transition-colors">
             Términos y Condiciones

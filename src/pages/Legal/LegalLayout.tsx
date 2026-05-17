@@ -44,7 +44,7 @@ export default function LegalLayout({ title, lastUpdated, children }: LegalLayou
             />
           </Link>
           <p className="text-xs text-slate-700 order-last sm:order-none">
-            © 2025 Ubyca · Experiencias GPS
+            ©2026 - Ubyca | Todos los derechos reservados
           </p>
           <div className="flex items-center gap-5">
             <Link

@@ -365,10 +365,12 @@ export default function PlansPage() {
           <p className="text-center text-xs text-gray-600 pb-4">
             ¿Tienes dudas?{' '}
             <a
-              href="mailto:hola@ubyca.com"
+              href="https://www.ubyca.com/contact/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-gray-500 hover:text-gray-400 transition-colors underline underline-offset-2"
             >
-              Contactanos
+              Contáctanos
             </a>
           </p>
         )}

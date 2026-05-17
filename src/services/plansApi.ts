@@ -18,19 +18,22 @@ export interface PublicPlan {
 }
 
 function normalizePlan(raw: Record<string, unknown>): PublicPlan {
+  const yearlyRaw    = raw.yearlyPriceComputed ?? raw.yearly_price_computed ?? null
+  const locationRaw  = raw.locationLimit       ?? raw.location_limit        ?? null
+  const trialDaysRaw = raw.trialDays           ?? raw.trial_days            ?? null
   return {
     id:                    raw.id                                                           as string,
     name:                  raw.name                                                         as string,
     slug:                  (raw.slug ?? '')                                                 as string,
-    monthlyPrice:          (raw.monthlyPrice          ?? raw.monthly_price          ?? 0)  as number,
-    annualDiscountPercent: (raw.annualDiscountPercent ?? raw.annual_discount_percent ?? 0) as number,
-    yearlyPriceComputed:   (raw.yearlyPriceComputed   ?? raw.yearly_price_computed  ?? null) as number | null,
-    locationLimit:         (raw.locationLimit          ?? raw.location_limit         ?? null) as number | null,
-    hasTrial:              (raw.hasTrial               ?? raw.has_trial              ?? false) as boolean,
-    trialDays:             (raw.trialDays              ?? raw.trial_days             ?? null) as number | null,
-    isRecommended:         (raw.isRecommended          ?? raw.is_recommended         ?? false) as boolean,
-    isCustom:              (raw.isCustom               ?? raw.is_custom              ?? false) as boolean,
-    sortOrder:             (raw.sortOrder              ?? raw.sort_order             ?? 0)  as number,
+    monthlyPrice:          Number(raw.monthlyPrice          ?? raw.monthly_price          ?? 0),
+    annualDiscountPercent: Number(raw.annualDiscountPercent ?? raw.annual_discount_percent ?? 0),
+    yearlyPriceComputed:   yearlyRaw   !== null ? Number(yearlyRaw)   : null,
+    locationLimit:         locationRaw !== null ? Number(locationRaw) : null,
+    hasTrial:              Boolean(raw.hasTrial    ?? raw.has_trial    ?? false),
+    trialDays:             trialDaysRaw !== null ? Number(trialDaysRaw) : null,
+    isRecommended:         Boolean(raw.isRecommended ?? raw.is_recommended ?? false),
+    isCustom:              Boolean(raw.isCustom      ?? raw.is_custom      ?? false),
+    sortOrder:             Number(raw.sortOrder       ?? raw.sort_order     ?? 0),
   }
 }
 

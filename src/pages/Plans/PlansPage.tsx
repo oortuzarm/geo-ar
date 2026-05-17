@@ -72,7 +72,7 @@ interface PlanCardProps {
 }
 
 function PlanCard({ plan, billing, isCurrent, onUpgrade }: PlanCardProps) {
-  const isCustom = plan.isCustom && plan.monthlyPrice === 0
+  const isCustom = plan.isCustom && Number(plan.monthlyPrice) === 0
 
   let displayPrice: string
   let priceLabel: string
@@ -371,7 +371,7 @@ export default function PlansPage() {
         {/* Footer */}
         {!loading && !error && plans.length > 0 && (
           <p className="text-center text-xs text-gray-600 pb-4">
-            ¿Tenés dudas?{' '}
+            ¿Tienes dudas?{' '}
             <a
               href="mailto:hola@ubyca.com"
               className="text-gray-500 hover:text-gray-400 transition-colors underline underline-offset-2"

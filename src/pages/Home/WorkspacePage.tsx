@@ -584,7 +584,7 @@ export default function WorkspacePage() {
                 </span>{' '}
                 de prueba.{' '}
                 <button
-                  onClick={() => setUpgradeOpen(true)}
+                  onClick={() => navigate('/app/plans')}
                   className="underline hover:text-amber-200 transition-colors"
                 >
                   Ver planes

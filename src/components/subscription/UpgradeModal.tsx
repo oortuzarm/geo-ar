@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 interface UpgradeModalProps {
   onClose: () => void
@@ -22,6 +23,7 @@ const COPY: Record<NonNullable<UpgradeModalProps['reason']>, { title: string; bo
 
 export default function UpgradeModal({ onClose, reason = 'general' }: UpgradeModalProps) {
   const { title, body } = COPY[reason]
+  const navigate = useNavigate()
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
@@ -66,7 +68,7 @@ export default function UpgradeModal({ onClose, reason = 'general' }: UpgradeMod
         {/* Actions */}
         <div className="flex flex-col gap-2">
           <button
-            onClick={onClose}
+            onClick={() => { onClose(); navigate('/app/plans') }}
             className="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white text-sm
                        font-medium rounded-lg transition-colors"
           >

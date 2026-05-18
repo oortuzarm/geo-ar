@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useInView } from 'framer-motion'
+import SiteFooter from '../../components/landing/SiteFooter'
 
 // ─── Demo data ────────────────────────────────────────────────────────────────
 
@@ -839,33 +840,6 @@ function CtaSection() {
   )
 }
 
-// ─── Footer ───────────────────────────────────────────────────────────────────
-
-function LandingFooter() {
-  return (
-    <footer className="py-10 px-5 border-t border-white/[0.06] bg-[#050810]">
-      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-lg bg-brand-600 flex items-center justify-center">
-            <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </div>
-          <span className="font-black text-white text-sm tracking-tight">Ubyca</span>
-        </div>
-        <p className="text-xs text-slate-600">
-          © {new Date().getFullYear()} Ubyca — Plataforma de experiencias geolocalizadas.
-        </p>
-        <Link to="/app" className="text-xs text-slate-600 hover:text-slate-400 transition-colors">
-          Abrir app →
-        </Link>
-      </div>
-    </footer>
-  )
-}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -880,7 +854,7 @@ export default function LandingPage() {
       <UseCasesSection />
       <FeaturesSection />
       <CtaSection />
-      <LandingFooter />
+      <SiteFooter />
     </div>
   )
 }

@@ -33,6 +33,8 @@ export interface ProjectEditorProps {
   onAfterPointChange?: () => void
   // Top-level project save (real: complex sync; demo: no-op, autosaved on every change)
   onSaveProject: () => Promise<void>
+  // Called when "Previsualizar" is tapped in demo mode; returns the temp preview URL
+  onPreviewOpen?: () => Promise<string | null>
   // Real-mode extras
   onToggleStatus?: () => Promise<void>
   onMediaOrphaned?: (url: string) => void
@@ -108,6 +110,7 @@ export default function ProjectEditor({
   hasUnsavedChanges = false,
   onMarkUnsaved,
   canAddLocation,
+  onPreviewOpen,
 }: ProjectEditorProps) {
   const navigate = useNavigate()
   const {
@@ -130,6 +133,8 @@ export default function ProjectEditor({
   const [leftTab, setLeftTab]                   = useState<'points' | 'project'>('points')
   const [isPublishing, setIsPublishing]         = useState(false)
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
+  const [previewUrl, setPreviewUrl]             = useState<string | null>(null)
+  const [previewLoading, setPreviewLoading]     = useState(false)
   const [mapBounds, setMapBounds]               = useState<MapBounds | null>(null)
   const [poiResults, setPoiResults]             = useState<PoiSearchResult[]>([])
   const [limitOpen, setLimitOpen]               = useState(false)
@@ -386,6 +391,23 @@ export default function ProjectEditor({
     }
   }
 
+  async function openPreview() {
+    if (mode === 'demo' && onPreviewOpen) {
+      setPreviewLoading(true)
+      try {
+        const url = await onPreviewOpen()
+        setPreviewUrl(url)
+        setPreviewModalOpen(true)
+      } catch {
+        addToast('No se pudo generar la previsualización', 'error')
+      } finally {
+        setPreviewLoading(false)
+      }
+    } else {
+      setPreviewModalOpen(true)
+    }
+  }
+
   // ── GPS location ─────────────────────────────────────────────────────────────
 
   function handleMyLocation() {
@@ -582,7 +604,8 @@ export default function ProjectEditor({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setPreviewModalOpen(true)}
+                  loading={previewLoading}
+                  onClick={() => { void openPreview() }}
                 >
                   Previsualizar
                 </Button>
@@ -611,7 +634,7 @@ export default function ProjectEditor({
             <div className="flex items-center gap-2 flex-shrink-0">
               {mode === 'real' ? (
                 <>
-                  <Button variant="ghost" size="sm" onClick={() => setPreviewModalOpen(true)}>
+                  <Button variant="ghost" size="sm" onClick={() => { void openPreview() }}>
                     Previsualizar
                   </Button>
                   {project && (
@@ -651,7 +674,7 @@ export default function ProjectEditor({
                 </>
               ) : (
                 <>
-                  <Button variant="ghost" size="sm" onClick={() => setPreviewModalOpen(true)}>
+                  <Button variant="ghost" size="sm" loading={previewLoading} onClick={() => { void openPreview() }}>
                     Previsualizar
                   </Button>
                   <span className="text-xs text-gray-500 hidden sm:block">
@@ -1099,6 +1122,7 @@ export default function ProjectEditor({
             isOpen={previewModalOpen}
             onClose={() => setPreviewModalOpen(false)}
             temporaryNote={mode === 'demo'}
+            publicUrl={previewUrl ?? undefined}
           />
         )}
 

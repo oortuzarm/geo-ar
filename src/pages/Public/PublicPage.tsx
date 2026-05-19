@@ -686,8 +686,15 @@ function UnlockedContentPanel({ content, onClose }: { content: AccessResponse; o
   )
 }
 
-export default function PublicPage({ isEmbed = false }: { isEmbed?: boolean } = {}) {
-  const { id } = useParams<{ id: string }>()
+export default function PublicPage({
+  isEmbed = false,
+  prefetched,
+}: {
+  isEmbed?: boolean
+  prefetched?: { project: GeoProject; points: GeoPoint[] }
+} = {}) {
+  const { id: idParam } = useParams<{ id: string }>()
+  const id = prefetched?.project.id ?? idParam
   const { userLocation, locationStatus, setUserLocation, addToast } = useGeoStore()
   const [project, setProject] = useState<GeoProject | null>(null)
   const [points, setPoints] = useState<GeoPoint[]>([])
@@ -896,6 +903,20 @@ export default function PublicPage({ isEmbed = false }: { isEmbed?: boolean } = 
   }, [selectedPointId])
 
   useEffect(() => {
+    if (prefetched) {
+      const activePoints = prefetched.points.filter((p) => p.active)
+      const proj = prefetched.project
+      if (!isEmbed) {
+        const ogImage = resolveOgImage(proj.coverImage)
+        const ogDesc = proj.shareText?.trim() || `Previsualización de: ${proj.title}`
+        updatePageMeta(proj.title, ogDesc, ogImage, window.location.href)
+      }
+      setProject(proj)
+      setPoints(activePoints)
+      setLoading(false)
+      return () => { if (!isEmbed) resetPageMeta() }
+    }
+
     if (!id) {
       console.error('[PublicPage] No hay id en la URL')
       setLoadError('not-found')

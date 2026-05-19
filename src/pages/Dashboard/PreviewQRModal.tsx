@@ -10,6 +10,8 @@ interface PreviewQRModalProps {
   onClose: () => void
   /** When true, shows a 30-minute expiration note — for temporary/demo previews */
   temporaryNote?: boolean
+  /** Override the default /public/:id URL (used for temporary preview links) */
+  publicUrl?: string
 }
 
 function toFileStem(title: string | undefined): string {
@@ -22,12 +24,12 @@ function toFileStem(title: string | undefined): string {
     .replace(/^-|-$/g, '') || 'proyecto'
 }
 
-export default function PreviewQRModal({ projectId, projectTitle, isOpen, onClose, temporaryNote = false }: PreviewQRModalProps) {
+export default function PreviewQRModal({ projectId, projectTitle, isOpen, onClose, temporaryNote = false, publicUrl: publicUrlProp }: PreviewQRModalProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [qrError, setQrError] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const publicUrl = `${window.location.origin}/public/${projectId}`
+  const resolvedUrl = publicUrlProp ?? `${window.location.origin}/public/${projectId}`
 
   // Generate QR each time the modal opens
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function PreviewQRModal({ projectId, projectTitle, isOpen, onClos
     setLoading(true)
     setQrError(false)
     setQrDataUrl(null)
-    QRCode.toDataURL(publicUrl, {
+    QRCode.toDataURL(resolvedUrl, {
       width: 280,
       margin: 2,
       color: { dark: '#111827', light: '#ffffff' },
@@ -43,7 +45,7 @@ export default function PreviewQRModal({ projectId, projectTitle, isOpen, onClos
       .then((url) => { setQrDataUrl(url) })
       .catch(() => { setQrError(true) })
       .finally(() => { setLoading(false) })
-  }, [isOpen, publicUrl])
+  }, [isOpen, resolvedUrl])
 
   // Close on Escape
   useEffect(() => {
@@ -65,7 +67,7 @@ export default function PreviewQRModal({ projectId, projectTitle, isOpen, onClos
 
   async function downloadSvg() {
     try {
-      const svgString = await QRCode.toString(publicUrl, {
+      const svgString = await QRCode.toString(resolvedUrl, {
         type: 'svg',
         width: 512,
         margin: 2,

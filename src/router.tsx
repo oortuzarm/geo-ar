@@ -24,6 +24,7 @@ import AccountPage              from './pages/Account/AccountPage'
 import PrivacyPolicyPage        from './pages/Legal/PrivacyPolicyPage'
 import TermsAndConditionsPage   from './pages/Legal/TermsAndConditionsPage'
 import TryPage                  from './pages/Try/TryPage'
+import TemporaryPreviewPage     from './pages/TemporaryPreview/TemporaryPreviewPage'
 import ProtectedRoute           from './components/auth/ProtectedRoute'
 import AdminRoute               from './components/auth/AdminRoute'
 import RootLayout               from './components/routing/RootLayout'
@@ -51,6 +52,7 @@ const publicRoutes = [
   { path: '/embed/:id',                  element: <EmbedPage /> },
   { path: '/accept-invitation/:token',   element: <AcceptInvitationPage /> },
   { path: '/try',                        element: <TryPage /> },
+  { path: '/temporary/:token',           element: <TemporaryPreviewPage /> },
 ]
 
 // ── Protected app routes (require authenticated session) ──────────────────────

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import ProjectEditor from '../../components/editor/ProjectEditor'
 import { useGeoStore } from '../../store/geoStore'
+import { createTemporaryPreview } from '../../services/temporaryPreviewsApi'
 import type { GeoPoint, GeoProject } from '../../types'
 
 const DEMO_LIMIT = 10
@@ -136,6 +137,13 @@ export default function TryPage() {
     if (state.project) saveToStorage(state.project, state.points)
   }
 
+  async function handlePreviewOpen(): Promise<string | null> {
+    const state = useGeoStore.getState()
+    if (!state.project) return null
+    const result = await createTemporaryPreview(state.project, state.points)
+    return result.public_url
+  }
+
   // Called after each form field change (upsert already done by ProjectEditor)
   function handleAfterPointChange() {
     const state = useGeoStore.getState()
@@ -155,6 +163,7 @@ export default function TryPage() {
       onBulkDeactivate={handleBulkDeactivate}
       onAfterPointChange={handleAfterPointChange}
       onSaveProject={async () => { /* autosaved on every change */ }}
+      onPreviewOpen={handlePreviewOpen}
       canAddLocation={(count) => count < DEMO_LIMIT}
     />
   )

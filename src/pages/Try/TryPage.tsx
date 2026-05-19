@@ -68,20 +68,31 @@ function loadFromStorage(): { project: GeoProject; points: GeoPoint[] } | null {
   }
 }
 
-// ── Point sanitizer — normalizes demo points before sending to the backend ────
-// Handles blank names, coerces numeric fields, and sets safe defaults so the
-// backend's validations don't reject a partially-filled demo project.
+// ── Demo payload sanitizers ────────────────────────────────────────────────────
+// Strip image fields before sending to the backend — demo mode never allows
+// image uploads, so no base64 or URLs should reach createTemporaryPreview.
+// Also used on load to evict stale image data from old localStorage entries.
+
+function sanitizeProject(project: GeoProject): GeoProject {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { coverImage: _c, markerImage: _m, ...rest } = project
+  return rest
+}
 
 function sanitizePoints(points: GeoPoint[]): GeoPoint[] {
-  return points.map((pt, i) => ({
-    ...pt,
-    name:             pt.name?.trim() || `Ubicación ${i + 1}`,
-    latitude:         Number(pt.latitude)         || 0,
-    longitude:        Number(pt.longitude)        || 0,
-    activationRadius: Number(pt.activationRadius) || 50,
-    active:           pt.active ?? true,
-    order:            Number(pt.order)            ?? i,
-  }))
+  return points.map((pt, i) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { image: _img, ...rest } = pt
+    return {
+      ...rest,
+      name:             pt.name?.trim() || `Ubicación ${i + 1}`,
+      latitude:         Number(pt.latitude)         || 0,
+      longitude:        Number(pt.longitude)        || 0,
+      activationRadius: Number(pt.activationRadius) || 50,
+      active:           pt.active ?? true,
+      order:            Number(pt.order)            ?? i,
+    }
+  })
 }
 
 // ── TryPage — thin provider wrapper ───────────────────────────────────────────
@@ -93,10 +104,18 @@ export default function TryPage() {
   useEffect(() => {
     const saved = loadFromStorage()
     if (saved) {
-      setProject(saved.project)
-      setPoints(saved.points)
-      if (saved.points.length > 0) {
-        useGeoStore.getState().setMapCenter([saved.points[0].latitude, saved.points[0].longitude])
+      // Evict any stale image data that might have been saved before uploads were blocked
+      const hadImages =
+        Boolean(saved.project.coverImage) ||
+        Boolean(saved.project.markerImage) ||
+        saved.points.some((p) => Boolean(p.image))
+      const cleanProject = sanitizeProject(saved.project)
+      const cleanPoints  = saved.points.map(({ image: _img, ...p }) => p as GeoPoint)
+      if (hadImages) saveToStorage(cleanProject, cleanPoints)
+      setProject(cleanProject)
+      setPoints(cleanPoints)
+      if (cleanPoints.length > 0) {
+        useGeoStore.getState().setMapCenter([cleanPoints[0].latitude, cleanPoints[0].longitude])
         useGeoStore.getState().setMapZoom(14)
       }
     } else {
@@ -175,7 +194,7 @@ export default function TryPage() {
     const state = useGeoStore.getState()
     if (!state.project) return null
     try {
-      const result = await createTemporaryPreview(state.project, sanitizePoints(state.points))
+      const result = await createTemporaryPreview(sanitizeProject(state.project), sanitizePoints(state.points))
       console.info('[TryPage] createTemporaryPreview response:', {
         token: result.token,
         publicUrl: result.publicUrl,

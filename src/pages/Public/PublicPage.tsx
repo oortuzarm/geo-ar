@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import PublicPointMarker from '../../components/map/PublicPointMarker'
@@ -695,6 +695,7 @@ export default function PublicPage({
 } = {}) {
   const { id: idParam } = useParams<{ id: string }>()
   const id = prefetched?.project.id ?? idParam
+  const isTemporaryPreview = Boolean(prefetched)
   const { userLocation, locationStatus, setUserLocation, addToast } = useGeoStore()
   const [project, setProject] = useState<GeoProject | null>(null)
   const [points, setPoints] = useState<GeoPoint[]>([])
@@ -1569,6 +1570,29 @@ export default function PublicPage({
             </svg>
           )}
         </button>
+
+      {/* ── Temporary preview watermark ──────────────────────────────────── */}
+      {isTemporaryPreview && (
+        <div
+          className="absolute left-4 z-[600] pointer-events-none
+                     bottom-[120px] md:bottom-6"
+        >
+          <div className="bg-gray-950/75 backdrop-blur-md border border-white/[0.08]
+                          rounded-2xl px-3.5 py-2.5 shadow-xl flex flex-col gap-1.5">
+            <span className="text-[11px] font-medium text-white/45 leading-none select-none">
+              Preview creada con Ubyca
+            </span>
+            <Link
+              to="/register"
+              className="pointer-events-auto text-[11px] font-semibold text-brand-400
+                         hover:text-brand-300 transition-colors leading-none"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Crear cuenta gratuita
+            </Link>
+          </div>
+        </div>
+      )}
       </div>
 
       {/* ── MOBILE BOTTOM SHEET (hidden on md+) ─────────────────────────────

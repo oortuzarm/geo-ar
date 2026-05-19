@@ -33,8 +33,8 @@ export interface ProjectEditorProps {
   onAfterPointChange?: () => void
   // Top-level project save (real: complex sync; demo: no-op, autosaved on every change)
   onSaveProject: () => Promise<void>
-  // Called when "Previsualizar" is tapped in demo mode; returns the temp preview URL
-  onPreviewOpen?: () => Promise<string | null>
+  // Called when "Previsualizar" is tapped in demo mode; returns the temp preview URL + token
+  onPreviewOpen?: () => Promise<{ url: string; token: string } | null>
   // Real-mode extras
   onToggleStatus?: () => Promise<void>
   onMediaOrphaned?: (url: string) => void
@@ -134,6 +134,7 @@ export default function ProjectEditor({
   const [isPublishing, setIsPublishing]         = useState(false)
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
   const [previewUrl, setPreviewUrl]             = useState<string | null>(null)
+  const [previewToken, setPreviewToken]         = useState<string | null>(null)
   const [previewLoading, setPreviewLoading]     = useState(false)
   const [mapBounds, setMapBounds]               = useState<MapBounds | null>(null)
   const [poiResults, setPoiResults]             = useState<PoiSearchResult[]>([])
@@ -395,12 +396,15 @@ export default function ProjectEditor({
     if (mode === 'demo' && onPreviewOpen) {
       setPreviewLoading(true)
       try {
-        const url = await onPreviewOpen()
-        if (url && isMobile) {
+        const result = await onPreviewOpen()
+        if (result && isMobile) {
           // Mobile: redirect directly — showing a QR to scan on the same device makes no sense
-          window.location.href = url
+          window.location.href = result.url
+        } else if (result) {
+          setPreviewUrl(result.url)
+          setPreviewToken(result.token)
+          setPreviewModalOpen(true)
         } else {
-          setPreviewUrl(url)
           setPreviewModalOpen(true)
         }
       } catch {
@@ -1128,6 +1132,7 @@ export default function ProjectEditor({
             onClose={() => setPreviewModalOpen(false)}
             temporaryNote={mode === 'demo'}
             publicUrl={previewUrl ?? undefined}
+            token={previewToken ?? undefined}
           />
         )}
 

@@ -34,3 +34,14 @@ export function createTemporaryPreview(
 export function fetchTemporaryPreview(token: string): Promise<TemporaryPreviewFetched> {
   return apiFetch<TemporaryPreviewFetched>(`${BASE}/api/temporary_previews/${token}`)
 }
+
+export interface ClaimResult {
+  redirect_url: string
+  redirectUrl?: string // camelCase fallback
+}
+
+export function claimTemporaryPreview(token: string): Promise<ClaimResult> {
+  return apiFetch<ClaimResult>(`${BASE}/api/temporary_previews/${token}/claim`, {
+    method: 'POST',
+  })
+}

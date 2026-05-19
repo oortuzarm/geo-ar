@@ -154,12 +154,14 @@ export default function TryPage() {
     if (state.project) saveToStorage(state.project, state.points)
   }
 
-  async function handlePreviewOpen(): Promise<string | null> {
+  async function handlePreviewOpen(): Promise<{ url: string; token: string } | null> {
     const state = useGeoStore.getState()
     if (!state.project) return null
     try {
       const result = await createTemporaryPreview(state.project, sanitizePoints(state.points))
-      return result.publicUrl ?? result.public_url ?? null
+      const url = result.publicUrl ?? result.public_url ?? null
+      if (!url) return null
+      return { url, token: result.token }
     } catch (err) {
       if (err instanceof ApiError) {
         console.error('[TemporaryPreview] Error del backend', err.status, err.message)

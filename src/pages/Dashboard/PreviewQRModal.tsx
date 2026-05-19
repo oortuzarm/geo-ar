@@ -1,17 +1,23 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import QRCode from 'qrcode'
 import Spinner from '../../components/ui/Spinner'
+import { useAuthStore } from '../../store/authStore'
+import { claimTemporaryPreview } from '../../services/temporaryPreviewsApi'
+import { ApiError } from '../../lib/apiFetch'
+import { PENDING_CLAIM_KEY } from '../../hooks/usePendingClaim'
 
 interface PreviewQRModalProps {
   projectId: string
   projectTitle?: string
   isOpen: boolean
   onClose: () => void
-  /** When true, shows a 30-minute expiration note — for temporary/demo previews */
+  /** When true, shows the 30-minute expiration note and the "Guardar experiencia" CTA */
   temporaryNote?: boolean
   /** Override the default /public/:id URL (used for temporary preview links) */
   publicUrl?: string
+  /** Temporary preview token — enables the authenticated claim flow */
+  token?: string
 }
 
 function toFileStem(title: string | undefined): string {
@@ -24,10 +30,38 @@ function toFileStem(title: string | undefined): string {
     .replace(/^-|-$/g, '') || 'proyecto'
 }
 
-export default function PreviewQRModal({ projectId, projectTitle, isOpen, onClose, temporaryNote = false, publicUrl: publicUrlProp }: PreviewQRModalProps) {
+/** Navigates to the result URL returned by the backend's claim endpoint.
+ *  Handles absolute same-origin URLs and relative paths. */
+function navigateToResult(url: string, navigate: ReturnType<typeof useNavigate>) {
+  try {
+    const parsed = new URL(url)
+    if (parsed.origin === window.location.origin) {
+      navigate(parsed.pathname + parsed.search, { replace: true })
+    } else {
+      window.location.href = url
+    }
+  } catch {
+    navigate(url, { replace: true })
+  }
+}
+
+export default function PreviewQRModal({
+  projectId,
+  projectTitle,
+  isOpen,
+  onClose,
+  temporaryNote = false,
+  publicUrl: publicUrlProp,
+  token,
+}: PreviewQRModalProps) {
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuthStore()
+
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
-  const [qrError, setQrError] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [qrError,   setQrError]   = useState(false)
+  const [loading,   setLoading]   = useState(false)
+  const [claiming,  setClaiming]  = useState(false)
+  const [claimError, setClaimError] = useState<string | null>(null)
 
   const resolvedUrl = publicUrlProp ?? `${window.location.origin}/public/${projectId}`
 
@@ -37,6 +71,7 @@ export default function PreviewQRModal({ projectId, projectTitle, isOpen, onClos
     setLoading(true)
     setQrError(false)
     setQrDataUrl(null)
+    setClaimError(null)
     QRCode.toDataURL(resolvedUrl, {
       width: 280,
       margin: 2,
@@ -80,6 +115,42 @@ export default function PreviewQRModal({ projectId, projectTitle, isOpen, onClos
       a.click()
       URL.revokeObjectURL(objectUrl)
     } catch { /* non-critical */ }
+  }
+
+  async function handleSaveExperience() {
+    if (claiming) return
+    setClaimError(null)
+
+    if (!isAuthenticated) {
+      // Persist token so ProtectedRoute can claim after auth
+      if (token) localStorage.setItem(PENDING_CLAIM_KEY, token)
+      navigate(`/register?claim_preview_token=${encodeURIComponent(token ?? '')}`)
+      onClose()
+      return
+    }
+
+    // Already authenticated → claim directly
+    if (!token) {
+      navigate('/app')
+      onClose()
+      return
+    }
+
+    setClaiming(true)
+    try {
+      const result = await claimTemporaryPreview(token)
+      const url = result.redirect_url ?? result.redirectUrl
+      onClose()
+      if (url) navigateToResult(url, navigate)
+    } catch (err) {
+      let msg = 'No se pudo guardar la experiencia.'
+      if (err instanceof ApiError && (err.status === 404 || err.status === 410)) {
+        msg = 'La previsualización expiró. Crea una nueva desde el editor.'
+      }
+      setClaimError(msg)
+    } finally {
+      setClaiming(false)
+    }
   }
 
   if (!isOpen) return null
@@ -176,25 +247,31 @@ export default function PreviewQRModal({ projectId, projectTitle, isOpen, onClos
             </div>
           )}
 
-          {/* Temporary preview note — shown only for demo/guest projects */}
+          {/* Demo-only: expiration note + save CTA */}
           {temporaryNote && (
             <>
               <p className="text-[11px] text-gray-500 text-center leading-relaxed">
                 Link temporal · válido por 30 minutos
               </p>
-              <Link
-                to="/register"
+              <button
+                onClick={() => { void handleSaveExperience() }}
+                disabled={claiming}
                 className="block w-full py-2.5 px-4 rounded-xl
                            bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700
                            text-white text-sm font-semibold text-center
-                           transition-colors"
-                onClick={onClose}
+                           transition-colors disabled:opacity-60 disabled:cursor-wait"
               >
-                Guardar experiencia
-              </Link>
-              <p className="text-[11px] text-gray-600 text-center -mt-2">
-                Gratis · sin tarjeta de crédito
-              </p>
+                {claiming ? 'Guardando…' : 'Guardar experiencia'}
+              </button>
+              {claimError ? (
+                <p className="text-[11px] text-red-400 text-center -mt-2 leading-relaxed">
+                  {claimError}
+                </p>
+              ) : (
+                <p className="text-[11px] text-gray-600 text-center -mt-2">
+                  {isAuthenticated ? 'Se creará un proyecto en tu cuenta' : 'Gratis · sin tarjeta de crédito'}
+                </p>
+              )}
             </>
           )}
         </div>

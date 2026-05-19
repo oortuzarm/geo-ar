@@ -1212,6 +1212,30 @@ export default function PublicPage({
 
     const isOpen = point.accessMode === 'open'
 
+    // ── Temporary preview (prefetched) mode ───────────────────────────────────
+    // The project and points exist only in the backend's temporary cache, not in
+    // the real database. Skip geolocation and the /access API entirely; navigate
+    // directly to the configured URL so the creator can validate the experience.
+    if (prefetched) {
+      if (!point.contentType || point.contentType === 'url') {
+        const targetUrl =
+          point.lookiarUrl ||
+          (point.contentData && 'url' in point.contentData
+            ? (point.contentData as { url: string }).url
+            : '')
+        if (targetUrl && targetUrl.startsWith('http')) {
+          window.location.href = targetUrl
+          return
+        }
+        setAccessError({ pointId: point.id, message: 'Este punto no tiene una URL configurada.' })
+        return
+      }
+      // Media content (video/audio/file) is not available in temporary previews.
+      setAccessError({ pointId: point.id, message: 'El contenido multimedia solo está disponible en experiencias publicadas.' })
+      return
+    }
+    // ── End prefetched mode ───────────────────────────────────────────────────
+
     if (!userLocation) {
       if (isOpen && point.lookiarUrl && (!point.contentType || point.contentType === 'url')) {
         trackPointClick(id!, point.id)
@@ -1319,7 +1343,7 @@ export default function PublicPage({
     } finally {
       setActivatingPointId(null)
     }
-  }, [activatingPointId, userLocation, id, addToast])
+  }, [activatingPointId, userLocation, id, addToast, prefetched])
 
   // ── Early returns ──────────────────────────────────────────────────────────
 

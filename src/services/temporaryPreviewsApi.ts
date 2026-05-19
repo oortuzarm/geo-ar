@@ -4,15 +4,21 @@ import type { GeoProject, GeoPoint } from '../types'
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
 
 export interface TemporaryPreviewCreated {
-  token: string
-  public_url: string
-  expires_at: string
+  token:     string
+  publicUrl: string
+  expiresAt: string
+  // Defensive fallbacks — in case an older response uses snake_case keys
+  public_url?:  string
+  expires_at?:  string
 }
 
 export interface TemporaryPreviewFetched {
-  project: GeoProject
-  points: GeoPoint[]
-  expires_at: string
+  project:   GeoProject
+  geoPoints: GeoPoint[]
+  expiresAt: string
+  // Defensive fallbacks
+  points?:     GeoPoint[]
+  expires_at?: string
 }
 
 export function createTemporaryPreview(

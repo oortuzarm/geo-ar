@@ -141,7 +141,7 @@ export default function TryPage() {
     const state = useGeoStore.getState()
     if (!state.project) return null
     const result = await createTemporaryPreview(state.project, state.points)
-    return result.public_url
+    return result.publicUrl ?? result.public_url ?? null
   }
 
   // Called after each form field change (upsert already done by ProjectEditor)

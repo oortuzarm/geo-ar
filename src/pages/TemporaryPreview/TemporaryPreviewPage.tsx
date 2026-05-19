@@ -99,13 +99,14 @@ export default function TemporaryPreviewPage() {
 
     fetchTemporaryPreview(token)
       .then((data) => {
-        // Guard against backend that doesn't enforce expiry
-        if (new Date(data.expires_at) < new Date()) {
+        // Guard against backend that doesn't enforce expiry (defensive — backend already returns 410)
+        const expiresAt = data.expiresAt ?? data.expires_at
+        if (expiresAt && new Date(expiresAt) < new Date()) {
           setPageState('expired')
           return
         }
         setProject(data.project)
-        setPoints(data.points)
+        setPoints(data.geoPoints ?? data.points ?? [])
         setPageState('ok')
       })
       .catch((err) => {

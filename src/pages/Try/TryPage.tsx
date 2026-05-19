@@ -1,11 +1,27 @@
+// ─── Architecture contract ────────────────────────────────────────────────────
+//
+// TryPage is a PERSISTENCE WRAPPER around ProjectEditor — nothing more.
+// It owns the localStorage layer and the temporary-preview API call.
+// All UI, layout, and feature logic lives in ProjectEditor and its sub-components.
+//
+// When ProjectEditor gains a new feature, TryPage gets it for free because
+// TryPage only provides callbacks; it never renders editor UI directly.
+//
+// Behavioral differences between demo and real mode are gated in:
+//   • EditorModeContext  — lets sub-components read the mode
+//   • ProjectEditor props — mode, canAddLocation, onPreviewOpen, etc.
+//   • ProjectPanel        — blocked uploads, image restrictions
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { useEffect } from 'react'
 import ProjectEditor from '../../components/editor/ProjectEditor'
+import { DEMO_LIMIT } from './DemoLimitModal'
 import { useGeoStore } from '../../store/geoStore'
 import { createTemporaryPreview } from '../../services/temporaryPreviewsApi'
 import { ApiError } from '../../lib/apiFetch'
 import type { GeoPoint, GeoProject } from '../../types'
 
-const DEMO_LIMIT = 10
 export const DEMO_STORAGE_KEY = 'ubyca-demo-state'
 const STORAGE_KEY = DEMO_STORAGE_KEY
 

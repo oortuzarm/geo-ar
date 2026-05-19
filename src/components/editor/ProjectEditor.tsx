@@ -1,3 +1,29 @@
+// ─── Architecture contract ────────────────────────────────────────────────────
+//
+// ProjectEditor is the SINGLE canonical editor used by BOTH /project/:id and /try.
+// TryPage and DashboardPage are thin persistence wrappers — they differ only in HOW
+// they store data, NOT in what UI they render.
+//
+// The `mode` prop ('real' | 'demo') may only affect:
+//   • Persistence layer   (API vs localStorage)
+//   • Upload restrictions (Vercel Blob vs base64 / blocked)
+//   • Point limits        (subscription vs DEMO_LIMIT)
+//   • Paywalls / CTAs     (UpgradeModal vs DemoLimitModal, "Crear cuenta" links)
+//   • Claim / auth flow   (PreviewQRModal temporaryNote, onPreviewOpen)
+//   • Status toggle       (publish/draft — real only, demo has no concept)
+//
+// The `mode` prop must NOT affect:
+//   • Layout or tab structure
+//   • Which panels are rendered
+//   • Map behavior or interactions
+//   • GeoPointForm fields or validation
+//   • ProjectPanel fields (beyond upload restrictions handled by EditorModeContext)
+//
+// Rule: any new feature added to the editor must work in BOTH modes by default.
+// Gate it behind editorMode === 'demo' only if the restriction is explicitly required.
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import DashboardMap from '../map/DashboardMap'
@@ -12,6 +38,7 @@ import PointSummarySheet from '../../pages/Dashboard/PointSummarySheet'
 import ProjectPanel from '../../pages/Dashboard/ProjectPanel'
 import PreviewQRModal from '../../pages/Dashboard/PreviewQRModal'
 import UpgradeModal from '../subscription/UpgradeModal'
+import DemoLimitModal, { DEMO_LIMIT } from '../../pages/Try/DemoLimitModal'
 import { useGeoStore } from '../../store/geoStore'
 import EditorModeContext from '../../contexts/EditorModeContext'
 import type { GeoPoint, MapBounds, PoiSearchResult } from '../../types'
@@ -49,47 +76,6 @@ export interface ProjectEditorProps {
 
 type LocationPhase = 'idle' | 'acquiring' | 'failed' | 'manual-map' | 'manual-address'
 type LocationSource = 'gps' | 'manual' | null
-
-// ─── Demo limit modal ─────────────────────────────────────────────────────────
-
-const DEMO_LIMIT = 10
-
-function DemoLimitModal({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-[9000] flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-        <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/25
-                        flex items-center justify-center mb-4">
-          <svg className="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-        </div>
-        <h2 className="text-lg font-bold text-white mb-2">Límite de la demo alcanzado</h2>
-        <p className="text-sm text-gray-400 mb-5 leading-relaxed">
-          La demo permite hasta {DEMO_LIMIT} ubicaciones. Crea una cuenta gratuita para agregar
-          más puntos GPS y guardar tu experiencia de forma permanente.
-        </p>
-        <Link
-          to="/register"
-          className="block w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-500 text-white text-sm
-                     font-semibold rounded-lg transition-colors text-center mb-2"
-          onClick={onClose}
-        >
-          Crear cuenta gratuita
-        </Link>
-        <button
-          onClick={onClose}
-          className="w-full py-2.5 px-4 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm
-                     font-medium rounded-lg transition-colors"
-        >
-          Continuar explorando
-        </button>
-      </div>
-    </div>
-  )
-}
 
 // ─── ProjectEditor ────────────────────────────────────────────────────────────
 
@@ -836,8 +822,8 @@ export default function ProjectEditor({
               </button>
             </div>
 
-            {/* Custom initial view hint — real mode only */}
-            {mode === 'real' && project?.publicInitialViewMode === 'custom' && (
+            {/* Custom initial view hint — shown whenever the user has selected 'custom' */}
+            {project?.publicInitialViewMode === 'custom' && (
               <>
                 <div className="absolute inset-0 pointer-events-none z-[900] border-2 border-brand-500/20" />
                 <div className="absolute bottom-24 lg:bottom-14 left-1/2 -translate-x-1/2 z-[900] pointer-events-none whitespace-nowrap">

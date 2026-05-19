@@ -1,3 +1,15 @@
+// ─── Architecture contract ────────────────────────────────────────────────────
+//
+// DashboardPage is a PERSISTENCE WRAPPER around ProjectEditor — nothing more.
+// It owns the API sync layer: save, publish/draft toggle, media cleanup,
+// concurrency guards, and subscription-based canAddLocation.
+// All UI, layout, and feature logic lives in ProjectEditor and its sub-components.
+//
+// When ProjectEditor gains a new feature, DashboardPage gets it for free because
+// DashboardPage only provides callbacks; it never renders editor UI directly.
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ProjectEditor from '../../components/editor/ProjectEditor'

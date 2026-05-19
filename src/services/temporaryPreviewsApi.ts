@@ -32,7 +32,9 @@ export function createTemporaryPreview(
 }
 
 export function fetchTemporaryPreview(token: string): Promise<TemporaryPreviewFetched> {
-  return apiFetch<TemporaryPreviewFetched>(`${BASE}/api/temporary_previews/${token}`)
+  return apiFetch<TemporaryPreviewFetched>(`${BASE}/api/temporary_previews/${token}`, {
+    cache: 'no-store',
+  })
 }
 
 export interface ClaimResult {

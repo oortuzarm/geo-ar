@@ -396,8 +396,13 @@ export default function ProjectEditor({
       setPreviewLoading(true)
       try {
         const url = await onPreviewOpen()
-        setPreviewUrl(url)
-        setPreviewModalOpen(true)
+        if (url && isMobile) {
+          // Mobile: redirect directly — showing a QR to scan on the same device makes no sense
+          window.location.href = url
+        } else {
+          setPreviewUrl(url)
+          setPreviewModalOpen(true)
+        }
       } catch {
         addToast('No se pudo generar la previsualización', 'error')
       } finally {

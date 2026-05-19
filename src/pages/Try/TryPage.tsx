@@ -194,7 +194,23 @@ export default function TryPage() {
     const state = useGeoStore.getState()
     if (!state.project) return null
     try {
-      const result = await createTemporaryPreview(sanitizeProject(state.project), sanitizePoints(state.points))
+      const cleanProject = sanitizeProject(state.project)
+      const cleanPoints  = sanitizePoints(state.points)
+      const firstPt      = cleanPoints[0]
+      const payloadJson  = JSON.stringify({ project: cleanProject, points: cleanPoints })
+      console.info('[TryPage][PreviewPayload] size_kb:', (payloadJson.length / 1024).toFixed(1))
+      console.info('[TryPage][PreviewPayload] project_keys:', Object.keys(cleanProject))
+      console.info('[TryPage][PreviewPayload] points_count:', cleanPoints.length)
+      if (firstPt) {
+        console.info('[TryPage][PreviewPayload] first_point_keys:', Object.keys(firstPt))
+        console.info('[TryPage][PreviewPayload] first_point_contentType:', firstPt.contentType ?? 'undefined')
+        console.info('[TryPage][PreviewPayload] first_point_url:',
+          firstPt.lookiarUrl ??
+          (firstPt.contentData && 'url' in firstPt.contentData ? firstPt.contentData.url : undefined) ??
+          'none'
+        )
+      }
+      const result = await createTemporaryPreview(cleanProject, cleanPoints)
       console.info('[TryPage] createTemporaryPreview response:', {
         token: result.token,
         publicUrl: result.publicUrl,

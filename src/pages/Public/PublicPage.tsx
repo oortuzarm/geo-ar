@@ -1574,10 +1574,19 @@ export default function PublicPage({
       {/* ── Temporary preview watermark ──────────────────────────────────── */}
       {isTemporaryPreview && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[600] pointer-events-none">
-          <span className="block bg-black/50 backdrop-blur-sm border border-white/10
+          <span className="flex items-center gap-0.5 bg-black/50 backdrop-blur-sm border border-white/10
                            rounded-full px-3 py-1 text-[10px] font-medium text-white/40
                            select-none whitespace-nowrap">
-            Preview Ubyca
+            Preview&nbsp;
+            <a
+              href="https://www.ubyca.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pointer-events-auto text-white/60 hover:text-white/80 transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Ubyca
+            </a>
           </span>
         </div>
       )}

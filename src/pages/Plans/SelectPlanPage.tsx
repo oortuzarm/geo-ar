@@ -5,6 +5,7 @@ import { claimTemporaryPreview } from '../../services/temporaryPreviewsApi'
 import { ApiError } from '../../lib/apiFetch'
 import { PENDING_CLAIM_KEY } from '../../hooks/usePendingClaim'
 import { DEMO_STORAGE_KEY } from '../Try/TryPage'
+import { LAST_PROJECT_KEY } from '../../hooks/useWorkspace'
 import { useAuthStore } from '../../store/authStore'
 import Spinner from '../../components/ui/Spinner'
 
@@ -12,19 +13,6 @@ import Spinner from '../../components/ui/Spinner'
 
 function fmtMoney(n: number): string {
   return n % 1 === 0 ? `$${n}` : `$${n.toFixed(2)}`
-}
-
-function navigateToProjectUrl(url: string, navigate: ReturnType<typeof useNavigate>) {
-  try {
-    const parsed = new URL(url)
-    if (parsed.origin === window.location.origin) {
-      navigate(parsed.pathname + parsed.search, { replace: true })
-    } else {
-      window.location.href = url
-    }
-  } catch {
-    navigate(url, { replace: true })
-  }
 }
 
 // ── Billing toggle — identical to PlansPage ───────────────────────────────────
@@ -327,16 +315,13 @@ export default function SelectPlanPage() {
     try {
       // TODO: Paddle checkout goes here before claim (future)
       const result = await claimTemporaryPreview(token, plan.slug)
+      // Write the claimed project ID so useWorkspace selects it on /app
+      localStorage.setItem(LAST_PROJECT_KEY, result.projectId)
       // Refresh currentUser so useSubscription reflects the newly assigned plan
       await useAuthStore.getState().reloadUser()
       localStorage.removeItem(PENDING_CLAIM_KEY)
       localStorage.removeItem(DEMO_STORAGE_KEY)
-      const url = result.redirect_url ?? result.redirectUrl
-      if (url) {
-        navigateToProjectUrl(url, navigate)
-      } else {
-        navigate('/app', { replace: true })
-      }
+      navigate('/app', { replace: true })
     } catch (err) {
       if (err instanceof ApiError && (err.status === 404 || err.status === 410)) {
         setExpired(true)

@@ -36,8 +36,9 @@ export function fetchTemporaryPreview(token: string): Promise<TemporaryPreviewFe
 }
 
 export interface ClaimResult {
-  redirect_url: string
-  redirectUrl?: string // camelCase fallback
+  projectId:    string
+  redirectUrl:  string
+  redirect_url?: string // snake_case fallback
 }
 
 export function claimTemporaryPreview(token: string, planKey?: string): Promise<ClaimResult> {

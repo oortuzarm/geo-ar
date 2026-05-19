@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import QRCode from 'qrcode'
 import Spinner from '../../components/ui/Spinner'
 
@@ -175,9 +176,24 @@ export default function PreviewQRModal({ projectId, projectTitle, isOpen, onClos
 
           {/* Temporary preview note — shown only for demo/guest projects */}
           {temporaryNote && (
-            <p className="text-[11px] text-gray-600 text-center leading-relaxed">
-              Link temporal · válido por 30 minutos
-            </p>
+            <>
+              <p className="text-[11px] text-gray-500 text-center leading-relaxed">
+                Link temporal · válido por 30 minutos
+              </p>
+              <Link
+                to="/register"
+                className="block w-full py-2.5 px-4 rounded-xl
+                           bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700
+                           text-white text-sm font-semibold text-center
+                           transition-colors"
+                onClick={onClose}
+              >
+                Guardar experiencia
+              </Link>
+              <p className="text-[11px] text-gray-600 text-center -mt-2">
+                Gratis · sin tarjeta de crédito
+              </p>
+            </>
           )}
         </div>
       </div>

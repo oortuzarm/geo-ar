@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
 import { motion, useInView } from 'framer-motion'
 import LandingNavBar from '../../components/landing/LandingNavBar'
 import SiteFooter from '../../components/landing/SiteFooter'
@@ -94,7 +93,8 @@ function HeroSection() {
             transition={{ duration: 0.7, delay: 0.24, ease: [0.22, 1, 0.36, 1] }}
             className="mt-8 flex items-center gap-3 flex-wrap"
           >
-            <Link to="/project/new"
+            <a
+              href="https://studio.ubyca.com/try"
               className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
                          bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
                          font-semibold text-sm transition-all duration-150
@@ -104,7 +104,7 @@ function HeroSection() {
                 <path fillRule="evenodd" clipRule="evenodd"
                   d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
               </svg>
-            </Link>
+            </a>
             <button
               onClick={() => document.getElementById('v2-cases')?.scrollIntoView({ behavior: 'smooth' })}
               className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
@@ -718,7 +718,8 @@ function FinalCTASection() {
           <p className="text-slate-400 mb-10 text-lg leading-relaxed">
             Prueba Ubyca creando un proyecto real desde el editor.
           </p>
-          <Link to="/project/new"
+          <a
+            href="https://studio.ubyca.com/try"
             className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl
                        bg-brand-600 hover:bg-brand-500 active:scale-[0.98]
                        text-white font-bold text-base transition-all duration-150
@@ -728,7 +729,7 @@ function FinalCTASection() {
               <path fillRule="evenodd" clipRule="evenodd"
                 d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
             </svg>
-          </Link>
+          </a>
         </Reveal>
       </div>
     </section>

@@ -23,6 +23,7 @@ import PlansPage               from './pages/Plans/PlansPage'
 import AccountPage              from './pages/Account/AccountPage'
 import PrivacyPolicyPage        from './pages/Legal/PrivacyPolicyPage'
 import TermsAndConditionsPage   from './pages/Legal/TermsAndConditionsPage'
+import TryPage                  from './pages/Try/TryPage'
 import ProtectedRoute           from './components/auth/ProtectedRoute'
 import AdminRoute               from './components/auth/AdminRoute'
 import RootLayout               from './components/routing/RootLayout'
@@ -49,6 +50,7 @@ const publicRoutes = [
   { path: '/public/:id',                 element: <PublicPage /> },
   { path: '/embed/:id',                  element: <EmbedPage /> },
   { path: '/accept-invitation/:token',   element: <AcceptInvitationPage /> },
+  { path: '/try',                        element: <TryPage /> },
 ]
 
 // ── Protected app routes (require authenticated session) ──────────────────────

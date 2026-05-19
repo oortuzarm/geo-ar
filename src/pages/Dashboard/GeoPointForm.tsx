@@ -5,6 +5,7 @@ import type { ContentType, GeoPoint, GeoPointAvailability, MediaContentData } fr
 import { reverseGeocode } from '../../features/geolocation/geocoding'
 import { uploadFile, formatFileSize } from '../../lib/uploadFile'
 import { isVercelBlobUrl } from '../../lib/deleteMediaFile'
+import { useEditorMode } from '../../contexts/EditorModeContext'
 
 interface GeoPointFormProps {
   point: GeoPoint
@@ -191,6 +192,7 @@ function isMediaContentData(data: GeoPoint['contentData']): data is MediaContent
 }
 
 export default function GeoPointForm({ point, onChange, onDelete, onClose, onSave, onMediaOrphaned, hideHeader = false }: GeoPointFormProps) {
+  const editorMode = useEditorMode()
   const imageFileRef  = useRef<HTMLInputElement>(null)
   const mediaFileRef  = useRef<HTMLInputElement>(null)
   const [showTooltip,    setShowTooltip]    = useState(false)
@@ -306,6 +308,12 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
+
+    if (editorMode === 'demo') {
+      setUploadError('Los archivos multimedia requieren una cuenta. Crea tu cuenta gratuita para usar esta función.')
+      return
+    }
+
     if (mediaFile && isVercelBlobUrl(mediaFile.url)) {
       console.log('[MEDIA_CLEANUP_QUEUE]', mediaFile.url)
       onMediaOrphaned?.(mediaFile.url)

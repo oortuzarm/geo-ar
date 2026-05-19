@@ -1573,7 +1573,7 @@ export default function PublicPage({
 
       {/* ── Temporary preview watermark ──────────────────────────────────── */}
       {isTemporaryPreview && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[600] pointer-events-none">
+        <div className="absolute bottom-6 left-6 z-[600] pointer-events-none">
           <span className="flex items-center gap-0.5 bg-black/50 backdrop-blur-sm border border-white/10
                            rounded-full px-3 py-1 text-[10px] font-medium text-white/40
                            select-none whitespace-nowrap">

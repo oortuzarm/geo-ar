@@ -33,9 +33,11 @@ interface ImageFieldProps {
   description: string
   onUpload: (url: string) => void
   onRemove: () => void
+  /** When true: clicking shows an upsell toast instead of opening the file picker */
+  blocked?: boolean
 }
 
-function ImageField({ value, label, description, onUpload, onRemove }: ImageFieldProps) {
+function ImageField({ value, label, description, onUpload, onRemove, blocked }: ImageFieldProps) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const { addToast } = useGeoStore()
@@ -58,13 +60,21 @@ function ImageField({ value, label, description, onUpload, onRemove }: ImageFiel
     }
   }
 
+  function handleClick() {
+    if (blocked) {
+      addToast('Crea tu cuenta gratuita para usar esta función.', 'info')
+      return
+    }
+    fileRef.current?.click()
+  }
+
   return (
     <div>
       <p className="text-xs text-gray-500 mb-2 leading-snug">{description}</p>
 
       <button
         type="button"
-        onClick={() => fileRef.current?.click()}
+        onClick={handleClick}
         disabled={uploading}
         className="relative w-full h-28 rounded-xl overflow-hidden border border-dashed border-gray-700
                    hover:border-brand-500/50 transition-colors group disabled:opacity-60"
@@ -93,7 +103,7 @@ function ImageField({ value, label, description, onUpload, onRemove }: ImageFiel
         )}
       </button>
 
-      {value && (
+      {value && !blocked && (
         <button
           type="button"
           onClick={onRemove}
@@ -212,11 +222,14 @@ function PublicInitialViewSection({ onMarkUnsaved }: { onMarkUnsaved: () => void
 
 export default function ProjectPanel({ onMarkUnsaved }: ProjectPanelProps) {
   const { project, updateProjectField } = useGeoStore()
+  const editorMode = useEditorMode()
 
   // Local controlled value — syncs to store on blur so typing doesn't trigger saves mid-word
   const [shareText, setShareText] = useState(() => project?.shareText ?? DEFAULT_SHARE_TEXT)
 
   if (!project) return null
+
+  const imagesBlocked = editorMode === 'demo'
 
   function field<K extends keyof GeoProject>(key: K, value: GeoProject[K]) {
     updateProjectField(key, value)
@@ -248,6 +261,7 @@ export default function ProjectPanel({ onMarkUnsaved }: ProjectPanelProps) {
             description="Usada para compartir y preview del proyecto."
             onUpload={(url) => field('coverImage', url)}
             onRemove={() => field('coverImage', undefined)}
+            blocked={imagesBlocked}
           />
         </section>
 
@@ -311,6 +325,7 @@ export default function ProjectPanel({ onMarkUnsaved }: ProjectPanelProps) {
             description="Usada automáticamente en los puntos GPS que no tengan imagen personalizada."
             onUpload={(url) => field('markerImage', url)}
             onRemove={() => field('markerImage', undefined)}
+            blocked={imagesBlocked}
           />
         </section>
 

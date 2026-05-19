@@ -66,6 +66,14 @@ export default function PreviewQRModal({
 
   const resolvedUrl = publicUrlProp ?? `${window.location.origin}/public/${projectId}`
 
+  // Log token state whenever the modal opens — helps trace the demo claim flow
+  useEffect(() => {
+    if (!isOpen) return
+    console.info('[PreviewQRModal] opened — token:', token ? token.slice(0, 8) + '…' : null,
+      '| publicUrl:', publicUrlProp ?? null,
+      '| temporaryNote:', temporaryNote)
+  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Generate QR each time the modal opens
   useEffect(() => {
     if (!isOpen) return
@@ -124,14 +132,16 @@ export default function PreviewQRModal({
 
     if (!isAuthenticated) {
       if (!token) {
-        console.warn('[PreviewQRModal] handleSaveExperience called with no token')
-        navigate('/register')
-        onClose()
+        console.error('[PreviewQRModal] "Guardar experiencia" pressed but token is null/undefined.',
+          'Props received — publicUrl:', publicUrlProp, '| token:', token,
+          '| Probably onPreviewOpen() returned null or token was not propagated.')
+        setClaimError('No se pudo preparar la experiencia. Cerrá este modal y presioná "Previsualizar" nuevamente.')
         return
       }
       // Persist token so usePendingClaim can claim after auth
       localStorage.setItem(PENDING_CLAIM_KEY, token)
-      console.info('[PreviewQRModal] Stored pending claim token', token.slice(0, 8) + '…')
+      console.info('[PreviewQRModal] Stored pending claim token', token.slice(0, 8) + '…',
+        '— navigating to /register')
       navigate(`/register?claim_preview_token=${encodeURIComponent(token)}`)
       onClose()
       return
@@ -139,6 +149,7 @@ export default function PreviewQRModal({
 
     // Already authenticated → claim directly
     if (!token) {
+      console.warn('[PreviewQRModal] Authenticated but token is null — going to /app')
       navigate('/app')
       onClose()
       return

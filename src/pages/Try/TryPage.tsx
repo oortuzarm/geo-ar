@@ -160,12 +160,31 @@ export default function TryPage() {
     if (!state.project) return null
     try {
       const result = await createTemporaryPreview(state.project, sanitizePoints(state.points))
-      const url = result.publicUrl ?? result.public_url ?? null
-      if (!url) return null
-      return { url, token: result.token }
+      console.info('[TryPage] createTemporaryPreview response:', {
+        token: result.token,
+        publicUrl: result.publicUrl,
+        public_url: result.public_url,
+        expiresAt: result.expiresAt ?? result.expires_at,
+      })
+
+      const token = result.token
+      if (!token) {
+        console.error('[TryPage] Backend did not return a token — cannot open preview modal')
+        return null
+      }
+
+      // Prefer the URL the backend provides; fall back to constructing it from
+      // the token so a missing publicUrl field doesn't silently drop the token.
+      const url =
+        result.publicUrl ??
+        result.public_url ??
+        `${window.location.origin}/temporary/${token}`
+
+      console.info('[TryPage] handlePreviewOpen returning:', { url, token: token.slice(0, 8) + '…' })
+      return { url, token }
     } catch (err) {
       if (err instanceof ApiError) {
-        console.error('[TemporaryPreview] Error del backend', err.status, err.message)
+        console.error('[TryPage] Backend error', err.status, err.message)
       }
       throw err
     }

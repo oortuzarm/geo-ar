@@ -397,6 +397,9 @@ export default function ProjectEditor({
       setPreviewLoading(true)
       try {
         const result = await onPreviewOpen()
+        console.info('[ProjectEditor] openPreview result:', result
+          ? { url: result.url, token: result.token?.slice(0, 8) + '…' }
+          : null)
         if (result && isMobile) {
           // Mobile: redirect directly — showing a QR to scan on the same device makes no sense
           window.location.href = result.url
@@ -405,6 +408,8 @@ export default function ProjectEditor({
           setPreviewToken(result.token)
           setPreviewModalOpen(true)
         } else {
+          // onPreviewOpen returned null — open modal anyway (real-mode fallback URL)
+          console.warn('[ProjectEditor] onPreviewOpen returned null — opening modal without token')
           setPreviewModalOpen(true)
         }
       } catch {

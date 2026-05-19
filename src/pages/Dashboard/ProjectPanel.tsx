@@ -40,6 +40,7 @@ interface ImageFieldProps {
 function ImageField({ value, label, description, onUpload, onRemove, blocked }: ImageFieldProps) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [blockedClicked, setBlockedClicked] = useState(false)
   const { addToast } = useGeoStore()
   const editorMode = useEditorMode()
 
@@ -60,13 +61,21 @@ function ImageField({ value, label, description, onUpload, onRemove, blocked }: 
     }
   }
 
+  function handleClick() {
+    if (blocked) {
+      setBlockedClicked(true)
+      return
+    }
+    fileRef.current?.click()
+  }
+
   return (
     <div>
       <p className="text-xs text-gray-500 mb-2 leading-snug">{description}</p>
 
       <button
         type="button"
-        onClick={() => { if (!blocked) fileRef.current?.click() }}
+        onClick={handleClick}
         disabled={uploading}
         className="relative w-full h-28 rounded-xl overflow-hidden border border-dashed border-gray-700
                    hover:border-brand-500/50 transition-colors group disabled:opacity-60"
@@ -76,7 +85,7 @@ function ImageField({ value, label, description, onUpload, onRemove, blocked }: 
           <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
             <Spinner size="sm" />
           </div>
-        ) : blocked ? (
+        ) : blocked && blockedClicked ? (
           <div className="w-full h-full bg-gray-800/50 flex flex-col items-center justify-center gap-1.5 px-4">
             <span className="text-xs text-red-400 text-center leading-snug">
               Crea tu cuenta gratuita para usar esta función.

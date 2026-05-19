@@ -40,8 +40,9 @@ export interface ClaimResult {
   redirectUrl?: string // camelCase fallback
 }
 
-export function claimTemporaryPreview(token: string): Promise<ClaimResult> {
+export function claimTemporaryPreview(token: string, planKey?: string): Promise<ClaimResult> {
   return apiFetch<ClaimResult>(`${BASE}/api/temporary_previews/${token}/claim`, {
     method: 'POST',
+    ...(planKey ? { body: JSON.stringify({ planKey }) } : {}),
   })
 }

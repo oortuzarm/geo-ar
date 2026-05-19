@@ -18,6 +18,7 @@ interface AuthStore {
   register:       (creds: RegisterCredentials) => Promise<void>
   logout:         ()                           => Promise<void>
   refreshSession: ()                           => Promise<void>
+  reloadUser:     ()                           => Promise<void>
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
@@ -51,5 +52,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     } catch {
       set({ currentUser: null, isAuthenticated: false, isLoading: false, isInitialized: true })
     }
+  },
+
+  async reloadUser() {
+    try {
+      const user = await me()
+      set({ currentUser: user })
+    } catch { /* session gone — leave current state intact */ }
   },
 }))

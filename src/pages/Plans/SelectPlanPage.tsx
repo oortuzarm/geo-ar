@@ -6,6 +6,7 @@ import { claimTemporaryPreview } from '../../services/temporaryPreviewsApi'
 import { ApiError } from '../../lib/apiFetch'
 import { PENDING_CLAIM_KEY } from '../../hooks/usePendingClaim'
 import { DEMO_STORAGE_KEY } from '../Try/TryPage'
+import { useAuthStore } from '../../store/authStore'
 import Spinner from '../../components/ui/Spinner'
 
 function navigateToProjectUrl(url: string, navigate: ReturnType<typeof useNavigate>) {
@@ -57,7 +58,9 @@ export default function SelectPlanPage() {
     setError(null)
     try {
       // TODO: Paddle checkout goes here before claim (future)
-      const result = await claimTemporaryPreview(token)
+      const result = await claimTemporaryPreview(token, plan.slug)
+      // Refresh currentUser so useSubscription reflects the newly assigned plan
+      await useAuthStore.getState().reloadUser()
       localStorage.removeItem(PENDING_CLAIM_KEY)
       localStorage.removeItem(DEMO_STORAGE_KEY)
       const url = result.redirect_url ?? result.redirectUrl

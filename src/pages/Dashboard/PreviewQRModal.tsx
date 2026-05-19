@@ -6,6 +6,7 @@ import { useAuthStore } from '../../store/authStore'
 import { claimTemporaryPreview } from '../../services/temporaryPreviewsApi'
 import { ApiError } from '../../lib/apiFetch'
 import { PENDING_CLAIM_KEY } from '../../hooks/usePendingClaim'
+import { DEMO_STORAGE_KEY } from '../Try/TryPage'
 
 interface PreviewQRModalProps {
   projectId: string
@@ -139,6 +140,8 @@ export default function PreviewQRModal({
     setClaiming(true)
     try {
       const result = await claimTemporaryPreview(token)
+      localStorage.removeItem(DEMO_STORAGE_KEY)
+      localStorage.removeItem(PENDING_CLAIM_KEY)
       const url = result.redirect_url ?? result.redirectUrl
       onClose()
       if (url) navigateToResult(url, navigate)

@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore'
 import { claimTemporaryPreview } from '../services/temporaryPreviewsApi'
 import { useGeoStore } from '../store/geoStore'
 import { ApiError } from '../lib/apiFetch'
+import { DEMO_STORAGE_KEY } from '../pages/Try/TryPage'
 
 export const PENDING_CLAIM_KEY = 'pendingTemporaryPreviewToken'
 
@@ -46,6 +47,7 @@ export function usePendingClaim() {
 
     claimTemporaryPreview(token)
       .then((result) => {
+        localStorage.removeItem(DEMO_STORAGE_KEY)
         const url = result.redirect_url ?? result.redirectUrl
         if (url) navigateToResult(url, navigate)
       })

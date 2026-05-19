@@ -6,7 +6,8 @@ import { ApiError } from '../../lib/apiFetch'
 import type { GeoPoint, GeoProject } from '../../types'
 
 const DEMO_LIMIT = 10
-const STORAGE_KEY = 'ubyca-demo-state'
+export const DEMO_STORAGE_KEY = 'ubyca-demo-state'
+const STORAGE_KEY = DEMO_STORAGE_KEY
 
 // ── localStorage helpers ───────────────────────────────────────────────────────
 

@@ -123,9 +123,16 @@ export default function PreviewQRModal({
     setClaimError(null)
 
     if (!isAuthenticated) {
-      // Persist token so ProtectedRoute can claim after auth
-      if (token) localStorage.setItem(PENDING_CLAIM_KEY, token)
-      navigate(`/register?claim_preview_token=${encodeURIComponent(token ?? '')}`)
+      if (!token) {
+        console.warn('[PreviewQRModal] handleSaveExperience called with no token')
+        navigate('/register')
+        onClose()
+        return
+      }
+      // Persist token so usePendingClaim can claim after auth
+      localStorage.setItem(PENDING_CLAIM_KEY, token)
+      console.info('[PreviewQRModal] Stored pending claim token', token.slice(0, 8) + '…')
+      navigate(`/register?claim_preview_token=${encodeURIComponent(token)}`)
       onClose()
       return
     }
@@ -140,15 +147,26 @@ export default function PreviewQRModal({
     setClaiming(true)
     try {
       const result = await claimTemporaryPreview(token)
+      console.info('[PreviewQRModal] Claim succeeded', result)
       localStorage.removeItem(DEMO_STORAGE_KEY)
       localStorage.removeItem(PENDING_CLAIM_KEY)
       const url = result.redirect_url ?? result.redirectUrl
       onClose()
-      if (url) navigateToResult(url, navigate)
+      if (url) {
+        navigateToResult(url, navigate)
+      } else {
+        console.warn('[PreviewQRModal] No redirect_url in claim response, going to /app')
+        navigate('/app', { replace: true })
+      }
     } catch (err) {
       let msg = 'No se pudo guardar la experiencia.'
-      if (err instanceof ApiError && (err.status === 404 || err.status === 410)) {
-        msg = 'La previsualización expiró. Crea una nueva desde el editor.'
+      if (err instanceof ApiError) {
+        console.error('[PreviewQRModal] Claim failed — HTTP', err.status, err.message)
+        if (err.status === 404 || err.status === 410) {
+          msg = 'La previsualización expiró. Crea una nueva desde el editor.'
+        }
+      } else {
+        console.error('[PreviewQRModal] Unexpected error during claim', err)
       }
       setClaimError(msg)
     } finally {

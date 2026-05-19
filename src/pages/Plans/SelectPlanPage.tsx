@@ -190,42 +190,6 @@ function PlanCard({ plan, billing, isClaiming, disabled, onChoose }: PlanCardPro
   )
 }
 
-// ── Summary card — reinforces the user already has an experience ready ─────────
-
-function SummaryCard({ locationCount }: { locationCount: number | null }) {
-  if (locationCount === null) return null
-
-  const label = locationCount === 1 ? 'ubicación lista para guardar' : 'ubicaciones listas para guardar'
-
-  return (
-    <div className="max-w-sm mx-auto bg-gray-900 border border-gray-800 rounded-2xl p-5
-                    flex items-center gap-4">
-      <div className="w-10 h-10 flex-shrink-0 rounded-xl bg-brand-500/10 border border-brand-500/20
-                      flex items-center justify-center">
-        <svg className="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      </div>
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-gray-100">
-          {locationCount} {label}
-        </p>
-        <div className="flex items-center gap-2 mt-1">
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full
-                           bg-gray-800 border border-gray-700
-                           text-[10px] font-medium text-gray-400 uppercase tracking-wider">
-            Borrador
-          </span>
-          <span className="text-xs text-gray-600">· Listo para activar</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ── Expired state ─────────────────────────────────────────────────────────────
 
 function ExpiredScreen() {
@@ -280,7 +244,6 @@ export default function SelectPlanPage() {
   const [error,          setError]          = useState<string | null>(null)
   const [expired,        setExpired]        = useState(false)
   const [billing,        setBilling]        = useState<'monthly' | 'annual'>('monthly')
-  const [locationCount,  setLocationCount]  = useState<number | null>(null)
 
   function loadPlans() {
     setLoadingPlans(true)
@@ -296,15 +259,6 @@ export default function SelectPlanPage() {
       navigate('/app', { replace: true })
       return
     }
-    // Read location count from demo localStorage state — no extra API call
-    try {
-      const raw = localStorage.getItem(DEMO_STORAGE_KEY)
-      if (raw) {
-        const parsed = JSON.parse(raw) as { points?: unknown[] }
-        if (Array.isArray(parsed.points)) setLocationCount(parsed.points.length)
-      }
-    } catch {}
-
     loadPlans()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -345,40 +299,18 @@ export default function SelectPlanPage() {
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
 
-      {/* ── Header ────────────────────────────────────────────────────────────── */}
-      <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center gap-3">
-          <span className="font-bold text-gray-100">Ubyca</span>
-          <span className="text-gray-700 select-none" aria-hidden>·</span>
-          <span className="text-sm text-gray-500">Activa tu experiencia</span>
-        </div>
-      </header>
-
       {/* ── Main ──────────────────────────────────────────────────────────────── */}
-      <main className="max-w-6xl mx-auto px-6 py-12 space-y-12">
+      <main className="max-w-6xl mx-auto px-6 py-12 space-y-10">
 
         {/* Hero */}
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-3">
           <h1 className="text-3xl font-bold text-gray-100">
             Tu experiencia está lista
           </h1>
           <p className="text-gray-500 text-base max-w-md mx-auto">
             Selecciona un plan para guardar tu experiencia geolocalizada y comenzar a usar Ubyca.
           </p>
-          <div className="flex justify-center">
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full
-                             bg-emerald-500/15 border border-emerald-500/25
-                             text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-              </svg>
-              Tus ubicaciones GPS ya están listas
-            </span>
-          </div>
         </div>
-
-        {/* Summary card */}
-        <SummaryCard locationCount={locationCount} />
 
         {/* Billing toggle — only shown when at least one plan has an annual discount */}
         {!loadingPlans && !error && annualDiscount > 0 && (

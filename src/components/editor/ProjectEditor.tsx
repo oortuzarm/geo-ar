@@ -571,13 +571,22 @@ export default function ProjectEditor({
                 {hasUnsavedChanges ? '● Guardar' : 'Guardar'}
               </Button>
             ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setPreviewModalOpen(true)}
-              >
-                Previsualizar
-              </Button>
+              <div className="flex items-center gap-1.5">
+                <Link
+                  to="/register"
+                  className="text-xs font-medium text-gray-400 hover:text-gray-100
+                             transition-colors whitespace-nowrap"
+                >
+                  Crear cuenta
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPreviewModalOpen(true)}
+                >
+                  Previsualizar
+                </Button>
+              </div>
             )}
           </div>
 

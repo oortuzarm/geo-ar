@@ -6,6 +6,7 @@ import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
 import { useSubscription } from '../../hooks/useSubscription'
 import { deleteMediaFile, isVercelBlobUrl } from '../../lib/deleteMediaFile'
+import { LAST_PROJECT_KEY } from '../../hooks/useWorkspace'
 import type { GeoPoint, MediaContentData } from '../../types'
 
 export default function DashboardPage() {
@@ -45,6 +46,7 @@ export default function DashboardPage() {
     async function load() {
       if (id === undefined || id === 'new') {
         const newProject = await geoProjectsApi.createProject()
+        localStorage.setItem(LAST_PROJECT_KEY, newProject.id)
         setProject(newProject)
         setPoints([])
         navigate(`/project/${newProject.id}`, { replace: true })
@@ -56,6 +58,7 @@ export default function DashboardPage() {
         geoPointsApi.listPoints(id),
       ])
       if (!proj) { navigate('/app'); return }
+      localStorage.setItem(LAST_PROJECT_KEY, proj.id)
       console.log('[InitialView Loaded Project]', proj?.publicInitialViewMode)
       setProject(proj)
       setPoints(pts)

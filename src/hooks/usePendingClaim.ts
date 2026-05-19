@@ -18,49 +18,74 @@ function navigateToResult(url: string, navigate: ReturnType<typeof useNavigate>)
       window.location.href = url
     }
   } catch {
+    // Relative path — pass straight to React Router
     navigate(url, { replace: true })
   }
 }
 
 /**
- * After the user becomes authenticated, checks localStorage for a pending
+ * After the user becomes fully authenticated, checks localStorage for a pending
  * temporary preview token and claims it against the backend.
- * On success  → navigates to the editor of the newly created project.
- * On expiry   → shows a toast and clears the token.
- * On other errors → shows a generic toast.
  *
- * Must be called inside a component that is always rendered while authenticated
- * (e.g. ProtectedRoute).
+ * Waits for isAuthenticated + currentUser + !isLoading + isInitialized
+ * to all be satisfied before firing — avoids false negatives during the
+ * brief auth-loading window.
+ *
+ * Must be called inside a component rendered for ALL protected routes (ProtectedRoute).
  */
 export function usePendingClaim() {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, currentUser, isLoading, isInitialized } = useAuthStore()
   const navigate = useNavigate()
   const claimedRef = useRef(false)
 
-  useEffect(() => {
-    if (!isAuthenticated || claimedRef.current) return
-    const token = localStorage.getItem(PENDING_CLAIM_KEY)
-    if (!token) return
+  const readyToCheck = isInitialized && !isLoading && isAuthenticated && currentUser !== null
 
-    // Mark as in-progress immediately to prevent concurrent attempts within this
-    // component lifetime. The token stays in localStorage until the call resolves
-    // so that a page-refresh can retry on transient errors (network, 5xx).
+  useEffect(() => {
+    console.info(
+      '[usePendingClaim] effect fired — readyToCheck:', readyToCheck,
+      '| isAuthenticated:', isAuthenticated,
+      '| currentUser:', currentUser?.email ?? null,
+      '| isLoading:', isLoading,
+      '| isInitialized:', isInitialized,
+      '| claimedRef:', claimedRef.current,
+    )
+
+    if (!readyToCheck) {
+      console.info('[usePendingClaim] Not ready yet — skipping claim check')
+      return
+    }
+
+    if (claimedRef.current) {
+      console.info('[usePendingClaim] Already claimed in this session — skipping')
+      return
+    }
+
+    const token = localStorage.getItem(PENDING_CLAIM_KEY)
+    console.info('[usePendingClaim] localStorage token:', token ? token.slice(0, 8) + '…' : null)
+
+    if (!token) {
+      console.info('[usePendingClaim] No pending claim token found — nothing to do')
+      return
+    }
+
+    // Mark as in-progress to prevent concurrent attempts within this component
+    // lifetime. The token stays in localStorage until the call resolves so that
+    // a page-refresh can retry on transient errors (network, 5xx).
     claimedRef.current = true
 
-    console.info('[usePendingClaim] Claiming temporary preview token', token.slice(0, 8) + '…')
+    console.info('[usePendingClaim] Claiming temporary preview…', token.slice(0, 8) + '…')
 
     claimTemporaryPreview(token)
       .then((result) => {
-        console.info('[usePendingClaim] Claim succeeded', result)
+        console.info('[usePendingClaim] Claim succeeded:', result)
         localStorage.removeItem(PENDING_CLAIM_KEY)
         localStorage.removeItem(DEMO_STORAGE_KEY)
         const url = result.redirect_url ?? result.redirectUrl
         if (url) {
+          console.info('[usePendingClaim] Navigating to:', url)
           navigateToResult(url, navigate)
         } else {
-          // Backend succeeded but sent no redirect — go to dashboard so the user
-          // can see the newly created project in the project list.
-          console.warn('[usePendingClaim] No redirect_url in claim response, falling back to /app')
+          console.warn('[usePendingClaim] No redirect_url in response — falling back to /app')
           navigate('/app', { replace: true })
         }
       })
@@ -70,16 +95,18 @@ export function usePendingClaim() {
         if (err instanceof ApiError) {
           console.error('[usePendingClaim] Claim failed — HTTP', err.status, err.message)
           if (err.status === 404 || err.status === 410) {
-            // Token expired or already used — remove it so we don't retry endlessly.
+            // Token expired or already claimed — clear it so we don't retry
             localStorage.removeItem(PENDING_CLAIM_KEY)
             msg = 'La experiencia temporal expiró. Puedes crear una nueva en /try.'
           }
-          // For 401, 5xx, network errors: keep the token so a page-refresh can retry.
+          // For 401, 5xx, network: keep token in localStorage — page refresh can retry
         } else {
-          console.error('[usePendingClaim] Unexpected error during claim', err)
+          console.error('[usePendingClaim] Unexpected error:', err)
         }
 
         useGeoStore.getState().addToast(msg, 'error')
       })
-  }, [isAuthenticated]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Re-run whenever any auth field that affects readiness changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readyToCheck])
 }

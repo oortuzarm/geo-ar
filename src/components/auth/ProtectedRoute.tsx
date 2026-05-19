@@ -10,6 +10,13 @@ import { usePendingClaim } from '../../hooks/usePendingClaim'
  */
 export default function ProtectedRoute() {
   const { isAuthenticated, isLoading, isInitialized } = useAuthStore()
+
+  console.info(
+    '[ProtectedRoute] render — isAuthenticated:', isAuthenticated,
+    '| isLoading:', isLoading,
+    '| isInitialized:', isInitialized,
+  )
+
   usePendingClaim()
 
   if (!isInitialized || isLoading) {

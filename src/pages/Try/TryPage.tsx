@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import ProjectEditor from '../../components/editor/ProjectEditor'
 import { useGeoStore } from '../../store/geoStore'
 import { createTemporaryPreview } from '../../services/temporaryPreviewsApi'
+import { ApiError } from '../../lib/apiFetch'
 import type { GeoPoint, GeoProject } from '../../types'
 
 const DEMO_LIMIT = 10
@@ -48,6 +49,22 @@ function loadFromStorage(): { project: GeoProject; points: GeoPoint[] } | null {
   } catch {
     return null
   }
+}
+
+// ── Point sanitizer — normalizes demo points before sending to the backend ────
+// Handles blank names, coerces numeric fields, and sets safe defaults so the
+// backend's validations don't reject a partially-filled demo project.
+
+function sanitizePoints(points: GeoPoint[]): GeoPoint[] {
+  return points.map((pt, i) => ({
+    ...pt,
+    name:             pt.name?.trim() || `Ubicación ${i + 1}`,
+    latitude:         Number(pt.latitude)         || 0,
+    longitude:        Number(pt.longitude)        || 0,
+    activationRadius: Number(pt.activationRadius) || 50,
+    active:           pt.active ?? true,
+    order:            Number(pt.order)            ?? i,
+  }))
 }
 
 // ── TryPage — thin provider wrapper ───────────────────────────────────────────
@@ -140,8 +157,15 @@ export default function TryPage() {
   async function handlePreviewOpen(): Promise<string | null> {
     const state = useGeoStore.getState()
     if (!state.project) return null
-    const result = await createTemporaryPreview(state.project, state.points)
-    return result.publicUrl ?? result.public_url ?? null
+    try {
+      const result = await createTemporaryPreview(state.project, sanitizePoints(state.points))
+      return result.publicUrl ?? result.public_url ?? null
+    } catch (err) {
+      if (err instanceof ApiError) {
+        console.error('[TemporaryPreview] Error del backend', err.status, err.message)
+      }
+      throw err
+    }
   }
 
   // Called after each form field change (upsert already done by ProjectEditor)

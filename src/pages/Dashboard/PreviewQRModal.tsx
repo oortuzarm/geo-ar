@@ -3,10 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import QRCode from 'qrcode'
 import Spinner from '../../components/ui/Spinner'
 import { useAuthStore } from '../../store/authStore'
-import { claimTemporaryPreview } from '../../services/temporaryPreviewsApi'
-import { ApiError } from '../../lib/apiFetch'
 import { PENDING_CLAIM_KEY } from '../../hooks/usePendingClaim'
-import { DEMO_STORAGE_KEY } from '../Try/TryPage'
 
 interface PreviewQRModalProps {
   projectId: string
@@ -31,20 +28,6 @@ function toFileStem(title: string | undefined): string {
     .replace(/^-|-$/g, '') || 'proyecto'
 }
 
-/** Navigates to the result URL returned by the backend's claim endpoint.
- *  Handles absolute same-origin URLs and relative paths. */
-function navigateToResult(url: string, navigate: ReturnType<typeof useNavigate>) {
-  try {
-    const parsed = new URL(url)
-    if (parsed.origin === window.location.origin) {
-      navigate(parsed.pathname + parsed.search, { replace: true })
-    } else {
-      window.location.href = url
-    }
-  } catch {
-    navigate(url, { replace: true })
-  }
-}
 
 export default function PreviewQRModal({
   projectId,
@@ -61,7 +44,6 @@ export default function PreviewQRModal({
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [qrError,   setQrError]   = useState(false)
   const [loading,   setLoading]   = useState(false)
-  const [claiming,  setClaiming]  = useState(false)
   const [claimError, setClaimError] = useState<string | null>(null)
 
   const resolvedUrl = publicUrlProp ?? `${window.location.origin}/public/${projectId}`
@@ -126,8 +108,7 @@ export default function PreviewQRModal({
     } catch { /* non-critical */ }
   }
 
-  async function handleSaveExperience() {
-    if (claiming) return
+  function handleSaveExperience() {
     setClaimError(null)
 
     if (!isAuthenticated) {
@@ -138,7 +119,7 @@ export default function PreviewQRModal({
         setClaimError('No se pudo preparar la experiencia. Cerrá este modal y presioná "Previsualizar" nuevamente.')
         return
       }
-      // Persist token so usePendingClaim can claim after auth
+      // Persist token so usePendingClaim can redirect to plan selection after auth
       localStorage.setItem(PENDING_CLAIM_KEY, token)
       console.info('[PreviewQRModal] Stored pending claim token', token.slice(0, 8) + '…',
         '— navigating to /register')
@@ -147,7 +128,7 @@ export default function PreviewQRModal({
       return
     }
 
-    // Already authenticated → claim directly
+    // Already authenticated → go to plan selection (claim happens there)
     if (!token) {
       console.warn('[PreviewQRModal] Authenticated but token is null — going to /app')
       navigate('/app')
@@ -155,34 +136,10 @@ export default function PreviewQRModal({
       return
     }
 
-    setClaiming(true)
-    try {
-      const result = await claimTemporaryPreview(token)
-      console.info('[PreviewQRModal] Claim succeeded', result)
-      localStorage.removeItem(DEMO_STORAGE_KEY)
-      localStorage.removeItem(PENDING_CLAIM_KEY)
-      const url = result.redirect_url ?? result.redirectUrl
-      onClose()
-      if (url) {
-        navigateToResult(url, navigate)
-      } else {
-        console.warn('[PreviewQRModal] No redirect_url in claim response, going to /app')
-        navigate('/app', { replace: true })
-      }
-    } catch (err) {
-      let msg = 'No se pudo guardar la experiencia.'
-      if (err instanceof ApiError) {
-        console.error('[PreviewQRModal] Claim failed — HTTP', err.status, err.message)
-        if (err.status === 404 || err.status === 410) {
-          msg = 'La previsualización expiró. Crea una nueva desde el editor.'
-        }
-      } else {
-        console.error('[PreviewQRModal] Unexpected error during claim', err)
-      }
-      setClaimError(msg)
-    } finally {
-      setClaiming(false)
-    }
+    localStorage.setItem(PENDING_CLAIM_KEY, token)
+    console.info('[PreviewQRModal] Authenticated — redirecting to plan selection for token', token.slice(0, 8) + '…')
+    navigate(`/app/select-plan?claim_preview_token=${encodeURIComponent(token)}`)
+    onClose()
   }
 
   if (!isOpen) return null
@@ -286,14 +243,13 @@ export default function PreviewQRModal({
                 Link temporal · válido por 30 minutos
               </p>
               <button
-                onClick={() => { void handleSaveExperience() }}
-                disabled={claiming}
+                onClick={handleSaveExperience}
                 className="block w-full py-2.5 px-4 rounded-xl
                            bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700
                            text-white text-sm font-semibold text-center
-                           transition-colors disabled:opacity-60 disabled:cursor-wait"
+                           transition-colors"
               >
-                {claiming ? 'Guardando…' : 'Guardar experiencia'}
+                Guardar experiencia
               </button>
               {claimError ? (
                 <p className="text-[11px] text-red-400 text-center -mt-2 leading-relaxed">

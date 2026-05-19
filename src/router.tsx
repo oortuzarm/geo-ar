@@ -20,6 +20,7 @@ import AcceptInvitationPage     from './pages/Auth/AcceptInvitationPage'
 import AdminPage                from './pages/Admin/AdminPage'
 import AdminPlansPage          from './pages/Admin/AdminPlansPage'
 import PlansPage               from './pages/Plans/PlansPage'
+import SelectPlanPage          from './pages/Plans/SelectPlanPage'
 import AccountPage              from './pages/Account/AccountPage'
 import PrivacyPolicyPage        from './pages/Legal/PrivacyPolicyPage'
 import TermsAndConditionsPage   from './pages/Legal/TermsAndConditionsPage'
@@ -72,6 +73,7 @@ const protectedChildren = [
       { path: 'projects',   element: <HomePage /> },
     ],
   },
+  { path: '/app/select-plan',      element: <SelectPlanPage /> },
   { path: '/project/new',         element: <DashboardPage /> },
   { path: '/project/:id',         element: <DashboardPage /> },
   { path: '/project/:id/preview', element: <PreviewPage /> },

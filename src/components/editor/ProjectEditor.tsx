@@ -712,52 +712,38 @@ export default function ProjectEditor({
 
           {/* Left sidebar: desktop only */}
           <aside className="hidden lg:flex w-[308px] max-w-[308px] flex-shrink-0 border-r border-gray-800 bg-gray-900 flex-col overflow-hidden">
-            {mode === 'real' ? (
-              <>
-                <div className="flex-shrink-0 flex border-b border-gray-800">
-                  {(['points', 'project'] as const).map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setLeftTab(tab)}
-                      className={`flex-1 py-2.5 text-xs font-medium transition-colors -mb-px border-b-2 ${
-                        leftTab === tab
-                          ? 'text-brand-400 border-brand-500'
-                          : 'text-gray-500 hover:text-gray-300 border-transparent'
-                      }`}
-                    >
-                      {tab === 'points' ? `Puntos GPS (${points.length})` : 'Proyecto'}
-                    </button>
-                  ))}
-                </div>
-                {leftTab === 'points' ? (
-                  <GeoPointsList
-                    points={points}
-                    selectedId={selectedPointId}
-                    onSelect={handleSelectPoint}
-                    onAdd={handleAddPoint}
-                    onToggleActive={handleToggleActive}
-                    onBulkActivate={handleBulkActivate}
-                    onBulkDeactivate={handleBulkDeactivate}
-                    onBulkDelete={handleBulkDelete}
-                    hideIdleTitle
-                  />
-                ) : (
-                  <ProjectPanel onMarkUnsaved={() => onMarkUnsaved?.()} />
-                )}
-              </>
-            ) : (
-              <GeoPointsList
-                points={points}
-                selectedId={selectedPointId}
-                onSelect={handleSelectPoint}
-                onAdd={handleAddPoint}
-                onToggleActive={handleToggleActive}
-                onBulkActivate={handleBulkActivate}
-                onBulkDeactivate={handleBulkDeactivate}
-                onBulkDelete={handleBulkDelete}
-                hideIdleTitle
-              />
-            )}
+            <>
+              <div className="flex-shrink-0 flex border-b border-gray-800">
+                {(['points', 'project'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setLeftTab(tab)}
+                    className={`flex-1 py-2.5 text-xs font-medium transition-colors -mb-px border-b-2 ${
+                      leftTab === tab
+                        ? 'text-brand-400 border-brand-500'
+                        : 'text-gray-500 hover:text-gray-300 border-transparent'
+                    }`}
+                  >
+                    {tab === 'points' ? `Puntos GPS (${points.length})` : 'Proyecto'}
+                  </button>
+                ))}
+              </div>
+              {leftTab === 'points' ? (
+                <GeoPointsList
+                  points={points}
+                  selectedId={selectedPointId}
+                  onSelect={handleSelectPoint}
+                  onAdd={handleAddPoint}
+                  onToggleActive={handleToggleActive}
+                  onBulkActivate={handleBulkActivate}
+                  onBulkDeactivate={handleBulkDeactivate}
+                  onBulkDelete={handleBulkDelete}
+                  hideIdleTitle
+                />
+              ) : (
+                <ProjectPanel onMarkUnsaved={() => onMarkUnsaved?.()} />
+              )}
+            </>
           </aside>
 
           {/* Map area */}

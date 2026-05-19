@@ -196,6 +196,12 @@ export default function TryPage() {
     if (state.project) saveToStorage(state.project, state.points)
   }
 
+  // Called by ProjectPanel whenever a project field changes
+  function handleMarkUnsaved() {
+    const state = useGeoStore.getState()
+    if (state.project) saveToStorage(state.project, state.points)
+  }
+
   return (
     <ProjectEditor
       mode="demo"
@@ -209,6 +215,7 @@ export default function TryPage() {
       onBulkDeactivate={handleBulkDeactivate}
       onAfterPointChange={handleAfterPointChange}
       onSaveProject={async () => { /* autosaved on every change */ }}
+      onMarkUnsaved={handleMarkUnsaved}
       onPreviewOpen={handlePreviewOpen}
       canAddLocation={(count) => count < DEMO_LIMIT}
     />

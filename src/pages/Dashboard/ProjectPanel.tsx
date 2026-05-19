@@ -1,8 +1,24 @@
 import { useRef, useState } from 'react'
 import { useGeoStore } from '../../store/geoStore'
 import { uploadImage } from '../../lib/uploadImage'
+import { useEditorMode } from '../../contexts/EditorModeContext'
 import Spinner from '../../components/ui/Spinner'
 import type { GeoProject, PublicInitialViewMode } from '../../types'
+
+const IMAGE_BASE64_MAX = 256 * 1024
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (file.size > IMAGE_BASE64_MAX) {
+      reject(new Error('La imagen supera los 256 KB. Comprimila antes de subirla.'))
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(new Error('Error al leer la imagen'))
+    reader.readAsDataURL(file)
+  })
+}
 
 const DEFAULT_SHARE_TEXT = 'Mira esta experiencia geolocalizada'
 
@@ -23,6 +39,7 @@ function ImageField({ value, label, description, onUpload, onRemove }: ImageFiel
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const { addToast } = useGeoStore()
+  const editorMode = useEditorMode()
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -30,7 +47,9 @@ function ImageField({ value, label, description, onUpload, onRemove }: ImageFiel
     e.target.value = ''
     setUploading(true)
     try {
-      const url = await uploadImage(file)
+      const url = editorMode === 'demo'
+        ? await fileToBase64(file)
+        : await uploadImage(file)
       onUpload(url)
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'Error al subir imagen', 'error')

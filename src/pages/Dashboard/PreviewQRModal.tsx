@@ -7,6 +7,8 @@ interface PreviewQRModalProps {
   projectTitle?: string
   isOpen: boolean
   onClose: () => void
+  /** When true, shows a 30-minute expiration note — for temporary/demo previews */
+  temporaryNote?: boolean
 }
 
 function toFileStem(title: string | undefined): string {
@@ -19,7 +21,7 @@ function toFileStem(title: string | undefined): string {
     .replace(/^-|-$/g, '') || 'proyecto'
 }
 
-export default function PreviewQRModal({ projectId, projectTitle, isOpen, onClose }: PreviewQRModalProps) {
+export default function PreviewQRModal({ projectId, projectTitle, isOpen, onClose, temporaryNote = false }: PreviewQRModalProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [qrError, setQrError] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -169,6 +171,13 @@ export default function PreviewQRModal({ projectId, projectTitle, isOpen, onClos
                 SVG
               </button>
             </div>
+          )}
+
+          {/* Temporary preview note — shown only for demo/guest projects */}
+          {temporaryNote && (
+            <p className="text-[11px] text-gray-600 text-center leading-relaxed">
+              Link temporal · válido por 30 minutos
+            </p>
           )}
         </div>
       </div>

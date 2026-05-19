@@ -541,25 +541,6 @@ export default function ProjectEditor({
     <EditorModeContext.Provider value={mode}>
       <div className="h-full bg-gray-950 flex flex-col overflow-hidden">
 
-        {/* Demo banner — shown in demo mode only */}
-        {mode === 'demo' && (
-          <div className="flex-shrink-0 bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 animate-pulse" />
-              <p className="text-xs text-amber-300/90 truncate">
-                Demo — Datos guardados en este navegador. Hasta {DEMO_LIMIT} ubicaciones.
-              </p>
-            </div>
-            <Link
-              to="/register"
-              className="flex-shrink-0 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500
-                         px-3 py-1.5 rounded-full transition-colors whitespace-nowrap"
-            >
-              Crear cuenta gratis
-            </Link>
-          </div>
-        )}
-
         {/* ── Top bar ── */}
         <header
           className="sticky top-0 flex-shrink-0 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm z-50"
@@ -590,13 +571,13 @@ export default function ProjectEditor({
                 {hasUnsavedChanges ? '● Guardar' : 'Guardar'}
               </Button>
             ) : (
-              <Link
-                to="/register"
-                className="text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500
-                           px-3 h-8 rounded-lg transition-colors flex items-center whitespace-nowrap"
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setPreviewModalOpen(true)}
               >
-                Crear cuenta
-              </Link>
+                Previsualizar
+              </Button>
             )}
           </div>
 
@@ -661,8 +642,11 @@ export default function ProjectEditor({
                 </>
               ) : (
                 <>
-                  <span className="text-xs text-amber-400/80 hidden sm:block">
-                    {DEMO_LIMIT - points.length} de {DEMO_LIMIT} ubicaciones disponibles
+                  <Button variant="ghost" size="sm" onClick={() => setPreviewModalOpen(true)}>
+                    Previsualizar
+                  </Button>
+                  <span className="text-xs text-gray-500 hidden sm:block">
+                    {DEMO_LIMIT - points.length} de {DEMO_LIMIT} disponibles
                   </span>
                   <Link
                     to="/register"
@@ -1099,13 +1083,13 @@ export default function ProjectEditor({
           </div>
         )}
 
-        {/* PreviewQRModal — real mode only */}
-        {mode === 'real' && project && (
+        {project && (
           <PreviewQRModal
             projectId={project.id}
             projectTitle={project.title}
             isOpen={previewModalOpen}
             onClose={() => setPreviewModalOpen(false)}
+            temporaryNote={mode === 'demo'}
           />
         )}
 

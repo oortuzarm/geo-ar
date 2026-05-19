@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import PublicPointMarker from '../../components/map/PublicPointMarker'
@@ -1573,24 +1573,12 @@ export default function PublicPage({
 
       {/* ── Temporary preview watermark ──────────────────────────────────── */}
       {isTemporaryPreview && (
-        <div
-          className="absolute left-4 z-[600] pointer-events-none
-                     bottom-[120px] md:bottom-6"
-        >
-          <div className="bg-gray-950/75 backdrop-blur-md border border-white/[0.08]
-                          rounded-2xl px-3.5 py-2.5 shadow-xl flex flex-col gap-1.5">
-            <span className="text-[11px] font-medium text-white/45 leading-none select-none">
-              Preview creada con Ubyca
-            </span>
-            <Link
-              to="/register"
-              className="pointer-events-auto text-[11px] font-semibold text-brand-400
-                         hover:text-brand-300 transition-colors leading-none"
-              onClick={(e) => e.stopPropagation()}
-            >
-              Crear cuenta gratuita
-            </Link>
-          </div>
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[600] pointer-events-none">
+          <span className="block bg-black/50 backdrop-blur-sm border border-white/10
+                           rounded-full px-3 py-1 text-[10px] font-medium text-white/40
+                           select-none whitespace-nowrap">
+            Preview Ubyca
+          </span>
         </div>
       )}
       </div>

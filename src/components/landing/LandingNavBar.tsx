@@ -48,6 +48,13 @@ export default function LandingNavBar() {
                 {label}
               </button>
             ))}
+            <Link
+              to="/precios"
+              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-400
+                         hover:text-white hover:bg-white/5 transition-all duration-150"
+            >
+              Precios
+            </Link>
           </nav>
 
           <a
@@ -92,6 +99,14 @@ export default function LandingNavBar() {
               {label}
             </button>
           ))}
+          <Link
+            to="/precios"
+            onClick={() => setOpen(false)}
+            className="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium
+                       text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+          >
+            Precios
+          </Link>
           <div className="pt-2">
             <a
               href="https://www.ubyca.com/contact/"

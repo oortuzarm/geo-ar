@@ -26,6 +26,7 @@ import PrivacyPolicyPage        from './pages/Legal/PrivacyPolicyPage'
 import TermsAndConditionsPage   from './pages/Legal/TermsAndConditionsPage'
 import TryPage                  from './pages/Try/TryPage'
 import TemporaryPreviewPage     from './pages/TemporaryPreview/TemporaryPreviewPage'
+import PricingPage              from './pages/Landing/PricingPage'
 import ProtectedRoute           from './components/auth/ProtectedRoute'
 import AdminRoute               from './components/auth/AdminRoute'
 import RootLayout               from './components/routing/RootLayout'
@@ -95,6 +96,7 @@ export const landingRouter = createBrowserRouter([
     element: <RootLayout />,
     children: [
       { path: '/contact',     element: <ContactPage /> },
+      { path: '/precios',     element: <PricingPage /> },
       { path: '/landing-v2',  element: <LandingV2Page /> },
       { path: '/landing-old', element: <LandingPage /> },
       ...legalRoutes,
@@ -131,6 +133,7 @@ export const devRouter = createBrowserRouter([
     children: [
       { path: '/',            element: <LandingV2Page /> },
       { path: '/contact',     element: <ContactPage /> },
+      { path: '/precios',     element: <PricingPage /> },
       { path: '/landing-v2',  element: <LandingV2Page /> },
       { path: '/landing-old', element: <LandingPage /> },
       ...authRoutes,

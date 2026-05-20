@@ -195,9 +195,10 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
   const editorMode = useEditorMode()
   const imageFileRef  = useRef<HTMLInputElement>(null)
   const mediaFileRef  = useRef<HTMLInputElement>(null)
-  const [showTooltip,    setShowTooltip]    = useState(false)
-  const [imageError,     setImageError]     = useState<string | null>(null)
-  const [advancedOpen,   setAdvancedOpen]   = useState(false)
+  const [showTooltip,         setShowTooltip]         = useState(false)
+  const [imageError,          setImageError]          = useState<string | null>(null)
+  const [imageBlockedClicked, setImageBlockedClicked] = useState(false)
+  const [advancedOpen,        setAdvancedOpen]        = useState(false)
 
   // ── Local state for text fields ───────────────────────────────────────────
   const [name,        setName]        = useState(point.name)
@@ -301,6 +302,11 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
     const reader = new FileReader()
     reader.onload = () => onChange({ image: reader.result as string })
     reader.readAsDataURL(file)
+  }
+
+  function handleImageClick() {
+    if (editorMode === 'demo') { setImageBlockedClicked(true); return }
+    imageFileRef.current?.click()
   }
 
   // ── Media upload (Vercel Blob via uploadFile) ─────────────────────────────
@@ -603,9 +609,11 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           <div
             className="border-2 border-dashed border-gray-700 rounded-lg p-3 text-center
                        hover:border-gray-600 transition-colors cursor-pointer"
-            onClick={() => imageFileRef.current?.click()}
+            onClick={handleImageClick}
           >
-            {point.image ? (
+            {imageBlockedClicked ? (
+              <p className="text-xs text-red-400">Crea tu cuenta gratuita para usar esta función.</p>
+            ) : point.image ? (
               <div className="relative">
                 <img src={point.image} alt="Point" className="w-full h-24 object-cover rounded" />
                 <button

@@ -902,7 +902,7 @@ export default function ProjectEditor({
                               items-center gap-3 bg-gray-900/97 backdrop-blur-sm
                               border border-brand-600/50 rounded-2xl px-4 py-3
                               shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
-                <p className="text-sm font-medium text-gray-100">
+                <p className="text-sm font-medium text-gray-700">
                   Haz clic en el mapa para indicar tu ubicación.
                 </p>
                 <button

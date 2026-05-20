@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { ApiError } from '../../lib/apiFetch'
 import PasswordInput from '../../components/ui/PasswordInput'
+import { PENDING_CLAIM_KEY } from '../../hooks/usePendingClaim'
 
 export default function LoginPage() {
   const { isAuthenticated, isInitialized, login } = useAuthStore()
@@ -12,6 +13,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error,    setError]    = useState<string | null>(null)
   const [loading,  setLoading]  = useState(false)
+
+  // Visiting /login directly means the user wants to access their existing account,
+  // not claim a demo preview. Clear any pending claim so usePendingClaim doesn't
+  // redirect them to select-plan after authentication.
+  useEffect(() => {
+    localStorage.removeItem(PENDING_CLAIM_KEY)
+  }, [])
 
   // If session already verified and user is logged in, go straight to /app
   if (isInitialized && isAuthenticated) {

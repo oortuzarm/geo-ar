@@ -38,6 +38,11 @@ function normalizePlan(raw: Record<string, unknown>): PublicPlan {
 }
 
 export async function getPlans(): Promise<PublicPlan[]> {
-  const raw = await apiFetch<Record<string, unknown>[]>(`${BASE}/api/plans`)
+  // credentials: 'omit' — public endpoint, no auth needed.
+  // Avoids CORS preflight credential requirements that would block unauthenticated
+  // origins (e.g. ubyca.com landing page) when the backend uses strict CORS rules.
+  const raw = await apiFetch<Record<string, unknown>[]>(`${BASE}/api/plans`, {
+    credentials: 'omit',
+  })
   return raw.map(normalizePlan)
 }

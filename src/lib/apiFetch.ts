@@ -18,8 +18,8 @@ export async function apiFetch<T>(
 
   try {
     const res = await fetch(url, {
+      credentials: 'include',  // default — callers can override by passing credentials explicitly
       ...init,
-      credentials: 'include',
       signal: controller.signal,
       headers: { 'Content-Type': 'application/json', ...init.headers },
     })

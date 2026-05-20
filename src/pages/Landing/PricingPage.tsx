@@ -245,8 +245,15 @@ export default function PricingPage() {
     setLoading(true)
     setError(null)
     getPlans()
-      .then(setPlans)
-      .catch(() => setError('No se pudieron cargar los planes. Intenta de nuevo.'))
+      .then((data) => {
+        console.info('[PricingPage] plans loaded:', data.length)
+        setPlans(data)
+      })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err)
+        console.error('[PricingPage] getPlans failed:', msg, err)
+        setError('No se pudieron cargar los planes. Intenta de nuevo.')
+      })
       .finally(() => setLoading(false))
   }
 

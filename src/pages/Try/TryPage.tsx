@@ -234,9 +234,14 @@ export default function TryPage() {
       return { url, token }
     } catch (err) {
       if (err instanceof ApiError) {
-        console.error('[TryPage] Backend error', err.status, err.message)
+        console.error('[TryPage] Backend error creating preview:', err.status, err.message)
+      } else {
+        console.error('[TryPage] Unknown error creating preview:', err)
       }
-      throw err
+      // Return null instead of rethrowing — openPreview opens the modal in
+      // fallback mode without showing a toast. Matches /project/ behaviour where
+      // clicking Preview always opens the modal regardless of point count.
+      return null
     }
   }
 

@@ -95,6 +95,8 @@ function HeroSection() {
           >
             <a
               href="https://studio.ubyca.com/try"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
                          bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
                          font-semibold text-sm transition-all duration-150
@@ -720,6 +722,8 @@ function FinalCTASection() {
           </p>
           <a
             href="https://studio.ubyca.com/try"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl
                        bg-brand-600 hover:bg-brand-500 active:scale-[0.98]
                        text-white font-bold text-base transition-all duration-150

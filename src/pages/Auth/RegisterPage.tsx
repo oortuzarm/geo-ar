@@ -72,10 +72,10 @@ export default function RegisterPage() {
 
         {/* Conversion hook */}
         <div className="text-center mb-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 mb-2">
+          <p className="text-[13px] font-semibold uppercase tracking-[0.2em] text-gray-400 mb-2">
             Empieza tu prueba gratis
           </p>
-          <p className="text-[10px] text-gray-600 tracking-wide">
+          <p className="text-xs text-gray-500 tracking-wide">
             14 días gratis&nbsp;·&nbsp;No necesitas tarjeta
           </p>
         </div>

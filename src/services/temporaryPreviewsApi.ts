@@ -32,9 +32,14 @@ export function createTemporaryPreview(
 }
 
 export function fetchTemporaryPreview(token: string): Promise<TemporaryPreviewFetched> {
-  return apiFetch<TemporaryPreviewFetched>(`${BASE}/api/temporary_previews/${token}`, {
-    cache: 'no-store',
-  })
+  // Append a per-call timestamp so every request is a cache miss at every layer:
+  // browser disk cache, CDN, and any server-side HTTP cache. Without this,
+  // a browser refresh of the same URL can return stale data even with
+  // cache: 'no-store', because that flag only controls the browser's own cache.
+  return apiFetch<TemporaryPreviewFetched>(
+    `${BASE}/api/temporary_previews/${token}?_cb=${Date.now()}`,
+    { cache: 'no-store' },
+  )
 }
 
 export interface ClaimResult {

@@ -67,6 +67,8 @@ export default function LandingNavBar() {
           <div className="hidden md:flex items-center gap-2 flex-shrink-0">
             <a
               href="https://studio.ubyca.com/login"
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300
                          border border-white/[0.12] hover:text-white hover:border-white/25
                          hover:bg-white/[0.05] transition-all duration-150"
@@ -75,6 +77,8 @@ export default function LandingNavBar() {
             </a>
             <a
               href="https://studio.ubyca.com/register"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl
                          bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
                          font-semibold text-sm transition-all duration-150
@@ -132,6 +136,8 @@ export default function LandingNavBar() {
           <div className="pt-2 flex flex-col gap-2">
             <a
               href="https://studio.ubyca.com/register"
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => setOpen(false)}
               className="flex items-center justify-center w-full py-3 rounded-xl
                          bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm
@@ -141,6 +147,8 @@ export default function LandingNavBar() {
             </a>
             <a
               href="https://studio.ubyca.com/login"
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => setOpen(false)}
               className="flex items-center justify-center w-full py-2.5 rounded-xl
                          border border-white/[0.12] text-slate-300 hover:text-white

@@ -338,6 +338,29 @@ export default function PricingPage() {
             </p>
           )}
 
+          {/* ── Custom CTA ───────────────────────────────────────────────────── */}
+          <section className="my-16 max-w-2xl mx-auto text-center px-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 leading-snug">
+              ¿Necesitas una solución más personalizada?
+            </h2>
+            <p className="text-gray-400 text-sm sm:text-base leading-relaxed mb-8 max-w-lg mx-auto">
+              Podemos ayudarte a implementar experiencias geolocalizadas para marcas,
+              espacios físicos, eventos o activaciones a gran escala.
+            </p>
+            <Link
+              to="/contact"
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-xl
+                         bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
+                         font-semibold text-sm transition-all duration-150
+                         shadow-[0_4px_20px_rgba(2,132,199,0.35)]"
+            >
+              Hablar con ventas
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </section>
+
           {/* ── FAQ ──────────────────────────────────────────────────────────── */}
           <section className="max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold text-gray-100 text-center mb-8">

@@ -105,15 +105,15 @@ function HeroSection() {
                   d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
               </svg>
             </a>
-            <button
-              onClick={() => document.getElementById('v2-cases')?.scrollIntoView({ behavior: 'smooth' })}
+            <a
+              href="/precios"
               className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
                          bg-white/[0.06] hover:bg-white/[0.10] active:scale-[0.98]
                          border border-white/10 text-white font-semibold text-sm
                          backdrop-blur-sm transition-all duration-150"
             >
-              Ver casos de uso
-            </button>
+              Ver planes
+            </a>
           </motion.div>
 
           <motion.div

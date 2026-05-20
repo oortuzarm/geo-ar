@@ -394,8 +394,11 @@ export default function ProjectEditor({
           setPreviewToken(result.token)
           setPreviewModalOpen(true)
         } else {
-          // onPreviewOpen returned null — open modal anyway (real-mode fallback URL)
+          // onPreviewOpen returned null — clear any stale URL so the modal
+          // never shows a previous preview, then open in fallback mode.
           console.warn('[ProjectEditor] onPreviewOpen returned null — opening modal without token')
+          setPreviewUrl(null)
+          setPreviewToken(null)
           setPreviewModalOpen(true)
         }
       } catch {

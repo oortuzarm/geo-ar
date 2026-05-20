@@ -225,10 +225,17 @@ export default function TryPage() {
 
       // Prefer the URL the backend provides; fall back to constructing it from
       // the token so a missing publicUrl field doesn't silently drop the token.
-      const url =
+      const baseUrl =
         result.publicUrl ??
         result.public_url ??
         `${window.location.origin}/temporary/${token}`
+
+      // Append a timestamp so each preview click produces a unique URL.
+      // This forces TemporaryPreviewPage to re-fetch even when the backend
+      // re-uses the same token (upsert by project ID), and prevents phone
+      // browsers from serving a cached page for an already-visited URL.
+      const sep = baseUrl.includes('?') ? '&' : '?'
+      const url = `${baseUrl}${sep}_t=${Date.now()}`
 
       console.info('[TryPage] handlePreviewOpen returning:', { url, token: token.slice(0, 8) + '…' })
       return { url, token }

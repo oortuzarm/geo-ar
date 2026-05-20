@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import PublicPage from '../Public/PublicPage'
 import Spinner from '../../components/ui/Spinner'
 import { fetchTemporaryPreview } from '../../services/temporaryPreviewsApi'
@@ -31,12 +31,22 @@ function ErrorCard(_props: { state: Exclude<PageState, 'loading' | 'ok'> }) {
 
 export default function TemporaryPreviewPage() {
   const { token } = useParams<{ token: string }>()
+  const [searchParams] = useSearchParams()
+  // Changes on every /try preview click — forces a re-fetch even when the
+  // backend re-uses the same token (upsert by project ID).
+  const cacheBust = searchParams.get('_t')
+
   const [pageState, setPageState] = useState<PageState>('loading')
   const [project, setProject]     = useState<GeoProject | null>(null)
   const [points, setPoints]       = useState<GeoPoint[]>([])
 
   useEffect(() => {
     if (!token) { setPageState('not-found'); return }
+
+    // Reset to loading so stale content is never visible during re-fetch.
+    setPageState('loading')
+    setProject(null)
+    setPoints([])
 
     fetchTemporaryPreview(token)
       .then((data) => {
@@ -57,7 +67,7 @@ export default function TemporaryPreviewPage() {
         }
         setPageState('error')
       })
-  }, [token])
+  }, [token, cacheBust])
 
   if (pageState === 'loading') {
     return (

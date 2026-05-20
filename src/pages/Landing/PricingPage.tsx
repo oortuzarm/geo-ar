@@ -261,16 +261,17 @@ export default function PricingPage() {
 
   const annualDiscount = plans.find((p) => p.annualDiscountPercent > 0)?.annualDiscountPercent ?? 0
   const gridCols =
-    plans.length <= 1 ? 'max-w-xs mx-auto' :
+    plans.length <= 1 ? 'max-w-xs mx-auto'                  :
     plans.length === 2 ? 'sm:grid-cols-2 max-w-2xl mx-auto' :
-                         'sm:grid-cols-2 lg:grid-cols-3'
+    plans.length === 3 ? 'sm:grid-cols-2 lg:grid-cols-3'    :
+                         'sm:grid-cols-2 lg:grid-cols-4'
 
   return (
     <div className="min-h-screen bg-[#050810] text-gray-100">
       <LandingNavBar />
 
       <main className="pt-24 pb-20">
-        <div className="max-w-5xl mx-auto px-5">
+        <div className="max-w-6xl mx-auto px-6">
 
           {/* ── Hero ────────────────────────────────────────────────────────── */}
           <div className="text-center mb-14 space-y-4">

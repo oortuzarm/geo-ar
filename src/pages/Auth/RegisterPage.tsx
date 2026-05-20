@@ -61,7 +61,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm">
 
         {/* Brand */}
-        <div className="text-center mb-5">
+        <div className="text-center mb-6">
           <img
             src="/logo-blanco.png"
             alt="Ubyca"
@@ -71,11 +71,11 @@ export default function RegisterPage() {
         </div>
 
         {/* Conversion hook */}
-        <div className="text-center mb-6">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500 mb-1.5">
+        <div className="text-center mb-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 mb-2">
             Empieza tu prueba gratis
           </p>
-          <p className="text-xs text-gray-600">
+          <p className="text-[10px] text-gray-600 tracking-wide">
             14 días gratis&nbsp;·&nbsp;No necesitas tarjeta
           </p>
         </div>

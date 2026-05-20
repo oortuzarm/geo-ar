@@ -4,6 +4,12 @@ import { useAuthStore } from '../../store/authStore'
 import { ApiError } from '../../lib/apiFetch'
 import PasswordInput from '../../components/ui/PasswordInput'
 
+const INPUT_BASE =
+  'w-full bg-gray-800/80 border border-gray-700 hover:border-gray-600 rounded-lg px-3 py-2.5 ' +
+  'text-sm text-gray-100 placeholder-gray-500 ' +
+  'focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500/60 ' +
+  'transition-all duration-200'
+
 export default function RegisterPage() {
   const { isAuthenticated, isInitialized, register } = useAuthStore()
   const navigate = useNavigate()
@@ -55,7 +61,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm">
 
         {/* Brand */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-5">
           <img
             src="/logo-blanco.png"
             alt="Ubyca"
@@ -64,8 +70,21 @@ export default function RegisterPage() {
           />
         </div>
 
+        {/* Value proposition */}
+        <div className="text-center mb-7 px-2">
+          <h1 className="text-[17px] font-bold text-white leading-snug mb-1.5">
+            Convierte lugares reales en experiencias interactivas.
+          </h1>
+          <p className="text-sm text-gray-500 leading-relaxed">
+            Crea contenido geolocalizado y desbloquéalo según ubicación GPS.
+          </p>
+        </div>
+
         {/* Card */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-2xl">
+        <div className={[
+          'bg-gray-900 border border-white/[0.07] rounded-2xl p-6',
+          'shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_8px_40px_rgba(0,0,0,0.55)]',
+        ].join(' ')}>
           <h2 className="text-lg font-semibold text-white mb-5">Crear cuenta</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -81,10 +100,7 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@email.com"
-                className="bg-gray-800 border border-gray-700 hover:border-gray-600
-                           rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500
-                           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
-                           transition-colors"
+                className={INPUT_BASE}
               />
             </div>
 
@@ -99,10 +115,7 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mínimo 8 caracteres"
-                className="w-full bg-gray-800 border border-gray-700 hover:border-gray-600
-                           rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500
-                           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
-                           transition-colors"
+                className={INPUT_BASE}
               />
             </div>
 
@@ -117,10 +130,7 @@ export default function RegisterPage() {
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 placeholder="Repetí tu contraseña"
-                className="w-full bg-gray-800 border border-gray-700 hover:border-gray-600
-                           rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500
-                           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
-                           transition-colors"
+                className={INPUT_BASE}
               />
             </div>
 
@@ -135,17 +145,31 @@ export default function RegisterPage() {
               type="submit"
               disabled={loading}
               className="w-full bg-brand-600 hover:bg-brand-500 active:bg-brand-700
-                         text-white font-semibold py-2.5 rounded-xl text-sm
-                         transition-colors disabled:opacity-50 disabled:cursor-wait
+                         text-white font-semibold py-2.5 rounded-xl text-sm mt-1
+                         shadow-[0_2px_12px_rgba(2,132,199,0.2)]
+                         hover:shadow-[0_4px_20px_rgba(2,132,199,0.35)] hover:-translate-y-px
+                         active:translate-y-0
+                         transition-all duration-200
+                         disabled:opacity-50 disabled:cursor-wait disabled:hover:translate-y-0
+                         disabled:hover:shadow-[0_2px_12px_rgba(2,132,199,0.2)]
                          focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2
-                         focus:ring-offset-gray-900 mt-1"
+                         focus:ring-offset-gray-900"
             >
               {loading ? 'Creando cuenta…' : 'Crear cuenta'}
             </button>
           </form>
 
+          {/* Trust microcopy */}
+          <div className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 mt-3.5">
+            <span className="text-[11px] text-gray-600">14 días gratis</span>
+            <span className="text-gray-700 text-[9px] leading-none">•</span>
+            <span className="text-[11px] text-gray-600">No necesitas tarjeta</span>
+            <span className="text-gray-700 text-[9px] leading-none">•</span>
+            <span className="text-[11px] text-gray-600">Configuración en minutos</span>
+          </div>
+
           <p className="text-center text-sm text-gray-500 mt-5">
-            ¿Ya tenés cuenta?{' '}
+            ¿Ya tienes cuenta?{' '}
             <Link
               to="/login"
               className="text-brand-400 hover:text-brand-300 font-medium transition-colors"

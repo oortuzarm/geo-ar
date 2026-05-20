@@ -2,6 +2,7 @@
 // ProjectEditor and TryPage both import from here — never define DEMO_LIMIT elsewhere.
 export const DEMO_LIMIT = 10
 
+import { Link } from 'react-router-dom'
 
 export default function DemoLimitModal({ onClose }: { onClose: () => void }) {
   return (
@@ -20,14 +21,14 @@ export default function DemoLimitModal({ onClose }: { onClose: () => void }) {
           La demo permite hasta {DEMO_LIMIT} ubicaciones. Crea una cuenta gratuita para agregar
           más puntos GPS y guardar tu experiencia de forma permanente.
         </p>
-        <button
-          type="button"
-          onClick={() => { window.open('/register', '_blank', 'noopener,noreferrer'); onClose() }}
+        <Link
+          to="/register"
           className="block w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-500 text-white text-sm
                      font-semibold rounded-lg transition-colors text-center mb-2"
+          onClick={onClose}
         >
           Crear cuenta gratuita
-        </button>
+        </Link>
         <button
           onClick={onClose}
           className="w-full py-2.5 px-4 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm

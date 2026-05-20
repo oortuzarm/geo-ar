@@ -680,14 +680,13 @@ export default function ProjectEditor({
                   <span className="text-xs text-gray-500 hidden sm:block">
                     {DEMO_LIMIT - points.length} de {DEMO_LIMIT} disponibles
                   </span>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); window.open('/register', '_blank', 'noopener,noreferrer') }}
+                  <Link
+                    to="/register"
                     className="flex items-center px-4 h-8 rounded-full text-xs font-semibold
                                bg-brand-600 hover:bg-brand-500 text-white transition-colors"
                   >
                     Crear cuenta gratuita
-                  </button>
+                  </Link>
                 </>
               )}
             </div>

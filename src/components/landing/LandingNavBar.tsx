@@ -15,10 +15,8 @@ export default function LandingNavBar() {
   function handleNavLink(sectionId: string) {
     setOpen(false)
     if (location.pathname === '/') {
-      // Already on landing — scroll directly
       setTimeout(() => document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' }), 80)
     } else {
-      // Navigate to landing and let its useEffect handle the hash scroll
       navigate({ pathname: '/', hash: `#${sectionId}` })
     }
   }
@@ -26,7 +24,7 @@ export default function LandingNavBar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
       <div className="border-b border-white/[0.06] bg-[#050810]/80 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
 
           <Link to="/" className="flex items-center flex-shrink-0">
             <img
@@ -37,38 +35,54 @@ export default function LandingNavBar() {
             />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-0.5">
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-0.5 flex-1">
             {NAV_LINKS.map(([label, id]) => (
               <button
                 key={id}
                 onClick={() => handleNavLink(id)}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-slate-400
-                           hover:text-white hover:bg-white/5 transition-all duration-150"
+                className="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-400
+                           hover:text-white hover:bg-white/5 transition-all duration-150 whitespace-nowrap"
               >
                 {label}
               </button>
             ))}
             <Link
               to="/precios"
-              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-400
+              className="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-400
                          hover:text-white hover:bg-white/5 transition-all duration-150"
             >
               Precios
             </Link>
+            <Link
+              to="/contact"
+              className="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-400
+                         hover:text-white hover:bg-white/5 transition-all duration-150"
+            >
+              Contacto
+            </Link>
           </nav>
 
-          <a
-            href="https://www.ubyca.com/contact/"
-            className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl
-                       bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
-                       font-semibold text-sm transition-all duration-150
-                       shadow-[0_4px_20px_rgba(2,132,199,0.35)]"
-          >
-            Hablemos
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-            </svg>
-          </a>
+          {/* Desktop CTA buttons */}
+          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
+            <a
+              href="https://studio.ubyca.com/login"
+              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300
+                         border border-white/[0.12] hover:text-white hover:border-white/25
+                         hover:bg-white/[0.05] transition-all duration-150"
+            >
+              Iniciar sesión
+            </a>
+            <a
+              href="https://studio.ubyca.com/register"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl
+                         bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
+                         font-semibold text-sm transition-all duration-150
+                         shadow-[0_4px_20px_rgba(2,132,199,0.35)]"
+            >
+              Comienza gratis
+            </a>
+          </div>
 
           {/* Mobile hamburger */}
           <button
@@ -107,14 +121,32 @@ export default function LandingNavBar() {
           >
             Precios
           </Link>
-          <div className="pt-2">
+          <Link
+            to="/contact"
+            onClick={() => setOpen(false)}
+            className="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium
+                       text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+          >
+            Contacto
+          </Link>
+          <div className="pt-2 flex flex-col gap-2">
             <a
-              href="https://www.ubyca.com/contact/"
+              href="https://studio.ubyca.com/register"
               onClick={() => setOpen(false)}
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl
-                         bg-brand-600 text-white font-semibold text-sm"
+              className="flex items-center justify-center w-full py-3 rounded-xl
+                         bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm
+                         transition-colors"
             >
-              Hablemos →
+              Comienza gratis
+            </a>
+            <a
+              href="https://studio.ubyca.com/login"
+              onClick={() => setOpen(false)}
+              className="flex items-center justify-center w-full py-2.5 rounded-xl
+                         border border-white/[0.12] text-slate-300 hover:text-white
+                         font-medium text-sm transition-colors"
+            >
+              Iniciar sesión
             </a>
           </div>
         </div>

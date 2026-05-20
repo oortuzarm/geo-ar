@@ -17,12 +17,6 @@ export default function SiteFooter() {
         </p>
         <div className="flex items-center gap-5">
           <Link
-            to="/precios"
-            className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
-          >
-            Precios
-          </Link>
-          <Link
             to="/terms_and_conditions"
             className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
           >

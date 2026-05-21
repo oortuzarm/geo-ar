@@ -253,12 +253,12 @@ function HeroSection() {
 
 // ─── How it works ─────────────────────────────────────────────────────────────
 
-const STEPS = [
+const HOW_STEPS = [
   {
-    title: 'Crea un punto en el mapa',
-    desc: 'Coloca uno o varios puntos GPS en cualquier lugar del mundo.',
+    title: 'Crea ubicaciones',
+    desc: 'Agrega puntos geolocalizados desde el mapa y personaliza su contenido.',
     icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
           d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -266,10 +266,10 @@ const STEPS = [
     ),
   },
   {
-    title: 'Define un radio de activación',
-    desc: 'Establece el área en metros donde se activa la experiencia.',
+    title: 'Define el área de activación',
+    desc: 'Configura el radio de acceso y las reglas para desbloquear contenido según ubicación.',
     icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="9" strokeWidth={1.75} />
         <circle cx="12" cy="12" r="4" strokeWidth={1.5} />
         <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
@@ -277,32 +277,12 @@ const STEPS = [
     ),
   },
   {
-    title: 'Agrega contenido o un enlace',
-    desc: 'Texto, imágenes, URL o promociones que se desbloquean al llegar.',
+    title: 'Comparte la experiencia',
+    desc: 'Tus usuarios podrán desbloquear contenido, promociones o rutas al llegar al lugar indicado.',
     icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Comparte el proyecto',
-    desc: 'Una URL única. Sin apps, sin instalaciones, sin fricción.',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
           d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Los usuarios desbloquean la experiencia',
-    desc: 'Al llegar al radio, el contenido se activa automáticamente.',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
       </svg>
     ),
   },
@@ -312,50 +292,48 @@ function HowItWorksSection() {
   return (
     <section id="v2-how" className="py-28 px-5 relative overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #050810 0%, #060d1c 55%, #050810 100%)' }}>
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-5xl mx-auto">
 
-        <Reveal className="text-center mb-16">
-          <SectionLabel>Paso a paso</SectionLabel>
-          <h2 className="text-3xl sm:text-4xl font-black text-white">Así funciona</h2>
-          <p className="mt-4 text-slate-400 max-w-xl mx-auto">
-            En minutos puedes tener una experiencia geolocalizada lista para compartir.
-          </p>
+        <Reveal className="text-center mb-20">
+          <SectionLabel>Cómo funciona</SectionLabel>
+          <h2 className="text-3xl sm:text-4xl font-black text-white">
+            Crea experiencias geolocalizadas en minutos.
+          </h2>
         </Reveal>
 
-        {/* Steps grid */}
+        {/* Steps */}
         <div className="relative">
-          {/* Desktop: horizontal connector line */}
-          <div className="hidden lg:block absolute top-10 left-[calc(10%+2.5rem)] right-[calc(10%+2.5rem)] h-px"
-            style={{ background: 'linear-gradient(to right, transparent, rgba(14,165,233,0.15) 20%, rgba(14,165,233,0.15) 80%, transparent)' }} />
+          {/* Desktop: horizontal connector */}
+          <div className="hidden lg:block absolute top-[2.75rem] left-[calc(100%/6+1.5rem)] right-[calc(100%/6+1.5rem)] h-px"
+            style={{ background: 'linear-gradient(to right, transparent, rgba(14,165,233,0.18) 15%, rgba(14,165,233,0.18) 85%, transparent)' }} />
 
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-4">
-            {STEPS.map((step, i) => (
-              <Reveal key={step.title} delay={i * 0.07}>
-                {/* Mobile: timeline layout */}
-                <div className="flex lg:flex-col lg:items-center gap-4 lg:gap-0 lg:text-center">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-8">
+            {HOW_STEPS.map((step, i) => (
+              <Reveal key={step.title} delay={i * 0.1}>
+                <div className="flex lg:flex-col lg:items-center gap-5 lg:gap-0 lg:text-center">
                   {/* Icon badge */}
                   <div className="relative flex-shrink-0">
-                    <div className="w-20 h-20 rounded-2xl bg-gray-900 border border-white/[0.08]
+                    <div className="w-[5.5rem] h-[5.5rem] rounded-2xl bg-gray-900 border border-white/[0.08]
                                     flex items-center justify-center text-brand-400
-                                    shadow-[0_0_0_1px_rgba(14,165,233,0.04),0_8px_24px_rgba(0,0,0,0.4)]">
+                                    shadow-[0_0_0_1px_rgba(14,165,233,0.05),0_8px_28px_rgba(0,0,0,0.45)]">
                       {step.icon}
                     </div>
-                    <span className="absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full
+                    <span className="absolute -top-3 -right-3 w-6 h-6 rounded-full
                                      bg-brand-600 border-2 border-[#060d1c]
                                      text-white text-[10px] font-black
                                      flex items-center justify-center">
                       {i + 1}
                     </span>
-                    {/* Mobile vertical connector (between steps) */}
-                    {i < STEPS.length - 1 && (
-                      <div className="lg:hidden absolute left-1/2 -translate-x-1/2 top-full mt-0
-                                      w-px h-10 bg-brand-500/10" />
+                    {/* Mobile vertical connector */}
+                    {i < HOW_STEPS.length - 1 && (
+                      <div className="lg:hidden absolute left-1/2 -translate-x-1/2 top-full mt-1
+                                      w-px h-10 bg-brand-500/[0.12]" />
                     )}
                   </div>
                   {/* Text */}
-                  <div className="pt-1 lg:pt-4 lg:px-1">
-                    <h3 className="font-bold text-white text-sm leading-snug mb-1.5">{step.title}</h3>
-                    <p className="text-xs text-slate-500 leading-relaxed">{step.desc}</p>
+                  <div className="lg:pt-6 lg:px-3">
+                    <h3 className="font-bold text-white text-base leading-snug mb-2">{step.title}</h3>
+                    <p className="text-sm text-slate-500 leading-relaxed">{step.desc}</p>
                   </div>
                 </div>
               </Reveal>
@@ -363,8 +341,8 @@ function HowItWorksSection() {
           </div>
         </div>
 
-        {/* Editor screenshot below steps */}
-        <Reveal delay={0.25} className="mt-20">
+        {/* Screenshot */}
+        <Reveal delay={0.2} className="mt-20">
           <div className="relative rounded-2xl overflow-hidden border border-white/[0.07]
                           shadow-[0_24px_64px_rgba(0,0,0,0.5)]">
             <img
@@ -375,14 +353,12 @@ function HowItWorksSection() {
               loading="lazy"
               draggable={false}
             />
-            {/* Left + right + bottom fade */}
             <div className="absolute inset-0 pointer-events-none" style={{
               background: [
                 'linear-gradient(to right, rgba(6,13,28,0.55) 0%, transparent 18%, transparent 82%, rgba(6,13,28,0.55) 100%)',
                 'linear-gradient(to bottom, transparent 50%, rgba(6,13,28,0.85) 100%)',
               ].join(', '),
             }} />
-            {/* Floating label */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
               <span className="text-[11px] font-semibold text-slate-500">
                 Editor de puntos GPS — Ubyca Studio
@@ -390,6 +366,36 @@ function HowItWorksSection() {
             </div>
           </div>
         </Reveal>
+
+        {/* CTA */}
+        <Reveal delay={0.3} className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <a
+            href="https://studio.ubyca.com/try"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
+                       bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
+                       font-semibold text-sm transition-all duration-150
+                       shadow-[0_4px_24px_rgba(2,132,199,0.4)]">
+            Comienza gratis
+            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" clipRule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+            </svg>
+          </a>
+          <a
+            href="https://studio.ubyca.com/try"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
+                       bg-white/[0.06] hover:bg-white/[0.10] active:scale-[0.98]
+                       border border-white/10 text-white font-semibold text-sm
+                       backdrop-blur-sm transition-all duration-150"
+          >
+            Ver demo
+          </a>
+        </Reveal>
+
       </div>
     </section>
   )

@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { motion, useInView } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { motion, useInView, AnimatePresence } from 'framer-motion'
 import LandingNavBar from '../../components/landing/LandingNavBar'
 import SiteFooter from '../../components/landing/SiteFooter'
 
@@ -39,6 +39,37 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
+const HERO_WORDS = [
+  'eventos y festivales.',
+  'tiendas y retail.',
+  'activaciones de marca.',
+  'ferias y stands.',
+]
+
+function RotatingWord() {
+  const [idx, setIdx] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setIdx((i) => (i + 1) % HERO_WORDS.length), 2600)
+    return () => clearInterval(id)
+  }, [])
+  return (
+    <span className="block min-h-[1.4em]">
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span
+          key={idx}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className="block text-brand-400"
+        >
+          {HERO_WORDS[idx]}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  )
+}
+
 function HeroSection() {
   return (
     <section className="relative bg-[#050810] overflow-hidden" style={{ minHeight: '100dvh' }}>
@@ -75,8 +106,8 @@ function HeroSection() {
             className="mt-6 font-black text-white tracking-tight leading-[1.04]
                        text-[2.2rem] sm:text-[2.8rem] lg:text-[3rem]"
           >
-            Convierte ubicaciones reales en{' '}
-            <span className="text-brand-400">experiencias interactivas</span>
+            Desbloquea contenido geolocalizado en
+            <RotatingWord />
           </motion.h1>
 
           <motion.p
@@ -84,8 +115,8 @@ function HeroSection() {
             transition={{ duration: 0.7, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
             className="mt-5 text-base md:text-lg text-slate-400 leading-relaxed"
           >
-            Crea puntos geolocalizados, define radios de activación y permite que tus usuarios
-            desbloqueen contenido, rutas, promociones o experiencias al llegar a un lugar específico.
+            Crea puntos geolocalizados, define radios de activación y permite desbloquear contenido,
+            promociones o rutas al llegar a un lugar específico.
           </motion.p>
 
           <motion.div

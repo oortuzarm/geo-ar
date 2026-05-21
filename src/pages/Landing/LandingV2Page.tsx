@@ -277,12 +277,12 @@ const HOW_STEPS = [
     ),
   },
   {
-    title: 'Comparte la experiencia',
-    desc: 'Tus usuarios podrán desbloquear contenido, promociones o rutas al llegar al lugar indicado.',
+    title: 'Desbloquea contenido',
+    desc: 'Tus usuarios podrán acceder a promociones, rutas o contenido al llegar al lugar indicado.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+          d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
       </svg>
     ),
   },
@@ -341,34 +341,8 @@ function HowItWorksSection() {
           </div>
         </div>
 
-        {/* Screenshot */}
-        <Reveal delay={0.2} className="mt-20">
-          <div className="relative rounded-2xl overflow-hidden border border-white/[0.07]
-                          shadow-[0_24px_64px_rgba(0,0,0,0.5)]">
-            <img
-              src="/funciona-desktop.webp"
-              alt="Editor Ubyca con mapa y puntos geolocalizados"
-              className="w-full object-cover select-none"
-              style={{ height: 300, objectPosition: 'center 40%' }}
-              loading="lazy"
-              draggable={false}
-            />
-            <div className="absolute inset-0 pointer-events-none" style={{
-              background: [
-                'linear-gradient(to right, rgba(6,13,28,0.55) 0%, transparent 18%, transparent 82%, rgba(6,13,28,0.55) 100%)',
-                'linear-gradient(to bottom, transparent 50%, rgba(6,13,28,0.85) 100%)',
-              ].join(', '),
-            }} />
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
-              <span className="text-[11px] font-semibold text-slate-500">
-                Editor de puntos GPS — Ubyca Studio
-              </span>
-            </div>
-          </div>
-        </Reveal>
-
         {/* CTA */}
-        <Reveal delay={0.3} className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <Reveal delay={0.3} className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-3">
           <a
             href="https://studio.ubyca.com/try"
             target="_blank"

@@ -992,8 +992,8 @@ export default function ProjectEditor({
               mapStyleId={mapStyleId}
             />
 
-            {/* Map style toggle */}
-            <div className="absolute bottom-20 right-4 z-[999] lg:bottom-8">
+            {/* Map style toggle — left on mobile to avoid FAB/Lista, right on desktop */}
+            <div className="absolute bottom-20 left-4 z-[999] lg:bottom-8 lg:left-auto lg:right-4">
               <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
             </div>
           </div>

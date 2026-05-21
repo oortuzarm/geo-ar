@@ -1482,8 +1482,8 @@ export default function PublicPage({
           <LocationBadge status={locationStatus} accuracy={userLocation?.accuracy} onClick={handleBadgeClick} />
         </div>
 
-        {/* Map style toggle */}
-        <div className="absolute bottom-4 right-4 z-[400]">
+        {/* Map style toggle — left on mobile to avoid "Mostrar lista", right on desktop */}
+        <div className="absolute bottom-4 left-4 z-[400] md:left-auto md:right-4">
           <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
         </div>
 

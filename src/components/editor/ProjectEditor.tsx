@@ -754,11 +754,11 @@ export default function ProjectEditor({
               />
             </div>
 
-            {/* My location button */}
+            {/* My location button — desktop only; mobile version lives in the bottom bar */}
             <button
               onClick={handleMyLocation}
               disabled={locatingUser}
-              className="absolute bottom-8 left-4 z-[1000] bg-gray-900/95 border border-gray-700
+              className="hidden lg:flex absolute bottom-8 left-4 z-[1000] bg-gray-900/95 border border-gray-700
                          rounded-lg p-2.5 shadow-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
               title="Mi ubicación"
             >
@@ -774,25 +774,6 @@ export default function ProjectEditor({
               )}
             </button>
 
-            {/* Mobile: FAB */}
-            {!fabPlacementMode && (
-              <div
-                className="lg:hidden absolute right-4 z-[1000]"
-                style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
-              >
-                <button
-                  onClick={() => setFabPlacementMode(true)}
-                  className="flex items-center gap-2 bg-brand-600 hover:bg-brand-500 active:bg-brand-700
-                             text-white rounded-full px-4 py-3 font-semibold text-sm transition-colors
-                             shadow-[0_4px_20px_rgba(2,132,199,0.4)]"
-                >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Agregar punto
-                </button>
-              </div>
-            )}
 
             {/* Mobile: placement mode hint */}
             {fabPlacementMode && (
@@ -819,22 +800,12 @@ export default function ProjectEditor({
               </div>
             )}
 
-            {/* Mobile: list button */}
-            <div className="lg:hidden absolute bottom-8 right-4 z-[1000]">
-              <button
-                className="bg-gray-900/95 border border-gray-700 rounded-lg px-3 py-2
-                           text-sm font-medium text-gray-300 shadow-lg hover:bg-gray-800 transition-colors"
-                onClick={() => setListDrawerOpen(true)}
-              >
-                Lista · {points.length}
-              </button>
-            </div>
 
             {/* Custom initial view hint — shown whenever the user has selected 'custom' */}
             {project?.publicInitialViewMode === 'custom' && (
               <>
                 <div className="absolute inset-0 pointer-events-none z-[900] border-2 border-brand-500/20" />
-                <div className="absolute bottom-24 lg:bottom-14 left-1/2 -translate-x-1/2 z-[900] pointer-events-none whitespace-nowrap">
+                <div className="absolute bottom-36 lg:bottom-14 left-1/2 -translate-x-1/2 z-[900] pointer-events-none whitespace-nowrap">
                   <div className="flex items-center gap-2 bg-gray-900/96 backdrop-blur-sm
                                   border border-brand-500/30 rounded-xl px-3.5 py-2 shadow-xl">
                     <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse flex-shrink-0" />
@@ -992,9 +963,85 @@ export default function ProjectEditor({
               mapStyleId={mapStyleId}
             />
 
-            {/* Map style toggle — left on mobile to avoid FAB/Lista, right on desktop */}
-            <div className="absolute bottom-20 left-4 z-[999] lg:bottom-8 lg:left-auto lg:right-4">
+            {/* Map style toggle — desktop only; mobile version lives in the bottom bar */}
+            <div className="hidden lg:block absolute bottom-8 right-4 z-[999]">
               <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
+            </div>
+
+            {/* ── Mobile bottom control bar ─────────────────────────────────────
+                Layout: [Mapa/Satélite]  [+ Agregar punto]  [☰ Lista]
+                        with "Mi ubicación" floating above the Lista column.    */}
+            <div
+              className="lg:hidden absolute inset-x-0 bottom-0 z-[1000]"
+              style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))' }}
+            >
+              {/* Mi ubicación — above Lista (right column) */}
+              <div className="flex justify-end pr-4 mb-2">
+                <button
+                  onClick={handleMyLocation}
+                  disabled={locatingUser}
+                  className="bg-gray-900/95 border border-gray-700 rounded-lg p-2
+                             shadow-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+                  title="Mi ubicación"
+                >
+                  {locatingUser ? (
+                    <Spinner size="sm" />
+                  ) : (
+                    <svg className="h-5 w-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+
+              {/* Main row */}
+              <div className="flex items-center justify-between gap-2 px-4">
+                {/* Left: map style toggle */}
+                <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
+
+                {/* Center: add point CTA or cancel placement */}
+                {!fabPlacementMode ? (
+                  <button
+                    onClick={() => setFabPlacementMode(true)}
+                    className="flex items-center gap-1.5 bg-brand-600 hover:bg-brand-500 active:bg-brand-700
+                               text-white rounded-full px-4 py-2.5 font-semibold text-sm transition-colors
+                               shadow-[0_4px_20px_rgba(2,132,199,0.4)]"
+                  >
+                    <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Agregar punto
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setFabPlacementMode(false)}
+                    className="flex items-center gap-1.5 bg-gray-700/90 border border-gray-600
+                               text-gray-200 rounded-full px-4 py-2.5 text-sm font-medium transition-colors"
+                  >
+                    <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Cancelar
+                  </button>
+                )}
+
+                {/* Right: list */}
+                <button
+                  onClick={() => setListDrawerOpen(true)}
+                  className="flex items-center gap-1.5 bg-gray-900/95 border border-gray-700
+                             rounded-lg px-3 py-2 text-sm font-medium text-gray-300
+                             shadow-lg hover:bg-gray-800 transition-colors"
+                >
+                  <svg className="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M4 6h16M4 10h16M4 14h10" />
+                  </svg>
+                  Lista · {points.length}
+                </button>
+              </div>
             </div>
           </div>
 

@@ -384,15 +384,13 @@ function HowItWorksSection() {
             </svg>
           </a>
           <a
-            href="https://studio.ubyca.com/try"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="https://www.ubyca.com/contact"
             className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
                        bg-white/[0.06] hover:bg-white/[0.10] active:scale-[0.98]
                        border border-white/10 text-white font-semibold text-sm
                        backdrop-blur-sm transition-all duration-150"
           >
-            Ver demo
+            Hablemos
           </a>
         </Reveal>
 

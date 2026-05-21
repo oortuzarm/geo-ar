@@ -69,14 +69,18 @@ export default function PointImageCarousel({ images, className = '' }: Props) {
         </span>
       </div>
 
-      {/* Left arrow — desktop only */}
+      {/* Left arrow */}
       {current > 0 && (
         <button
           onClick={(e) => { e.stopPropagation(); prev() }}
-          className="absolute left-2.5 top-1/2 -translate-y-1/2
-                     w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm
-                     hidden md:flex items-center justify-center text-white
-                     hover:bg-black/70 active:scale-90 transition-all duration-150"
+          className="absolute left-2 top-1/2 -translate-y-1/2
+                     w-8 h-8 md:w-9 md:h-9 rounded-full
+                     flex items-center justify-center
+                     bg-black/45 hover:bg-black/60 backdrop-blur-sm
+                     border border-white/10
+                     shadow-[0_2px_8px_rgba(0,0,0,0.35)]
+                     text-white active:scale-90
+                     transition-all duration-150"
           aria-label="Imagen anterior"
         >
           <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none"
@@ -86,14 +90,18 @@ export default function PointImageCarousel({ images, className = '' }: Props) {
         </button>
       )}
 
-      {/* Right arrow — desktop only */}
+      {/* Right arrow */}
       {current < images.length - 1 && (
         <button
           onClick={(e) => { e.stopPropagation(); next() }}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2
-                     w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm
-                     hidden md:flex items-center justify-center text-white
-                     hover:bg-black/70 active:scale-90 transition-all duration-150"
+          className="absolute right-2 top-1/2 -translate-y-1/2
+                     w-8 h-8 md:w-9 md:h-9 rounded-full
+                     flex items-center justify-center
+                     bg-black/45 hover:bg-black/60 backdrop-blur-sm
+                     border border-white/10
+                     shadow-[0_2px_8px_rgba(0,0,0,0.35)]
+                     text-white active:scale-90
+                     transition-all duration-150"
           aria-label="Imagen siguiente"
         >
           <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none"

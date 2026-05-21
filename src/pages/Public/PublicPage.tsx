@@ -1656,9 +1656,8 @@ export default function PublicPage({
                       'px-2.5 py-[3px] rounded-full text-[11px] font-medium',
                       'ring-1 transition-all duration-150 active:scale-[0.95]',
                       locationFilter === 'available'
-                        ? 'bg-emerald-500/[0.28] text-emerald-300 ring-emerald-400/[0.5]'
-                          + ' shadow-[0_0_10px_rgba(52,211,153,0.22)]'
-                        : 'bg-emerald-500/[0.07] text-emerald-400/70 ring-emerald-500/[0.14]',
+                        ? 'bg-emerald-400/[0.14] text-white ring-emerald-400/[0.28]'
+                        : 'bg-emerald-500/[0.07] text-emerald-400/60 ring-emerald-500/[0.12]',
                     ].join(' ')}
                   >
                     ⚡ {availablePoints.length} disponibles ahora
@@ -1690,14 +1689,6 @@ export default function PublicPage({
             className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
             style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
           >
-            {locationFilter === 'available' && displayedPoints.length > 0 && (
-              <div className="flex items-center gap-1.5 px-4 pt-3 pb-0.5">
-                <span className="text-emerald-400 text-[11px] leading-none">⚡</span>
-                <span className="text-[11px] font-medium text-emerald-400/65">
-                  Mostrando experiencias disponibles ahora
-                </span>
-              </div>
-            )}
             <div
               className="space-y-3 px-4 pt-1"
               style={{ paddingBottom: 'calc(40px + env(safe-area-inset-bottom, 0px))' }}

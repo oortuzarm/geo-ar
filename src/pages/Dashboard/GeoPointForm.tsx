@@ -6,6 +6,7 @@ import { reverseGeocode } from '../../features/geolocation/geocoding'
 import { uploadFile, formatFileSize } from '../../lib/uploadFile'
 import { isVercelBlobUrl } from '../../lib/deleteMediaFile'
 import { useEditorMode } from '../../contexts/EditorModeContext'
+import { normalizeUrl, isValidUrl } from '../../lib/urlUtils'
 
 interface GeoPointFormProps {
   point: GeoPoint
@@ -215,6 +216,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
   const [mediaFile,     setMediaFile]     = useState<{ url: string; fileName: string; mimeType: string; size: number } | null>(initialMedia)
   const [uploadState,   setUploadState]   = useState<'idle' | 'uploading' | 'done' | 'error'>('idle')
   const [uploadError,   setUploadError]   = useState<string | null>(null)
+  const [urlError,      setUrlError]      = useState<string | null>(null)
 
   // ── Address state ─────────────────────────────────────────────────────────
   const [addressCustom,   setAddressCustom]   = useState(point.instructions ?? '')
@@ -268,9 +270,10 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
 
   // Push all local text state to the parent store in one shot.
   function flush() {
+    const normalizedUrl = normalizeUrl(lookiarUrl)
     const contentData =
       contentType === 'url'
-        ? { url: lookiarUrl }
+        ? { url: normalizedUrl }
         : mediaFile
           ? { file_url: mediaFile.url, file_name: mediaFile.fileName, mime_type: mediaFile.mimeType }
           : { file_url: '', file_name: '', mime_type: '' }
@@ -279,7 +282,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
       name,
       contentType,
       contentData,
-      lookiarUrl:   contentType === 'url' ? lookiarUrl : undefined,
+      lookiarUrl:   contentType === 'url' ? normalizedUrl : undefined,
       description:  description    || undefined,
       instructions: addressCustom  || undefined,
       buttonText:   buttonText     || undefined,
@@ -419,14 +422,26 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
 
         {/* ── Contenido: URL ──────────────────────────────────────────────── */}
         {contentType === 'url' && (
-          <Input
-            label="URL del contenido*"
-            placeholder="Ej: https://tusitio.com"
-            value={lookiarUrl}
-            onChange={(e) => setLookiarUrl(e.target.value)}
-            onBlur={() => onChange({ lookiarUrl, contentData: { url: lookiarUrl } })}
-            hint="Agrega cualquier enlace: experiencias, promociones o contenido digital."
-          />
+          <div className="flex flex-col gap-1">
+            <Input
+              label="URL del contenido*"
+              placeholder="Ej: https://tusitio.com"
+              value={lookiarUrl}
+              onChange={(e) => { setLookiarUrl(e.target.value); setUrlError(null) }}
+              onBlur={() => {
+                const normalized = normalizeUrl(lookiarUrl)
+                if (normalized !== lookiarUrl) setLookiarUrl(normalized)
+                if (!isValidUrl(normalized)) {
+                  setUrlError('La URL no es válida.')
+                } else {
+                  setUrlError(null)
+                  onChange({ lookiarUrl: normalized, contentData: { url: normalized } })
+                }
+              }}
+              hint={urlError ? undefined : 'Agrega cualquier enlace: experiencias, promociones o contenido digital.'}
+            />
+            {urlError && <p className="text-xs text-red-400">{urlError}</p>}
+          </div>
         )}
 
         {/* ── Contenido: Video / Audio / Archivo ─────────────────────────── */}

@@ -258,7 +258,7 @@ const HOW_STEPS = [
     title: 'Crea ubicaciones',
     desc: 'Agrega puntos geolocalizados desde el mapa y personaliza su contenido.',
     icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
           d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -269,7 +269,7 @@ const HOW_STEPS = [
     title: 'Define el área de activación',
     desc: 'Configura el radio de acceso y las reglas para desbloquear contenido según ubicación.',
     icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="9" strokeWidth={1.75} />
         <circle cx="12" cy="12" r="4" strokeWidth={1.5} />
         <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
@@ -277,12 +277,12 @@ const HOW_STEPS = [
     ),
   },
   {
-    title: 'Desbloquea contenido',
-    desc: 'Tus usuarios podrán acceder a promociones, rutas o contenido al llegar al lugar indicado.',
+    title: 'Comparte la experiencia',
+    desc: 'Tus usuarios podrán desbloquear contenido, promociones o rutas al llegar al lugar indicado.',
     icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-          d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
       </svg>
     ),
   },
@@ -290,127 +290,110 @@ const HOW_STEPS = [
 
 function HowItWorksSection() {
   return (
-    <section id="v2-how" className="py-24 px-5 relative overflow-hidden"
+    <section id="v2-how" className="py-28 px-5 relative overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #050810 0%, #060d1c 55%, #050810 100%)' }}>
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-5xl mx-auto">
 
-        <div className="flex flex-col lg:flex-row items-start gap-14 lg:gap-16">
+        <Reveal className="text-center mb-20">
+          <SectionLabel>Cómo funciona</SectionLabel>
+          <h2 className="text-3xl sm:text-4xl font-black text-white">
+            Desbloquea contenido según ubicación.
+          </h2>
+        </Reveal>
 
-          {/* ── Left: heading + steps + CTAs ── */}
-          <div className="flex-shrink-0 w-full lg:w-[390px] xl:w-[430px] flex flex-col">
+        {/* Steps */}
+        <div className="relative">
+          {/* Desktop: horizontal connector */}
+          <div className="hidden lg:block absolute top-[2.75rem] left-[calc(100%/6+1.5rem)] right-[calc(100%/6+1.5rem)] h-px"
+            style={{ background: 'linear-gradient(to right, transparent, rgba(14,165,233,0.18) 15%, rgba(14,165,233,0.18) 85%, transparent)' }} />
 
-            <Reveal>
-              <SectionLabel>Cómo funciona</SectionLabel>
-              <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight">
-                Desbloquea contenido<br className="hidden sm:block" /> según ubicación.
-              </h2>
-              <p className="mt-4 text-slate-400 text-base leading-relaxed">
-                En minutos puedes tener una experiencia geolocalizada lista para compartir.
-              </p>
-            </Reveal>
-
-            {/* Vertical step list */}
-            <div className="mt-10 flex flex-col">
-              {HOW_STEPS.map((step, i) => (
-                <Reveal key={step.title} delay={i * 0.1}>
-                  <div className="flex items-start gap-4">
-                    {/* Icon + connector */}
-                    <div className="flex flex-col items-center flex-shrink-0">
-                      <div className="w-9 h-9 rounded-xl bg-gray-900 border border-white/[0.08]
-                                      flex items-center justify-center text-brand-400
-                                      shadow-[0_0_0_1px_rgba(14,165,233,0.05),0_4px_16px_rgba(0,0,0,0.4)]">
-                        {step.icon}
-                      </div>
-                      {i < HOW_STEPS.length - 1 && (
-                        <div className="w-px mt-2 bg-brand-500/[0.12]" style={{ height: 28 }} />
-                      )}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-8">
+            {HOW_STEPS.map((step, i) => (
+              <Reveal key={step.title} delay={i * 0.1}>
+                <div className="flex lg:flex-col lg:items-center gap-5 lg:gap-0 lg:text-center">
+                  {/* Icon badge */}
+                  <div className="relative flex-shrink-0">
+                    <div className="w-[5.5rem] h-[5.5rem] rounded-2xl bg-gray-900 border border-white/[0.08]
+                                    flex items-center justify-center text-brand-400
+                                    shadow-[0_0_0_1px_rgba(14,165,233,0.05),0_8px_28px_rgba(0,0,0,0.45)]">
+                      {step.icon}
                     </div>
-                    {/* Text */}
-                    <div className={i < HOW_STEPS.length - 1 ? 'pb-7' : ''}>
-                      <div className="flex items-baseline gap-2 mb-1">
-                        <span className="text-[10px] font-black text-brand-500/50 tabular-nums">0{i + 1}</span>
-                        <h3 className="font-bold text-white text-sm leading-snug">{step.title}</h3>
-                      </div>
-                      <p className="text-sm text-slate-500 leading-relaxed">{step.desc}</p>
-                    </div>
+                    <span className="absolute -top-3 -right-3 w-6 h-6 rounded-full
+                                     bg-brand-600 border-2 border-[#060d1c]
+                                     text-white text-[10px] font-black
+                                     flex items-center justify-center">
+                      {i + 1}
+                    </span>
+                    {/* Mobile vertical connector */}
+                    {i < HOW_STEPS.length - 1 && (
+                      <div className="lg:hidden absolute left-1/2 -translate-x-1/2 top-full mt-1
+                                      w-px h-10 bg-brand-500/[0.12]" />
+                    )}
                   </div>
-                </Reveal>
-              ))}
-            </div>
-
-            {/* CTAs */}
-            <Reveal delay={0.35} className="mt-10 flex flex-wrap gap-3">
-              <a
-                href="https://studio.ubyca.com/try"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
-                           bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
-                           font-semibold text-sm transition-all duration-150
-                           shadow-[0_4px_24px_rgba(2,132,199,0.4)]">
-                Comienza gratis
-                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" clipRule="evenodd"
-                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
-                </svg>
-              </a>
-              <a
-                href="https://www.ubyca.com/contact"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
-                           bg-white/[0.06] hover:bg-white/[0.10] active:scale-[0.98]
-                           border border-white/10 text-white font-semibold text-sm
-                           backdrop-blur-sm transition-all duration-150"
-              >
-                Hablemos
-              </a>
-            </Reveal>
+                  {/* Text */}
+                  <div className="lg:pt-6 lg:px-3">
+                    <h3 className="font-bold text-white text-base leading-snug mb-2">{step.title}</h3>
+                    <p className="text-sm text-slate-500 leading-relaxed">{step.desc}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
           </div>
-
-          {/* ── Right: product screenshot ── */}
-          <Reveal delay={0.15} className="flex-1 w-full min-w-0">
-            <div className="relative">
-              <div className="absolute -inset-12 pointer-events-none" style={{
-                background: 'radial-gradient(ellipse 80% 65% at 50% 45%, rgba(14,165,233,0.07) 0%, transparent 70%)',
-              }} />
-              {/* Browser chrome */}
-              <div className="relative rounded-2xl overflow-hidden border border-white/[0.09]
-                              shadow-[0_4px_6px_rgba(0,0,0,0.3),0_24px_80px_rgba(0,0,0,0.65),0_0_0_1px_rgba(14,165,233,0.05)]">
-                <div className="h-9 bg-[#111827] border-b border-white/[0.06] flex items-center gap-3 px-4 flex-shrink-0">
-                  <div className="flex gap-1.5 flex-shrink-0">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-500/70" />
-                  </div>
-                  <div className="flex-1 flex justify-center min-w-0">
-                    <div className="bg-white/[0.05] border border-white/[0.05] rounded-md
-                                    px-4 py-0.5 text-[11px] text-slate-500 truncate max-w-[220px]">
-                      studio.ubyca.com/project/festival
-                    </div>
-                  </div>
-                </div>
-                <div className="relative bg-[#111827]">
-                  <img
-                    src="/funciona-desktop.webp"
-                    alt="Editor Ubyca con mapa y puntos geolocalizados"
-                    className="w-full object-cover select-none block"
-                    style={{ objectPosition: 'center 40%', maxHeight: 500 }}
-                    loading="lazy"
-                    draggable={false}
-                  />
-                  <div className="absolute inset-0 pointer-events-none" style={{
-                    background: 'linear-gradient(to bottom, transparent 72%, rgba(6,13,28,0.65) 100%)',
-                  }} />
-                  <div className="absolute bottom-4 left-4 flex items-center gap-1.5 backdrop-blur-sm
-                                  bg-sky-500/10 border border-sky-500/20 rounded-full px-2.5 py-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
-                    <span className="text-[10px] font-semibold text-sky-400">Radio de activación activo</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Reveal>
-
         </div>
+
+        {/* Screenshot */}
+        <Reveal delay={0.2} className="mt-20">
+          <div className="relative rounded-2xl overflow-hidden border border-white/[0.07]
+                          shadow-[0_24px_64px_rgba(0,0,0,0.5)]">
+            <img
+              src="/funciona-desktop.webp"
+              alt="Editor Ubyca con mapa y puntos geolocalizados"
+              className="w-full object-cover select-none"
+              style={{ height: 300, objectPosition: 'center 40%' }}
+              loading="lazy"
+              draggable={false}
+            />
+            <div className="absolute inset-0 pointer-events-none" style={{
+              background: [
+                'linear-gradient(to right, rgba(6,13,28,0.55) 0%, transparent 18%, transparent 82%, rgba(6,13,28,0.55) 100%)',
+                'linear-gradient(to bottom, transparent 50%, rgba(6,13,28,0.85) 100%)',
+              ].join(', '),
+            }} />
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
+              <span className="text-[11px] font-semibold text-slate-500">
+                Editor de puntos GPS — Ubyca Studio
+              </span>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* CTA */}
+        <Reveal delay={0.3} className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <a
+            href="https://studio.ubyca.com/try"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
+                       bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
+                       font-semibold text-sm transition-all duration-150
+                       shadow-[0_4px_24px_rgba(2,132,199,0.4)]">
+            Comienza gratis
+            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" clipRule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+            </svg>
+          </a>
+          <a
+            href="https://www.ubyca.com/contact"
+            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
+                       bg-white/[0.06] hover:bg-white/[0.10] active:scale-[0.98]
+                       border border-white/10 text-white font-semibold text-sm
+                       backdrop-blur-sm transition-all duration-150"
+          >
+            Hablemos
+          </a>
+        </Reveal>
+
       </div>
     </section>
   )

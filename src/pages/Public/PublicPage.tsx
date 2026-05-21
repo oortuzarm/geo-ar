@@ -1660,7 +1660,7 @@ export default function PublicPage({
                         : 'bg-emerald-500/[0.07] text-emerald-400/60 ring-emerald-500/[0.12]',
                     ].join(' ')}
                   >
-                    ⚡ {availablePoints.length} disponibles ahora
+                    {availablePoints.length} activas
                   </button>
                 </div>
               </div>

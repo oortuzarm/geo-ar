@@ -4,7 +4,7 @@ import { getPlans, type PublicPlan } from '../../services/plansApi'
 import { claimTemporaryPreview } from '../../services/temporaryPreviewsApi'
 import { ApiError } from '../../lib/apiFetch'
 import { PENDING_CLAIM_KEY } from '../../hooks/usePendingClaim'
-import { DEMO_STORAGE_KEY } from '../Try/TryPage'
+import { DEMO_STORAGE_KEY, DEMO_PREVIEW_TOKEN_KEY } from '../Try/TryPage'
 import { LAST_PROJECT_KEY } from '../../hooks/useWorkspace'
 import { useAuthStore } from '../../store/authStore'
 import Spinner from '../../components/ui/Spinner'
@@ -275,6 +275,7 @@ export default function SelectPlanPage() {
       await useAuthStore.getState().reloadUser()
       localStorage.removeItem(PENDING_CLAIM_KEY)
       localStorage.removeItem(DEMO_STORAGE_KEY)
+      localStorage.removeItem(DEMO_PREVIEW_TOKEN_KEY)
       navigate('/app', { replace: true })
     } catch (err) {
       if (err instanceof ApiError && (err.status === 404 || err.status === 410)) {

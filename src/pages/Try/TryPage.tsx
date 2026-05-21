@@ -18,11 +18,12 @@ import { useEffect } from 'react'
 import ProjectEditor from '../../components/editor/ProjectEditor'
 import { DEMO_LIMIT } from './DemoLimitModal'
 import { useGeoStore } from '../../store/geoStore'
-import { createTemporaryPreview } from '../../services/temporaryPreviewsApi'
+import { createTemporaryPreview, deleteTemporaryPreview } from '../../services/temporaryPreviewsApi'
 import { ApiError } from '../../lib/apiFetch'
 import type { GeoPoint, GeoProject } from '../../types'
 
-export const DEMO_STORAGE_KEY = 'ubyca-demo-state'
+export const DEMO_STORAGE_KEY       = 'ubyca-demo-state'
+export const DEMO_PREVIEW_TOKEN_KEY = 'ubyca-demo-preview-token'
 const STORAGE_KEY = DEMO_STORAGE_KEY
 
 // ── localStorage helpers ───────────────────────────────────────────────────────
@@ -192,6 +193,16 @@ export default function TryPage() {
   async function handlePreviewOpen(): Promise<{ url: string; token: string } | null> {
     const state = useGeoStore.getState()
     if (!state.project) return null
+
+    // Invalidate the previous active preview for this demo session so the old
+    // URL returns 404/410 ("Previsualización no disponible") instead of showing
+    // a stale snapshot. Fire-and-forget — silently ignored if backend doesn't
+    // support DELETE or the token already expired/was claimed.
+    const prevToken = localStorage.getItem(DEMO_PREVIEW_TOKEN_KEY)
+    if (prevToken) {
+      deleteTemporaryPreview(prevToken).catch(() => {})
+    }
+
     try {
       const cleanProject = sanitizeProject(state.project)
       const cleanPoints  = sanitizePoints(state.points)
@@ -237,6 +248,8 @@ export default function TryPage() {
       const sep = baseUrl.includes('?') ? '&' : '?'
       const url = `${baseUrl}${sep}_t=${Date.now()}`
 
+      // Track the new token as the only active preview for this demo session.
+      localStorage.setItem(DEMO_PREVIEW_TOKEN_KEY, token)
       console.info('[TryPage] handlePreviewOpen returning:', { url, token: token.slice(0, 8) + '…' })
       return { url, token }
     } catch (err) {

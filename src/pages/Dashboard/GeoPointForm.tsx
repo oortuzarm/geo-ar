@@ -268,26 +268,9 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
     setContentType(ct)
   }
 
-  // Validate + normalize the URL field. Updates local state and returns the
-  // normalized URL, or null if the URL is invalid (also sets urlError).
-  function validateUrl(): string | null {
-    if (contentType !== 'url') return ''
-    const normalized = normalizeUrl(lookiarUrl)
-    if (normalized !== lookiarUrl) setLookiarUrl(normalized)
-    if (!isValidUrl(normalized)) {
-      setUrlError('La URL no es válida.')
-      return null
-    }
-    setUrlError(null)
-    return normalized
-  }
-
   // Push all local text state to the parent store in one shot.
-  // Returns false and blocks persistence when the URL field is invalid.
-  function flush(): boolean {
-    const normalizedUrl = validateUrl()
-    if (normalizedUrl === null) return false
-
+  function flush() {
+    const normalizedUrl = normalizeUrl(lookiarUrl)
     const contentData =
       contentType === 'url'
         ? { url: normalizedUrl }
@@ -304,11 +287,10 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
       instructions: addressCustom  || undefined,
       buttonText:   buttonText     || undefined,
     })
-    return true
   }
 
-  function handleSaveClick()  { if (flush()) onSave()  }
-  function handleCloseClick() { if (flush()) onClose() }
+  function handleSaveClick()  { flush(); onSave()  }
+  function handleCloseClick() { flush(); onClose() }
 
   // ── Image upload (base64, existing behavior) ──────────────────────────────
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -447,8 +429,12 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
               value={lookiarUrl}
               onChange={(e) => { setLookiarUrl(e.target.value); setUrlError(null) }}
               onBlur={() => {
-                const normalized = validateUrl()
-                if (normalized !== null) {
+                const normalized = normalizeUrl(lookiarUrl)
+                if (normalized !== lookiarUrl) setLookiarUrl(normalized)
+                if (!isValidUrl(normalized)) {
+                  setUrlError('La URL no es válida.')
+                } else {
+                  setUrlError(null)
                   onChange({ lookiarUrl: normalized, contentData: { url: normalized } })
                 }
               }}

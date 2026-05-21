@@ -149,7 +149,7 @@ export default function DashboardMap({
       style={{ width: '100%', height: '100%', background: '#111827', zIndex: 0 }}
     >
       <TileLayer
-        url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${import.meta.env.VITE_MAPTILER_KEY}`}
+        url={`https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=${import.meta.env.VITE_MAPTILER_KEY}`}
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.maptiler.com/">MapTiler</a>'
         maxZoom={20}
       />

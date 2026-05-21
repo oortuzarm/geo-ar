@@ -37,13 +37,15 @@ export default function WorkspaceMap({ points, onMarkerClick }: WorkspaceMapProp
     <MapContainer
       center={[-33.4489, -70.6693]}
       zoom={11}
+      maxZoom={20}
       className="w-full h-full"
       style={{ width: '100%', height: '100%', background: '#111827', zIndex: 0 }}
       zoomControl
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${import.meta.env.VITE_MAPTILER_KEY}`}
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.maptiler.com/">MapTiler</a>'
+        maxZoom={20}
       />
       <FitBounds points={points} />
       {points.map((point) => (

@@ -27,7 +27,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import DashboardMap from '../map/DashboardMap'
+import MapStyleToggle from '../map/MapStyleToggle'
 import POISearch from '../map/POISearch'
+import { useMapStyle } from '../../hooks/useMapStyle'
 import Button from '../ui/Button'
 import Spinner from '../ui/Spinner'
 import Modal from '../ui/Modal'
@@ -106,6 +108,9 @@ export default function ProjectEditor({
     setMapCenter, setMapZoom,
     addToast, isSaving,
   } = useGeoStore()
+
+  // ── Map style ───────────────────────────────────────────────────────────────
+  const { styleId: mapStyleId, setStyle: setMapStyle } = useMapStyle()
 
   // ── Local UI state ──────────────────────────────────────────────────────────
   const [pointFormOpen, setPointFormOpen]       = useState(false)
@@ -984,7 +989,13 @@ export default function ProjectEditor({
               onBoundsChange={setMapBounds}
               onPoiCreate={handlePoiCreateFromPopup}
               userPos={editorUserPos}
+              mapStyleId={mapStyleId}
             />
+
+            {/* Map style toggle */}
+            <div className="absolute bottom-20 right-4 z-[999] lg:bottom-8">
+              <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
+            </div>
           </div>
 
           {/* Right panel: desktop only */}

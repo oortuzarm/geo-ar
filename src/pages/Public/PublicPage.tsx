@@ -13,7 +13,10 @@ import { fetchWalkingRoute } from '../../features/routing/orsClient'
 import type { RouteResult } from '../../features/routing/orsClient'
 import type { RouteStatus } from './PublicPointCard'
 import { useGeolocation } from '../../hooks/useGeolocation'
+import { useMapStyle } from '../../hooks/useMapStyle'
 import { useGeoStore } from '../../store/geoStore'
+import MapStyleToggle from '../../components/map/MapStyleToggle'
+import { getMapTileUrl, MAP_ATTRIBUTION } from '../../config/mapStyles'
 import RoutePolyline from '../../components/map/RoutePolyline'
 import ManualLocationSheet from '../../components/map/ManualLocationSheet'
 import MapController from '../../components/map/MapController'
@@ -697,6 +700,7 @@ export default function PublicPage({
   const id = prefetched?.project.id ?? idParam
   const isTemporaryPreview = Boolean(prefetched)
   const { userLocation, locationStatus, setUserLocation, addToast } = useGeoStore()
+  const { styleId: mapStyleId, setStyle: setMapStyle } = useMapStyle()
   const [project, setProject] = useState<GeoProject | null>(null)
   const [points, setPoints] = useState<GeoPoint[]>([])
   const [loading, setLoading] = useState(true)
@@ -1445,8 +1449,9 @@ export default function PublicPage({
             resetTrigger={resetViewTrigger}
           />
           <TileLayer
-            url={`https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=${import.meta.env.VITE_MAPTILER_KEY}`}
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.maptiler.com/">MapTiler</a>'
+            key={mapStyleId}
+            url={getMapTileUrl(mapStyleId)}
+            attribution={MAP_ATTRIBUTION}
             maxZoom={20}
           />
           {userLocation && (
@@ -1475,6 +1480,11 @@ export default function PublicPage({
         {/* Location badge — interactive button */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400]">
           <LocationBadge status={locationStatus} accuracy={userLocation?.accuracy} onClick={handleBadgeClick} />
+        </div>
+
+        {/* Map style toggle */}
+        <div className="absolute bottom-4 right-4 z-[400]">
+          <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
         </div>
 
         {/* Map-pick cursor overlay — crosshair when waiting for tap/click */}

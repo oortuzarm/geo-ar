@@ -297,7 +297,7 @@ function HowItWorksSection() {
         <Reveal className="text-center mb-20">
           <SectionLabel>Cómo funciona</SectionLabel>
           <h2 className="text-3xl sm:text-4xl font-black text-white">
-            Crea experiencias geolocalizadas en minutos.
+            Desbloquea contenido según ubicación.
           </h2>
         </Reveal>
 

@@ -52,6 +52,15 @@ export type AccessResponse =
   | { success: true; content_type: 'url';                       url: string }
   | { success: true; content_type: 'video' | 'audio' | 'file'; file_url: string; file_name: string; mime_type: string }
 
+// ── GeoPoint images ───────────────────────────────────────────────────────────
+
+export interface PointImage {
+  id: string
+  url: string
+  isCover: boolean
+  position: number
+}
+
 // ── GeoPoint ──────────────────────────────────────────────────────────────────
 
 export interface GeoPoint {
@@ -64,7 +73,8 @@ export interface GeoPoint {
   latitude: number
   longitude: number
   activationRadius: number
-  image?: string
+  image?: string           // legacy single cover image — superseded by images[]
+  images?: PointImage[]
   description?: string
   instructions?: string
   buttonText?: string

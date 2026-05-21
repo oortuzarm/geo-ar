@@ -4,9 +4,11 @@ import Button from '../../components/ui/Button'
 import type { ContentType, GeoPoint, GeoPointAvailability, MediaContentData } from '../../types'
 import { reverseGeocode } from '../../features/geolocation/geocoding'
 import { uploadFile, formatFileSize } from '../../lib/uploadFile'
+import { uploadImage } from '../../lib/uploadImage'
 import { isVercelBlobUrl } from '../../lib/deleteMediaFile'
 import { useEditorMode } from '../../contexts/EditorModeContext'
 import { normalizeUrl, isValidUrl } from '../../lib/urlUtils'
+import type { PointImage } from '../../types'
 
 interface GeoPointFormProps {
   point: GeoPoint
@@ -22,6 +24,8 @@ const RADIUS_TOOLTIP =
   'El radio de activación define la distancia máxima desde el punto geolocalizado dentro de la cual esta experiencia puede activarse. Si el usuario está fuera de este radio, la experiencia no se mostrará.'
 
 const WEEK_DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+
+const MAX_GALLERY = 5
 
 // ─── Content type config ──────────────────────────────────────────────────────
 
@@ -194,12 +198,27 @@ function isMediaContentData(data: GeoPoint['contentData']): data is MediaContent
 
 export default function GeoPointForm({ point, onChange, onDelete, onClose, onSave, onMediaOrphaned, hideHeader = false }: GeoPointFormProps) {
   const editorMode = useEditorMode()
-  const imageFileRef  = useRef<HTMLInputElement>(null)
-  const mediaFileRef  = useRef<HTMLInputElement>(null)
-  const [showTooltip,         setShowTooltip]         = useState(false)
-  const [imageError,          setImageError]          = useState<string | null>(null)
-  const [imageBlockedClicked, setImageBlockedClicked] = useState(false)
-  const [advancedOpen,        setAdvancedOpen]        = useState(false)
+  const mediaFileRef   = useRef<HTMLInputElement>(null)
+  const galleryFileRef = useRef<HTMLInputElement>(null)
+  const [showTooltip,          setShowTooltip]          = useState(false)
+  const [advancedOpen,         setAdvancedOpen]         = useState(false)
+
+  // ── Gallery state ─────────────────────────────────────────────────────────
+  // Migrate from legacy `image` field on first open — becomes position-0 cover.
+  const [galleryImages, setGalleryImages] = useState<PointImage[]>(() => {
+    if (point.images && point.images.length > 0) {
+      return [...point.images].sort((a, b) => a.position - b.position)
+    }
+    if (point.image) {
+      return [{ id: crypto.randomUUID(), url: point.image, isCover: true, position: 0 }]
+    }
+    return []
+  })
+  const [galleryUploading,  setGalleryUploading]  = useState(false)
+  const [galleryError,      setGalleryError]      = useState<string | null>(null)
+  const [galleryBlocked,    setGalleryBlocked]    = useState(false)
+  const [dragIdx,           setDragIdx]           = useState<number | null>(null)
+  const [dragOverIdx,       setDragOverIdx]       = useState<number | null>(null)
 
   // ── Local state for text fields ───────────────────────────────────────────
   const [name,        setName]        = useState(point.name)
@@ -268,9 +287,81 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
     setContentType(ct)
   }
 
+  // ── Gallery handlers ──────────────────────────────────────────────────────
+
+  async function handleGalleryFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    if (editorMode === 'demo') { setGalleryError('Crea tu cuenta gratuita para subir imágenes.'); return }
+    if (galleryImages.length >= MAX_GALLERY) { setGalleryError(`Máximo ${MAX_GALLERY} imágenes por punto.`); return }
+    setGalleryError(null)
+    setGalleryUploading(true)
+    try {
+      const url   = await uploadImage(file)
+      const newImg: PointImage = {
+        id: crypto.randomUUID(), url,
+        isCover: galleryImages.length === 0,
+        position: galleryImages.length,
+      }
+      const next = [...galleryImages, newImg]
+      setGalleryImages(next)
+      onChange({ images: next, image: undefined })
+    } catch (err) {
+      setGalleryError(err instanceof Error ? err.message : 'Error al subir la imagen')
+    } finally {
+      setGalleryUploading(false)
+    }
+  }
+
+  function handleGalleryRemove(id: string) {
+    const img = galleryImages.find((i) => i.id === id)
+    if (img && isVercelBlobUrl(img.url)) onMediaOrphaned?.(img.url)
+    const filtered = galleryImages.filter((i) => i.id !== id)
+    const wasCover = img?.isCover ?? false
+    const reindexed = filtered.map((i, idx) => ({
+      ...i, isCover: wasCover && idx === 0 ? true : i.isCover, position: idx,
+    }))
+    setGalleryImages(reindexed)
+    onChange({ images: reindexed, image: undefined })
+  }
+
+  function handleSetCover(id: string) {
+    const updated = galleryImages.map((i) => ({ ...i, isCover: i.id === id }))
+    setGalleryImages(updated)
+    onChange({ images: updated, image: undefined })
+  }
+
+  function handleGalleryReorder(targetIdx: number) {
+    if (dragIdx === null || dragIdx === targetIdx) return
+    const next = [...galleryImages]
+    const [moved] = next.splice(dragIdx, 1)
+    next.splice(targetIdx, 0, moved)
+    const reordered = next.map((img, i) => ({ ...img, position: i }))
+    setGalleryImages(reordered)
+    onChange({ images: reordered, image: undefined })
+    setDragIdx(null); setDragOverIdx(null)
+  }
+
+  // Validate + normalize the URL field. Returns normalized string or null (invalid).
+  function validateUrl(): string | null {
+    if (contentType !== 'url') return ''
+    const normalized = normalizeUrl(lookiarUrl)
+    if (normalized !== lookiarUrl) setLookiarUrl(normalized)
+    if (!isValidUrl(normalized)) {
+      setUrlError('La URL no es válida.')
+      return null
+    }
+    setUrlError(null)
+    return normalized
+  }
+
   // Push all local text state to the parent store in one shot.
-  function flush() {
-    const normalizedUrl = normalizeUrl(lookiarUrl)
+  // Returns false and blocks persistence when the URL field is invalid.
+  function flush(): boolean {
+    const normalizedUrl = validateUrl()
+    if (normalizedUrl === null) return false
+
     const contentData =
       contentType === 'url'
         ? { url: normalizedUrl }
@@ -287,30 +378,11 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
       instructions: addressCustom  || undefined,
       buttonText:   buttonText     || undefined,
     })
+    return true
   }
 
-  function handleSaveClick()  { flush(); onSave()  }
-  function handleCloseClick() { flush(); onClose() }
-
-  // ── Image upload (base64, existing behavior) ──────────────────────────────
-  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    e.target.value = ''
-    setImageError(null)
-    if (file.size > 256 * 1024) {
-      setImageError('La imagen supera los 256 KB. Comprimila antes de subirla.')
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => onChange({ image: reader.result as string })
-    reader.readAsDataURL(file)
-  }
-
-  function handleImageClick() {
-    if (editorMode === 'demo') { setImageBlockedClicked(true); return }
-    imageFileRef.current?.click()
-  }
+  function handleSaveClick()  { if (flush()) onSave()  }
+  function handleCloseClick() { if (flush()) onClose() }
 
   // ── Media upload (Vercel Blob via uploadFile) ─────────────────────────────
   async function handleMediaFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -429,12 +501,8 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
               value={lookiarUrl}
               onChange={(e) => { setLookiarUrl(e.target.value); setUrlError(null) }}
               onBlur={() => {
-                const normalized = normalizeUrl(lookiarUrl)
-                if (normalized !== lookiarUrl) setLookiarUrl(normalized)
-                if (!isValidUrl(normalized)) {
-                  setUrlError('La URL no es válida.')
-                } else {
-                  setUrlError(null)
+                const normalized = validateUrl()
+                if (normalized !== null) {
                   onChange({ lookiarUrl: normalized, contentData: { url: normalized } })
                 }
               }}
@@ -618,33 +686,122 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           </div>
         </div>
 
-        {/* Imagen de portada */}
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">Imagen de portada</span>
-          <div
-            className="border-2 border-dashed border-gray-700 rounded-lg p-3 text-center
-                       hover:border-gray-600 transition-colors cursor-pointer"
-            onClick={handleImageClick}
-          >
-            {imageBlockedClicked ? (
-              <p className="text-xs text-red-400">Crea tu cuenta gratuita para usar esta función.</p>
-            ) : point.image ? (
-              <div className="relative">
-                <img src={point.image} alt="Point" className="w-full h-24 object-cover rounded" />
-                <button
-                  className="absolute top-1 right-1 bg-black/60 text-white rounded p-0.5 text-xs"
-                  onClick={(e) => { e.stopPropagation(); setImageError(null); onChange({ image: undefined }) }}
-                >✕</button>
-              </div>
-            ) : (
-              <>
-                <p className="text-xs text-gray-500">Click para subir imagen</p>
-                <p className="text-xs text-gray-600">.JPG .PNG · Máx 256 KB</p>
-              </>
-            )}
-          </div>
-          {imageError && <p className="text-xs text-red-400">{imageError}</p>}
-          <input ref={imageFileRef} type="file" accept=".jpg,.jpeg,.png" className="hidden" onChange={handleImageUpload} />
+        {/* ── Galería del punto ─────────────────────────────────────────── */}
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Galería del punto
+          </span>
+
+          {/* Upload drop-zone — only shown when below the 5-image limit */}
+          {galleryImages.length < MAX_GALLERY && (
+            <div
+              className="border-2 border-dashed border-gray-700 rounded-lg p-3 text-center
+                         hover:border-gray-600 transition-colors cursor-pointer"
+              onClick={() => {
+                if (editorMode === 'demo') { setGalleryBlocked(true); return }
+                galleryFileRef.current?.click()
+              }}
+            >
+              {galleryBlocked ? (
+                <p className="text-xs text-red-400">Crea tu cuenta gratuita para subir imágenes.</p>
+              ) : (
+                <>
+                  <p className="text-xs text-gray-400">
+                    {galleryImages.length === 0 ? 'Agregar imagen de portada' : 'Agregar imagen'}
+                  </p>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    JPG · PNG · WebP · Máx 4 MB
+                    {galleryImages.length > 0 && ` · ${MAX_GALLERY - galleryImages.length} libre${MAX_GALLERY - galleryImages.length !== 1 ? 's' : ''}`}
+                  </p>
+                </>
+              )}
+              {galleryError && <p className="text-xs text-red-400 mt-2">{galleryError}</p>}
+            </div>
+          )}
+
+          {/* Thumbnail row */}
+          {(galleryImages.length > 0 || galleryUploading) && (
+            <div className="flex gap-2 flex-wrap">
+              {galleryImages.map((img, idx) => (
+                <div
+                  key={img.id}
+                  draggable
+                  onDragStart={() => setDragIdx(idx)}
+                  onDragOver={(e) => { e.preventDefault(); setDragOverIdx(idx) }}
+                  onDrop={() => handleGalleryReorder(idx)}
+                  onDragEnd={() => { setDragIdx(null); setDragOverIdx(null) }}
+                  className={[
+                    'relative w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0',
+                    'border transition-all duration-150 cursor-grab active:cursor-grabbing',
+                    dragOverIdx === idx && dragIdx !== idx
+                      ? 'border-brand-500 ring-2 ring-brand-500/50 scale-105'
+                      : img.isCover
+                        ? 'border-yellow-400/70'
+                        : 'border-gray-700',
+                    dragIdx === idx ? 'opacity-40' : '',
+                  ].join(' ')}
+                >
+                  <img
+                    src={img.url}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+
+                  {/* Cover star */}
+                  <button
+                    type="button"
+                    onClick={() => handleSetCover(img.id)}
+                    title={img.isCover ? 'Portada actual' : 'Establecer como portada'}
+                    className={[
+                      'absolute bottom-1 left-1 w-5 h-5 rounded-full flex items-center justify-center',
+                      'text-[9px] shadow transition-all duration-150',
+                      img.isCover
+                        ? 'bg-yellow-400 text-gray-900'
+                        : 'bg-black/55 text-white/70 hover:bg-yellow-400 hover:text-gray-900',
+                    ].join(' ')}
+                  >
+                    ⭐
+                  </button>
+
+                  {/* Remove */}
+                  <button
+                    type="button"
+                    onClick={() => handleGalleryRemove(img.id)}
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center
+                               bg-black/55 text-white text-[9px] hover:bg-red-500 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+
+              {/* Upload-in-progress placeholder */}
+              {galleryUploading && (
+                <div className="w-[72px] h-[72px] rounded-xl border border-gray-700 bg-gray-800
+                                flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-brand-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                </div>
+              )}
+            </div>
+          )}
+
+          {galleryImages.length > 1 && (
+            <p className="text-[11px] text-gray-600">
+              Arrastra para reordenar · ⭐ indica la portada
+            </p>
+          )}
+
+          <input
+            ref={galleryFileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleGalleryFileSelect}
+          />
         </div>
 
         {/* Descripción */}

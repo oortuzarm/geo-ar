@@ -7,6 +7,7 @@ import { computePointAvailability, formatDays } from '../../features/geolocation
 import type { PointAvailability } from '../../features/geolocation/availability'
 import type { GeoPoint } from '../../types'
 import Modal from '../../components/ui/Modal'
+import { getPointCoverImage } from '../../lib/pointImageUtils'
 
 const DESCRIPTION_LIMIT = 140
 
@@ -143,6 +144,8 @@ interface PublicPointCardProps {
   accessFallbackUrl?: string
   /** Auto-resolved address from reverse geocoding; falls back to point.instructions for legacy data */
   address?: string
+  /** When true, suppresses the cover image banner (caller renders a carousel above). */
+  hideImage?: boolean
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -151,6 +154,7 @@ export default function PublicPointCard({
   point, distance, isSelected, onSelect, onActivate, onExit,
   routeStatus, walkingDistanceMeters, walkingDurationSeconds,
   isActivating, accessMessage, accessFallbackUrl, address,
+  hideImage = false,
 }: PublicPointCardProps) {
   const [descExpanded, setDescExpanded] = useState(false)
   const [showRouteWarning, setShowRouteWarning] = useState(false)
@@ -224,10 +228,15 @@ export default function PublicPointCard({
       ].join(' ')}
       onClick={onSelect}
     >
-      {/* Cover image */}
-      {point.image && (
+      {/* Cover image — hidden when caller renders a full carousel above the card */}
+      {!hideImage && getPointCoverImage(point) && (
         <div className="h-28 overflow-hidden">
-          <img src={point.image} alt={point.name} className="w-full h-full object-cover" />
+          <img
+            src={getPointCoverImage(point)}
+            alt={point.name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
         </div>
       )}
 

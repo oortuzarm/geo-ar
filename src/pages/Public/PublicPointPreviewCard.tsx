@@ -1,6 +1,7 @@
 import { computePointAvailability } from '../../features/geolocation/availability'
 import { formatDistance } from '../../features/geolocation/haversine'
 import type { GeoPoint } from '../../types'
+import { getPointCoverImage } from '../../lib/pointImageUtils'
 
 // Badge variants mirror the three possible access states visible from a glance.
 type StatusVariant = 'ok' | 'block' | 'neutral'
@@ -63,9 +64,9 @@ export default function PublicPointPreviewCard({
                     shadow-[0_8px_32px_rgba(0,0,0,0.65)]">
 
       <div className="flex gap-3 p-3">
-        {point.image && (
+        {getPointCoverImage(point) && (
           <img
-            src={point.image}
+            src={getPointCoverImage(point)}
             alt={point.name}
             className="w-[68px] h-[68px] rounded-xl object-cover flex-shrink-0 ring-1 ring-white/10"
           />

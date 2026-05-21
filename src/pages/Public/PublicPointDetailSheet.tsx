@@ -1,6 +1,8 @@
 import PublicPointCard from './PublicPointCard'
+import PointImageCarousel from '../../components/public/PointImageCarousel'
 import type { GeoPoint } from '../../types'
 import type { RouteStatus } from './PublicPointCard'
+import { getPointGalleryImages } from '../../lib/pointImageUtils'
 
 interface PublicPointDetailSheetProps {
   point:                  GeoPoint
@@ -61,11 +63,20 @@ export default function PublicPointDetailSheet({
             WebkitOverflowScrolling: 'touch',
           } as React.CSSProperties}
         >
+          {/* Image carousel — full-width, above the card */}
+          {(() => {
+            const imgs = getPointGalleryImages(point)
+            return imgs.length > 0 ? (
+              <PointImageCarousel images={imgs} />
+            ) : null
+          })()}
+
           <div className="p-4">
             <PublicPointCard
               point={point}
               distance={distance}
               isSelected
+              hideImage={getPointGalleryImages(point).length > 0}
               onSelect={() => {}}
               onActivate={onActivate}
               isActivating={isActivating}

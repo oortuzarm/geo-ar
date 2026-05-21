@@ -82,7 +82,7 @@ function sanitizeProject(project: GeoProject): GeoProject {
 function sanitizePoints(points: GeoPoint[]): GeoPoint[] {
   return points.map((pt, i) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { image: _img, ...rest } = pt
+    const { image: _img, images: _images, ...rest } = pt
     return {
       ...rest,
       name:             pt.name?.trim() || `Ubicación ${i + 1}`,

@@ -8,8 +8,8 @@ export function normalizeUrl(value: string): string {
 export function isValidUrl(value: string): boolean {
   if (!value) return true // empty is not invalid
   try {
-    new URL(value)
-    return true
+    const u = new URL(value)
+    return (u.protocol === 'http:' || u.protocol === 'https:') && u.hostname.includes('.')
   } catch {
     return false
   }

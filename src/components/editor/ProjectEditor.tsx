@@ -1006,14 +1006,15 @@ export default function ProjectEditor({
                 {!fabPlacementMode ? (
                   <button
                     onClick={() => setFabPlacementMode(true)}
-                    className="flex items-center gap-1.5 bg-brand-600 hover:bg-brand-500 active:bg-brand-700
-                               text-white rounded-full px-4 py-2.5 font-semibold text-sm transition-colors
+                    className="w-14 h-14 flex items-center justify-center
+                               bg-brand-600 hover:bg-brand-500 active:bg-brand-700
+                               text-white rounded-full transition-colors
                                shadow-[0_4px_20px_rgba(2,132,199,0.4)]"
+                    aria-label="Agregar punto"
                   >
-                    <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                     </svg>
-                    Agregar punto
                   </button>
                 ) : (
                   <button

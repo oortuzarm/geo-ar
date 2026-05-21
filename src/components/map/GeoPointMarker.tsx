@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Circle, Marker } from 'react-leaflet'
 import { createGeoIcon } from './createGeoIcon'
 import { mapTheme } from './mapTheme'
+import { getPointCoverImage } from '../../lib/pointImageUtils'
 import type { GeoPoint } from '../../types'
 
 interface GeoPointMarkerProps {
@@ -63,7 +64,7 @@ export default function GeoPointMarker({ point, selected, onClick, onDragEnd }: 
     }
   }, []) // stable: same Leaflet instance lives as long as this component (keyed by point.id)
 
-  const icon = createGeoIcon(selected, point.active, false, point.image)
+  const icon = createGeoIcon(selected, point.active, false, getPointCoverImage(point))
 
   return (
     <>

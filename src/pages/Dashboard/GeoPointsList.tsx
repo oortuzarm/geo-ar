@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Modal from '../../components/ui/Modal'
+import { getPointCoverImage } from '../../lib/pointImageUtils'
 import type { GeoPoint } from '../../types'
 
 function urlDomain(url: string): string {
@@ -311,8 +312,8 @@ export default function GeoPointsList({
 
                     {/* Thumbnail */}
                     <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-gray-800 border border-gray-700/50">
-                      {point.image ? (
-                        <img src={point.image} alt={point.name} className="w-full h-full object-cover" />
+                      {getPointCoverImage(point) ? (
+                        <img src={getPointCoverImage(point)} alt={point.name} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

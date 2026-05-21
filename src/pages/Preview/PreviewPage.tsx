@@ -5,6 +5,7 @@ import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
 import type { GeoProject, GeoPoint } from '../../types'
 import { formatDistance } from '../../features/geolocation/haversine'
+import { getPointCoverImage } from '../../lib/pointImageUtils'
 
 export default function PreviewPage() {
   const { id } = useParams<{ id: string }>()
@@ -165,8 +166,8 @@ export default function PreviewPage() {
                         ].join(' ')}
                       >
                         <div className="flex items-start gap-2">
-                          {pt.image && (
-                            <img src={pt.image} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                          {getPointCoverImage(pt) && (
+                            <img src={getPointCoverImage(pt)} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
                           )}
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-semibold text-gray-200 truncate">{pt.name}</p>

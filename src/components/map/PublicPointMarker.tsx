@@ -1,6 +1,7 @@
 import { Marker, Circle } from 'react-leaflet'
 import { createGeoIcon } from './createGeoIcon'
 import { mapTheme } from './mapTheme'
+import { getPointCoverImage } from '../../lib/pointImageUtils'
 import type { GeoPoint } from '../../types'
 
 const { activationRadius: ar } = mapTheme
@@ -24,7 +25,7 @@ export default function PublicPointMarker({
   dimmed,
   onClick,
 }: PublicPointMarkerProps) {
-  const icon = createGeoIcon(selected, point.active, dimmed, point.image)
+  const icon = createGeoIcon(selected, point.active, dimmed, getPointCoverImage(point))
 
   const circleOptions = selected ? ar.selected : dimmed ? ar.dimmed : ar.default
 

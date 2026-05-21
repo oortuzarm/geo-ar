@@ -1,3 +1,4 @@
+import { getPointCoverImage } from '../../lib/pointImageUtils'
 import type { GeoPoint } from '../../types'
 
 interface Props {
@@ -60,9 +61,9 @@ export default function PointSummarySheet({ point, onClose, onEdit, onToggleActi
         <div className="px-4 pt-2 pb-5">
           <div className="flex gap-4 items-center">
             {/* Thumbnail */}
-            {point.image ? (
+            {getPointCoverImage(point) ? (
               <img
-                src={point.image}
+                src={getPointCoverImage(point)}
                 alt={point.name}
                 className="w-16 h-16 rounded-2xl object-cover flex-shrink-0 border border-gray-700/60"
               />

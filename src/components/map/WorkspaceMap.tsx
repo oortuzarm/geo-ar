@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
 import { createGeoIcon } from './createGeoIcon'
+import { getPointCoverImage } from '../../lib/pointImageUtils'
 import type { GeoPoint } from '../../types'
 
 /**
@@ -49,7 +50,7 @@ export default function WorkspaceMap({ points, onMarkerClick }: WorkspaceMapProp
         <Marker
           key={point.id}
           position={[point.latitude, point.longitude]}
-          icon={createGeoIcon(false, point.active, false, point.image)}
+          icon={createGeoIcon(false, point.active, false, getPointCoverImage(point))}
           draggable={false}
           eventHandlers={
             onMarkerClick ? { click: () => onMarkerClick(point.id) } : undefined

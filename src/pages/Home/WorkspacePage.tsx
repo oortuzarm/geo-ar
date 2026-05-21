@@ -16,6 +16,7 @@ import PreviewQRModal from '../Dashboard/PreviewQRModal'
 import WorkspaceMap from '../../components/map/WorkspaceMap'
 import UpgradeModal from '../../components/subscription/UpgradeModal'
 import { useSubscription } from '../../hooks/useSubscription'
+import { getPointCoverImage } from '../../lib/pointImageUtils'
 import type { ContentType, GeoPoint, MediaContentData } from '../../types'
 
 // ── Content type display config ───────────────────────────────────────────────
@@ -69,8 +70,8 @@ function KPICard({
 function PointThumbnail({ point }: { point: GeoPoint }) {
   return (
     <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-800 border border-gray-700/50 flex-shrink-0">
-      {point.image ? (
-        <img src={point.image} alt="" className="w-full h-full object-cover" />
+      {getPointCoverImage(point) ? (
+        <img src={getPointCoverImage(point)} alt="" className="w-full h-full object-cover" />
       ) : (
         <div className="w-full h-full flex items-center justify-center">
           <svg className="h-3.5 w-3.5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

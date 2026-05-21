@@ -25,6 +25,9 @@ export default function PublicPointDetailSheet({
   routeStatus, walkingDistanceMeters, walkingDurationSeconds, address,
   isEmbed = false,
 }: PublicPointDetailSheetProps) {
+  const galleryImages = getPointGalleryImages(point)
+  const hasGallery    = galleryImages.length > 0
+
   return (
     <div
       className={`${isEmbed ? '' : 'md:hidden '}absolute inset-x-0 bottom-0 z-[1100]`}
@@ -63,20 +66,23 @@ export default function PublicPointDetailSheet({
             WebkitOverflowScrolling: 'touch',
           } as React.CSSProperties}
         >
-          {/* Image carousel — full-width, above the card */}
-          {(() => {
-            const imgs = getPointGalleryImages(point)
-            return imgs.length > 0 ? (
-              <PointImageCarousel images={imgs} />
-            ) : null
-          })()}
+          {/* Carousel — same horizontal margins as the card below */}
+          {hasGallery && (
+            <div className="px-4 pt-4">
+              <PointImageCarousel
+                images={galleryImages}
+                className="rounded-2xl overflow-hidden"
+              />
+            </div>
+          )}
 
-          <div className="p-4">
+          {/* Card — px-4 aligns with carousel; pt shrinks when carousel is above */}
+          <div className={`px-4 pb-4 ${hasGallery ? 'pt-3' : 'pt-4'}`}>
             <PublicPointCard
               point={point}
               distance={distance}
               isSelected
-              hideImage={getPointGalleryImages(point).length > 0}
+              hideImage={hasGallery}
               onSelect={() => {}}
               onActivate={onActivate}
               isActivating={isActivating}

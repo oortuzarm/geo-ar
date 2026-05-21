@@ -31,7 +31,7 @@ export default function PointImageCarousel({ images, className = '' }: Props) {
         <img
           src={images[0]}
           alt=""
-          className="w-full aspect-[4/3] object-cover"
+          className="w-full aspect-[4/3] object-cover block"
           loading="eager"
         />
       </div>

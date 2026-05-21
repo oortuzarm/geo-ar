@@ -230,17 +230,20 @@ export default function PublicPointCard({
     >
       {/* Cover image — hidden when caller renders a full carousel above the card */}
       {!hideImage && getPointCoverImage(point) && (
-        <div className="h-28 overflow-hidden">
+        <div className="relative h-32 overflow-hidden">
           <img
             src={getPointCoverImage(point)}
             alt={point.name}
             className="w-full h-full object-cover"
             loading="lazy"
           />
+          <div className="absolute inset-x-0 bottom-0 h-1/2
+                          bg-gradient-to-t from-gray-950/70 to-transparent
+                          pointer-events-none" />
         </div>
       )}
 
-      <div className="p-3">
+      <div className="p-3.5">
         {/* Name + exit button */}
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-semibold text-white text-sm leading-snug">{point.name}</h3>

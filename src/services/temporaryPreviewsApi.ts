@@ -48,12 +48,6 @@ export interface ClaimResult {
   redirect_url?: string // snake_case fallback
 }
 
-export function deleteTemporaryPreview(token: string): Promise<void> {
-  return apiFetch<void>(`${BASE}/api/temporary_previews/${token}`, {
-    method: 'DELETE',
-  })
-}
-
 export function claimTemporaryPreview(token: string, planKey?: string): Promise<ClaimResult> {
   return apiFetch<ClaimResult>(`${BASE}/api/temporary_previews/${token}/claim`, {
     method: 'POST',

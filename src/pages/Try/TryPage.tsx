@@ -18,7 +18,7 @@ import { useEffect } from 'react'
 import ProjectEditor from '../../components/editor/ProjectEditor'
 import { DEMO_LIMIT } from './DemoLimitModal'
 import { useGeoStore } from '../../store/geoStore'
-import { createTemporaryPreview, deleteTemporaryPreview } from '../../services/temporaryPreviewsApi'
+import { createTemporaryPreview } from '../../services/temporaryPreviewsApi'
 import { ApiError } from '../../lib/apiFetch'
 import type { GeoPoint, GeoProject } from '../../types'
 
@@ -193,15 +193,6 @@ export default function TryPage() {
   async function handlePreviewOpen(): Promise<{ url: string; token: string } | null> {
     const state = useGeoStore.getState()
     if (!state.project) return null
-
-    // Invalidate the previous active preview for this demo session so the old
-    // URL returns 404/410 ("Previsualización no disponible") instead of showing
-    // a stale snapshot. Fire-and-forget — silently ignored if backend doesn't
-    // support DELETE or the token already expired/was claimed.
-    const prevToken = localStorage.getItem(DEMO_PREVIEW_TOKEN_KEY)
-    if (prevToken) {
-      deleteTemporaryPreview(prevToken).catch(() => {})
-    }
 
     try {
       const cleanProject = sanitizeProject(state.project)

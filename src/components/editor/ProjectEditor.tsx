@@ -969,34 +969,39 @@ export default function ProjectEditor({
             </div>
 
             {/* ── Mobile bottom control bar ─────────────────────────────────────
-                Layout: [Mapa/Satélite]              [+]
-                                         [Mi ubicación]
-                                         [☰ · n]           */}
+                Layout: [Mapa/Satélite]  [☰ · n]  [+]
+                                                   [Mi ubicación] ← above right */}
             <div
               className="lg:hidden absolute inset-x-0 bottom-8 z-[1000]"
               style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom, 8px))' }}
             >
-              {/* Right column: Mi ubicación stacked above Lista */}
+              {/* Mi ubicación — independent, above right */}
               <div className="flex justify-end pr-4 mb-2">
-                <div className="flex flex-col items-end gap-2">
-                  <button
-                    onClick={handleMyLocation}
-                    disabled={locatingUser}
-                    className="bg-gray-900/95 border border-gray-700 rounded-lg p-2
-                               shadow-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
-                    title="Mi ubicación"
-                  >
-                    {locatingUser ? (
-                      <Spinner size="sm" />
-                    ) : (
-                      <svg className="h-5 w-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                    )}
-                  </button>
+                <button
+                  onClick={handleMyLocation}
+                  disabled={locatingUser}
+                  className="bg-gray-900/95 border border-gray-700 rounded-lg p-2
+                             shadow-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+                  title="Mi ubicación"
+                >
+                  {locatingUser ? (
+                    <Spinner size="sm" />
+                  ) : (
+                    <svg className="h-5 w-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+
+              {/* Bottom row: [Mapa/Satélite] — [☰ · n] — [+] */}
+              <div className="flex items-center justify-between px-4">
+                <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
+
+                <div className="flex items-center gap-3">
                   <button
                     onClick={() => setListDrawerOpen(true)}
                     className="flex items-center gap-1.5 bg-gray-900/95 border border-gray-700
@@ -1009,38 +1014,33 @@ export default function ProjectEditor({
                     </svg>
                     · {points.length}
                   </button>
+
+                  {!fabPlacementMode ? (
+                    <button
+                      onClick={() => setFabPlacementMode(true)}
+                      className="w-14 h-14 flex items-center justify-center
+                                 bg-brand-600 hover:bg-brand-500 active:bg-brand-700
+                                 text-white rounded-full transition-colors
+                                 shadow-[0_4px_20px_rgba(2,132,199,0.4)]"
+                      aria-label="Agregar punto"
+                    >
+                      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setFabPlacementMode(false)}
+                      className="flex items-center gap-1.5 bg-gray-700/90 border border-gray-600
+                                 text-gray-200 rounded-full px-4 py-2.5 text-sm font-medium transition-colors"
+                    >
+                      <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Cancelar
+                    </button>
+                  )}
                 </div>
-              </div>
-
-              {/* Bottom row: MapStyleToggle left, FAB right */}
-              <div className="flex items-center justify-between px-4">
-                <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
-
-                {!fabPlacementMode ? (
-                  <button
-                    onClick={() => setFabPlacementMode(true)}
-                    className="w-14 h-14 flex items-center justify-center
-                               bg-brand-600 hover:bg-brand-500 active:bg-brand-700
-                               text-white rounded-full transition-colors
-                               shadow-[0_4px_20px_rgba(2,132,199,0.4)]"
-                    aria-label="Agregar punto"
-                  >
-                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setFabPlacementMode(false)}
-                    className="flex items-center gap-1.5 bg-gray-700/90 border border-gray-600
-                               text-gray-200 rounded-full px-4 py-2.5 text-sm font-medium transition-colors"
-                  >
-                    <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    Cancelar
-                  </button>
-                )}
               </div>
             </div>
           </div>

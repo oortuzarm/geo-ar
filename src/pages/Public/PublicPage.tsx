@@ -1665,7 +1665,7 @@ export default function PublicPage({
                 />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white line-clamp-2 leading-snug">
+                <p className="text-sm font-semibold text-gray-700 line-clamp-2 leading-snug">
                   {project.title}
                 </p>
                 <div className="flex items-center gap-1.5 mt-1.5">

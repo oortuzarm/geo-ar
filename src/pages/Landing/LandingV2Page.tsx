@@ -42,7 +42,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 const HERO_WORDS = [
   'eventos y festivales.',
   'tiendas y retail.',
-  'activaciones de marca.',
+  'activaciones.',
   'ferias y stands.',
 ]
 

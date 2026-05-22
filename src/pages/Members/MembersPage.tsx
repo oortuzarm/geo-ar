@@ -4,6 +4,7 @@ import Spinner  from '../../components/ui/Spinner'
 import Modal    from '../../components/ui/Modal'
 import ToastContainer from '../../components/ui/Toast'
 import { useAuthStore } from '../../store/authStore'
+import { usePlanFeatures } from '../../hooks/usePlanFeatures'
 import { useGeoStore }  from '../../store/geoStore'
 import {
   getMembers,
@@ -163,6 +164,7 @@ function InviteModal({ onClose, onSuccess }: InviteModalProps) {
 export default function MembersPage() {
   const { currentUser } = useAuthStore()
   const { addToast }    = useGeoStore()
+  const { canUseMembers } = usePlanFeatures()
 
   const [data,     setData]     = useState<MembersResponse | null>(null)
   const [loading,  setLoading]  = useState(true)
@@ -285,6 +287,16 @@ export default function MembersPage() {
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
+
+  if (!canUseMembers) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-6">
+        <div className="text-4xl">👥</div>
+        <h2 className="text-lg font-semibold text-gray-100">Miembros no disponible</h2>
+        <p className="text-sm text-gray-400 max-w-xs">Esta función no está disponible en tu plan actual. Actualizá tu plan para invitar colaboradores a tu proyecto.</p>
+      </div>
+    )
+  }
 
   const pendingInvitations = data?.invitations.filter((i) => i.status === 'pending') ?? []
 

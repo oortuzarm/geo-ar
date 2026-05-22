@@ -7,6 +7,7 @@ import { uploadFile, formatFileSize } from '../../lib/uploadFile'
 import { uploadImage } from '../../lib/uploadImage'
 import { isVercelBlobUrl } from '../../lib/deleteMediaFile'
 import { useEditorMode } from '../../contexts/EditorModeContext'
+import { usePlanFeatures } from '../../hooks/usePlanFeatures'
 import { normalizeUrl, isValidUrl } from '../../lib/urlUtils'
 import type { PointImage } from '../../types'
 
@@ -65,9 +66,13 @@ function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void 
 function AvailabilityRules({
   availability,
   onChange,
+  canUseSchedule = true,
+  canUseQuota    = true,
 }: {
-  availability: GeoPointAvailability | undefined
-  onChange: (updates: Partial<GeoPointAvailability>) => void
+  availability:   GeoPointAvailability | undefined
+  onChange:       (updates: Partial<GeoPointAvailability>) => void
+  canUseSchedule?: boolean
+  canUseQuota?:    boolean
 }) {
   const scheduleEnabled = availability?.scheduleEnabled ?? false
   const scheduleDays    = availability?.scheduleDays ?? []
@@ -92,14 +97,14 @@ function AvailabilityRules({
       {/* ── Schedule rule ── */}
       <div className="bg-gray-800/50 border border-gray-800 rounded-lg p-3 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-300">Disponible por horario</span>
-          <Toggle
-            enabled={scheduleEnabled}
-            onToggle={() => onChange({ scheduleEnabled: !scheduleEnabled })}
-          />
+          <span className={`text-sm ${canUseSchedule ? 'text-gray-300' : 'text-gray-600'}`}>Disponible por horario</span>
+          {canUseSchedule
+            ? <Toggle enabled={scheduleEnabled} onToggle={() => onChange({ scheduleEnabled: !scheduleEnabled })} />
+            : <span className="text-xs text-gray-600" title="Esta función no está disponible en tu plan actual.">🔒 No disponible</span>
+          }
         </div>
 
-        {scheduleEnabled && (
+        {canUseSchedule && scheduleEnabled && (
           <>
             <div className="flex flex-wrap gap-1.5">
               {WEEK_DAYS.map((day) => (
@@ -154,14 +159,14 @@ function AvailabilityRules({
       {/* ── Quota rule ── */}
       <div className="bg-gray-800/50 border border-gray-800 rounded-lg p-3 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-300">Disponible por cupos</span>
-          <Toggle
-            enabled={quotaEnabled}
-            onToggle={() => onChange({ quotaEnabled: !quotaEnabled })}
-          />
+          <span className={`text-sm ${canUseQuota ? 'text-gray-300' : 'text-gray-600'}`}>Disponible por cupos</span>
+          {canUseQuota
+            ? <Toggle enabled={quotaEnabled} onToggle={() => onChange({ quotaEnabled: !quotaEnabled })} />
+            : <span className="text-xs text-gray-600" title="Esta función no está disponible en tu plan actual.">🔒 No disponible</span>
+          }
         </div>
 
-        {quotaEnabled && (
+        {canUseQuota && quotaEnabled && (
           <>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
@@ -198,6 +203,7 @@ function isMediaContentData(data: GeoPoint['contentData']): data is MediaContent
 
 export default function GeoPointForm({ point, onChange, onDelete, onClose, onSave, onMediaOrphaned, hideHeader = false }: GeoPointFormProps) {
   const editorMode = useEditorMode()
+  const { canUseContentType, canUseScheduleAvailability, canUseQuotaAvailability } = usePlanFeatures()
   const mediaFileRef   = useRef<HTMLInputElement>(null)
   const galleryFileRef = useRef<HTMLInputElement>(null)
   const [showTooltip,          setShowTooltip]          = useState(false)
@@ -473,22 +479,29 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
             Tipo de contenido
           </span>
           <div className="grid grid-cols-2 gap-2">
-            {CONTENT_TYPES.map(({ type, label, icon }) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => handleContentTypeChange(type)}
-                className={[
-                  'flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all',
-                  contentType === type
-                    ? 'border-brand-500 bg-brand-500/10 text-brand-400'
-                    : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:border-gray-600 hover:text-gray-300',
-                ].join(' ')}
-              >
-                <span className="text-base leading-none">{icon}</span>
-                <span className="truncate">{label}</span>
-              </button>
-            ))}
+            {CONTENT_TYPES.map(({ type, label, icon }) => {
+              const allowed = canUseContentType(type)
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  disabled={!allowed}
+                  onClick={() => allowed && handleContentTypeChange(type)}
+                  title={allowed ? undefined : 'Esta función no está disponible en tu plan actual.'}
+                  className={[
+                    'flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all',
+                    !allowed
+                      ? 'border-gray-800 bg-gray-800/30 text-gray-600 cursor-not-allowed'
+                      : contentType === type
+                        ? 'border-brand-500 bg-brand-500/10 text-brand-400'
+                        : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:border-gray-600 hover:text-gray-300',
+                  ].join(' ')}
+                >
+                  <span className="text-base leading-none">{allowed ? icon : '🔒'}</span>
+                  <span className="truncate">{label}</span>
+                </button>
+              )
+            })}
           </div>
         </div>
 
@@ -595,6 +608,8 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
         <AvailabilityRules
           availability={point.availability}
           onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
+          canUseSchedule={canUseScheduleAvailability}
+          canUseQuota={canUseQuotaAvailability}
         />
 
         {/* Coordenadas — dentro de sección colapsable */}

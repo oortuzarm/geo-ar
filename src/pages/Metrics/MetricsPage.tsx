@@ -17,6 +17,7 @@ import type {
   GeoDistribution,
 } from '../../lib/analytics'
 import { useWorkspace } from '../../hooks/useWorkspace'
+import { usePlanFeatures } from '../../hooks/usePlanFeatures'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -1084,6 +1085,7 @@ function PointsSection({ byPoint }: { byPoint: PointAnalytics[] }) {
 export default function MetricsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { project, loading: workspaceLoading } = useWorkspace()
+  const { canUseAnalytics } = usePlanFeatures()
   const selectedId = project?.id ?? ''
   const [pointId,     setPointId]     = useState<string>(searchParams.get('pointId') ?? '')
   const [summary,     setSummary]     = useState<ProjectAnalytics | null>(null)
@@ -1127,6 +1129,16 @@ export default function MetricsPage() {
     : displaySummary.radiusEntries > 5 ? 'Mejorable'
     : '—'
     : ''
+
+  if (!canUseAnalytics) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-6">
+        <div className="text-4xl">📊</div>
+        <h2 className="text-lg font-semibold text-gray-100">Analíticas no disponibles</h2>
+        <p className="text-sm text-gray-400 max-w-xs">Esta función no está disponible en tu plan actual. Actualizá tu plan para acceder a las analíticas de tus proyectos.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="text-gray-100 min-h-full overflow-x-hidden">

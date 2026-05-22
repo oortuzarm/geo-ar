@@ -1,4 +1,6 @@
 import { apiFetch } from '../lib/apiFetch'
+import type { FeaturesConfig } from '../lib/planFeatureRegistry'
+import { DEFAULT_FEATURES_CONFIG } from '../lib/planFeatureRegistry'
 
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
 
@@ -19,6 +21,7 @@ export interface PublicPlan {
   features:              string[]
   ctaText:               string | null
   ctaUrl:                string | null
+  featuresConfig:        FeaturesConfig
 }
 
 function normalizePlan(raw: Record<string, unknown>): PublicPlan {
@@ -43,6 +46,7 @@ function normalizePlan(raw: Record<string, unknown>): PublicPlan {
     features:              Array.isArray(featuresRaw) ? (featuresRaw as string[]) : [],
     ctaText:               ((raw.ctaText  ?? raw.cta_text  ?? null) as string | null),
     ctaUrl:                ((raw.ctaUrl   ?? raw.cta_url   ?? null) as string | null),
+    featuresConfig:        ((raw.featuresConfig ?? raw.features_config ?? DEFAULT_FEATURES_CONFIG) as FeaturesConfig),
   }
 }
 

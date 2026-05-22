@@ -6,6 +6,8 @@ import {
   getAdminPlans, createAdminPlan, updateAdminPlan, deleteAdminPlan,
 } from '../../services/adminApi'
 import type { AdminPlan, CreatePlanPayload } from '../../types/admin.types'
+import { CONTENT_TYPE_OPTIONS, BOOLEAN_FEATURES, DEFAULT_FEATURES_CONFIG } from '../../lib/planFeatureRegistry'
+import type { FeaturesConfig } from '../../lib/planFeatureRegistry'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -139,6 +141,7 @@ const EMPTY_FORM = {
   features:             [] as string[],
   ctaText:              '',
   ctaUrl:               '',
+  featuresConfig:       DEFAULT_FEATURES_CONFIG as FeaturesConfig,
 }
 type PlanForm = typeof EMPTY_FORM
 
@@ -161,6 +164,7 @@ function planToForm(p: AdminPlan): PlanForm {
     features:             p.features ?? [],
     ctaText:              p.ctaText ?? '',
     ctaUrl:               p.ctaUrl ?? '',
+    featuresConfig:       p.featuresConfig ?? DEFAULT_FEATURES_CONFIG,
   }
 }
 
@@ -181,6 +185,7 @@ function formToPayload(f: PlanForm): CreatePlanPayload {
     features:             f.features.filter(feat => feat.trim() !== ''),
     ctaText:              f.ctaText.trim() || null,
     ctaUrl:               f.ctaUrl.trim() || null,
+    featuresConfig:       f.featuresConfig,
   }
 }
 
@@ -510,6 +515,54 @@ function PlanFormModal({ plan, saving, onSave, onClose }: PlanFormModalProps) {
                   placeholder="/try o /contact"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Funciones incluidas */}
+          <div className="rounded-xl border border-gray-800 bg-gray-800/30 p-4 space-y-4">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Funciones incluidas</p>
+
+            {/* content_types — multi-select */}
+            <div className="flex flex-col gap-2">
+              <FieldLabel>Tipos de contenido</FieldLabel>
+              <div className="flex flex-wrap gap-2">
+                {CONTENT_TYPE_OPTIONS.map(({ value, label }) => {
+                  const allowed = (form.featuresConfig.content_types ?? []).includes(value)
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => {
+                        const current = form.featuresConfig.content_types ?? []
+                        const next = allowed
+                          ? current.filter(t => t !== value)
+                          : [...current, value]
+                        set('featuresConfig', { ...form.featuresConfig, content_types: next })
+                      }}
+                      className={[
+                        'px-3 py-1.5 rounded-lg border text-xs font-medium transition-all',
+                        allowed
+                          ? 'border-brand-500 bg-brand-500/10 text-brand-400'
+                          : 'border-gray-700 bg-gray-800/50 text-gray-500 hover:border-gray-600',
+                      ].join(' ')}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* boolean features */}
+            <div className="flex flex-col gap-2.5">
+              {BOOLEAN_FEATURES.map(({ key, label }) => (
+                <Toggle
+                  key={String(key)}
+                  checked={Boolean(form.featuresConfig[key] ?? true)}
+                  onChange={v => set('featuresConfig', { ...form.featuresConfig, [key]: v })}
+                  label={label}
+                />
+              ))}
             </div>
           </div>
 

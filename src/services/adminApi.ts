@@ -67,6 +67,8 @@
 
 import { apiFetch } from '../lib/apiFetch'
 import type { AdminUser, AdminProject, AdminMetrics, AdminPlan, CreatePlanPayload, UpdatePlanPayload } from '../types/admin.types'
+import type { FeaturesConfig } from '../lib/planFeatureRegistry'
+import { DEFAULT_FEATURES_CONFIG } from '../lib/planFeatureRegistry'
 
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
 
@@ -192,6 +194,7 @@ function normalizePlan(raw: Record<string, unknown>): AdminPlan {
     features:              Array.isArray(featuresRaw) ? (featuresRaw as string[]) : [],
     ctaText:               ((raw.ctaText  ?? raw.cta_text  ?? null) as string | null),
     ctaUrl:                ((raw.ctaUrl   ?? raw.cta_url   ?? null) as string | null),
+    featuresConfig:        ((raw.featuresConfig ?? raw.features_config ?? DEFAULT_FEATURES_CONFIG) as FeaturesConfig),
     createdAt:             (raw.createdAt              ?? raw.created_at             ?? '')    as string,
     updatedAt:             (raw.updatedAt              ?? raw.updated_at             ?? '')    as string,
   }

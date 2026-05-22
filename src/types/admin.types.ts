@@ -39,6 +39,8 @@ export interface AdminMetrics {
   totalPoints:            number
 }
 
+import type { FeaturesConfig } from '../lib/planFeatureRegistry'
+
 // Field names match what the backend's plan_json serializer returns (camelCase).
 // The backend DB columns use snake_case; Rails serializes them as camelCase in plan_json.
 export interface AdminPlan {
@@ -60,6 +62,7 @@ export interface AdminPlan {
   features:             string[]
   ctaText:              string | null
   ctaUrl:               string | null
+  featuresConfig:       FeaturesConfig
   createdAt:            string
   updatedAt:            string
 }
@@ -82,6 +85,7 @@ export interface CreatePlanPayload {
   features:             string[]
   ctaText:              string | null
   ctaUrl:               string | null
+  featuresConfig?:      FeaturesConfig
 }
 
 export type UpdatePlanPayload = Partial<CreatePlanPayload>

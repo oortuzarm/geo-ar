@@ -1,3 +1,5 @@
+import type { FeaturesConfig } from '../lib/planFeatureRegistry'
+
 export interface User {
   id:     string
   email:  string
@@ -9,4 +11,5 @@ export interface User {
   effectiveLocationLimit: number | null   // null = unlimited
   planName:               string | null
   planSlug:               string | null
+  planFeaturesConfig:     FeaturesConfig | null
 }

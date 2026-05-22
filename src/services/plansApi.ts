@@ -15,12 +15,17 @@ export interface PublicPlan {
   isRecommended:         boolean
   isCustom:              boolean
   sortOrder:             number
+  publicDescription:     string | null
+  features:              string[]
+  ctaText:               string | null
+  ctaUrl:                string | null
 }
 
 function normalizePlan(raw: Record<string, unknown>): PublicPlan {
   const yearlyRaw    = raw.yearlyPriceComputed ?? raw.yearly_price_computed ?? null
   const locationRaw  = raw.locationLimit       ?? raw.location_limit        ?? null
   const trialDaysRaw = raw.trialDays           ?? raw.trial_days            ?? null
+  const featuresRaw  = raw.features
   return {
     id:                    raw.id                                                           as string,
     name:                  raw.name                                                         as string,
@@ -34,6 +39,10 @@ function normalizePlan(raw: Record<string, unknown>): PublicPlan {
     isRecommended:         Boolean(raw.isRecommended ?? raw.is_recommended ?? false),
     isCustom:              Boolean(raw.isCustom      ?? raw.is_custom      ?? false),
     sortOrder:             Number(raw.sortOrder       ?? raw.sort_order     ?? 0),
+    publicDescription:     ((raw.publicDescription  ?? raw.public_description  ?? null) as string | null),
+    features:              Array.isArray(featuresRaw) ? (featuresRaw as string[]) : [],
+    ctaText:               ((raw.ctaText  ?? raw.cta_text  ?? null) as string | null),
+    ctaUrl:                ((raw.ctaUrl   ?? raw.cta_url   ?? null) as string | null),
   }
 }
 

@@ -56,6 +56,10 @@ export interface AdminPlan {
   applyToExistingUsers: boolean
   isCustom:             boolean
   sortOrder:            number
+  publicDescription:    string | null
+  features:             string[]
+  ctaText:              string | null
+  ctaUrl:               string | null
   createdAt:            string
   updatedAt:            string
 }
@@ -74,6 +78,10 @@ export interface CreatePlanPayload {
   isRecommended:        boolean
   isCustom:             boolean
   sortOrder:            number
+  publicDescription:    string | null
+  features:             string[]
+  ctaText:              string | null
+  ctaUrl:               string | null
 }
 
 export type UpdatePlanPayload = Partial<CreatePlanPayload>

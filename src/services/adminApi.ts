@@ -169,9 +169,10 @@ export async function deleteAdminUser(id: string): Promise<void> {
 // DELETE /api/admin/plans/:id
 
 function normalizePlan(raw: Record<string, unknown>): AdminPlan {
-  const yearlyRaw = raw.yearlyPriceComputed ?? raw.yearly_price_computed ?? null
-  const locationRaw = raw.locationLimit ?? raw.location_limit ?? null
+  const yearlyRaw    = raw.yearlyPriceComputed ?? raw.yearly_price_computed ?? null
+  const locationRaw  = raw.locationLimit ?? raw.location_limit ?? null
   const trialDaysRaw = raw.trialDays ?? raw.trial_days ?? null
+  const featuresRaw  = raw.features
   return {
     id:                    raw.id                                                              as string,
     name:                  raw.name                                                            as string,
@@ -187,6 +188,10 @@ function normalizePlan(raw: Record<string, unknown>): AdminPlan {
     applyToExistingUsers:  (raw.applyToExistingUsers   ?? raw.apply_to_existing_users ?? false) as boolean,
     isCustom:              Boolean(raw.isCustom        ?? raw.is_custom              ?? false),
     sortOrder:             Number(raw.sortOrder         ?? raw.sort_order             ?? 0),
+    publicDescription:     ((raw.publicDescription  ?? raw.public_description  ?? null) as string | null),
+    features:              Array.isArray(featuresRaw) ? (featuresRaw as string[]) : [],
+    ctaText:               ((raw.ctaText  ?? raw.cta_text  ?? null) as string | null),
+    ctaUrl:                ((raw.ctaUrl   ?? raw.cta_url   ?? null) as string | null),
     createdAt:             (raw.createdAt              ?? raw.created_at             ?? '')    as string,
     updatedAt:             (raw.updatedAt              ?? raw.updated_at             ?? '')    as string,
   }

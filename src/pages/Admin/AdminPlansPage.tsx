@@ -135,6 +135,10 @@ const EMPTY_FORM = {
   isRecommended:        false,
   isCustom:             false,
   sortOrder:            '0',
+  publicDescription:    '',
+  features:             [] as string[],
+  ctaText:              '',
+  ctaUrl:               '',
 }
 type PlanForm = typeof EMPTY_FORM
 
@@ -153,6 +157,10 @@ function planToForm(p: AdminPlan): PlanForm {
     isRecommended:        p.isRecommended,
     isCustom:             p.isCustom,
     sortOrder:            String(p.sortOrder),
+    publicDescription:    p.publicDescription ?? '',
+    features:             p.features ?? [],
+    ctaText:              p.ctaText ?? '',
+    ctaUrl:               p.ctaUrl ?? '',
   }
 }
 
@@ -169,6 +177,10 @@ function formToPayload(f: PlanForm): CreatePlanPayload {
     isRecommended:        f.isRecommended,
     isCustom:             f.customPricing || f.isCustom,
     sortOrder:            parseInt(f.sortOrder) || 0,
+    publicDescription:    f.publicDescription.trim() || null,
+    features:             f.features.filter(feat => feat.trim() !== ''),
+    ctaText:              f.ctaText.trim() || null,
+    ctaUrl:               f.ctaUrl.trim() || null,
   }
 }
 
@@ -377,6 +389,128 @@ function PlanFormModal({ plan, saving, onSave, onClose }: PlanFormModalProps) {
               onChange={v => set('sortOrder', v)}
               placeholder="0"
             />
+          </div>
+
+          {/* Public content */}
+          <div className="flex flex-col gap-3">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Contenido público
+            </p>
+
+            {/* Description */}
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel>Descripción pública</FieldLabel>
+              <textarea
+                value={form.publicDescription}
+                onChange={e => set('publicDescription', e.target.value)}
+                placeholder="Breve descripción visible en la página de precios…"
+                rows={2}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2
+                           text-sm text-gray-200 placeholder-gray-500 resize-none
+                           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+                           transition-colors"
+              />
+            </div>
+
+            {/* Features list */}
+            <div className="flex flex-col gap-2">
+              <FieldLabel>Features / bullets</FieldLabel>
+              {form.features.length > 0 && (
+                <div className="space-y-1.5">
+                  {form.features.map((feat, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        value={feat}
+                        onChange={e => {
+                          const next = [...form.features]
+                          next[i] = e.target.value
+                          set('features', next)
+                        }}
+                        placeholder={`Feature ${i + 1}`}
+                        className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5
+                                   text-sm text-gray-200 placeholder-gray-500
+                                   focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+                                   transition-colors"
+                      />
+                      <button
+                        type="button"
+                        disabled={i === 0}
+                        onClick={() => {
+                          const next = [...form.features];
+                          [next[i - 1], next[i]] = [next[i], next[i - 1]]
+                          set('features', next)
+                        }}
+                        title="Subir"
+                        className="p-1 text-gray-600 hover:text-gray-300 disabled:opacity-25
+                                   disabled:cursor-default transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={i === form.features.length - 1}
+                        onClick={() => {
+                          const next = [...form.features];
+                          [next[i], next[i + 1]] = [next[i + 1], next[i]]
+                          set('features', next)
+                        }}
+                        title="Bajar"
+                        className="p-1 text-gray-600 hover:text-gray-300 disabled:opacity-25
+                                   disabled:cursor-default transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => set('features', form.features.filter((_, j) => j !== i))}
+                        title="Eliminar feature"
+                        className="p-1 text-gray-600 hover:text-red-400 transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => set('features', [...form.features, ''])}
+                className="flex items-center gap-1.5 text-xs text-brand-400 hover:text-brand-300
+                           transition-colors py-0.5 w-fit"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Agregar feature
+              </button>
+            </div>
+
+            {/* CTA */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>CTA text</FieldLabel>
+                <TextInput
+                  value={form.ctaText}
+                  onChange={v => set('ctaText', v)}
+                  placeholder="Comenzar gratis"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>CTA URL</FieldLabel>
+                <TextInput
+                  value={form.ctaUrl}
+                  onChange={v => set('ctaUrl', v)}
+                  placeholder="/try o /contact"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Actions */}

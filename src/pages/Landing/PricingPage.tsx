@@ -88,6 +88,17 @@ function PlanCard({ plan, billing }: { plan: PublicPlan; billing: 'monthly' | 'a
     ? 'Ubicaciones ilimitadas'
     : `${plan.locationLimit} ubicaciones`
 
+  // CTA — use admin-configured values with graceful fallback to current defaults
+  const ctaLabel = plan.ctaText ?? (isCustom ? 'Contactar ventas' : 'Comenzar gratis')
+  const ctaHref  = plan.ctaUrl  ?? (isCustom ? '/contact'         : 'https://studio.ubyca.com/register')
+  const ctaIsExternal = ctaHref.startsWith('http')
+  const ctaClassName = [
+    'w-full py-2.5 rounded-xl text-sm font-semibold text-center block transition-colors',
+    !isCustom && plan.isRecommended
+      ? 'bg-brand-600 hover:bg-brand-700 text-white'
+      : 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700',
+  ].join(' ')
+
   return (
     <div className={[
       'relative flex flex-col rounded-2xl p-6 transition-all duration-200',
@@ -111,7 +122,13 @@ function PlanCard({ plan, billing }: { plan: PublicPlan; billing: 'monthly' | 'a
       </div>
 
       {/* Plan name */}
-      <h3 className="text-xl font-bold text-gray-100 mb-4">{plan.name}</h3>
+      <h3 className="text-xl font-bold text-gray-100 mb-1">{plan.name}</h3>
+
+      {/* Public description */}
+      {plan.publicDescription && (
+        <p className="text-sm text-gray-500 mb-4 leading-snug">{plan.publicDescription}</p>
+      )}
+      {!plan.publicDescription && <div className="mb-4" />}
 
       {/* Price */}
       <div className="mb-6">
@@ -138,7 +155,7 @@ function PlanCard({ plan, billing }: { plan: PublicPlan; billing: 'monthly' | 'a
       {/* Divider */}
       <div className="border-t border-gray-800 mb-5" />
 
-      {/* Feature list */}
+      {/* Feature list — location always first, then dynamic features */}
       <ul className="space-y-3 flex-1 mb-6">
         <li className="flex items-start gap-2.5 text-sm text-gray-300">
           <svg className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,31 +163,30 @@ function PlanCard({ plan, billing }: { plan: PublicPlan; billing: 'monthly' | 'a
           </svg>
           {locationText}
         </li>
+        {plan.features.map((feat, i) => (
+          <li key={i} className="flex items-start gap-2.5 text-sm text-gray-300">
+            <svg className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+            {feat}
+          </li>
+        ))}
       </ul>
 
       {/* CTA */}
-      {isCustom ? (
-        <Link
-          to="/contact"
-          className="w-full py-2.5 rounded-xl text-sm font-semibold text-center block
-                     bg-gray-800 hover:bg-gray-700 text-gray-200 transition-colors border border-gray-700"
-        >
-          Contactar ventas
-        </Link>
-      ) : (
+      {ctaIsExternal ? (
         <a
-          href="https://studio.ubyca.com/register"
+          href={ctaHref}
           target="_blank"
           rel="noopener noreferrer"
-          className={[
-            'w-full py-2.5 rounded-xl text-sm font-semibold text-center block transition-colors',
-            plan.isRecommended
-              ? 'bg-brand-600 hover:bg-brand-700 text-white'
-              : 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700',
-          ].join(' ')}
+          className={ctaClassName}
         >
-          Comenzar gratis
+          {ctaLabel}
         </a>
+      ) : (
+        <Link to={ctaHref} className={ctaClassName}>
+          {ctaLabel}
+        </Link>
       )}
     </div>
   )

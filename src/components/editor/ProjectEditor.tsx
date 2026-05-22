@@ -802,7 +802,7 @@ export default function ProjectEditor({
                                rounded-2xl px-4 py-3.5 flex items-center gap-3
                                shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-100">
+                    <p className="text-sm font-medium text-gray-700">
                       Toca el mapa para colocar el punto
                     </p>
                   </div>

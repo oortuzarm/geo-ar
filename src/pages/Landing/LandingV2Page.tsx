@@ -42,7 +42,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 const HERO_WORDS = [
   'eventos y festivales.',
   'tiendas y retail.',
-  'activaciones de marca.',
+  'marcas y activaciones.',
   'ferias y stands.',
 ]
 
@@ -53,7 +53,7 @@ function RotatingWord() {
     return () => clearInterval(id)
   }, [])
   return (
-    <span className="block min-h-[1.4em]">
+    <span className="block h-[1.4em]">
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
           key={idx}
@@ -61,7 +61,7 @@ function RotatingWord() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="block text-brand-400"
+          className="block text-brand-400 whitespace-nowrap"
         >
           {HERO_WORDS[idx]}
         </motion.span>

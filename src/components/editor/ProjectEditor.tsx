@@ -969,42 +969,53 @@ export default function ProjectEditor({
             </div>
 
             {/* ── Mobile bottom control bar ─────────────────────────────────────
-                Layout: [Mapa/Satélite]  [+ Agregar punto]  [☰ Lista]
-                        with "Mi ubicación" floating above the Lista column.    */}
+                Layout: [Mapa/Satélite]              [+]
+                                         [Mi ubicación]
+                                         [☰ · n]           */}
             <div
               className="lg:hidden absolute inset-x-0 bottom-8 z-[1000]"
               style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom, 8px))' }}
             >
-              {/* Mi ubicación — above Lista (right column) */}
+              {/* Right column: Mi ubicación stacked above Lista */}
               <div className="flex justify-end pr-4 mb-2">
-                <button
-                  onClick={handleMyLocation}
-                  disabled={locatingUser}
-                  className="bg-gray-900/95 border border-gray-700 rounded-lg p-2
-                             shadow-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
-                  title="Mi ubicación"
-                >
-                  {locatingUser ? (
-                    <Spinner size="sm" />
-                  ) : (
-                    <svg className="h-5 w-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex flex-col items-end gap-2">
+                  <button
+                    onClick={handleMyLocation}
+                    disabled={locatingUser}
+                    className="bg-gray-900/95 border border-gray-700 rounded-lg p-2
+                               shadow-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+                    title="Mi ubicación"
+                  >
+                    {locatingUser ? (
+                      <Spinner size="sm" />
+                    ) : (
+                      <svg className="h-5 w-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setListDrawerOpen(true)}
+                    className="flex items-center gap-1.5 bg-gray-900/95 border border-gray-700
+                               rounded-lg px-3 py-2 text-sm font-medium text-gray-300
+                               shadow-lg hover:bg-gray-800 transition-colors"
+                  >
+                    <svg className="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        d="M4 6h16M4 10h16M4 14h10" />
                     </svg>
-                  )}
-                </button>
+                    · {points.length}
+                  </button>
+                </div>
               </div>
 
-              {/* Main row — flex-1 on both sides keeps + perfectly screen-centered */}
-              <div className="flex items-center px-4">
-                {/* Left: map style toggle */}
-                <div className="flex-1 flex items-center">
-                  <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
-                </div>
+              {/* Bottom row: MapStyleToggle left, FAB right */}
+              <div className="flex items-center justify-between px-4">
+                <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
 
-                {/* Center: add point CTA or cancel placement */}
                 {!fabPlacementMode ? (
                   <button
                     onClick={() => setFabPlacementMode(true)}
@@ -1030,22 +1041,6 @@ export default function ProjectEditor({
                     Cancelar
                   </button>
                 )}
-
-                {/* Right: list */}
-                <div className="flex-1 flex items-center justify-end">
-                  <button
-                    onClick={() => setListDrawerOpen(true)}
-                    className="flex items-center gap-1.5 bg-gray-900/95 border border-gray-700
-                               rounded-lg px-3 py-2 text-sm font-medium text-gray-300
-                               shadow-lg hover:bg-gray-800 transition-colors"
-                  >
-                    <svg className="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M4 6h16M4 10h16M4 14h10" />
-                    </svg>
-                    · {points.length}
-                  </button>
-                </div>
               </div>
             </div>
           </div>

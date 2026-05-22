@@ -743,7 +743,7 @@ export default function ProjectEditor({
           {/* Map area */}
           <div className={`flex-1 relative overflow-hidden min-h-0 min-w-0${locationPhase === 'manual-map' ? ' cursor-crosshair' : ''}`}>
 
-            {/* POI / address search bar */}
+            {/* POI / address search bar + Mi ubicación (mobile only, below search) */}
             <div className="absolute top-4 z-[1000] left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-full sm:max-w-lg sm:px-4">
               <POISearch
                 mapBounds={mapBounds}
@@ -752,6 +752,26 @@ export default function ProjectEditor({
                 onCreatePoint={handlePoiCreatePoint}
                 onResultsChange={setPoiResults}
               />
+              <div className="lg:hidden flex justify-end mt-2">
+                <button
+                  onClick={handleMyLocation}
+                  disabled={locatingUser}
+                  className="bg-gray-900/95 border border-gray-700 rounded-lg p-2
+                             shadow-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+                  title="Mi ubicación"
+                >
+                  {locatingUser ? (
+                    <Spinner size="sm" />
+                  ) : (
+                    <svg className="h-5 w-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* My location button — desktop only; mobile version lives in the bottom bar */}
@@ -969,34 +989,11 @@ export default function ProjectEditor({
             </div>
 
             {/* ── Mobile bottom control bar ─────────────────────────────────────
-                Layout: [Mapa/Satélite]  [☰ · n]  [+]
-                                                   [Mi ubicación] ← above right */}
+                Layout: [Mapa/Satélite]  [☰ · n]  [+]                          */}
             <div
               className="lg:hidden absolute inset-x-0 bottom-8 z-[1000]"
               style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom, 8px))' }}
             >
-              {/* Mi ubicación — independent, above right */}
-              <div className="flex justify-end pr-4 mb-2">
-                <button
-                  onClick={handleMyLocation}
-                  disabled={locatingUser}
-                  className="bg-gray-900/95 border border-gray-700 rounded-lg p-2
-                             shadow-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
-                  title="Mi ubicación"
-                >
-                  {locatingUser ? (
-                    <Spinner size="sm" />
-                  ) : (
-                    <svg className="h-5 w-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  )}
-                </button>
-              </div>
-
               {/* Bottom row: [Mapa/Satélite] — [☰ · n] — [+] */}
               <div className="flex items-center justify-between px-4">
                 <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />

@@ -75,7 +75,7 @@ export default function PublicPointPreviewCard({
         <div className="flex-1 min-w-0">
           {/* Name + close button */}
           <div className="flex items-start gap-2">
-            <p className="flex-1 text-sm font-semibold text-white leading-snug line-clamp-1">
+            <p className="flex-1 text-sm font-semibold text-gray-700 leading-snug line-clamp-1">
               {point.name}
             </p>
             <button
@@ -93,7 +93,7 @@ export default function PublicPointPreviewCard({
           </div>
 
           {point.description && (
-            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 leading-snug">
+            <p className="text-xs text-gray-700 mt-0.5 line-clamp-2 leading-snug">
               {point.description}
             </p>
           )}

@@ -972,8 +972,8 @@ export default function ProjectEditor({
                 Layout: [Mapa/Satélite]  [+ Agregar punto]  [☰ Lista]
                         with "Mi ubicación" floating above the Lista column.    */}
             <div
-              className="lg:hidden absolute inset-x-0 bottom-0 z-[1000]"
-              style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))' }}
+              className="lg:hidden absolute inset-x-0 bottom-8 z-[1000]"
+              style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom, 8px))' }}
             >
               {/* Mi ubicación — above Lista (right column) */}
               <div className="flex justify-end pr-4 mb-2">

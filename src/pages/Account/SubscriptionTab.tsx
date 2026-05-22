@@ -228,29 +228,67 @@ function PaymentHistoryTable({ records }: { records: PaymentRecord[] }) {
       {records.length === 0 ? (
         <p className="text-sm text-gray-500">No hay pagos registrados aún.</p>
       ) : (
-        // -mx-6 counteracts card's px-6 so the table bleeds edge-to-edge
-        <div className="overflow-x-auto -mx-6">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/[0.06]">
-                {(['Número de orden', 'Fecha', 'Estado', 'Facturación', 'Método de pago', 'Monto'] as const).map(col => (
-                  <th
-                    key={col}
-                    className="px-6 pb-3 text-left text-xs font-medium text-gray-500
-                               uppercase tracking-wide whitespace-nowrap"
-                  >
-                    {col}
-                  </th>
+        <>
+          {/* ── Desktop table (sm+) — 4 columns, no horizontal scroll ── */}
+          <div className="hidden sm:block -mx-6">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/[0.06]">
+                  {(['Número de orden', 'Fecha', 'Estado', 'Monto'] as const).map((col, i) => (
+                    <th
+                      key={col}
+                      className={[
+                        'px-6 pb-3 text-xs font-medium text-gray-500 uppercase tracking-wide',
+                        i === 3 ? 'text-right' : 'text-left',
+                      ].join(' ')}
+                    >
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.04]">
+                {records.map(record => (
+                  <tr key={record.orderId} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="px-6 py-3.5">
+                      <button
+                        onClick={() => downloadInvoice(record.orderId)}
+                        className="font-mono text-xs text-brand-400 hover:text-brand-300
+                                   underline underline-offset-2 transition-colors block"
+                      >
+                        {record.orderId}
+                      </button>
+                      <p className="text-xs text-gray-600 mt-0.5">
+                        {record.billingCycle} · {record.paymentMethod}
+                      </p>
+                    </td>
+                    <td className="px-6 py-3.5 whitespace-nowrap text-gray-400 text-sm">
+                      {record.date}
+                    </td>
+                    <td className="px-6 py-3.5 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full
+                                        text-xs font-medium ${STATUS_CLASSES[record.status]}`}>
+                        {record.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3.5 whitespace-nowrap text-right font-medium tabular-nums text-gray-200">
+                      {record.currency} {record.amount}
+                    </td>
+                  </tr>
                 ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/[0.04]">
-              {records.map(record => (
-                <tr
-                  key={record.orderId}
-                  className="hover:bg-white/[0.02] transition-colors"
-                >
-                  <td className="px-6 py-3.5 whitespace-nowrap">
+              </tbody>
+            </table>
+          </div>
+
+          {/* ── Mobile cards (below sm) ── */}
+          <div className="sm:hidden space-y-2.5">
+            {records.map(record => (
+              <div
+                key={record.orderId}
+                className="border border-white/[0.06] rounded-xl px-4 py-3.5"
+              >
+                <div className="flex items-start justify-between gap-3 mb-2.5">
+                  <div>
                     <button
                       onClick={() => downloadInvoice(record.orderId)}
                       className="font-mono text-xs text-brand-400 hover:text-brand-300
@@ -258,30 +296,25 @@ function PaymentHistoryTable({ records }: { records: PaymentRecord[] }) {
                     >
                       {record.orderId}
                     </button>
-                  </td>
-                  <td className="px-6 py-3.5 whitespace-nowrap text-gray-400">
-                    {record.date}
-                  </td>
-                  <td className="px-6 py-3.5 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full
-                                      text-xs font-medium ${STATUS_CLASSES[record.status]}`}>
-                      {record.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3.5 whitespace-nowrap text-gray-400">
-                    {record.billingCycle}
-                  </td>
-                  <td className="px-6 py-3.5 whitespace-nowrap text-gray-400">
-                    {record.paymentMethod}
-                  </td>
-                  <td className="px-6 py-3.5 whitespace-nowrap font-medium tabular-nums text-gray-200">
+                    <p className="text-xs text-gray-600 mt-0.5">
+                      {record.billingCycle} · {record.paymentMethod}
+                    </p>
+                  </div>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full
+                                    text-xs font-medium shrink-0 ${STATUS_CLASSES[record.status]}`}>
+                    {record.status}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.05]">
+                  <span className="text-xs text-gray-500">{record.date}</span>
+                  <span className="text-sm font-medium tabular-nums text-gray-200">
                     {record.currency} {record.amount}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </Card>
   )

@@ -1040,7 +1040,7 @@ export default function ProjectEditor({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d="M4 6h16M4 10h16M4 14h10" />
                   </svg>
-                  Lista · {points.length}
+                  · {points.length}
                 </button>
               </div>
             </div>

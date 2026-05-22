@@ -1482,8 +1482,28 @@ export default function PublicPage({
           <LocationBadge status={locationStatus} accuracy={userLocation?.accuracy} onClick={handleBadgeClick} />
         </div>
 
-        {/* Map style toggle — left on mobile to avoid "Mostrar lista", right on desktop */}
-        <div className="absolute bottom-8 left-4 z-[400] md:left-auto md:right-4">
+        {/* Map style toggle — left on mobile, right on desktop.
+            On mobile, the preview badge stacks above the toggle via flex-col. */}
+        <div className="absolute bottom-8 left-4 z-[600] md:left-auto md:right-4 md:z-[400]
+                        flex flex-col items-start gap-2">
+          {isTemporaryPreview && (
+            <div className="pointer-events-none md:hidden">
+              <span className="flex items-center gap-0.5 bg-black/50 backdrop-blur-sm border border-white/10
+                               rounded-full px-3 py-1 text-[10px] font-medium text-white/40
+                               select-none whitespace-nowrap">
+                Preview&nbsp;
+                <a
+                  href="https://www.ubyca.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="pointer-events-auto text-white/60 hover:text-white/80 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Ubyca
+                </a>
+              </span>
+            </div>
+          )}
           <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
         </div>
 
@@ -1582,9 +1602,10 @@ export default function PublicPage({
           )}
         </button>
 
-      {/* ── Temporary preview watermark ──────────────────────────────────── */}
+      {/* ── Temporary preview watermark — desktop only (md+)
+            On mobile the badge renders inside the MapStyleToggle wrapper above */}
       {isTemporaryPreview && (
-        <div className="absolute bottom-6 left-6 z-[600] pointer-events-none">
+        <div className="hidden md:block absolute bottom-6 left-6 z-[600] pointer-events-none">
           <span className="flex items-center gap-0.5 bg-black/50 backdrop-blur-sm border border-white/10
                            rounded-full px-3 py-1 text-[10px] font-medium text-white/40
                            select-none whitespace-nowrap">

@@ -1,17 +1,19 @@
-import { useLayoutEffect } from 'react'
+import { useEffect, useLayoutEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
-/**
- * Scrolls the window to the top on every client-side navigation.
- * Uses useLayoutEffect so the scroll happens before the browser paints,
- * preventing the brief flash of the previous scroll position.
- *
- * Coexists with ScrollRestoration: for back/forward navigation,
- * ScrollRestoration fires after this and restores the saved position.
- */
 export default function ScrollToTop() {
   const { pathname } = useLocation()
 
+  // Take ownership of scroll restoration so the browser never restores
+  // a stale position on back/forward navigation before React can respond.
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual'
+    }
+  }, [])
+
+  // useLayoutEffect fires synchronously before the browser paints,
+  // so the page is never seen at the previous scroll position.
   useLayoutEffect(() => {
     window.scrollTo(0, 0)
   }, [pathname])

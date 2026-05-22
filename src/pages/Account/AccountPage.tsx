@@ -5,10 +5,11 @@ import Button from '../../components/ui/Button'
 import PasswordInput from '../../components/ui/PasswordInput'
 import { getAccount, updateAccount, updatePassword } from '../../services/accountApi'
 import type { UserProfile } from '../../types/account.types'
+import SubscriptionTab from './SubscriptionTab'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Tab = 'perfil' | 'seguridad'
+type Tab = 'perfil' | 'seguridad' | 'suscripcion'
 
 interface ProfileForm {
   firstName: string
@@ -458,8 +459,9 @@ export default function AccountPage() {
   }, [])
 
   const TABS: { id: Tab; label: string }[] = [
-    { id: 'perfil',    label: 'Perfil'    },
-    { id: 'seguridad', label: 'Seguridad' },
+    { id: 'perfil',      label: 'Perfil'       },
+    { id: 'seguridad',   label: 'Seguridad'    },
+    { id: 'suscripcion', label: 'Suscripción'  },
   ]
 
   return (
@@ -513,7 +515,8 @@ export default function AccountPage() {
               onProfileSaved={setProfile}
             />
           )}
-          {tab === 'seguridad' && <SeguridadTab />}
+          {tab === 'seguridad'   && <SeguridadTab />}
+          {tab === 'suscripcion' && <SubscriptionTab />}
         </div>
 
         {/* Danger zone — always visible regardless of active tab */}

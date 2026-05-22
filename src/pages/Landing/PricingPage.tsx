@@ -352,6 +352,18 @@ export default function PricingPage() {
             </div>
           )}
 
+          {/* ── FAQ ──────────────────────────────────────────────────────────── */}
+          <section className="max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-100 text-center mb-8">
+              Preguntas frecuentes
+            </h2>
+            <div>
+              {FAQ_ITEMS.map((item) => (
+                <FaqItem key={item.q} q={item.q} a={item.a} />
+              ))}
+            </div>
+          </section>
+
           {/* ── Custom CTA ───────────────────────────────────────────────────── */}
           <section className="max-w-2xl mx-auto text-center px-4">
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 leading-snug">
@@ -373,18 +385,6 @@ export default function PricingPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
               </svg>
             </Link>
-          </section>
-
-          {/* ── FAQ ──────────────────────────────────────────────────────────── */}
-          <section className="max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold text-gray-100 text-center mb-8">
-              Preguntas frecuentes
-            </h2>
-            <div>
-              {FAQ_ITEMS.map((item) => (
-                <FaqItem key={item.q} q={item.q} a={item.a} />
-              ))}
-            </div>
           </section>
 
           {/* ── Footer link ──────────────────────────────────────────────────── */}

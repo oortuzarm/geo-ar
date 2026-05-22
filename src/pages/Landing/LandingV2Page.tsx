@@ -713,16 +713,6 @@ function FinalCTASection() {
       }} />
       <div className="relative z-10 max-w-2xl mx-auto text-center">
         <Reveal>
-          <div className="w-14 h-14 rounded-2xl bg-brand-600/15 border border-brand-500/25
-                          flex items-center justify-center mx-auto mb-8
-                          shadow-[0_0_24px_rgba(14,165,233,0.18)]">
-            <svg className="w-7 h-7 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </div>
           <h2 className="text-3xl sm:text-4xl font-black text-white mb-5">
             Crea tu primera experiencia geolocalizada
           </h2>

@@ -330,7 +330,7 @@ export default function GeoPointsList({
                     <div className="flex-1 min-w-0">
                       <p className={[
                         'text-sm font-medium truncate',
-                        point.active ? 'text-gray-100' : 'text-gray-500',
+                        point.active ? 'text-gray-700' : 'text-gray-500',
                       ].join(' ')}>
                         {point.name || <span className="italic text-gray-600 font-normal">Sin nombre</span>}
                       </p>

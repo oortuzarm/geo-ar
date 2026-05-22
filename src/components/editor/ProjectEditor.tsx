@@ -1122,7 +1122,7 @@ export default function ProjectEditor({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <h2 className="flex-1 text-base font-semibold text-gray-100 truncate">
+              <h2 className="flex-1 text-base font-semibold text-gray-700 truncate">
                 {selectedPoint.name || (isNewMobilePoint ? 'Nuevo punto' : 'Punto GPS')}
               </h2>
               <button

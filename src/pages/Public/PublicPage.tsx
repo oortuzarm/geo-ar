@@ -1483,7 +1483,7 @@ export default function PublicPage({
         </div>
 
         {/* Map style toggle — left on mobile to avoid "Mostrar lista", right on desktop */}
-        <div className="absolute bottom-4 left-4 z-[400] md:left-auto md:right-4">
+        <div className="absolute bottom-8 left-4 z-[400] md:left-auto md:right-4">
           <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
         </div>
 
@@ -1539,8 +1539,8 @@ export default function PublicPage({
             'transition-all duration-150',
             mobileState === 'detail'    ? 'hidden'
             : sheetState === 'expanded' ? 'hidden'
-            : mobileState === 'preview' ? (isEmbed ? 'bottom-[324px]' : 'bottom-[324px] md:hidden')
-            :                             (isEmbed ? 'bottom-[148px]' : 'bottom-[148px] md:hidden'),
+            : mobileState === 'preview' ? (isEmbed ? 'bottom-[336px]' : 'bottom-[336px] md:hidden')
+            :                             (isEmbed ? 'bottom-[160px]' : 'bottom-[160px] md:hidden'),
           ].join(' ')}
           title="Compartir"
         >
@@ -1563,8 +1563,8 @@ export default function PublicPage({
             'disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100',
             mobileState === 'detail'    ? (isEmbed ? 'hidden' : 'hidden md:flex md:bottom-4')
             : sheetState === 'expanded' ? (isEmbed ? 'hidden' : 'hidden md:flex md:bottom-4')
-            : mobileState === 'preview' ? (isEmbed ? 'bottom-[272px]' : 'bottom-[272px] md:bottom-4')
-            :                             (isEmbed ? 'bottom-24' : 'bottom-24 md:bottom-4'),
+            : mobileState === 'preview' ? (isEmbed ? 'bottom-[284px]' : 'bottom-[284px] md:bottom-4')
+            :                             (isEmbed ? 'bottom-[108px]' : 'bottom-[108px] md:bottom-4'),
           ].join(' ')}
           title={locationButtonReturnsToProject ? 'Volver a vista del proyecto' : 'Mi ubicación'}
         >
@@ -1717,7 +1717,7 @@ export default function PublicPage({
       {sheetState === 'hidden' && mobileState !== 'detail' && (
         <div
           className={`${isEmbed ? '' : 'md:hidden '}absolute right-4 z-[1100]`}
-          style={{ bottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}
+          style={{ bottom: 'calc(32px + env(safe-area-inset-bottom, 0px))' }}
         >
           <button
             onClick={() => {

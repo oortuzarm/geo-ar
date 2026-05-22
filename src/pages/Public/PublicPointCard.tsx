@@ -246,7 +246,7 @@ export default function PublicPointCard({
       <div className="p-3.5">
         {/* Name + exit button */}
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-gray-700 text-sm leading-snug">{point.name}</h3>
+          <h3 className="font-semibold text-white text-sm leading-snug">{point.name}</h3>
           {isSelected && onExit && (
             <button
               onClick={(e) => { e.stopPropagation(); onExit() }}

@@ -130,27 +130,25 @@ function PlanCard({ plan, billing }: { plan: PublicPlan; billing: 'monthly' | 'a
       )}
       {!plan.publicDescription && <div className="mb-4" />}
 
-      {/* Price */}
-      <div className="mb-6">
-        {isCustom ? (
-          <p className="text-2xl font-bold text-gray-100">Personalizado</p>
-        ) : (
+      {/* Price — hidden for custom/enterprise plans to avoid redundant "Personalizado" heading */}
+      {!isCustom && (
+        <div className="mb-6">
           <div className="flex items-baseline gap-1.5">
             <span className="text-4xl font-bold tabular-nums text-gray-100">
               {displayPrice}
             </span>
             <span className="text-sm text-gray-500 leading-none">{priceLabel}</span>
           </div>
-        )}
-        {billing === 'annual' && !isCustom && (
-          <p className="text-xs text-emerald-400 mt-1.5 font-medium">Facturado anualmente</p>
-        )}
-        {plan.hasTrial && plan.trialDays && (
-          <p className="text-xs text-emerald-400 mt-1.5 font-medium">
-            {plan.trialDays} días de prueba gratis
-          </p>
-        )}
-      </div>
+          {billing === 'annual' && (
+            <p className="text-xs text-emerald-400 mt-1.5 font-medium">Facturado anualmente</p>
+          )}
+          {plan.hasTrial && plan.trialDays && (
+            <p className="text-xs text-emerald-400 mt-1.5 font-medium">
+              {plan.trialDays} días de prueba gratis
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Divider */}
       <div className="border-t border-gray-800 mb-5" />

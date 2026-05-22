@@ -462,7 +462,7 @@ export default function PlansPage() {
             Elige el plan ideal para tu proyecto
           </h2>
           <p className="text-gray-500 text-base max-w-md mx-auto">
-            Todos los planes incluyen acceso completo a las funciones. Sin contratos. Sin sorpresas.
+            Todo lo que necesitas para crear experiencias geolocalizadas.
           </p>
         </div>
 

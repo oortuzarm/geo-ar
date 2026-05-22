@@ -1,10 +1,24 @@
 import { useEffect, useLayoutEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
+// Reset every possible scroll container.
+//
+// Why all three:
+//   window.scrollTo       → resets document.documentElement (standards mode)
+//   documentElement.scrollTop → explicit, covers Chrome mobile edge cases
+//   body.scrollTop        → fixes the CSS-induced body scroll container
+//     (overflow-x:hidden on html+body forces overflow-y:auto, making body
+//      the real scroll container when height:100% constrains both elements)
+function resetScroll() {
+  window.scrollTo(0, 0)
+  document.documentElement.scrollTop = 0
+  document.body.scrollTop = 0
+}
+
 export default function ScrollToTop() {
   const { pathname } = useLocation()
 
-  // Disable browser-native scroll restoration so it never races with our own reset.
+  // Take ownership of scroll restoration so the browser never fires its own.
   useEffect(() => {
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual'
@@ -12,12 +26,14 @@ export default function ScrollToTop() {
   }, [])
 
   useLayoutEffect(() => {
-    // CSS rule: when overflow-x is 'hidden', overflow-y computes to 'auto'.
-    // With html+body at height:100%, content on public pages overflows *body*,
-    // making document.body the real scroll container — not document.documentElement.
-    // window.scrollTo only resets documentElement; we must also reset body directly.
-    window.scrollTo(0, 0)
-    document.body.scrollTop = 0
+    // Synchronous reset — fires before the browser paints.
+    resetScroll()
+
+    // rAF reset — iOS Safari and some Android browsers fire their own async
+    // scroll restoration after useLayoutEffect. Repeating inside rAF ensures
+    // we override it immediately before the next frame is painted.
+    const id = requestAnimationFrame(resetScroll)
+    return () => cancelAnimationFrame(id)
   }, [pathname])
 
   return null

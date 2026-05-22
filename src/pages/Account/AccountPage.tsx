@@ -519,8 +519,8 @@ export default function AccountPage() {
           {tab === 'suscripcion' && <SubscriptionTab />}
         </div>
 
-        {/* Danger zone — always visible regardless of active tab */}
-        <DangerZone />
+        {/* Danger zone — only on Perfil tab */}
+        {tab === 'perfil' && <DangerZone />}
       </div>
     </div>
   )

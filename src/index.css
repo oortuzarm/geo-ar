@@ -53,6 +53,9 @@
   .geo-marker--selected {
     transform: scale(1.28);
   }
+  .leaflet-control-zoom {
+    display: none !important;
+  }
 }
 
 /* Override Leaflet dark theme */

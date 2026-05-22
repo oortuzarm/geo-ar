@@ -744,7 +744,7 @@ export default function ProjectEditor({
           <div className={`flex-1 relative overflow-hidden min-h-0 min-w-0${locationPhase === 'manual-map' ? ' cursor-crosshair' : ''}`}>
 
             {/* POI / address search bar */}
-            <div className="absolute top-4 z-[1000] left-14 right-2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-full sm:max-w-lg sm:px-4">
+            <div className="absolute top-4 z-[1000] left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-full sm:max-w-lg sm:px-4">
               <POISearch
                 mapBounds={mapBounds}
                 existingPoints={points}

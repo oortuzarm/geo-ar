@@ -7,9 +7,9 @@ import { getPointCoverImage } from '../../lib/pointImageUtils'
 type StatusVariant = 'ok' | 'block' | 'neutral'
 
 const BADGE: Record<StatusVariant, string> = {
-  ok:      'bg-emerald-50 border-emerald-200 text-emerald-700',
-  block:   'bg-red-50 border-red-200 text-red-600',
-  neutral: 'bg-gray-100 border-gray-200 text-gray-600',
+  ok:      'bg-emerald-500/[0.18] border-emerald-500/35 text-emerald-300',
+  block:   'bg-red-500/[0.18] border-red-500/35 text-red-300',
+  neutral: 'bg-gray-500/[0.18] border-gray-500/30 text-gray-300',
 }
 
 interface PublicPointPreviewCardProps {
@@ -59,29 +59,29 @@ export default function PublicPointPreviewCard({
 
   return (
     <div className="geo-preview-enter rounded-2xl overflow-hidden
-                    bg-white/95 backdrop-blur-xl
-                    border border-gray-900/[0.06]
-                    shadow-[0_8px_32px_rgba(0,0,0,0.18)]">
+                    bg-gray-950/97 backdrop-blur-xl
+                    border border-white/[0.09]
+                    shadow-[0_8px_32px_rgba(0,0,0,0.65)]">
 
       <div className="flex gap-3 p-3">
         {getPointCoverImage(point) && (
           <img
             src={getPointCoverImage(point)}
             alt={point.name}
-            className="w-[68px] h-[68px] rounded-xl object-cover flex-shrink-0 ring-1 ring-gray-900/10"
+            className="w-[68px] h-[68px] rounded-xl object-cover flex-shrink-0 ring-1 ring-white/10"
           />
         )}
 
         <div className="flex-1 min-w-0">
           {/* Name + close button */}
           <div className="flex items-start gap-2">
-            <p className="flex-1 text-sm font-semibold text-gray-900 leading-snug line-clamp-1">
+            <p className="flex-1 text-sm font-semibold text-white leading-snug line-clamp-1">
               {point.name}
             </p>
             <button
               onClick={onClose}
-              className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 border border-gray-900/[0.07]
-                         flex items-center justify-center text-gray-400 hover:text-gray-800
+              className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-700/90 border border-white/[0.1]
+                         flex items-center justify-center text-gray-300 hover:text-white
                          active:scale-90 transition-all duration-150"
               aria-label="Cerrar preview"
             >

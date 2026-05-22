@@ -18,6 +18,7 @@ import type {
 } from '../../lib/analytics'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import { usePlanFeatures } from '../../hooks/usePlanFeatures'
+import PlanGate from '../../components/ui/PlanGate'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -1132,11 +1133,11 @@ export default function MetricsPage() {
 
   if (!canUseAnalytics) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-6">
-        <div className="text-4xl">📊</div>
-        <h2 className="text-lg font-semibold text-gray-100">Analíticas no disponibles</h2>
-        <p className="text-sm text-gray-400 max-w-xs">Esta función no está disponible en tu plan actual. Actualizá tu plan para acceder a las analíticas de tus proyectos.</p>
-      </div>
+      <PlanGate
+        emoji="📊"
+        title="Analíticas no disponibles"
+        description="Esta función no está disponible en tu plan actual. Actualizá tu plan para acceder a las analíticas de tus proyectos."
+      />
     )
   }
 

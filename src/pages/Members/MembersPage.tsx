@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Button   from '../../components/ui/Button'
+import PlanGate from '../../components/ui/PlanGate'
 import Spinner  from '../../components/ui/Spinner'
 import Modal    from '../../components/ui/Modal'
 import ToastContainer from '../../components/ui/Toast'
@@ -290,11 +291,11 @@ export default function MembersPage() {
 
   if (!canUseMembers) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-6">
-        <div className="text-4xl">👥</div>
-        <h2 className="text-lg font-semibold text-gray-100">Miembros no disponible</h2>
-        <p className="text-sm text-gray-400 max-w-xs">Esta función no está disponible en tu plan actual. Actualizá tu plan para invitar colaboradores a tu proyecto.</p>
-      </div>
+      <PlanGate
+        emoji="👥"
+        title="Miembros no disponible"
+        description="Esta función no está disponible en tu plan actual. Actualizá tu plan para invitar colaboradores a tu proyecto."
+      />
     )
   }
 

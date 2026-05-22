@@ -997,10 +997,12 @@ export default function ProjectEditor({
                 </button>
               </div>
 
-              {/* Main row */}
-              <div className="flex items-center justify-between gap-2 px-4">
+              {/* Main row — flex-1 on both sides keeps + perfectly screen-centered */}
+              <div className="flex items-center px-4">
                 {/* Left: map style toggle */}
-                <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
+                <div className="flex-1 flex items-center">
+                  <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
+                </div>
 
                 {/* Center: add point CTA or cancel placement */}
                 {!fabPlacementMode ? (
@@ -1030,18 +1032,20 @@ export default function ProjectEditor({
                 )}
 
                 {/* Right: list */}
-                <button
-                  onClick={() => setListDrawerOpen(true)}
-                  className="flex items-center gap-1.5 bg-gray-900/95 border border-gray-700
-                             rounded-lg px-3 py-2 text-sm font-medium text-gray-300
-                             shadow-lg hover:bg-gray-800 transition-colors"
-                >
-                  <svg className="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M4 6h16M4 10h16M4 14h10" />
-                  </svg>
-                  · {points.length}
-                </button>
+                <div className="flex-1 flex items-center justify-end">
+                  <button
+                    onClick={() => setListDrawerOpen(true)}
+                    className="flex items-center gap-1.5 bg-gray-900/95 border border-gray-700
+                               rounded-lg px-3 py-2 text-sm font-medium text-gray-300
+                               shadow-lg hover:bg-gray-800 transition-colors"
+                  >
+                    <svg className="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M4 6h16M4 10h16M4 14h10" />
+                    </svg>
+                    · {points.length}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

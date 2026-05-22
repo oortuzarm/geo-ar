@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { getPlans, type PublicPlan } from '../../services/plansApi'
 import { useSubscription } from '../../hooks/useSubscription'
 import Spinner from '../../components/ui/Spinner'
@@ -76,10 +76,7 @@ function PlanCard({ plan, billing, isCurrent, onUpgrade }: PlanCardProps) {
 
   let displayPrice: string
   let priceLabel: string
-  if (isCustom) {
-    displayPrice = 'Personalizado'
-    priceLabel   = ''
-  } else if (billing === 'annual' && plan.yearlyPriceComputed !== null) {
+  if (billing === 'annual' && plan.yearlyPriceComputed !== null) {
     displayPrice = fmtMoney(plan.yearlyPriceComputed)
     priceLabel   = '/año'
   } else {
@@ -90,6 +87,16 @@ function PlanCard({ plan, billing, isCurrent, onUpgrade }: PlanCardProps) {
   const locationText = plan.locationLimit === null
     ? 'Ubicaciones ilimitadas'
     : `${plan.locationLimit} ubicaciones`
+
+  const ctaHref  = plan.ctaUrl  ?? null
+  const ctaLabel = plan.ctaText ?? null
+
+  const ctaLinkClass = [
+    'w-full py-2.5 rounded-xl text-sm font-semibold text-center block transition-colors',
+    plan.isRecommended
+      ? 'bg-brand-600 hover:bg-brand-700 text-white'
+      : 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700',
+  ].join(' ')
 
   return (
     <div className={[
@@ -121,24 +128,32 @@ function PlanCard({ plan, billing, isCurrent, onUpgrade }: PlanCardProps) {
       </div>
 
       {/* Plan name */}
-      <h3 className="text-xl font-bold text-gray-100 mb-4">{plan.name}</h3>
+      <h3 className="text-xl font-bold text-gray-100 mb-2">{plan.name}</h3>
 
-      {/* Price */}
-      <div className="mb-6">
-        {isCustom ? (
-          <p className="text-2xl font-bold text-gray-100">Personalizado</p>
-        ) : (
+      {/* Public description */}
+      {plan.publicDescription && (
+        <p className="text-sm text-gray-400 leading-relaxed mb-4">{plan.publicDescription}</p>
+      )}
+
+      {/* Price — hidden for custom/enterprise plans */}
+      {!isCustom && (
+        <div className="mb-6">
           <div className="flex items-baseline gap-1.5">
             <span className="text-4xl font-bold tabular-nums text-gray-100">
               {displayPrice}
             </span>
             <span className="text-sm text-gray-500 leading-none">{priceLabel}</span>
           </div>
-        )}
-        {billing === 'annual' && !isCustom && (
-          <p className="text-xs text-emerald-400 mt-1.5 font-medium">Facturado anualmente</p>
-        )}
-      </div>
+          {billing === 'annual' && (
+            <p className="text-xs text-emerald-400 mt-1.5 font-medium">Facturado anualmente</p>
+          )}
+          {plan.hasTrial && plan.trialDays != null && (
+            <p className="text-xs text-emerald-400 mt-1.5 font-medium">
+              {plan.trialDays} días de prueba gratis
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Divider */}
       <div className="border-t border-gray-800 mb-5" />
@@ -151,6 +166,14 @@ function PlanCard({ plan, billing, isCurrent, onUpgrade }: PlanCardProps) {
           </svg>
           {locationText}
         </li>
+        {plan.features.map((feat, i) => (
+          <li key={i} className="flex items-start gap-2.5 text-sm text-gray-300">
+            <svg className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+            {feat}
+          </li>
+        ))}
       </ul>
 
       {/* CTA */}
@@ -165,6 +188,16 @@ function PlanCard({ plan, billing, isCurrent, onUpgrade }: PlanCardProps) {
           </svg>
           Plan actual
         </button>
+      ) : ctaHref ? (
+        ctaHref.startsWith('http') ? (
+          <a href={ctaHref} target="_blank" rel="noopener noreferrer" className={ctaLinkClass}>
+            {ctaLabel ?? 'Más información'}
+          </a>
+        ) : (
+          <Link to={ctaHref} className={ctaLinkClass}>
+            {ctaLabel ?? 'Más información'}
+          </Link>
+        )
       ) : isCustom ? (
         <a
           href="https://www.ubyca.com/contact/"

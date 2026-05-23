@@ -359,7 +359,7 @@ const HOW_STEPS = [
 
 function HowItWorksSection() {
   return (
-    <section id="v2-how" className="py-28 px-5 relative overflow-hidden"
+    <section id="v2-how" className="py-20 px-5 relative overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #050810 0%, #060d1c 55%, #050810 100%)' }}>
       <div className="max-w-5xl mx-auto">
 
@@ -494,7 +494,7 @@ const USE_CASES = [
 
 function UseCasesSection() {
   return (
-    <section id="v2-cases" className="py-28 px-5 bg-[#050810]">
+    <section id="v2-cases" className="py-20 px-5 bg-[#050810]">
       <div className="max-w-6xl mx-auto">
 
         <Reveal className="text-center mb-14">
@@ -597,7 +597,7 @@ const DIFFERENTIALS = [
 
 function DifferentialsSection() {
   return (
-    <section className="py-28 px-5"
+    <section className="py-20 px-5"
       style={{ background: 'linear-gradient(180deg, #050810 0%, #06101f 50%, #050810 100%)' }}>
       <div className="max-w-6xl mx-auto">
 
@@ -643,7 +643,7 @@ function DifferentialsSection() {
 
 function WorldAsInterfaceSection() {
   return (
-    <section id="v2-concept" className="py-16 lg:py-28 px-5 relative overflow-hidden"
+    <section id="v2-concept" className="py-16 lg:py-20 px-5 relative overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #050810 0%, #060c18 55%, #050810 100%)' }}>
       <div className="absolute inset-0 pointer-events-none" style={{
         background: 'radial-gradient(ellipse 55% 60% at 25% 55%, rgba(14,165,233,0.07) 0%, transparent 65%)',
@@ -779,7 +779,7 @@ function WorldAsInterfaceSection() {
 
 function FinalCTASection() {
   return (
-    <section className="py-32 px-5 bg-[#050810] relative overflow-hidden">
+    <section className="py-24 px-5 bg-[#050810] relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none" style={{
         background: 'radial-gradient(ellipse 55% 70% at 50% 50%, rgba(14,165,233,0.07) 0%, transparent 65%)',
       }} />

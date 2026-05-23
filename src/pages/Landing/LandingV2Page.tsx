@@ -251,6 +251,59 @@ function HeroSection() {
   )
 }
 
+// ─── Metrics band ─────────────────────────────────────────────────────────────
+
+const METRICS = [
+  {
+    number: '5x',
+    title:  'más interacción',
+    desc:   'Las experiencias basadas en ubicación pueden generar hasta 5 veces más interacción al entregar contenido en el lugar y momento correcto.',
+  },
+  {
+    number: '+20%',
+    title:  'visitas físicas',
+    desc:   'Las activaciones geolocalizadas ayudan a aumentar recorridos, participación e interacción en espacios físicos reales.',
+  },
+  {
+    number: '+293%',
+    title:  'aperturas',
+    desc:   'El contenido contextual aumenta significativamente el engagement y las aperturas frente a experiencias digitales tradicionales.',
+  },
+]
+
+function MetricsBandSection() {
+  return (
+    <section className="relative bg-[#050810] px-5 py-16 sm:py-20">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
+      <div className="max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-3">
+          {METRICS.map((m, i) => (
+            <Reveal key={m.number} delay={i * 0.1}>
+              <div className={[
+                'flex flex-col items-center text-center px-8 py-8 sm:py-0',
+                i > 0 ? 'border-t border-white/[0.05] sm:border-t-0 sm:border-l sm:border-white/[0.06]' : '',
+              ].join(' ')}>
+                <span className="text-[3rem] sm:text-[3.6rem] font-black text-brand-400 leading-none tracking-tight tabular-nums">
+                  {m.number}
+                </span>
+                <p className="mt-3 text-sm font-semibold text-white/80">
+                  {m.title}
+                </p>
+                <p className="mt-2.5 text-[12px] text-slate-500 leading-relaxed max-w-[220px]">
+                  {m.desc}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+
+      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/[0.04] to-transparent" />
+    </section>
+  )
+}
+
 // ─── How it works ─────────────────────────────────────────────────────────────
 
 const HOW_STEPS = [
@@ -757,6 +810,7 @@ export default function LandingV2Page() {
     <div className="min-h-screen bg-[#050810] text-white">
       <LandingNavBar />
       <HeroSection />
+      <MetricsBandSection />
       <HowItWorksSection />
       <UseCasesSection />
       <DifferentialsSection />

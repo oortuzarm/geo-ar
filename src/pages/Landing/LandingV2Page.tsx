@@ -359,11 +359,11 @@ const HOW_STEPS = [
 
 function HowItWorksSection() {
   return (
-    <section id="v2-how" className="py-20 px-5 relative overflow-hidden"
+    <section id="v2-how" className="py-16 sm:py-20 px-5 relative overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #050810 0%, #060d1c 55%, #050810 100%)' }}>
       <div className="max-w-5xl mx-auto">
 
-        <Reveal className="text-center mb-20">
+        <Reveal className="text-center mb-14 sm:mb-20">
           <SectionLabel>Cómo funciona</SectionLabel>
           <h2 className="text-3xl sm:text-4xl font-black text-white">
             Activa contenido en lugares reales.
@@ -379,7 +379,7 @@ function HowItWorksSection() {
           <div className="hidden lg:block absolute top-[2.75rem] left-[calc(100%/6+1.5rem)] right-[calc(100%/6+1.5rem)] h-px"
             style={{ background: 'linear-gradient(to right, transparent, rgba(14,165,233,0.18) 15%, rgba(14,165,233,0.18) 85%, transparent)' }} />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 lg:gap-8">
             {HOW_STEPS.map((step, i) => (
               <Reveal key={step.title} delay={i * 0.1}>
                 <div className="flex lg:flex-col lg:items-center gap-5 lg:gap-0 lg:text-center">
@@ -494,10 +494,10 @@ const USE_CASES = [
 
 function UseCasesSection() {
   return (
-    <section id="v2-cases" className="py-20 px-5 bg-[#050810]">
+    <section id="v2-cases" className="py-16 sm:py-20 px-5 bg-[#050810]">
       <div className="max-w-6xl mx-auto">
 
-        <Reveal className="text-center mb-14">
+        <Reveal className="text-center mb-10 sm:mb-14">
           <SectionLabel>Verticales</SectionLabel>
           <h2 className="text-3xl sm:text-4xl font-black text-white">Casos de uso</h2>
           <p className="mt-4 text-slate-400 max-w-lg mx-auto">
@@ -597,11 +597,11 @@ const DIFFERENTIALS = [
 
 function DifferentialsSection() {
   return (
-    <section className="py-20 px-5"
+    <section className="py-16 sm:py-20 px-5"
       style={{ background: 'linear-gradient(180deg, #050810 0%, #06101f 50%, #050810 100%)' }}>
       <div className="max-w-6xl mx-auto">
 
-        <Reveal className="text-center mb-14">
+        <Reveal className="text-center mb-10 sm:mb-14">
           <SectionLabel>Diferenciales</SectionLabel>
           <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-[1.06]">
             No es un mapa.{' '}
@@ -643,7 +643,7 @@ function DifferentialsSection() {
 
 function WorldAsInterfaceSection() {
   return (
-    <section id="v2-concept" className="py-16 lg:py-20 px-5 relative overflow-hidden"
+    <section id="v2-concept" className="py-12 sm:py-16 lg:py-20 px-5 relative overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #050810 0%, #060c18 55%, #050810 100%)' }}>
       <div className="absolute inset-0 pointer-events-none" style={{
         background: 'radial-gradient(ellipse 55% 60% at 25% 55%, rgba(14,165,233,0.07) 0%, transparent 65%)',
@@ -779,7 +779,7 @@ function WorldAsInterfaceSection() {
 
 function FinalCTASection() {
   return (
-    <section className="py-24 px-5 bg-[#050810] relative overflow-hidden">
+    <section className="py-20 sm:py-24 px-5 bg-[#050810] relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none" style={{
         background: 'radial-gradient(ellipse 55% 70% at 50% 50%, rgba(14,165,233,0.07) 0%, transparent 65%)',
       }} />

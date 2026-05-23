@@ -257,22 +257,22 @@ const METRICS = [
   {
     number: '5x',
     title:  'más interacción',
-    desc:   'Las experiencias basadas en ubicación pueden generar hasta 5 veces más interacción al entregar contenido en el lugar y momento correcto.',
+    desc:   'Las experiencias basadas en ubicación generan más interacción al activar contenido en el momento correcto.',
   },
   {
     number: '+20%',
     title:  'visitas físicas',
-    desc:   'Las activaciones geolocalizadas ayudan a aumentar recorridos, participación e interacción en espacios físicos reales.',
+    desc:   'Las activaciones geolocalizadas aumentan recorridos e interacción en espacios físicos.',
   },
   {
     number: '+293%',
     title:  'aperturas',
-    desc:   'El contenido contextual aumenta significativamente el engagement y las aperturas frente a experiencias digitales tradicionales.',
+    desc:   'El contenido contextual aumenta el engagement y las aperturas frente a experiencias tradicionales.',
   },
   {
     number: '65%',
     title:  'interacción contextual',
-    desc:   'El 65% de los usuarios está dispuesto a interactuar con experiencias basadas en ubicación cuando el contenido es relevante.',
+    desc:   'El 65% de los usuarios interactuaría con experiencias basadas en ubicación si el contenido es relevante.',
   },
 ]
 

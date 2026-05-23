@@ -292,12 +292,12 @@ function MetricsBandSection() {
     <section className="relative bg-[#050810] px-5 py-16 sm:py-20">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
 
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {METRICS.map((m, i) => (
             <Reveal key={m.number} delay={i * 0.1}>
               <div className={[
-                'flex flex-col items-center text-center px-6 py-8 sm:py-6 lg:py-0',
+                'flex flex-col items-center text-center px-8 py-8 sm:py-6 lg:py-0',
                 METRIC_BORDERS[i],
               ].join(' ')}>
                 <span className="text-[2.8rem] sm:text-[3.2rem] font-black text-brand-400 leading-none tracking-tight tabular-nums">
@@ -306,7 +306,7 @@ function MetricsBandSection() {
                 <p className="mt-3 text-sm font-semibold text-white/80">
                   {m.title}
                 </p>
-                <p className="mt-2.5 text-[12px] text-slate-400 leading-relaxed max-w-[200px]">
+                <p className="mt-2.5 text-[12px] text-slate-400 leading-relaxed max-w-[240px]">
                   {m.desc}
                 </p>
               </div>

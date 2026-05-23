@@ -271,7 +271,7 @@ const METRICS = [
   },
   {
     number: '65%',
-    title:  'interactuaría con contenido cercano',
+    title:  'interacción contextual',
     desc:   'El 65% de los usuarios está dispuesto a interactuar con experiencias basadas en ubicación cuando el contenido es relevante.',
   },
 ]
@@ -306,7 +306,7 @@ function MetricsBandSection() {
                 <p className="mt-3 text-sm font-semibold text-white/80">
                   {m.title}
                 </p>
-                <p className="mt-2.5 text-[12px] text-slate-500 leading-relaxed max-w-[200px]">
+                <p className="mt-2.5 text-[12px] text-slate-400 leading-relaxed max-w-[200px]">
                   {m.desc}
                 </p>
               </div>

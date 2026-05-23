@@ -299,6 +299,9 @@ function HowItWorksSection() {
           <h2 className="text-3xl sm:text-4xl font-black text-white">
             Activa contenido en lugares reales.
           </h2>
+          <p className="mt-4 text-slate-400 max-w-lg mx-auto">
+            Aumenta la interacción en espacios físicos utilizando contenido desbloqueable por ubicación.
+          </p>
         </Reveal>
 
         {/* Steps */}

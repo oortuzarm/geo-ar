@@ -269,6 +269,22 @@ const METRICS = [
     title:  'aperturas',
     desc:   'El contenido contextual aumenta significativamente el engagement y las aperturas frente a experiencias digitales tradicionales.',
   },
+  {
+    number: '65%',
+    title:  'interactuaría con contenido cercano',
+    desc:   'El 65% de los usuarios está dispuesto a interactuar con experiencias basadas en ubicación cuando el contenido es relevante.',
+  },
+]
+
+// Border logic per index for a sm:2-col / lg:4-col grid.
+// Mobile  (1 col)  — top border for all except first.
+// sm      (2 cols) — left border on odd items (col 2); top border stays for row 2 items.
+// lg      (4 cols) — left border on items 1-3; remove top borders.
+const METRIC_BORDERS = [
+  '',
+  'border-t border-white/[0.05] sm:border-t-0 sm:border-l sm:border-white/[0.06]',
+  'border-t border-white/[0.05]                             lg:border-t-0 lg:border-l lg:border-white/[0.06]',
+  'border-t border-white/[0.05] sm:border-l sm:border-white/[0.06] lg:border-t-0',
 ]
 
 function MetricsBandSection() {
@@ -276,21 +292,21 @@ function MetricsBandSection() {
     <section className="relative bg-[#050810] px-5 py-16 sm:py-20">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
 
-      <div className="max-w-4xl mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-3">
+      <div className="max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {METRICS.map((m, i) => (
             <Reveal key={m.number} delay={i * 0.1}>
               <div className={[
-                'flex flex-col items-center text-center px-8 py-8 sm:py-0',
-                i > 0 ? 'border-t border-white/[0.05] sm:border-t-0 sm:border-l sm:border-white/[0.06]' : '',
+                'flex flex-col items-center text-center px-6 py-8 sm:py-6 lg:py-0',
+                METRIC_BORDERS[i],
               ].join(' ')}>
-                <span className="text-[3rem] sm:text-[3.6rem] font-black text-brand-400 leading-none tracking-tight tabular-nums">
+                <span className="text-[2.8rem] sm:text-[3.2rem] font-black text-brand-400 leading-none tracking-tight tabular-nums">
                   {m.number}
                 </span>
                 <p className="mt-3 text-sm font-semibold text-white/80">
                   {m.title}
                 </p>
-                <p className="mt-2.5 text-[12px] text-slate-500 leading-relaxed max-w-[220px]">
+                <p className="mt-2.5 text-[12px] text-slate-500 leading-relaxed max-w-[200px]">
                   {m.desc}
                 </p>
               </div>

@@ -289,7 +289,7 @@ const METRIC_BORDERS = [
 
 function MetricsBandSection() {
   return (
-    <section className="relative bg-[#050810] px-5 py-16 sm:py-20">
+    <section className="relative bg-[#050810] px-5 py-12 sm:py-20">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
 
       <div className="max-w-6xl mx-auto">

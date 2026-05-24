@@ -656,7 +656,7 @@ export default function WorkspacePage() {
 
                 <div className="flex flex-col items-end gap-2 flex-shrink-0">
                   <button
-                    onClick={() => setPreviewOpen(true)}
+                    onClick={() => window.open('/community', '_blank')}
                     className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150
                                cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2
                                focus:ring-offset-gray-900 focus:ring-gray-600

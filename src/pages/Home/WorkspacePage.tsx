@@ -127,19 +127,15 @@ function StatusToggle({
 interface WorkspaceMenuProps {
   projectId: string
   projectTitle: string
-  projectStatus: 'active' | 'draft' | 'inactive'
   onShare: () => void
   onEmbed: () => void
-  onToggleStatus: () => void
   onDelete: () => void
   onPreview: () => void
-  togglingStatus: boolean
 }
 
 function WorkspaceMenu({
-  projectId, projectTitle: _t, projectStatus,
-  onShare, onEmbed, onToggleStatus, onDelete, onPreview,
-  togglingStatus,
+  projectId, projectTitle: _t,
+  onShare, onEmbed, onDelete, onPreview,
 }: WorkspaceMenuProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -202,33 +198,6 @@ function WorkspaceMenu({
                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
             Ver público
-          </button>
-
-          <div className="border-t border-gray-800 my-1" />
-
-          <button
-            className={`${item} ${togglingStatus ? 'opacity-50 pointer-events-none' : ''}`}
-            onClick={() => act(onToggleStatus)}
-          >
-            {projectStatus === 'active' ? (
-              <>
-                <svg className="h-4 w-4 flex-shrink-0 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                </svg>
-                <span className="text-amber-400">Pasar a borrador</span>
-              </>
-            ) : (
-              <>
-                <svg className="h-4 w-4 flex-shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span className="text-emerald-400">Publicar</span>
-              </>
-            )}
           </button>
 
           <div className="border-t border-gray-800 my-1" />
@@ -567,12 +536,9 @@ export default function WorkspacePage() {
             <WorkspaceMenu
               projectId={project.id}
               projectTitle={project.title}
-              projectStatus={project.status}
-              togglingStatus={togglingStatus}
               onShare={() => setShareOpen(true)}
               onEmbed={() => setEmbedOpen(true)}
               onPreview={() => window.open(publicUrl, '_blank')}
-              onToggleStatus={handleToggleStatus}
               onDelete={() => setDeleteConfirm(true)}
             />
             <Button
@@ -763,6 +729,27 @@ export default function WorkspacePage() {
                   {project.status === 'active' ? 'Publicado' : 'Borrador'}
                 </span>
               </div>
+              <p className="text-xs text-gray-600 leading-snug">
+                {project.status === 'active'
+                  ? 'Tu experiencia es visible públicamente y accesible mediante su enlace.'
+                  : 'Tu experiencia no es visible públicamente.'}
+              </p>
+              <button
+                onClick={handleToggleStatus}
+                disabled={togglingStatus}
+                className={[
+                  'mt-1 self-start px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150',
+                  'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900',
+                  togglingStatus ? 'opacity-50 cursor-wait' : 'cursor-pointer',
+                  project.status === 'active'
+                    ? 'text-amber-400 border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 focus:ring-amber-500'
+                    : 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 focus:ring-emerald-500',
+                ].join(' ')}
+              >
+                {togglingStatus
+                  ? <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-current/30 border-t-current animate-spin" />Guardando…</span>
+                  : project.status === 'active' ? 'Pasar a borrador' : 'Publicar workspace'}
+              </button>
             </div>
 
             <KPICard

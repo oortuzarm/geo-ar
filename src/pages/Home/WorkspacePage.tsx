@@ -127,14 +127,12 @@ function StatusToggle({
 interface WorkspaceMenuProps {
   projectId: string
   projectTitle: string
-  onShare: () => void
-  onEmbed: () => void
   onDelete: () => void
 }
 
 function WorkspaceMenu({
   projectId, projectTitle: _t,
-  onShare, onEmbed, onDelete,
+  onDelete,
 }: WorkspaceMenuProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -174,25 +172,6 @@ function WorkspaceMenu({
       {open && (
         <div className="absolute right-0 top-full mt-1 w-56 bg-gray-900 border border-gray-700 rounded-xl
                         shadow-2xl py-1 z-50 origin-top-right">
-
-          <button className={item} onClick={() => act(onShare)}>
-            <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-            </svg>
-            Compartir
-          </button>
-
-          <button className={item} onClick={() => act(onEmbed)}>
-            <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-            </svg>
-            Integrar en sitio web
-          </button>
-
-
-          <div className="border-t border-gray-800 my-1" />
 
           <button
             className={`${item} text-red-400 hover:text-red-300 hover:bg-red-500/10`}
@@ -525,11 +504,34 @@ export default function WorkspacePage() {
             >
               Previsualizar
             </Button>
+
+            <button
+              onClick={() => setShareOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium
+                         text-gray-400 hover:text-gray-100 hover:bg-gray-800 transition-colors"
+            >
+              <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              <span className="hidden sm:inline">Compartir</span>
+            </button>
+
+            <button
+              onClick={() => setEmbedOpen(true)}
+              title="Integrar en sitio web"
+              className="p-2 rounded-lg text-gray-400 hover:text-gray-100 hover:bg-gray-800
+                         transition-colors cursor-pointer"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+            </button>
+
             <WorkspaceMenu
               projectId={project.id}
               projectTitle={project.title}
-              onShare={() => setShareOpen(true)}
-              onEmbed={() => setEmbedOpen(true)}
               onDelete={() => setDeleteConfirm(true)}
             />
             <Button

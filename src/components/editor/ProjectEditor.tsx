@@ -118,6 +118,7 @@ export default function ProjectEditor({
   const [locatingUser, setLocatingUser]         = useState(false)
   const [listDrawerOpen, setListDrawerOpen]     = useState(false)
   const [mobileEditOpen, setMobileEditOpen]     = useState(false)
+  const [mobileProjectOpen, setMobileProjectOpen] = useState(false)
   const [isNewMobilePoint, setIsNewMobilePoint] = useState(false)
   const [fabPlacementMode, setFabPlacementMode] = useState(false)
   const [isMobile, setIsMobile]                 = useState(() => window.innerWidth < 1024)
@@ -191,6 +192,7 @@ export default function ProjectEditor({
     setPointFormOpen(true)
     setMobileEditOpen(false)
     setIsNewMobilePoint(false)
+    setMobileProjectOpen(false)
     const pt = useGeoStore.getState().points.find((p) => p.id === pointId)
     if (pt) focusPoint(pt)
   }
@@ -208,6 +210,7 @@ export default function ProjectEditor({
       setPointFormOpen(true)
       setMobileEditOpen(true)
       setIsNewMobilePoint(true)
+      setMobileProjectOpen(false)
       addToast('Nuevo punto creado', 'success')
     } catch {
       addToast('Error al crear el punto', 'error')
@@ -1000,7 +1003,7 @@ export default function ProjectEditor({
 
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => setListDrawerOpen(true)}
+                    onClick={() => { setMobileProjectOpen(false); setListDrawerOpen(true) }}
                     className="flex items-center gap-1.5 bg-gray-900/95 border border-gray-700
                                rounded-lg px-3 py-2 text-sm font-medium text-gray-300
                                shadow-lg hover:bg-gray-800 transition-colors"
@@ -1012,9 +1015,24 @@ export default function ProjectEditor({
                     · {points.length}
                   </button>
 
+                  <button
+                    onClick={() => { setListDrawerOpen(false); setMobileProjectOpen(true) }}
+                    className="flex items-center justify-center w-9 h-9 bg-gray-900/95 border border-gray-700
+                               rounded-lg text-gray-400 shadow-lg hover:bg-gray-800
+                               hover:text-gray-200 transition-colors"
+                    aria-label="Configuración del proyecto"
+                  >
+                    <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d={'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z'} />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </button>
+
                   {!fabPlacementMode ? (
                     <button
-                      onClick={() => setFabPlacementMode(true)}
+                      onClick={() => { setMobileProjectOpen(false); setListDrawerOpen(false); setFabPlacementMode(true) }}
                       className="w-14 h-14 flex items-center justify-center
                                  bg-brand-600 hover:bg-brand-500 active:bg-brand-700
                                  text-white rounded-full transition-colors
@@ -1079,6 +1097,40 @@ export default function ProjectEditor({
                 onBulkDelete={handleBulkDelete}
                 onClose={() => setListDrawerOpen(false)}
               />
+            </div>
+          </div>
+        )}
+
+        {/* ── Mobile: project panel sheet ── */}
+        {mobileProjectOpen && (
+          <div className="lg:hidden fixed inset-0 z-[3000]">
+            <div className="absolute inset-0 bg-black/60" onClick={() => setMobileProjectOpen(false)} />
+            <div
+              className="absolute inset-x-0 bottom-0 rounded-t-2xl
+                         bg-gray-900 border-t border-gray-800
+                         flex flex-col overflow-hidden animate-sheet-up"
+              style={{
+                maxHeight: '85dvh',
+                paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+              }}
+            >
+              <div
+                className="flex-shrink-0 flex items-center gap-3 px-2 border-b border-gray-800"
+                style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem' }}
+              >
+                <button
+                  onClick={() => setMobileProjectOpen(false)}
+                  className="flex items-center justify-center w-10 h-10 text-gray-400
+                             hover:text-gray-100 transition-colors flex-shrink-0"
+                  aria-label="Cerrar"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <h2 className="flex-1 text-base font-semibold text-gray-100">Proyecto</h2>
+              </div>
+              <ProjectPanel onMarkUnsaved={() => onMarkUnsaved?.()} />
             </div>
           </div>
         )}

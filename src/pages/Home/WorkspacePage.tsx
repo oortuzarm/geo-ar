@@ -610,6 +610,70 @@ export default function WorkspacePage() {
             </div>
           )}
 
+          {/* ── Community map ─────────────────────────────────────────── */}
+          {project.status === 'active' && (
+            <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <SectionLabel>Mapa comunitario de Ubyca</SectionLabel>
+                  <p className="text-xs text-gray-500 mt-1.5 mb-3 leading-relaxed">
+                    Permite que tu proyecto aparezca en el mapa público de Ubyca para que otras personas puedan descubrirlo por ubicación.
+                  </p>
+
+                  {project.communityEnabled ? (
+                    <>
+                      {project.communityStatus === 'approved' && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                          {subscription.isTrialActive || subscription.status === 'active'
+                            ? 'Visible en el mapa comunitario'
+                            : 'Aprobado — inactivo hasta que renueves tu suscripción'}
+                        </span>
+                      )}
+                      {project.communityStatus === 'pending' && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-amber-500/10 text-amber-400 border-amber-500/20">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                          Esperando aprobación del equipo Ubyca
+                        </span>
+                      )}
+                      {project.communityStatus === 'rejected' && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-red-500/10 text-red-400 border-red-500/20">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
+                          No aprobado — revisá el contenido antes de volver a solicitar
+                        </span>
+                      )}
+                      {project.communityStatus === 'hidden' && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-gray-700/40 text-gray-400 border-gray-600/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-500 flex-shrink-0" />
+                          Oculto por el equipo Ubyca
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-xs text-gray-600">No aparece en el mapa comunitario</span>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleToggleCommunity}
+                  disabled={communityToggling}
+                  className={[
+                    'flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150',
+                    'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900',
+                    communityToggling ? 'opacity-50 cursor-wait' : 'cursor-pointer',
+                    project.communityEnabled
+                      ? 'text-gray-400 border-gray-600/40 bg-gray-800 hover:bg-gray-700 focus:ring-gray-600'
+                      : 'text-brand-400 border-brand-500/40 bg-brand-500/10 hover:bg-brand-500/20 focus:ring-brand-500',
+                  ].join(' ')}
+                >
+                  {communityToggling
+                    ? <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-current/30 border-t-current animate-spin" />Guardando…</span>
+                    : project.communityEnabled ? 'Desactivar' : 'Activar'}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* ── Subscription strip ────────────────────────────────────── */}
           {(subscription.planName || subscription.limit !== null) && (
             <div className="flex items-center gap-4 flex-wrap">
@@ -851,67 +915,6 @@ export default function WorkspacePage() {
               </div>
             )}
           </section>
-          {/* ── Community map ─────────────────────────────────────────────── */}
-          {project.status === 'active' && (
-            <section className="pb-6">
-              <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <SectionLabel>Mapa comunitario</SectionLabel>
-                    <p className="text-xs text-gray-500 mt-1.5 mb-3 leading-relaxed">
-                      Al activarlo, tu workspace aparecerá en el mapa público de Ubyca y otros usuarios podrán descubrirlo.
-                    </p>
-
-                    {project.communityEnabled ? (
-                      <>
-                        {project.communityStatus === 'approved' && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-                            Visible en el mapa comunitario
-                          </span>
-                        )}
-                        {project.communityStatus === 'pending' && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-amber-500/10 text-amber-400 border-amber-500/20">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-                            Esperando aprobación del equipo Ubyca
-                          </span>
-                        )}
-                        {project.communityStatus === 'rejected' && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-red-500/10 text-red-400 border-red-500/20">
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
-                            No aprobado — revisá el contenido antes de volver a solicitar
-                          </span>
-                        )}
-                        {project.communityStatus === 'hidden' && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-gray-700/40 text-gray-400 border-gray-600/30">
-                            <span className="w-1.5 h-1.5 rounded-full bg-gray-500 flex-shrink-0" />
-                            Oculto por el equipo Ubyca
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <span className="text-xs text-gray-600">No aparece en el mapa comunitario</span>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={handleToggleCommunity}
-                    disabled={communityToggling}
-                    className={[
-                      'flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150',
-                      'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900',
-                      communityToggling ? 'opacity-50 cursor-wait' : 'cursor-pointer',
-                      project.communityEnabled
-                        ? 'text-gray-400 border-gray-600/40 bg-gray-800 hover:bg-gray-700 focus:ring-gray-600'
-                        : 'text-brand-400 border-brand-500/40 bg-brand-500/10 hover:bg-brand-500/20 focus:ring-brand-500',
-                    ].join(' ')}
-                  >
-                    {project.communityEnabled ? 'Desactivar' : 'Activar'}
-                  </button>
-                </div>
-              </div>
-            </section>
-          )}
 
       </main>
 

@@ -4,9 +4,6 @@ import { uploadImage } from '../../lib/uploadImage'
 import { useEditorMode } from '../../contexts/EditorModeContext'
 import Spinner from '../../components/ui/Spinner'
 import type { GeoProject, PublicInitialViewMode } from '../../types'
-import { saveProject } from '../../services/geoProjectsApi'
-import { useSubscription } from '../../hooks/useSubscription'
-
 const IMAGE_BASE64_MAX = 256 * 1024
 
 function fileToBase64(file: File): Promise<string> {
@@ -227,99 +224,6 @@ function PublicInitialViewSection({ onMarkUnsaved }: { onMarkUnsaved: () => void
   )
 }
 
-// ── Community map section ─────────────────────────────────────────────────────
-
-function CommunitySection() {
-  const { project, updateProjectField } = useGeoStore()
-  const subscription = useSubscription()
-  const editorMode = useEditorMode()
-  const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
-
-  if (!project || editorMode === 'demo') return null
-
-  const enabled = project.communityEnabled ?? false
-  const cStatus = project.communityStatus ?? 'pending'
-
-  async function handleToggle() {
-    if (!project || saving) return
-    setSaving(true)
-    setSaveError(null)
-    try {
-      const updated = await saveProject(project.id, { communityEnabled: !enabled })
-      updateProjectField('communityEnabled', updated.communityEnabled)
-      updateProjectField('communityStatus', updated.communityStatus)
-    } catch {
-      setSaveError('No se pudo guardar el cambio. Intenta de nuevo.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  let statusText: string
-  let statusClass: string
-
-  if (!enabled) {
-    statusText = 'No estás participando en el mapa comunitario.'
-    statusClass = 'text-gray-600'
-  } else if (cStatus === 'rejected') {
-    statusText = 'La solicitud fue rechazada.'
-    statusClass = 'text-red-400'
-  } else if (cStatus === 'hidden') {
-    statusText = 'Tu proyecto fue ocultado del mapa comunitario por Ubyca.'
-    statusClass = 'text-amber-400'
-  } else if (cStatus === 'approved') {
-    const hasAccess = subscription.isTrialActive || subscription.status === 'active'
-    statusText = hasAccess
-      ? 'Tu proyecto aparece en el mapa comunitario.'
-      : 'Tu proyecto está aprobado, pero no aparece porque tu prueba terminó o tu suscripción no está activa.'
-    statusClass = hasAccess ? 'text-emerald-400' : 'text-amber-400'
-  } else {
-    statusText = 'Solicitud pendiente de aprobación. Aparecerá cuando sea aprobada por Ubyca y mientras tu cuenta tenga acceso activo.'
-    statusClass = 'text-amber-400'
-  }
-
-  return (
-    <section>
-      <h3 className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-1">
-        Mapa comunitario de Ubyca
-      </h3>
-      <p className="text-xs text-gray-500 mb-3 leading-snug">
-        Permite que tu proyecto aparezca en el mapa público de Ubyca para que otras personas puedan descubrirlo por ubicación.
-      </p>
-
-      <div className="flex items-center gap-3 rounded-lg px-2 py-2 -mx-2 hover:bg-gray-800/40 transition-colors">
-        <button
-          type="button"
-          role="switch"
-          aria-checked={enabled}
-          disabled={saving}
-          onClick={handleToggle}
-          className={[
-            'relative w-10 h-5 rounded-full flex-shrink-0 transition-colors',
-            enabled ? 'bg-brand-600' : 'bg-gray-700',
-            saving ? 'opacity-50' : '',
-          ].join(' ')}
-        >
-          <span className={[
-            'absolute top-0.5 left-0.5 h-4 w-4 bg-white rounded-full shadow transition-transform',
-            enabled ? 'translate-x-5' : '',
-          ].join(' ')} />
-        </button>
-        <span className="text-sm text-gray-300 leading-snug flex-1">
-          Mostrar mi proyecto en el mapa comunitario
-        </span>
-        {saving && (
-          <span className="w-3 h-3 rounded-full border-2 border-brand-400/30 border-t-brand-400 animate-spin flex-shrink-0" />
-        )}
-      </div>
-
-      <p className={`mt-2 text-xs leading-snug ${statusClass}`}>{statusText}</p>
-      {saveError && <p className="mt-1 text-xs text-red-400">{saveError}</p>}
-    </section>
-  )
-}
-
 // ── Main panel ────────────────────────────────────────────────────────────────
 
 export default function ProjectPanel({ onMarkUnsaved }: ProjectPanelProps) {
@@ -430,9 +334,6 @@ export default function ProjectPanel({ onMarkUnsaved }: ProjectPanelProps) {
             blocked={imagesBlocked}
           />
         </section>
-
-        {/* ── Mapa comunitario ─────────────────────────────────────────────── */}
-        <CommunitySection />
 
       </div>
     </div>

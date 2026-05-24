@@ -10,6 +10,7 @@ import {
   type UpdateSubscriptionPayload,
   type SubscriptionSaveResponse,
 } from '../../services/adminApi'
+import { getAdminSettings, patchAdminSettings } from '../../services/settingsApi'
 import type { AdminUser, AdminProject, AdminMetrics, AdminPlan } from '../../types/admin.types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -164,6 +165,158 @@ function CommunityStatusBadge({ status }: { status: AdminProject['communityStatu
                       leading-none whitespace-nowrap ${map[status] ?? map.pending}`}>
       {label[status] ?? status}
     </span>
+  )
+}
+
+// ── Community settings panel ──────────────────────────────────────────────────
+
+function CommunitySettingsPanel() {
+  const [enabled,     setEnabled]     = useState(true)
+  const [title,       setTitle]       = useState('')
+  const [description, setDescription] = useState('')
+  const [loading,     setLoading]     = useState(true)
+  const [saving,      setSaving]      = useState(false)
+  const [saveResult,  setSaveResult]  = useState<'success' | 'error' | null>(null)
+
+  useEffect(() => {
+    getAdminSettings()
+      .then((s) => {
+        setEnabled(s.communityMapEnabled)
+        setTitle(s.communityMapDisabledTitle)
+        setDescription(s.communityMapDisabledDescription)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    if (!saveResult) return
+    const t = setTimeout(() => setSaveResult(null), 3000)
+    return () => clearTimeout(t)
+  }, [saveResult])
+
+  async function handleSave() {
+    if (saving) return
+    setSaving(true)
+    setSaveResult(null)
+    try {
+      const updated = await patchAdminSettings({
+        communityMapEnabled:             enabled,
+        communityMapDisabledTitle:       title,
+        communityMapDisabledDescription: description,
+      })
+      setEnabled(updated.communityMapEnabled)
+      setTitle(updated.communityMapDisabledTitle)
+      setDescription(updated.communityMapDisabledDescription)
+      setSaveResult('success')
+    } catch {
+      setSaveResult('error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <section className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+      <div className="px-5 py-4 border-b border-gray-800">
+        <h2 className="text-sm font-semibold text-white">Configuración del mapa comunitario</h2>
+        <p className="text-xs text-gray-500 mt-0.5">
+          Controla si el mapa comunitario está disponible públicamente y el mensaje que verán los usuarios cuando esté deshabilitado.
+        </p>
+      </div>
+
+      {loading ? (
+        <div className="p-5 space-y-3">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-9 rounded-lg" />
+          ))}
+        </div>
+      ) : (
+        <div className="p-5 space-y-5">
+
+          {/* Toggle */}
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-gray-200 font-medium">Habilitar mapa comunitario</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Cuando está desactivado, los usuarios ven un mensaje de no disponible en /community.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={enabled}
+              onClick={() => setEnabled((v) => !v)}
+              className={[
+                'relative w-10 h-5 rounded-full flex-shrink-0 transition-colors cursor-pointer',
+                enabled ? 'bg-brand-600' : 'bg-gray-700',
+              ].join(' ')}
+            >
+              <span className={[
+                'absolute top-0.5 left-0.5 h-4 w-4 bg-white rounded-full shadow transition-transform',
+                enabled ? 'translate-x-5' : '',
+              ].join(' ')} />
+            </button>
+          </div>
+
+          {/* Title */}
+          <div>
+            <label className="text-xs text-gray-400 font-medium block mb-1.5">
+              Título cuando está deshabilitado
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Ej: Mapa comunitario próximamente"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm
+                         text-gray-100 placeholder-gray-600
+                         focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="text-xs text-gray-400 font-medium block mb-1.5">
+              Descripción cuando está deshabilitado
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              placeholder="Ej: Estamos preparando el mapa comunitario. Volvé pronto."
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm
+                         text-gray-100 placeholder-gray-600 resize-none
+                         focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500"
+            />
+          </div>
+
+          {/* Save row */}
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <div className="text-xs min-h-[1rem]">
+              {saveResult === 'success' && (
+                <span className="text-emerald-400">Cambios guardados.</span>
+              )}
+              {saveResult === 'error' && (
+                <span className="text-red-400">No se pudo guardar. Intentá de nuevo.</span>
+              )}
+            </div>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className={[
+                'px-4 py-2 rounded-lg text-xs font-semibold transition-colors',
+                'bg-brand-600 hover:bg-brand-500 text-white',
+                saving ? 'opacity-60 cursor-wait' : 'cursor-pointer',
+              ].join(' ')}
+            >
+              {saving ? 'Guardando…' : 'Guardar cambios'}
+            </button>
+          </div>
+
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -1374,29 +1527,33 @@ export default function AdminPage() {
 
         {/* ── Community section ── */}
         {activeSection === 'community' && (
-          <section className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-800">
-              <h2 className="text-sm font-semibold text-white">Mapa comunitario</h2>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Proyectos que solicitaron aparecer en el mapa público de Ubyca.
-              </p>
-            </div>
-            {loadingProjects ? (
-              <div className="p-5 space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-9 rounded-lg" />
-                ))}
+          <>
+            <CommunitySettingsPanel />
+
+            <section className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-800">
+                <h2 className="text-sm font-semibold text-white">Mapa comunitario</h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Proyectos que solicitaron aparecer en el mapa público de Ubyca.
+                </p>
               </div>
-            ) : errorProjects ? (
-              <p className="px-5 py-6 text-sm text-red-400">{errorProjects}</p>
-            ) : (
-              <CommunityTable
-                projects={projects}
-                updating={updatingCommunityId}
-                onUpdateStatus={handleUpdateCommunityStatus}
-              />
-            )}
-          </section>
+              {loadingProjects ? (
+                <div className="p-5 space-y-3">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-9 rounded-lg" />
+                  ))}
+                </div>
+              ) : errorProjects ? (
+                <p className="px-5 py-6 text-sm text-red-400">{errorProjects}</p>
+              ) : (
+                <CommunityTable
+                  projects={projects}
+                  updating={updatingCommunityId}
+                  onUpdateStatus={handleUpdateCommunityStatus}
+                />
+              )}
+            </section>
+          </>
         )}
 
       </main>

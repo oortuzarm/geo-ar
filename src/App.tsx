@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { RouterProvider } from 'react-router-dom'
 import { landingRouter, appRouter, devRouter } from './router'
 import { useAuthStore } from './store/authStore'
+import { useSettingsStore } from './store/settingsStore'
 import Spinner from './components/ui/Spinner'
 
 const LANDING_HOSTS = new Set(['ubyca.com', 'www.ubyca.com'])
@@ -18,9 +19,11 @@ const isLandingHost = LANDING_HOSTS.has(window.location.hostname)
 
 export default function App() {
   const { refreshSession, isLoading, isInitialized } = useAuthStore()
+  const fetchPublicSettings = useSettingsStore((s) => s.fetchPublicSettings)
 
-  // On landing domains auth is never needed — skip the session check entirely.
   useEffect(() => {
+    // Fetch public settings on every domain — /community is available everywhere
+    fetchPublicSettings()
     if (!isLandingHost) refreshSession()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 

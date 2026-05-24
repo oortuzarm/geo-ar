@@ -16,6 +16,7 @@ import PreviewQRModal from '../Dashboard/PreviewQRModal'
 import WorkspaceMap from '../../components/map/WorkspaceMap'
 import UpgradeModal from '../../components/subscription/UpgradeModal'
 import { useSubscription } from '../../hooks/useSubscription'
+import { useSettingsStore } from '../../store/settingsStore'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
 import type { ContentType, GeoPoint, MediaContentData } from '../../types'
 
@@ -379,7 +380,8 @@ export default function WorkspacePage() {
   const { currentUser } = useAuthStore()
   const { project, points, loading, updateProject, refresh } = useWorkspace()
 
-  const subscription = useSubscription()
+  const subscription          = useSubscription()
+  const communityMapEnabled   = useSettingsStore((s) => s.communityMapEnabled)
 
   const [shareOpen,         setShareOpen]        = useState(false)
   const [embedOpen,         setEmbedOpen]        = useState(false)
@@ -611,7 +613,7 @@ export default function WorkspacePage() {
           )}
 
           {/* ── Community map ─────────────────────────────────────────── */}
-          {project.status === 'active' && (
+          {project.status === 'active' && communityMapEnabled && (
             <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">

@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet'
 import { getCommunityProjects, type CommunityProject } from '../../services/communityApi'
 import { getMapTileUrl, MAP_ATTRIBUTION } from '../../config/mapStyles'
 import Spinner from '../../components/ui/Spinner'
+import { useSettingsStore } from '../../store/settingsStore'
 
 // ── Project card ──────────────────────────────────────────────────────────────
 
@@ -60,20 +61,94 @@ function ProjectCard({
 
 // ── CommunityPage ─────────────────────────────────────────────────────────────
 
+// ── Disabled screen ───────────────────────────────────────────────────────────
+
+function DisabledScreen({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="min-h-screen bg-gray-950 flex flex-col">
+      <header className="border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-3">
+          <a href="/" className="flex items-center">
+            <img
+              src="/logo-blanco.png"
+              alt="Ubyca"
+              className="h-6 w-auto object-contain select-none"
+              draggable={false}
+            />
+          </a>
+        </div>
+      </header>
+      <div className="flex-1 flex flex-col items-center justify-center gap-5 px-6 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-gray-800 border border-gray-700
+                        flex items-center justify-center">
+          <svg className="w-7 h-7 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+        <div className="space-y-1.5">
+          <p className="text-base font-semibold text-gray-200">
+            {title || 'Mapa comunitario no disponible'}
+          </p>
+          <p className="text-sm text-gray-500 max-w-xs leading-relaxed">
+            {description || 'Esta función no está disponible por el momento.'}
+          </p>
+        </div>
+        <button
+          onClick={() => window.history.back()}
+          className="mt-1 px-5 py-2.5 border border-gray-700 hover:border-gray-600
+                     text-gray-400 hover:text-gray-200 font-semibold text-sm rounded-xl
+                     transition-colors cursor-pointer"
+        >
+          Volver
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── CommunityPage ─────────────────────────────────────────────────────────────
+
 export default function CommunityPage() {
+  const communityMapEnabled        = useSettingsStore((s) => s.communityMapEnabled)
+  const communityMapDisabledTitle  = useSettingsStore((s) => s.communityMapDisabledTitle)
+  const communityMapDisabledDescription = useSettingsStore((s) => s.communityMapDisabledDescription)
+  const settingsLoaded             = useSettingsStore((s) => s.isLoaded)
+
   const [projects,   setProjects]   = useState<CommunityProject[]>([])
   const [loading,    setLoading]    = useState(true)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!settingsLoaded) return
+    if (!communityMapEnabled) { setLoading(false); return }
     getCommunityProjects()
       .then(setProjects)
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [])
+  }, [settingsLoaded, communityMapEnabled])
 
   function toggleSelect(id: string) {
     setSelectedId((prev) => (prev === id ? null : id))
+  }
+
+  if (!settingsLoaded) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    )
+  }
+
+  if (!communityMapEnabled) {
+    return (
+      <DisabledScreen
+        title={communityMapDisabledTitle}
+        description={communityMapDisabledDescription}
+      />
+    )
   }
 
   return (

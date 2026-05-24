@@ -621,7 +621,7 @@ export default function WorkspacePage() {
                 <div className="flex-1 min-w-0">
                   <SectionLabel>Mapa comunitario de Ubyca</SectionLabel>
                   <p className="text-xs text-gray-500 mt-1.5 mb-3 leading-relaxed">
-                    Permite que tu proyecto aparezca en el mapa público de Ubyca para que otras personas puedan descubrirlo por ubicación.
+                    Amplía el alcance de tu proyecto permitiendo que otras personas lo descubran desde el mapa comunitario de Ubyca.
                   </p>
 
                   {project.communityEnabled ? (

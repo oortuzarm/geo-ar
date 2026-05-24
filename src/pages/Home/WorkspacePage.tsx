@@ -713,35 +713,35 @@ export default function WorkspacePage() {
             />
 
             {/* Estado */}
-            <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl px-5 py-5 flex flex-col gap-3">
+            <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl px-5 py-5 flex flex-col gap-2">
               <p className="text-xs text-gray-500 uppercase tracking-wider font-medium leading-none">
                 Estado
               </p>
-              <span className={`self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border ${
-                project.status === 'active'
-                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                  : 'bg-gray-700/40 text-gray-400 border-gray-600/30'
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                  project.status === 'active' ? 'bg-emerald-400' : 'bg-gray-500'
-                }`} />
-                {project.status === 'active' ? 'Publicado' : 'Borrador'}
-              </span>
               <button
                 onClick={handleToggleStatus}
                 disabled={togglingStatus}
                 className={[
-                  'self-start px-3 py-1 rounded-lg text-xs font-semibold border transition-all duration-150',
-                  'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900',
-                  togglingStatus ? 'opacity-50 cursor-wait' : 'cursor-pointer',
+                  'self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border',
+                  'transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900',
+                  togglingStatus ? 'opacity-60 cursor-wait' : 'cursor-pointer',
                   project.status === 'active'
-                    ? 'text-amber-400 border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 focus:ring-amber-500'
-                    : 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 focus:ring-emerald-500',
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 hover:border-emerald-500/40 focus:ring-emerald-500'
+                    : 'bg-gray-700/40 text-gray-400 border-gray-600/30 hover:bg-gray-700/60 hover:border-gray-500/50 focus:ring-gray-500',
                 ].join(' ')}
               >
-                {togglingStatus
-                  ? <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-current/30 border-t-current animate-spin" />Guardando…</span>
-                  : project.status === 'active' ? 'Pasar a borrador' : 'Publicar'}
+                {togglingStatus ? (
+                  <>
+                    <span className="w-3 h-3 rounded-full border-2 border-current/30 border-t-current animate-spin flex-shrink-0" />
+                    <span>{project.status === 'active' ? 'Publicado' : 'Borrador'}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                      project.status === 'active' ? 'bg-emerald-400' : 'bg-gray-500'
+                    }`} />
+                    {project.status === 'active' ? 'Publicado' : 'Borrador'}
+                  </>
+                )}
               </button>
             </div>
 

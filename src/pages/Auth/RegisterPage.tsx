@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { ApiError } from '../../lib/apiFetch'
 import PasswordInput from '../../components/ui/PasswordInput'
+import { getSiteConfig } from '../../services/siteConfigApi'
 
 const INPUT =
   'bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg px-3 py-2.5 ' +
@@ -14,11 +15,18 @@ export default function RegisterPage() {
   const { isAuthenticated, isInitialized, register } = useAuthStore()
   const navigate = useNavigate()
 
-  const [email,    setEmail]    = useState('')
-  const [password, setPassword] = useState('')
-  const [confirm,  setConfirm]  = useState('')
-  const [error,    setError]    = useState<string | null>(null)
-  const [loading,  setLoading]  = useState(false)
+  const [email,     setEmail]     = useState('')
+  const [password,  setPassword]  = useState('')
+  const [confirm,   setConfirm]   = useState('')
+  const [error,     setError]     = useState<string | null>(null)
+  const [loading,   setLoading]   = useState(false)
+  const [trialDays, setTrialDays] = useState<number>(14)
+
+  useEffect(() => {
+    getSiteConfig()
+      .then(cfg => setTrialDays(cfg.registerTrialDays))
+      .catch(() => { /* keep default 14 */ })
+  }, [])
 
   if (isInitialized && isAuthenticated) {
     return <Navigate to="/app" replace />
@@ -76,7 +84,7 @@ export default function RegisterPage() {
             Empieza tu prueba gratis
           </p>
           <p className="text-xs text-gray-500 tracking-wide">
-            14 días gratis&nbsp;·&nbsp;No necesitas tarjeta
+            {trialDays} días gratis&nbsp;·&nbsp;No necesitas tarjeta
           </p>
         </div>
 

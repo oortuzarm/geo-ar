@@ -5,6 +5,7 @@ import { ApiError } from '../../lib/apiFetch'
 import {
   getAdminPlans, createAdminPlan, updateAdminPlan, deleteAdminPlan,
 } from '../../services/adminApi'
+import { getSiteConfig, updateAdminSiteConfig } from '../../services/siteConfigApi'
 import type { AdminPlan, CreatePlanPayload } from '../../types/admin.types'
 import { CONTENT_TYPE_OPTIONS, BOOLEAN_FEATURES, DEFAULT_FEATURES_CONFIG } from '../../lib/planFeatureRegistry'
 import type { FeaturesConfig } from '../../lib/planFeatureRegistry'
@@ -668,11 +669,22 @@ export default function AdminPlansPage() {
 
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
 
+  // ── Configuración global de registro ────────────────────────────────────────
+  const [regTrialDays,  setRegTrialDays]  = useState<number>(14)
+  const [regTrialInput, setRegTrialInput] = useState<string>('14')
+  const [regTrialSaving, setRegTrialSaving] = useState(false)
+
   useEffect(() => {
     getAdminPlans()
       .then(setPlans)
       .catch(() => setError('No se pudieron cargar los planes.'))
       .finally(() => setLoading(false))
+    getSiteConfig()
+      .then(cfg => {
+        setRegTrialDays(cfg.registerTrialDays)
+        setRegTrialInput(String(cfg.registerTrialDays))
+      })
+      .catch(() => { /* keep defaults */ })
   }, [])
 
   useEffect(() => {
@@ -733,6 +745,25 @@ export default function AdminPlansPage() {
       setToast({ msg: extractApiErrors(err), type: 'error' })
     } finally {
       setDeleting(false)
+    }
+  }
+
+  async function handleSaveRegTrialDays() {
+    const val = parseInt(regTrialInput, 10)
+    if (isNaN(val) || val <= 0) {
+      setToast({ msg: 'Los días de trial deben ser un entero positivo mayor que 0.', type: 'error' })
+      return
+    }
+    setRegTrialSaving(true)
+    try {
+      await updateAdminSiteConfig('register_trial_days', String(val))
+      setRegTrialDays(val)
+      setRegTrialInput(String(val))
+      setToast({ msg: 'Configuración de registro actualizada.', type: 'success' })
+    } catch (err) {
+      setToast({ msg: extractApiErrors(err), type: 'error' })
+    } finally {
+      setRegTrialSaving(false)
     }
   }
 
@@ -804,7 +835,56 @@ export default function AdminPlansPage() {
       </header>
 
       {/* ── Main ── */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-5">
+
+        {/* ── Configuración global de registro ── */}
+        <section className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-sm font-semibold text-white">Configuración global de registro</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Texto que se muestra en <span className="text-gray-400">/register</span>, independiente de los días de trial por plan.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-end gap-3 max-w-xs">
+            <div className="flex flex-col gap-1.5 flex-1">
+              <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                Días de trial en /register
+              </label>
+              <input
+                type="number"
+                min={1}
+                step={1}
+                value={regTrialInput}
+                onChange={e => setRegTrialInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSaveRegTrialDays()}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2
+                           text-sm text-gray-200 placeholder-gray-500
+                           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+                           transition-colors"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleSaveRegTrialDays}
+              disabled={regTrialSaving}
+              className="px-4 py-2 bg-brand-600 hover:bg-brand-700 disabled:bg-brand-800
+                         disabled:text-brand-400 text-white text-sm font-medium rounded-lg
+                         transition-colors cursor-pointer disabled:cursor-not-allowed
+                         flex items-center gap-2 flex-shrink-0"
+            >
+              {regTrialSaving && (
+                <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              )}
+              {regTrialSaving ? 'Guardando…' : 'Guardar'}
+            </button>
+          </div>
+          <p className="text-xs text-gray-600 mt-2">
+            Vista previa: <span className="text-gray-400">{regTrialDays} días gratis · No necesitas tarjeta</span>
+          </p>
+        </section>
+
         <section className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
 
           {/* Section header */}

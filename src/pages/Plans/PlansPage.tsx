@@ -147,11 +147,6 @@ function PlanCard({ plan, billing, isCurrent, onUpgrade }: PlanCardProps) {
           {billing === 'annual' && (
             <p className="text-xs text-emerald-400 mt-1.5 font-medium">Facturado anualmente</p>
           )}
-          {plan.hasTrial && plan.trialDays != null && (
-            <p className="text-xs text-emerald-400 mt-1.5 font-medium">
-              {plan.trialDays} días de prueba gratis
-            </p>
-          )}
         </div>
       )}
 

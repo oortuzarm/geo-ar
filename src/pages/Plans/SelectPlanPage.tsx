@@ -140,11 +140,6 @@ function PlanCard({ plan, billing, isClaiming, disabled, onChoose }: PlanCardPro
         {billing === 'annual' && !isCustom && (
           <p className="text-xs text-emerald-400 mt-1.5 font-medium">Facturado anualmente</p>
         )}
-        {plan.hasTrial && plan.trialDays && (
-          <p className="text-xs text-emerald-400 mt-1.5 font-medium">
-            {plan.trialDays} días de prueba gratis
-          </p>
-        )}
       </div>
 
       {/* Divider */}

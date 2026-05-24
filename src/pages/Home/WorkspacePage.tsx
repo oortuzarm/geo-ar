@@ -654,22 +654,33 @@ export default function WorkspacePage() {
                   )}
                 </div>
 
-                <button
-                  onClick={handleToggleCommunity}
-                  disabled={communityToggling}
-                  className={[
-                    'flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150',
-                    'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900',
-                    communityToggling ? 'opacity-50 cursor-wait' : 'cursor-pointer',
-                    project.communityEnabled
-                      ? 'text-gray-400 border-gray-600/40 bg-gray-800 hover:bg-gray-700 focus:ring-gray-600'
-                      : 'text-brand-400 border-brand-500/40 bg-brand-500/10 hover:bg-brand-500/20 focus:ring-brand-500',
-                  ].join(' ')}
-                >
-                  {communityToggling
-                    ? <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-current/30 border-t-current animate-spin" />Guardando…</span>
-                    : project.communityEnabled ? 'Desactivar' : 'Activar'}
-                </button>
+                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => setPreviewOpen(true)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150
+                               cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2
+                               focus:ring-offset-gray-900 focus:ring-gray-600
+                               text-gray-400 border-gray-700/50 bg-transparent hover:bg-gray-800"
+                  >
+                    Previsualizar
+                  </button>
+                  <button
+                    onClick={handleToggleCommunity}
+                    disabled={communityToggling}
+                    className={[
+                      'px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150',
+                      'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900',
+                      communityToggling ? 'opacity-50 cursor-wait' : 'cursor-pointer',
+                      project.communityEnabled
+                        ? 'text-gray-400 border-gray-600/40 bg-gray-800 hover:bg-gray-700 focus:ring-gray-600'
+                        : 'text-brand-400 border-brand-500/40 bg-brand-500/10 hover:bg-brand-500/20 focus:ring-brand-500',
+                    ].join(' ')}
+                  >
+                    {communityToggling
+                      ? <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-current/30 border-t-current animate-spin" />Guardando…</span>
+                      : project.communityEnabled ? 'Desactivar' : 'Activar'}
+                  </button>
+                </div>
               </div>
             </div>
           )}

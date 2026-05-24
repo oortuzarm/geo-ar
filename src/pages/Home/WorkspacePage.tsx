@@ -381,7 +381,9 @@ export default function WorkspacePage() {
   const { project, points, loading, updateProject, refresh } = useWorkspace()
 
   const subscription          = useSubscription()
-  const communityMapEnabled   = useSettingsStore((s) => s.communityMapEnabled)
+  const communityMapEnabled             = useSettingsStore((s) => s.communityMapEnabled)
+  const communityMapDisabledTitle       = useSettingsStore((s) => s.communityMapDisabledTitle)
+  const communityMapDisabledDescription = useSettingsStore((s) => s.communityMapDisabledDescription)
 
   const [shareOpen,         setShareOpen]        = useState(false)
   const [embedOpen,         setEmbedOpen]        = useState(false)
@@ -613,8 +615,8 @@ export default function WorkspacePage() {
           )}
 
           {/* ── Community map ─────────────────────────────────────────── */}
-          {project.status === 'active' && communityMapEnabled && (
-            <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl p-5">
+          {project.status === 'active' && (
+            <div className="relative bg-gray-900/70 border border-white/[0.07] rounded-2xl p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <SectionLabel>Mapa comunitario de Ubyca</SectionLabel>
@@ -684,6 +686,21 @@ export default function WorkspacePage() {
                   </button>
                 </div>
               </div>
+
+              {/* Disabled overlay — blocks interaction and shows admin-configured message */}
+              {!communityMapEnabled && (
+                <div className="absolute inset-0 rounded-2xl bg-gray-950/80 backdrop-blur-[2px]
+                                flex flex-col items-center justify-center gap-2 px-6 text-center z-10">
+                  <p className="text-sm font-semibold text-gray-200">
+                    {communityMapDisabledTitle || 'Mapa comunitario próximamente'}
+                  </p>
+                  {communityMapDisabledDescription && (
+                    <p className="text-xs text-gray-500 leading-relaxed max-w-xs">
+                      {communityMapDisabledDescription}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

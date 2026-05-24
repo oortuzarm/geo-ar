@@ -130,12 +130,11 @@ interface WorkspaceMenuProps {
   onShare: () => void
   onEmbed: () => void
   onDelete: () => void
-  onPreview: () => void
 }
 
 function WorkspaceMenu({
   projectId, projectTitle: _t,
-  onShare, onEmbed, onDelete, onPreview,
+  onShare, onEmbed, onDelete,
 }: WorkspaceMenuProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -192,13 +191,6 @@ function WorkspaceMenu({
             Integrar en sitio web
           </button>
 
-          <button className={item} onClick={() => act(onPreview)}>
-            <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-            Ver público
-          </button>
 
           <div className="border-t border-gray-800 my-1" />
 
@@ -538,7 +530,6 @@ export default function WorkspacePage() {
               projectTitle={project.title}
               onShare={() => setShareOpen(true)}
               onEmbed={() => setEmbedOpen(true)}
-              onPreview={() => window.open(publicUrl, '_blank')}
               onDelete={() => setDeleteConfirm(true)}
             />
             <Button

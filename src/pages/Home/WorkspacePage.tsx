@@ -127,12 +127,13 @@ function StatusToggle({
 interface WorkspaceMenuProps {
   projectId: string
   projectTitle: string
+  onPreview: () => void
   onDelete: () => void
 }
 
 function WorkspaceMenu({
   projectId, projectTitle: _t,
-  onDelete,
+  onPreview, onDelete,
 }: WorkspaceMenuProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -172,6 +173,18 @@ function WorkspaceMenu({
       {open && (
         <div className="absolute right-0 top-full mt-1 w-56 bg-gray-900 border border-gray-700 rounded-xl
                         shadow-2xl py-1 z-50 origin-top-right">
+
+          {/* Previsualizar — only shown on mobile; desktop has the topbar button */}
+          <button className={`${item} md:hidden`} onClick={() => act(onPreview)}>
+            <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            Previsualizar
+          </button>
+          <div className="border-t border-gray-800 my-1 md:hidden" />
 
           <button
             className={`${item} text-red-400 hover:text-red-300 hover:bg-red-500/10`}
@@ -532,11 +545,29 @@ export default function WorkspacePage() {
             <WorkspaceMenu
               projectId={project.id}
               projectTitle={project.title}
+              onPreview={() => setPreviewOpen(true)}
               onDelete={() => setDeleteConfirm(true)}
             />
+
+            {/* Mobile: circular FAB — matches the editor's add-point button */}
+            <button
+              onClick={() => { if (atLimit) { setUpgradeOpen(true); return }; navigate(editorUrl) }}
+              title={atLimit ? 'Límite de ubicaciones alcanzado' : 'Nueva ubicación'}
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-full
+                         bg-brand-600 hover:bg-brand-500 active:bg-brand-700
+                         text-white transition-colors
+                         shadow-[0_4px_16px_rgba(2,132,199,0.35)]"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+
+            {/* Desktop: text button */}
             <Button
               onClick={() => { if (atLimit) { setUpgradeOpen(true); return }; navigate(editorUrl) }}
               title={atLimit ? 'Límite de ubicaciones alcanzado' : undefined}
+              className="hidden md:inline-flex"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

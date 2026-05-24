@@ -16,15 +16,17 @@ export interface AdminUser {
 }
 
 export interface AdminProject {
-  id:          string
-  title:       string
-  status:      'draft' | 'active' | 'inactive'
-  userId:      string | null
-  userEmail:   string | null
-  pointsCount: number
-  isOrphan:    boolean
-  createdAt:   string
-  updatedAt:   string
+  id:               string
+  title:            string
+  status:           'draft' | 'active' | 'inactive'
+  communityEnabled: boolean
+  communityStatus:  'pending' | 'approved' | 'rejected' | 'hidden'
+  userId:           string | null
+  userEmail:        string | null
+  pointsCount:      number
+  isOrphan:         boolean
+  createdAt:        string
+  updatedAt:        string
 }
 
 export interface AdminMetrics {

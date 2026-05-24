@@ -6,6 +6,7 @@ import {
   getAdminPlans,
   deleteAdminProject, deleteAdminUser,
   updateAdminUserSubscription,
+  updateAdminProjectCommunityStatus,
   type UpdateSubscriptionPayload,
   type SubscriptionSaveResponse,
 } from '../../services/adminApi'
@@ -145,6 +146,201 @@ function EmptyRow({ cols, message }: { cols: number; message: string }) {
         {message}
       </td>
     </tr>
+  )
+}
+
+function CommunityStatusBadge({ status }: { status: AdminProject['communityStatus'] }) {
+  const map: Record<string, string> = {
+    pending:  'bg-amber-500/15   text-amber-300   border-amber-500/25',
+    approved: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25',
+    rejected: 'bg-red-500/15     text-red-300     border-red-500/25',
+    hidden:   'bg-gray-500/15    text-gray-400    border-gray-500/25',
+  }
+  const label: Record<string, string> = {
+    pending: 'Pendiente', approved: 'Aprobado', rejected: 'Rechazado', hidden: 'Oculto',
+  }
+  return (
+    <span className={`inline-flex px-2 py-0.5 rounded-full border text-[11px] font-medium
+                      leading-none whitespace-nowrap ${map[status] ?? map.pending}`}>
+      {label[status] ?? status}
+    </span>
+  )
+}
+
+// ── Community table ───────────────────────────────────────────────────────────
+
+type CommunityFilter = 'all' | 'pending' | 'approved' | 'rejected' | 'hidden'
+
+function CommunityTable({
+  projects,
+  updating,
+  onUpdateStatus,
+}: {
+  projects:       AdminProject[]
+  updating:       string | null
+  onUpdateStatus: (id: string, status: AdminProject['communityStatus']) => void
+}) {
+  const [filter, setFilter] = useState<CommunityFilter>('all')
+  const [search, setSearch] = useState('')
+
+  const communityProjects = projects.filter((p) => p.communityEnabled)
+
+  const visible = communityProjects.filter((p) => {
+    const matchFilter = filter === 'all' || p.communityStatus === filter
+    const q = search.toLowerCase()
+    const matchSearch = !q ||
+      p.title.toLowerCase().includes(q) ||
+      (p.userEmail ?? '').toLowerCase().includes(q)
+    return matchFilter && matchSearch
+  })
+
+  const pendingCount = communityProjects.filter((p) => p.communityStatus === 'pending').length
+
+  return (
+    <>
+      <div className="px-5 py-3 border-b border-gray-800 flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-1">
+          {(['all', 'pending', 'approved', 'rejected', 'hidden'] as CommunityFilter[]).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={[
+                'px-2.5 py-1 rounded-lg text-xs font-medium transition-colors relative',
+                filter === f
+                  ? 'bg-brand-500/15 text-brand-300 border border-brand-500/25'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800',
+              ].join(' ')}
+            >
+              {{ all: 'Todos', pending: 'Pendientes', approved: 'Aprobados', rejected: 'Rechazados', hidden: 'Ocultos' }[f]}
+              {f === 'pending' && pendingCount > 0 && (
+                <span className="ml-1 bg-amber-500 text-black text-[9px] font-bold rounded-full px-1 leading-none py-0.5">
+                  {pendingCount}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+        <div className="ml-auto w-52">
+          <SearchInput value={search} onChange={setSearch} placeholder="Buscar proyecto o email…" />
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-800">
+              {['Proyecto', 'Email', 'Ws. Estado', 'Comunidad', 'Puntos', 'Acciones'].map((h) => (
+                <th key={h} className="px-5 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-800/60">
+            {visible.length === 0 ? (
+              <EmptyRow cols={6} message="No hay proyectos que coincidan con el filtro." />
+            ) : (
+              visible.map((p) => {
+                const isUpdating = updating === p.id
+                return (
+                  <tr key={p.id} className="hover:bg-gray-900/40 transition-colors">
+                    <td className="px-5 py-3 max-w-[160px]">
+                      <span className="block text-gray-200 text-xs truncate">
+                        {p.title || <span className="italic text-gray-500">Sin nombre</span>}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-gray-400 text-xs max-w-[180px]">
+                      <span className="block truncate">{p.userEmail ?? <span className="text-gray-600">—</span>}</span>
+                    </td>
+                    <td className="px-5 py-3 whitespace-nowrap">
+                      <WorkspaceStatusBadge status={p.status} />
+                    </td>
+                    <td className="px-5 py-3 whitespace-nowrap">
+                      <CommunityStatusBadge status={p.communityStatus} />
+                    </td>
+                    <td className="px-5 py-3 text-gray-300 tabular-nums">{p.pointsCount}</td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-1">
+                        {/* Aprobar */}
+                        <button
+                          onClick={() => onUpdateStatus(p.id, 'approved')}
+                          disabled={isUpdating || p.communityStatus === 'approved'}
+                          title="Aprobar"
+                          className={[
+                            'w-7 h-7 rounded-md flex items-center justify-center transition-colors',
+                            isUpdating || p.communityStatus === 'approved'
+                              ? 'text-gray-700 cursor-not-allowed'
+                              : 'text-emerald-500/70 hover:text-emerald-400 hover:bg-emerald-500/10 cursor-pointer',
+                          ].join(' ')}
+                        >
+                          {isUpdating ? (
+                            <span className="w-3 h-3 rounded-full border-2 border-emerald-400/30 border-t-emerald-400 animate-spin" />
+                          ) : (
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+
+                        {/* Rechazar */}
+                        <button
+                          onClick={() => onUpdateStatus(p.id, 'rejected')}
+                          disabled={isUpdating || p.communityStatus === 'rejected'}
+                          title="Rechazar"
+                          className={[
+                            'w-7 h-7 rounded-md flex items-center justify-center transition-colors',
+                            isUpdating || p.communityStatus === 'rejected'
+                              ? 'text-gray-700 cursor-not-allowed'
+                              : 'text-red-500/70 hover:text-red-400 hover:bg-red-500/10 cursor-pointer',
+                          ].join(' ')}
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+
+                        {/* Ocultar */}
+                        <button
+                          onClick={() => onUpdateStatus(p.id, 'hidden')}
+                          disabled={isUpdating || p.communityStatus === 'hidden'}
+                          title="Ocultar"
+                          className={[
+                            'w-7 h-7 rounded-md flex items-center justify-center transition-colors',
+                            isUpdating || p.communityStatus === 'hidden'
+                              ? 'text-gray-700 cursor-not-allowed'
+                              : 'text-amber-500/70 hover:text-amber-400 hover:bg-amber-500/10 cursor-pointer',
+                          ].join(' ')}
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                          </svg>
+                        </button>
+
+                        {/* Ver experiencia pública */}
+                        <a
+                          href={`/public/${p.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Ver experiencia pública"
+                          className="w-7 h-7 rounded-md flex items-center justify-center transition-colors
+                                     text-gray-400 hover:text-gray-100 hover:bg-gray-700 cursor-pointer"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+    </>
   )
 }
 
@@ -768,6 +964,8 @@ export default function AdminPage() {
   const [errorProjects, setErrorProjects] = useState<string | null>(null)
   const [errorMetrics,  setErrorMetrics]  = useState<string | null>(null)
 
+  const [activeSection, setActiveSection] = useState<'users' | 'community'>('users')
+
   const [deleteWorkspaceTarget, setDeleteWorkspaceTarget] = useState<AdminUserRow | null>(null)
   const [deleteUserTarget,      setDeleteUserTarget]      = useState<AdminUserRow | null>(null)
   const [manageSubTarget,       setManageSubTarget]       = useState<AdminUserRow | null>(null)
@@ -775,6 +973,7 @@ export default function AdminPage() {
   const [deletingUserId,        setDeletingUserId]        = useState<string | null>(null)
   const [savingSubscription,    setSavingSubscription]    = useState(false)
   const [refreshing,            setRefreshing]            = useState(false)
+  const [updatingCommunityId,   setUpdatingCommunityId]   = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
 
   useEffect(() => {
@@ -962,6 +1161,24 @@ export default function AdminPage() {
     window.open('/project/' + row.workspace.id, '_blank')
   }
 
+  async function handleUpdateCommunityStatus(
+    id: string,
+    status: AdminProject['communityStatus'],
+  ) {
+    setUpdatingCommunityId(id)
+    try {
+      await updateAdminProjectCommunityStatus(id, status)
+      setProjects((prev) =>
+        prev.map((p) => p.id === id ? { ...p, communityStatus: status } : p)
+      )
+      setToast({ msg: `Estado actualizado a "${status}".`, type: 'success' })
+    } catch {
+      setToast({ msg: 'No se pudo actualizar el estado. Intenta de nuevo.', type: 'error' })
+    } finally {
+      setUpdatingCommunityId(null)
+    }
+  }
+
   const tableLoading = loadingUsers || loadingProjects
   const tableError   = errorUsers ?? errorProjects ?? null
 
@@ -1023,8 +1240,32 @@ export default function AdminPage() {
 
           {/* Nav tabs */}
           <div className="flex items-center gap-1 ml-4">
-            <button className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-100">
+            <button
+              onClick={() => setActiveSection('users')}
+              className={[
+                'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                activeSection === 'users'
+                  ? 'bg-gray-800 text-gray-100'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800',
+              ].join(' ')}
+            >
               Usuarios
+            </button>
+            <button
+              onClick={() => setActiveSection('community')}
+              className={[
+                'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors relative',
+                activeSection === 'community'
+                  ? 'bg-gray-800 text-gray-100'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800',
+              ].join(' ')}
+            >
+              Mapa comunitario
+              {projects.filter((p) => p.communityEnabled && p.communityStatus === 'pending').length > 0 && (
+                <span className="ml-1.5 bg-amber-500 text-black text-[9px] font-bold rounded-full px-1 leading-none py-0.5">
+                  {projects.filter((p) => p.communityEnabled && p.communityStatus === 'pending').length}
+                </span>
+              )}
             </button>
             <Link
               to="/admin/plans"
@@ -1082,52 +1323,81 @@ export default function AdminPage() {
         ) : null}
 
         {/* ── Users section ── */}
-        <section className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">Usuarios</h2>
-            <button
-              onClick={refreshData}
-              disabled={refreshing || tableLoading}
-              title="Actualizar datos desde el servidor"
-              className={[
-                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium',
-                'border border-gray-700 text-gray-400 transition-colors',
-                refreshing || tableLoading
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'hover:border-gray-600 hover:text-gray-200 hover:bg-gray-800 cursor-pointer',
-              ].join(' ')}
-            >
-              <svg
-                className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`}
-                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        {activeSection === 'users' && (
+          <section className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-white">Usuarios</h2>
+              <button
+                onClick={refreshData}
+                disabled={refreshing || tableLoading}
+                title="Actualizar datos desde el servidor"
+                className={[
+                  'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium',
+                  'border border-gray-700 text-gray-400 transition-colors',
+                  refreshing || tableLoading
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'hover:border-gray-600 hover:text-gray-200 hover:bg-gray-800 cursor-pointer',
+                ].join(' ')}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              {refreshing ? 'Actualizando…' : 'Actualizar'}
-            </button>
-          </div>
-
-          {tableLoading ? (
-            <div className="p-5 space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-9 rounded-lg" />
-              ))}
+                <svg
+                  className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {refreshing ? 'Actualizando…' : 'Actualizar'}
+              </button>
             </div>
-          ) : tableError ? (
-            <p className="px-5 py-6 text-sm text-red-400">{tableError}</p>
-          ) : (
-            <UsersTable
-              rows={mergedRows}
-              deletingWorkspaceId={deletingWorkspaceId}
-              deletingUserId={deletingUserId}
-              onViewWorkspace={handleViewWorkspace}
-              onDeleteWorkspace={(row) => setDeleteWorkspaceTarget(row)}
-              onDeleteUser={(row) => setDeleteUserTarget(row)}
-              onManageSubscription={(row) => setManageSubTarget(row)}
-            />
-          )}
-        </section>
+
+            {tableLoading ? (
+              <div className="p-5 space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-9 rounded-lg" />
+                ))}
+              </div>
+            ) : tableError ? (
+              <p className="px-5 py-6 text-sm text-red-400">{tableError}</p>
+            ) : (
+              <UsersTable
+                rows={mergedRows}
+                deletingWorkspaceId={deletingWorkspaceId}
+                deletingUserId={deletingUserId}
+                onViewWorkspace={handleViewWorkspace}
+                onDeleteWorkspace={(row) => setDeleteWorkspaceTarget(row)}
+                onDeleteUser={(row) => setDeleteUserTarget(row)}
+                onManageSubscription={(row) => setManageSubTarget(row)}
+              />
+            )}
+          </section>
+        )}
+
+        {/* ── Community section ── */}
+        {activeSection === 'community' && (
+          <section className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-800">
+              <h2 className="text-sm font-semibold text-white">Mapa comunitario</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Proyectos que solicitaron aparecer en el mapa público de Ubyca.
+              </p>
+            </div>
+            {loadingProjects ? (
+              <div className="p-5 space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-9 rounded-lg" />
+                ))}
+              </div>
+            ) : errorProjects ? (
+              <p className="px-5 py-6 text-sm text-red-400">{errorProjects}</p>
+            ) : (
+              <CommunityTable
+                projects={projects}
+                updating={updatingCommunityId}
+                onUpdateStatus={handleUpdateCommunityStatus}
+              />
+            )}
+          </section>
+        )}
 
       </main>
 

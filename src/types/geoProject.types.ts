@@ -19,6 +19,9 @@ export interface GeoProject {
   publicInitialCenterLat?: number
   publicInitialCenterLng?: number
   publicInitialZoom?: number
+  // Community map
+  communityEnabled?: boolean
+  communityStatus?: 'pending' | 'approved' | 'rejected' | 'hidden'
 }
 
 export interface GeoPointAvailability {

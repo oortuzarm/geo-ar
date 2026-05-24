@@ -96,15 +96,17 @@ function normalizeUser(raw: Record<string, unknown>): AdminUser {
 function normalizeProject(raw: Record<string, unknown>): AdminProject {
   const userId = (raw.userId ?? raw.user_id ?? null) as string | null
   return {
-    id:          raw.id                          as string,
-    title:       (raw.title ?? raw.name ?? '')   as string,
-    status:      raw.status                      as AdminProject['status'],
+    id:               raw.id                                                        as string,
+    title:            (raw.title ?? raw.name ?? '')                                 as string,
+    status:           raw.status                                                    as AdminProject['status'],
+    communityEnabled: (raw.communityEnabled ?? raw.community_enabled ?? false)      as boolean,
+    communityStatus:  ((raw.communityStatus ?? raw.community_status ?? 'pending') as AdminProject['communityStatus']),
     userId,
-    userEmail:   (raw.userEmail ?? raw.user_email ?? null) as string | null,
-    pointsCount: (raw.pointsCount ?? raw.points_count ?? 0) as number,
-    isOrphan:    (raw.isOrphan   ?? raw.is_orphan ?? userId === null) as boolean,
-    createdAt:   (raw.createdAt  ?? raw.created_at ?? '') as string,
-    updatedAt:   (raw.updatedAt  ?? raw.updated_at ?? '') as string,
+    userEmail:        (raw.userEmail ?? raw.user_email ?? null)                     as string | null,
+    pointsCount:      (raw.pointsCount ?? raw.points_count ?? 0)                   as number,
+    isOrphan:         (raw.isOrphan   ?? raw.is_orphan ?? userId === null)          as boolean,
+    createdAt:        (raw.createdAt  ?? raw.created_at ?? '')                     as string,
+    updatedAt:        (raw.updatedAt  ?? raw.updated_at ?? '')                     as string,
   }
 }
 
@@ -227,6 +229,18 @@ export async function updateAdminPlan(id: string, payload: UpdatePlanPayload): P
 
 export async function deleteAdminPlan(id: string): Promise<void> {
   await apiFetch<void>(`${BASE}/api/admin/plans/${id}`, { method: 'DELETE' })
+}
+
+// ── Community status ──────────────────────────────────────────────────────────
+
+export async function updateAdminProjectCommunityStatus(
+  id: string,
+  status: 'pending' | 'approved' | 'rejected' | 'hidden',
+): Promise<void> {
+  await apiFetch<unknown>(`${BASE}/api/admin/projects/${id}/community_status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  })
 }
 
 // ── User subscriptions ────────────────────────────────────────────────────────

@@ -27,6 +27,7 @@ import TermsAndConditionsPage   from './pages/Legal/TermsAndConditionsPage'
 import TryPage                  from './pages/Try/TryPage'
 import TemporaryPreviewPage     from './pages/TemporaryPreview/TemporaryPreviewPage'
 import PricingPage              from './pages/Landing/PricingPage'
+import CommunityPage            from './pages/Community/CommunityPage'
 import ProtectedRoute           from './components/auth/ProtectedRoute'
 import AdminRoute               from './components/auth/AdminRoute'
 import RootLayout               from './components/routing/RootLayout'
@@ -55,6 +56,7 @@ const publicRoutes = [
   { path: '/accept-invitation/:token',   element: <AcceptInvitationPage /> },
   { path: '/try',                        element: <TryPage /> },
   { path: '/temporary/:token',           element: <TemporaryPreviewPage /> },
+  { path: '/community',                  element: <CommunityPage /> },
 ]
 
 // ── Protected app routes (require authenticated session) ──────────────────────
@@ -97,6 +99,7 @@ export const landingRouter = createBrowserRouter([
     children: [
       { path: '/contact',     element: <ContactPage /> },
       { path: '/precios',     element: <PricingPage /> },
+      { path: '/community',   element: <CommunityPage /> },
       { path: '/landing-v2',  element: <LandingV2Page /> },
       { path: '/landing-old', element: <LandingPage /> },
       ...legalRoutes,

@@ -381,15 +381,16 @@ export default function WorkspacePage() {
 
   const subscription = useSubscription()
 
-  const [shareOpen,       setShareOpen]      = useState(false)
-  const [embedOpen,       setEmbedOpen]      = useState(false)
-  const [previewOpen,     setPreviewOpen]    = useState(false)
-  const [upgradeOpen,     setUpgradeOpen]    = useState(false)
-  const [deleteConfirm,   setDeleteConfirm]  = useState(false)
-  const [togglingStatus,  setTogglingStatus] = useState(false)
-  const [deleting,        setDeleting]       = useState(false)
-  const [totalClicks,     setTotalClicks]    = useState<number | null>(null)
-  const [togglingPointId, setTogglingPointId] = useState<string | null>(null)
+  const [shareOpen,         setShareOpen]        = useState(false)
+  const [embedOpen,         setEmbedOpen]        = useState(false)
+  const [previewOpen,       setPreviewOpen]      = useState(false)
+  const [upgradeOpen,       setUpgradeOpen]      = useState(false)
+  const [deleteConfirm,     setDeleteConfirm]    = useState(false)
+  const [togglingStatus,    setTogglingStatus]   = useState(false)
+  const [deleting,          setDeleting]         = useState(false)
+  const [totalClicks,       setTotalClicks]       = useState<number | null>(null)
+  const [togglingPointId,   setTogglingPointId]  = useState<string | null>(null)
+  const [communityToggling, setCommunityToggling] = useState(false)
   // Optimistic active overrides: pointId → bool. Cleared after server round-trip.
   const [activeOverrides, setActiveOverrides] = useState<Record<string, boolean>>({})
 
@@ -467,6 +468,21 @@ export default function WorkspacePage() {
       addToast('No se pudo actualizar el estado de la ubicación', 'error')
     } finally {
       setTogglingPointId(null)
+    }
+  }
+
+  async function handleToggleCommunity() {
+    if (!project || communityToggling) return
+    setCommunityToggling(true)
+    try {
+      const updated = await geoProjectsApi.saveProject(project.id, {
+        communityEnabled: !project.communityEnabled,
+      })
+      updateProject(updated)
+    } catch {
+      addToast('No se pudo actualizar el mapa comunitario', 'error')
+    } finally {
+      setCommunityToggling(false)
     }
   }
 
@@ -835,6 +851,68 @@ export default function WorkspacePage() {
               </div>
             )}
           </section>
+          {/* ── Community map ─────────────────────────────────────────────── */}
+          {project.status === 'active' && (
+            <section className="pb-6">
+              <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <SectionLabel>Mapa comunitario</SectionLabel>
+                    <p className="text-xs text-gray-500 mt-1.5 mb-3 leading-relaxed">
+                      Al activarlo, tu workspace aparecerá en el mapa público de Ubyca y otros usuarios podrán descubrirlo.
+                    </p>
+
+                    {project.communityEnabled ? (
+                      <>
+                        {project.communityStatus === 'approved' && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                            Visible en el mapa comunitario
+                          </span>
+                        )}
+                        {project.communityStatus === 'pending' && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-amber-500/10 text-amber-400 border-amber-500/20">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                            Esperando aprobación del equipo Ubyca
+                          </span>
+                        )}
+                        {project.communityStatus === 'rejected' && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-red-500/10 text-red-400 border-red-500/20">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
+                            No aprobado — revisá el contenido antes de volver a solicitar
+                          </span>
+                        )}
+                        {project.communityStatus === 'hidden' && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-gray-700/40 text-gray-400 border-gray-600/30">
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-500 flex-shrink-0" />
+                            Oculto por el equipo Ubyca
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-xs text-gray-600">No aparece en el mapa comunitario</span>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={handleToggleCommunity}
+                    disabled={communityToggling}
+                    className={[
+                      'flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150',
+                      'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900',
+                      communityToggling ? 'opacity-50 cursor-wait' : 'cursor-pointer',
+                      project.communityEnabled
+                        ? 'text-gray-400 border-gray-600/40 bg-gray-800 hover:bg-gray-700 focus:ring-gray-600'
+                        : 'text-brand-400 border-brand-500/40 bg-brand-500/10 hover:bg-brand-500/20 focus:ring-brand-500',
+                    ].join(' ')}
+                  >
+                    {project.communityEnabled ? 'Desactivar' : 'Activar'}
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
+
       </main>
 
       {/* ── Modals ─────────────────────────────────────────────────────────── */}

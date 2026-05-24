@@ -713,32 +713,25 @@ export default function WorkspacePage() {
             />
 
             {/* Estado */}
-            <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl px-5 py-5 flex flex-col gap-2">
+            <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl px-5 py-5 flex flex-col gap-3">
               <p className="text-xs text-gray-500 uppercase tracking-wider font-medium leading-none">
                 Estado
               </p>
-              <div className="flex items-center mt-1">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border ${
-                  project.status === 'active'
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                    : 'bg-gray-700/40 text-gray-400 border-gray-600/30'
-                }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                    project.status === 'active' ? 'bg-emerald-400' : 'bg-gray-500'
-                  }`} />
-                  {project.status === 'active' ? 'Publicado' : 'Borrador'}
-                </span>
-              </div>
-              <p className="text-xs text-gray-600 leading-snug">
-                {project.status === 'active'
-                  ? 'Tu experiencia es visible públicamente y accesible mediante su enlace.'
-                  : 'Tu experiencia no es visible públicamente.'}
-              </p>
+              <span className={`self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border ${
+                project.status === 'active'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                  : 'bg-gray-700/40 text-gray-400 border-gray-600/30'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                  project.status === 'active' ? 'bg-emerald-400' : 'bg-gray-500'
+                }`} />
+                {project.status === 'active' ? 'Publicado' : 'Borrador'}
+              </span>
               <button
                 onClick={handleToggleStatus}
                 disabled={togglingStatus}
                 className={[
-                  'mt-1 self-start px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150',
+                  'self-start px-3 py-1 rounded-lg text-xs font-semibold border transition-all duration-150',
                   'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900',
                   togglingStatus ? 'opacity-50 cursor-wait' : 'cursor-pointer',
                   project.status === 'active'
@@ -748,7 +741,7 @@ export default function WorkspacePage() {
               >
                 {togglingStatus
                   ? <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-current/30 border-t-current animate-spin" />Guardando…</span>
-                  : project.status === 'active' ? 'Pasar a borrador' : 'Publicar workspace'}
+                  : project.status === 'active' ? 'Pasar a borrador' : 'Publicar'}
               </button>
             </div>
 

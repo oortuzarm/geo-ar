@@ -1938,8 +1938,17 @@ export default function PublicPage({
 
           {/* Gesture capture layer — non-scrolling wrapper that owns the touch
               listeners. Keeping this separate from the scroll container prevents
-              the browser from entering "scroll mode" before preventDefault fires. */}
-          <div ref={gestureLayerRef} className="flex-1 min-h-0">
+              the browser from entering "scroll mode" before preventDefault fires.
+              In expanded state, the same header handlers are also wired here so
+              that swipe-up from any card reliably triggers the full transition
+              (iOS may capture touchmove before preventDefault fires in the native
+              listener; the touchend-based fallback is always reliable). */}
+          <div
+            ref={gestureLayerRef}
+            className="flex-1 min-h-0"
+            onTouchStart={sheetState === 'expanded' ? handleDragStart : undefined}
+            onTouchEnd={sheetState === 'expanded' ? handleDragEnd : undefined}
+          >
             {/* Inner scroll area — overflow-y-hidden in expanded (no content scroll
                 until sheet is full); overflow-y-auto only in full. */}
             <div

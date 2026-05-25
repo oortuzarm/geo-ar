@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
@@ -717,9 +717,21 @@ function MapClusterLayer({ points, selectedPointId, onPointClick }: MapClusterLa
   // One setState call per event → no window where zoom is new but bounds are stale.
   const [vp, setVp] = useState<Viewport>(() => snapViewport(map))
 
+  // Single handler for all viewport-change events so no path is missed.
+  // Binding the same function reference avoids react-leaflet re-registering
+  // on every render from producing transiently unregistered listeners.
+  const updateViewport = useCallback(() => setVp(snapViewport(map)), [map])
+
   useMapEvents({
-    zoomend: () => setVp(snapViewport(map)),
-    moveend: () => setVp(snapViewport(map)),
+    // Fires after animated zoom (flyTo, setView, fitBounds with zoom change)
+    zoomend:   updateViewport,
+    // Fires after any pan — animated or programmatic — and after flyTo completes
+    moveend:   updateViewport,
+    // Fires when Leaflet redraws content for non-animated setView / fitBounds
+    // (called via _resetView internally, which is the non-animate path)
+    viewreset: updateViewport,
+    // Fires when the map container is resized — keeps clusters correct on layout shifts
+    resize:    updateViewport,
   })
 
   const sc = useMemo(() => {

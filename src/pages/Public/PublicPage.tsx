@@ -697,6 +697,7 @@ interface MapClusterLayerProps {
   points:          GeoPoint[]
   selectedPointId: string | null
   onPointClick:    (pt: GeoPoint) => void
+  refreshKey:      number
 }
 
 // Plain-number snapshot of the map viewport.
@@ -710,7 +711,7 @@ function snapViewport(m: L.Map): Viewport {
   return { zoom: m.getZoom(), west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() }
 }
 
-function MapClusterLayer({ points, selectedPointId, onPointClick }: MapClusterLayerProps) {
+function MapClusterLayer({ points, selectedPointId, onPointClick, refreshKey }: MapClusterLayerProps) {
   const map = useMap()
 
   // Single atomic state: zoom + all four bounds edges as primitives.
@@ -721,6 +722,12 @@ function MapClusterLayer({ points, selectedPointId, onPointClick }: MapClusterLa
   // Binding the same function reference avoids react-leaflet re-registering
   // on every render from producing transiently unregistered listeners.
   const updateViewport = useCallback(() => setVp(snapViewport(map)), [map])
+
+  // Re-snapshot the viewport when a programmatic flyTo completes (e.g. "Mi ubicación").
+  // MapController signals completion via onFlyEnd → parent increments refreshKey.
+  // This guarantees clusters refresh after the animation settles without adding
+  // more arbitrary Leaflet event listeners.
+  useEffect(() => { updateViewport() }, [refreshKey, updateViewport])
 
   useMapEvents({
     // Fires after animated zoom (flyTo, setView, fitBounds with zoom change)
@@ -841,6 +848,13 @@ export default function PublicPage({
   const [flyToKey, setFlyToKey] = useState<string | null>(null)
   const [flyToTarget, setFlyToTarget] = useState<FlyTarget | null>(null)
   const flyToCounterRef = useRef(0)
+
+  // ── Cluster refresh ────────────────────────────────────────────────────────
+  // Incremented by handleFlyEnd after each programmatic flyTo settles.
+  // Passed to MapClusterLayer so it re-snapshots the viewport once the
+  // Leaflet animation has fully updated getBounds() / getZoom().
+  const [clusterRefreshKey, setClusterRefreshKey] = useState(0)
+  const handleFlyEnd = useCallback(() => setClusterRefreshKey((k) => k + 1), [])
 
   // ── Unlocked media content (video / audio / file) ────────────────────────
   // Set by handleActivate when the backend returns a non-URL content type.
@@ -1541,7 +1555,7 @@ export default function PublicPage({
           Embed: always absolute inset-0 (force mobile layout).            */}
       <div className={`absolute inset-0${isEmbed ? '' : ' md:relative md:flex-1'}`}>
         <MapContainer center={mapFallbackCenter} zoom={14} maxZoom={20} className="w-full h-full" style={mapPickMode ? { cursor: 'crosshair' } : undefined}>
-          <MapController flyKey={flyToKey} flyTarget={flyToTarget} />
+          <MapController flyKey={flyToKey} flyTarget={flyToTarget} onFlyEnd={handleFlyEnd} />
           {isEmbed && <InvalidateMapSize />}
           <MapPickHandler active={mapPickMode} onPick={handleManualLocationConfirm} />
           <PublicInitialViewController
@@ -1563,6 +1577,7 @@ export default function PublicPage({
             points={displayedPoints}
             selectedPointId={selectedPointId}
             onPointClick={handlePointClick}
+            refreshKey={clusterRefreshKey}
           />
           {routeResult && (
             <RoutePolyline

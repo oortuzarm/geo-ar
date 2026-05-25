@@ -137,6 +137,9 @@ export default function AppShell() {
           </NavLink>
         </nav>
 
+        {/* Slot for community widget — WorkspacePage injects here via React portal */}
+        <div id="workspace-community-slot" />
+
         {/* User + logout footer */}
         <div className="px-3 py-4 border-t border-gray-800 space-y-1">
           {currentUser && (

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import { useGeoStore } from '../../store/geoStore'
@@ -18,7 +19,7 @@ import UpgradeModal from '../../components/subscription/UpgradeModal'
 import { useSubscription } from '../../hooks/useSubscription'
 import { useSettingsStore } from '../../store/settingsStore'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
-import type { ContentType, GeoPoint, MediaContentData } from '../../types'
+import type { ContentType, GeoPoint, GeoProject, MediaContentData } from '../../types'
 
 // ── Content type display config ───────────────────────────────────────────────
 
@@ -325,6 +326,155 @@ function EmbedModal({
   )
 }
 
+// ── Community sidebar widget (desktop, rendered via portal) ───────────────────
+
+interface CommunitySidebarWidgetProps {
+  project: GeoProject
+  communityMapEnabled: boolean
+  communityMapDisabledTitle: string
+  communityMapDisabledDescription: string
+  subscriptionActive: boolean
+  toggling: boolean
+  onToggle: () => void
+}
+
+function CommunityHelpTooltip({ text }: { text: string }) {
+  const [visible, setVisible] = useState(false)
+  if (!text) return null
+  return (
+    <div className="relative flex-shrink-0">
+      <button
+        onMouseEnter={() => setVisible(true)}
+        onMouseLeave={() => setVisible(false)}
+        className="text-gray-700 hover:text-gray-500 transition-colors cursor-help"
+        tabIndex={-1}
+        aria-label="Más información"
+      >
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+            d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+        </svg>
+      </button>
+      {visible && (
+        <div className="absolute bottom-full right-0 mb-2 w-44
+                        bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5
+                        text-[11px] text-gray-300 leading-relaxed z-[9999] shadow-xl pointer-events-none">
+          {text}
+          <span className="absolute top-full right-2 border-[5px] border-transparent border-t-gray-700" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function CommunitySidebarWidget({
+  project,
+  communityMapEnabled,
+  communityMapDisabledTitle,
+  communityMapDisabledDescription,
+  subscriptionActive,
+  toggling,
+  onToggle,
+}: CommunitySidebarWidgetProps) {
+  return (
+    <div className="relative mx-3 pt-3 pb-3 border-t border-gray-800/60 flex flex-col gap-2.5">
+
+      {/* Title */}
+      <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider leading-none">
+        Mapa comunitario Ubyca
+      </p>
+
+      {/* Subtitle + help tooltip */}
+      <div className="flex items-start gap-1.5">
+        <p className="text-[11px] text-gray-600 leading-snug flex-1">
+          Amplía el alcance de tu proyecto
+        </p>
+        <CommunityHelpTooltip text={communityMapDisabledDescription} />
+      </div>
+
+      {/* Status badge */}
+      <div>
+        {project.communityEnabled ? (
+          <>
+            {project.communityStatus === 'approved' && (
+              <span className={[
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border',
+                subscriptionActive
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                  : 'bg-gray-700/30 text-gray-500 border-gray-600/20',
+              ].join(' ')}>
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                  subscriptionActive ? 'bg-emerald-400' : 'bg-gray-500'
+                }`} />
+                {subscriptionActive ? 'Visible en el mapa' : 'Aprobado'}
+              </span>
+            )}
+            {project.communityStatus === 'pending' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-amber-500/10 text-amber-400 border-amber-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                Pendiente
+              </span>
+            )}
+            {project.communityStatus === 'rejected' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-red-500/10 text-red-400 border-red-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
+                No aprobado
+              </span>
+            )}
+            {project.communityStatus === 'hidden' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-gray-700/40 text-gray-400 border-gray-600/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-500 flex-shrink-0" />
+                Oculto por Ubyca
+              </span>
+            )}
+          </>
+        ) : (
+          <span className="text-[11px] text-gray-600">No visible en el mapa</span>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-1.5">
+        <button
+          onClick={onToggle}
+          disabled={toggling}
+          className={[
+            'flex-1 py-1.5 rounded-md text-[11px] font-medium border transition-all duration-150 text-center focus:outline-none',
+            toggling ? 'opacity-50 cursor-wait' : 'cursor-pointer',
+            project.communityEnabled
+              ? 'text-gray-400 border-gray-700/50 bg-gray-800/80 hover:bg-gray-700/80'
+              : 'text-brand-400 border-brand-500/40 bg-brand-500/10 hover:bg-brand-500/20',
+          ].join(' ')}
+        >
+          {toggling
+            ? <span className="inline-flex items-center justify-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-full border-2 border-current/30 border-t-current animate-spin" />
+              </span>
+            : project.communityEnabled ? 'Desactivar' : 'Activar'}
+        </button>
+        <button
+          onClick={() => window.open('/community', '_blank')}
+          className="flex-1 py-1.5 rounded-md text-[11px] font-medium border text-center
+                     text-gray-500 border-gray-700/40 bg-transparent hover:bg-gray-800/60
+                     transition-all duration-150 cursor-pointer focus:outline-none"
+        >
+          Previsualizar
+        </button>
+      </div>
+
+      {/* Global disabled overlay */}
+      {!communityMapEnabled && (
+        <div className="absolute inset-0 rounded-lg bg-gray-950/85 backdrop-blur-[2px]
+                        flex flex-col items-center justify-center gap-1 px-3 text-center z-10">
+          <p className="text-[11px] font-semibold text-gray-300 leading-snug">
+            {communityMapDisabledTitle || 'Próximamente'}
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function WorkspacePage() {
@@ -604,9 +754,9 @@ export default function WorkspacePage() {
             </div>
           )}
 
-          {/* ── Community map ─────────────────────────────────────────── */}
+          {/* ── Community map — mobile card (desktop: sidebar widget via portal) ── */}
           {project.status === 'active' && (
-            <div className="relative bg-gray-900/70 border border-white/[0.07] rounded-2xl p-5">
+            <div className="md:hidden relative bg-gray-900/70 border border-white/[0.07] rounded-2xl p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <SectionLabel>Mapa comunitario de Ubyca</SectionLabel>
@@ -693,6 +843,24 @@ export default function WorkspacePage() {
               )}
             </div>
           )}
+
+          {/* Community widget → desktop sidebar (portal; mobile sees card above) */}
+          {project.status === 'active' && (() => {
+            const slot = document.getElementById('workspace-community-slot')
+            if (!slot) return null
+            return createPortal(
+              <CommunitySidebarWidget
+                project={project}
+                communityMapEnabled={communityMapEnabled}
+                communityMapDisabledTitle={communityMapDisabledTitle}
+                communityMapDisabledDescription={communityMapDisabledDescription}
+                subscriptionActive={subscription.isTrialActive || subscription.status === 'active'}
+                toggling={communityToggling}
+                onToggle={handleToggleCommunity}
+              />,
+              slot,
+            )
+          })()}
 
           {/* ── Subscription strip ────────────────────────────────────── */}
           {(subscription.planName || subscription.limit !== null) && (

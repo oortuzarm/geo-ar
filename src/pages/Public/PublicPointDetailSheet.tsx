@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import PublicPointCard from './PublicPointCard'
 import PointImageCarousel from '../../components/public/PointImageCarousel'
 import type { GeoPoint } from '../../types'
@@ -28,10 +29,17 @@ export default function PublicPointDetailSheet({
   const galleryImages = getPointGalleryImages(point)
   const hasGallery    = galleryImages.length > 0
 
+  // Slide-up on mount: start at 0, animate to final height after first paint.
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setVisible(true))
+    return () => cancelAnimationFrame(id)
+  }, [])
+
   return (
     <div
       className={`${isEmbed ? '' : 'md:hidden '}absolute inset-x-0 bottom-0 z-[1100]`}
-      style={{ height: '82dvh', transition: 'height 0.4s cubic-bezier(0.32,0.72,0,1)' }}
+      style={{ height: visible ? '72dvh' : '0dvh', transition: 'height 0.45s cubic-bezier(0.32,0.72,0,1)' }}
     >
       <div className="h-full flex flex-col rounded-t-[28px] overflow-hidden
                       bg-gray-950/98 backdrop-blur-xl

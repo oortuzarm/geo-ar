@@ -557,12 +557,14 @@ type MobileState = 'clean' | 'preview' | 'detail'
 
 // ── Bottom sheet state ────────────────────────────────────────────────────────
 // hidden   → map fullscreen, "Mostrar lista" button shown
-// expanded → full scrollable list (the existing large sheet, unchanged design)
-type SheetState = 'hidden' | 'expanded'
+// expanded → half-height list (~52 dvh), map remains visible above
+// full     → full-screen list (map hidden), "Mapa" button floats above
+type SheetState = 'hidden' | 'expanded' | 'full'
 
 const SHEET_HEIGHT: Record<SheetState, string> = {
   hidden:   '0px',
-  expanded: '90dvh',
+  expanded: '52dvh',
+  full:     '100dvh',
 }
 
 // Calls map.invalidateSize() after iframe layout settles, then on every resize.
@@ -1223,8 +1225,8 @@ export default function PublicPage({
     setAccessError(null)
     setMobileState('preview')
     setShouldReturnToProjectView(false)
-    // Tap from expanded list → close list so the map is visible.
-    if (sheetState === 'expanded') setSheetState('hidden')
+    // Tap from list → close sheet so the map is visible.
+    if (sheetState !== 'hidden') setSheetState('hidden')
     flyToCounterRef.current += 1
     setFlyToKey(`point-${pt.id}-${flyToCounterRef.current}`)
     // Shift the fly target 80px south so the pin lands in the upper portion of the visible map area.
@@ -1312,10 +1314,20 @@ export default function PublicPage({
     if (dragStartYRef.current === null) return
     const delta = dragStartYRef.current - e.changedTouches[0].clientY
     dragStartYRef.current = null
-    // Swipe down on the list → close and return to map
-    if (delta < -40) {
-      suppressMapClickUntilRef.current = Date.now() + 500
-      setSheetState('hidden')
+    if (sheetState === 'expanded') {
+      if (delta < -40) {
+        // Swipe down → close and return to map
+        suppressMapClickUntilRef.current = Date.now() + 500
+        setSheetState('hidden')
+      } else if (delta > 40) {
+        // Swipe up → expand to full list
+        setSheetState('full')
+      }
+    } else if (sheetState === 'full') {
+      if (delta < -40) {
+        // Swipe down → back to partial list with map visible
+        setSheetState('expanded')
+      }
     }
   }
 
@@ -1661,7 +1673,7 @@ export default function PublicPage({
             'hover:bg-gray-50 active:scale-95 active:shadow-sm',
             'transition-all duration-150',
             mobileState === 'detail'    ? 'hidden'
-            : sheetState === 'expanded' ? 'hidden'
+            : sheetState !== 'hidden'   ? 'hidden'
             : mobileState === 'preview' ? (isEmbed ? 'bottom-[336px]' : 'bottom-[336px] md:hidden')
             :                             (isEmbed ? 'bottom-[160px]' : 'bottom-[160px] md:hidden'),
           ].join(' ')}
@@ -1685,7 +1697,7 @@ export default function PublicPage({
             'transition-all duration-150',
             'disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100',
             mobileState === 'detail'    ? (isEmbed ? 'hidden' : 'hidden md:flex md:bottom-4')
-            : sheetState === 'expanded' ? (isEmbed ? 'hidden' : 'hidden md:flex md:bottom-4')
+            : sheetState !== 'hidden'   ? (isEmbed ? 'hidden' : 'hidden md:flex md:bottom-4')
             : mobileState === 'preview' ? (isEmbed ? 'bottom-[284px]' : 'bottom-[284px] md:bottom-4')
             :                             (isEmbed ? 'bottom-[108px]' : 'bottom-[108px] md:bottom-4'),
           ].join(' ')}
@@ -1729,10 +1741,10 @@ export default function PublicPage({
 
       {/* ── MOBILE BOTTOM SHEET (hidden on md+) ─────────────────────────────
           Height changes per state — the sheet always anchors to bottom-0 and
-          grows/shrinks upward. flex-1 on the scroll area then fills exactly
-          the visible space, so scroll is always reachable.
-          peek     → 80px + safe-area  — handle + mini summary only
-          expanded → 90dvh             — full scrollable list              */}
+          grows/shrinks upward. flex-1 on the scroll area fills the visible space.
+          hidden   → 0px               — map fullscreen
+          expanded → 52dvh             — map visible above, list below
+          full     → 100dvh            — full list, "Mapa" button floats above */}
       <div
         ref={sheetRef}
         className={`${isEmbed ? '' : 'md:hidden '}absolute inset-x-0 bottom-0 z-[1000]`}
@@ -1826,7 +1838,9 @@ export default function PublicPage({
           >
             <div
               className="space-y-3 px-4 pt-1"
-              style={{ paddingBottom: 'calc(40px + env(safe-area-inset-bottom, 0px))' }}
+              style={{ paddingBottom: sheetState === 'full'
+                ? 'calc(80px + env(safe-area-inset-bottom, 0px))'
+                : 'calc(40px + env(safe-area-inset-bottom, 0px))' }}
             >
               {renderPoints(mobileCardRefs)}
             </div>
@@ -1864,6 +1878,33 @@ export default function PublicPage({
               />
             </svg>
             <span>Mostrar lista</span>
+          </button>
+        </div>
+      )}
+
+      {/* ── FLOATING "MAPA" BUTTON ───────────────────────────────────────────
+          Only visible in full state (map not visible). Centered at the bottom.
+          Taps bring the user back to expanded so the map becomes visible.   */}
+      {sheetState === 'full' && mobileState !== 'detail' && (
+        <div
+          className={`${isEmbed ? '' : 'md:hidden '}absolute inset-x-0 bottom-0 z-[1100]
+                      flex justify-center pointer-events-none`}
+          style={{ paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))' }}
+        >
+          <button
+            onClick={() => setSheetState('expanded')}
+            className="pointer-events-auto flex items-center gap-2 px-5 py-3
+                       rounded-full bg-gray-900/95 text-white backdrop-blur-sm
+                       font-semibold text-sm
+                       border border-white/[0.18]
+                       shadow-[0_4px_24px_rgba(0,0,0,0.65)]
+                       active:scale-95 transition-all duration-150"
+          >
+            <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
+            </svg>
+            Mapa
           </button>
         </div>
       )}

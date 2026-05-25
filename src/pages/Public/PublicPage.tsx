@@ -723,11 +723,21 @@ function MapClusterLayer({ points, selectedPointId, onPointClick }: MapClusterLa
   // position by the time points arrive from the API, so vp would otherwise be stale.
   useEffect(() => { updateViewport() }, [points.length, updateViewport])
 
-  useMapEvents({
-    zoomend:   updateViewport,
-    moveend:   updateViewport,
-    viewreset: updateViewport,
-  })
+  // Stable registration: deps are both stable refs, so this runs once on mount
+  // and never cycles. useMapEvents({ ... }) recreates the handlers object on
+  // every render (new reference → new deps → cleanup+setup every render), which
+  // creates a race window where moveend from an animated flyTo can land between
+  // the off() and the on() and be silently dropped.
+  useEffect(() => {
+    map.on('zoomend', updateViewport)
+    map.on('moveend', updateViewport)
+    map.on('viewreset', updateViewport)
+    return () => {
+      map.off('zoomend', updateViewport)
+      map.off('moveend', updateViewport)
+      map.off('viewreset', updateViewport)
+    }
+  }, [map, updateViewport])
 
   const sc = useMemo(() => {
     const instance = new Supercluster<GeoPoint>({ radius: 80, maxZoom: 15 })

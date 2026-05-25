@@ -830,7 +830,16 @@ export default function PublicPage({
 
   // ── Bottom sheet ───────────────────────────────────────────────────────────
   const [sheetState, setSheetState] = useState<SheetState>('hidden')
-  const dragStartYRef = useRef<number | null>(null)
+  const dragStartYRef   = useRef<number | null>(null)
+  // dragHeight: live pixel height during a touch drag (null = not dragging, use SHEET_HEIGHT).
+  const [dragHeight, setDragHeight] = useState<number | null>(null)
+  const dragHeightRef   = useRef<number | null>(null)
+  // sheetStateRef: sync copy of sheetState readable synchronously inside native listeners.
+  const sheetStateRef   = useRef<SheetState>('hidden')
+  // gestureLayerRef: non-scrolling wrapper that owns the expand/collapse touch listeners.
+  const gestureLayerRef = useRef<HTMLDivElement>(null)
+  // scrollAreaRef: inner scroll container — read scrollTop to detect collapse opportunity.
+  const scrollAreaRef   = useRef<HTMLDivElement>(null)
 
   // ── Route state ────────────────────────────────────────────────────────────
   const [routeResult, setRouteResult] = useState<RouteResult | null>(null)
@@ -896,6 +905,99 @@ export default function PublicPage({
       L.DomEvent.disableClickPropagation(sheetRef.current)
     }
   }, [])
+
+  // Keep sheetStateRef in sync so native touch handlers can read current state.
+  useEffect(() => { sheetStateRef.current = sheetState }, [sheetState])
+
+  // Airbnb-style scroll-to-expand: the gesture lives on gestureLayerRef (a non-scrolling
+  // wrapper), NOT on the scroll container itself.  This prevents the browser from ever
+  // entering "scroll mode" for the inner list while the sheet is in expanded state.
+  //
+  // expanded  → e.preventDefault() on every touchmove (eager, before dead zone)
+  //             → dy > 0 (finger up) drives sheet height from expandedPx to fullPx
+  //             → snap to full / back to expanded on touchend
+  // full      → NO preventDefault for normal scrolls
+  //             → dy < 0 (finger down) at scrollTop=0 collapses to expanded
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const el = gestureLayerRef.current!
+    if (!el) return
+
+    let startY         = 0
+    let startScrollTop = 0
+    type Mode = 'idle' | 'expanding' | 'collapsing' | 'scroll'
+    let mode: Mode = 'idle'
+
+    const expandedPx = () => Math.round(window.innerHeight * 0.52)
+    const fullPx     = () => window.innerHeight
+
+    function setDrag(h: number)  { dragHeightRef.current = h;    setDragHeight(h)    }
+    function clearDrag()          { dragHeightRef.current = null; setDragHeight(null) }
+
+    function onTouchStart(e: TouchEvent) {
+      startY         = e.touches[0].clientY
+      startScrollTop = scrollAreaRef.current?.scrollTop ?? 0
+      mode           = 'idle'
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      const dy    = startY - e.touches[0].clientY   // positive = finger moved up
+      const state = sheetStateRef.current
+
+      // ── EXPANDED: block ALL native scroll; upward gesture expands the sheet ──
+      if (state === 'expanded') {
+        e.preventDefault()   // eager — before dead zone, so browser never commits to scroll
+        if (mode === 'idle') {
+          if (Math.abs(dy) < 4) return
+          mode = dy > 0 ? 'expanding' : 'scroll'
+        }
+        if (mode === 'expanding') {
+          const expPx = expandedPx()
+          const fPx   = fullPx()
+          const newH  = Math.min(fPx, Math.max(expPx, expPx + dy))
+          setDrag(newH)
+          if (newH >= fPx) { setSheetState('full'); clearDrag(); mode = 'scroll' }
+        }
+        return
+      }
+
+      // ── FULL: normal list scroll; only intercept collapse from top ──
+      if (mode === 'idle') {
+        if (Math.abs(dy) < 4) return
+        mode = (startScrollTop < 2 && dy < 0) ? 'collapsing' : 'scroll'
+      }
+      if (mode === 'scroll') return   // native scroll — no preventDefault
+
+      // mode === 'collapsing'
+      e.preventDefault()
+      const expPx = expandedPx()
+      const fPx   = fullPx()
+      setDrag(Math.max(expPx, Math.min(fPx, fPx + dy)))  // dy < 0 → shrinks sheet
+    }
+
+    function onTouchEnd() {
+      if (mode === 'expanding' || mode === 'collapsing') {
+        const h         = dragHeightRef.current
+        const expPx     = expandedPx()
+        const fPx       = fullPx()
+        const threshold = expPx + (fPx - expPx) * 0.4
+        if (h !== null) setSheetState(h > threshold ? 'full' : 'expanded')
+        clearDrag()
+      }
+      mode = 'idle'
+    }
+
+    el.addEventListener('touchstart',  onTouchStart, { passive: true  })
+    el.addEventListener('touchmove',   onTouchMove,  { passive: false })
+    el.addEventListener('touchend',    onTouchEnd,   { passive: true  })
+    el.addEventListener('touchcancel', onTouchEnd,   { passive: true  })
+    return () => {
+      el.removeEventListener('touchstart',  onTouchStart)
+      el.removeEventListener('touchmove',   onTouchMove)
+      el.removeEventListener('touchend',    onTouchEnd)
+      el.removeEventListener('touchcancel', onTouchEnd)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Close the sheet whenever location becomes active
   useEffect(() => {
@@ -1751,8 +1853,8 @@ export default function PublicPage({
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
         style={{
-          height: SHEET_HEIGHT[sheetState],
-          transition: 'height 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
+          height:     dragHeight !== null ? `${dragHeight}px` : SHEET_HEIGHT[sheetState],
+          transition: dragHeight !== null ? 'none' : 'height 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
         }}
       >
         <div className="h-full flex flex-col rounded-t-[28px] overflow-hidden
@@ -1831,18 +1933,27 @@ export default function PublicPage({
             </div>
           </div>
 
-          {/* Scrollable point list */}
-          <div
-            className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
-            style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
-          >
+          {/* Gesture capture layer — non-scrolling wrapper that owns the touch
+              listeners. Keeping this separate from the scroll container prevents
+              the browser from entering "scroll mode" before preventDefault fires. */}
+          <div ref={gestureLayerRef} className="flex-1 min-h-0">
+            {/* Inner scroll area — overflow-y-hidden in expanded (no content scroll
+                until sheet is full); overflow-y-auto only in full. */}
             <div
-              className="space-y-3 px-4 pt-1"
-              style={{ paddingBottom: sheetState === 'full'
-                ? 'calc(80px + env(safe-area-inset-bottom, 0px))'
-                : 'calc(40px + env(safe-area-inset-bottom, 0px))' }}
+              ref={scrollAreaRef}
+              className={`h-full overscroll-contain ${
+                sheetState === 'full' ? 'overflow-y-auto' : 'overflow-y-hidden'
+              }`}
+              style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
             >
-              {renderPoints(mobileCardRefs)}
+              <div
+                className="space-y-3 px-4 pt-1"
+                style={{ paddingBottom: sheetState === 'full'
+                  ? 'calc(80px + env(safe-area-inset-bottom, 0px))'
+                  : 'calc(40px + env(safe-area-inset-bottom, 0px))' }}
+              >
+                {renderPoints(mobileCardRefs)}
+              </div>
             </div>
           </div>
 

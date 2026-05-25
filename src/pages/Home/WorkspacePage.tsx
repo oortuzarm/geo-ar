@@ -338,34 +338,6 @@ interface CommunitySidebarWidgetProps {
   onToggle: () => void
 }
 
-function CommunityHelpTooltip({ text }: { text: string }) {
-  const [visible, setVisible] = useState(false)
-  if (!text) return null
-  return (
-    <div className="relative flex-shrink-0">
-      <button
-        onMouseEnter={() => setVisible(true)}
-        onMouseLeave={() => setVisible(false)}
-        className="text-gray-700 hover:text-gray-500 transition-colors cursor-help"
-        tabIndex={-1}
-        aria-label="Más información"
-      >
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-            d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-        </svg>
-      </button>
-      {visible && (
-        <div className="absolute bottom-full right-0 mb-2 w-44
-                        bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5
-                        text-[11px] text-gray-300 leading-relaxed z-[9999] shadow-xl pointer-events-none">
-          {text}
-          <span className="absolute top-full right-2 border-[5px] border-transparent border-t-gray-700" />
-        </div>
-      )}
-    </div>
-  )
-}
 
 function CommunitySidebarWidget({
   project,
@@ -386,15 +358,12 @@ function CommunitySidebarWidget({
           : 'Mapa comunitario Ubyca'}
       </p>
 
-      {/* Subtitle + help tooltip — description switches to admin text when disabled */}
-      <div className="flex items-start gap-1.5">
-        <p className="text-[11px] text-gray-600 leading-snug flex-1">
-          {!communityMapEnabled && communityMapDisabledDescription
-            ? communityMapDisabledDescription
-            : 'Amplía el alcance de tu proyecto'}
-        </p>
-        <CommunityHelpTooltip text={communityMapDisabledDescription} />
-      </div>
+      {/* Subtitle */}
+      <p className="text-[11px] text-gray-600 leading-snug">
+        {!communityMapEnabled && communityMapDisabledDescription
+          ? communityMapDisabledDescription
+          : 'Amplia el alcance de tu proyecto permitiendo que más personas puedan descubrirlo'}
+      </p>
 
       {/* Status badge */}
       <div>
@@ -772,7 +741,7 @@ export default function WorkspacePage() {
                 <div className="flex-1 min-w-0">
                   <SectionLabel>Mapa comunitario de Ubyca</SectionLabel>
                   <p className="text-xs text-gray-500 mt-1.5 mb-3 leading-relaxed">
-                    Amplía el alcance de tu proyecto permitiendo que otras personas lo descubran desde el mapa comunitario de Ubyca.
+                    Amplia el alcance de tu proyecto permitiendo que más personas puedan descubrirlo.
                   </p>
 
                   {project.communityEnabled ? (

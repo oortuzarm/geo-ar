@@ -604,9 +604,9 @@ export default function WorkspacePage() {
             </div>
           )}
 
-          {/* ── Community map — mobile only (desktop: sidebar widget) ──── */}
+          {/* ── Community map ─────────────────────────────────────────── */}
           {project.status === 'active' && (
-            <div className="md:hidden relative bg-gray-900/70 border border-white/[0.07] rounded-2xl p-5">
+            <div className="relative bg-gray-900/70 border border-white/[0.07] rounded-2xl p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <SectionLabel>Mapa comunitario de Ubyca</SectionLabel>

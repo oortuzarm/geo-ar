@@ -719,6 +719,10 @@ function MapClusterLayer({ points, selectedPointId, onPointClick }: MapClusterLa
 
   const updateViewport = useCallback(() => setVp(snapViewport(map)), [map])
 
+  // Re-snapshot after points load: on /public the map is already at its fitBounds
+  // position by the time points arrive from the API, so vp would otherwise be stale.
+  useEffect(() => { updateViewport() }, [points.length, updateViewport])
+
   useMapEvents({
     zoomend:   updateViewport,
     moveend:   updateViewport,

@@ -137,6 +137,9 @@ export default function AppShell() {
           </NavLink>
         </nav>
 
+        {/* Slot for plan/progress widget — WorkspacePage injects here via React portal */}
+        <div id="workspace-plan-slot" />
+
         {/* Slot for community widget — WorkspacePage injects here via React portal */}
         <div id="workspace-community-slot" />
 

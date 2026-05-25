@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import { useGeoStore } from '../../store/geoStore'
@@ -19,7 +18,8 @@ import UpgradeModal from '../../components/subscription/UpgradeModal'
 import { useSubscription } from '../../hooks/useSubscription'
 import { useSettingsStore } from '../../store/settingsStore'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
-import type { ContentType, GeoPoint, GeoProject, MediaContentData } from '../../types'
+import { useWorkspaceStore } from '../../store/workspaceStore'
+import type { ContentType, GeoPoint, MediaContentData } from '../../types'
 
 // ── Content type display config ───────────────────────────────────────────────
 
@@ -326,172 +326,6 @@ function EmbedModal({
   )
 }
 
-// ── Plan sidebar widget (desktop, rendered via portal) ───────────────────────
-
-interface PlanSidebarWidgetProps {
-  planName: string | null | undefined
-  limit: number | null
-  pointsLength: number
-  atLimit: boolean
-}
-
-function PlanSidebarWidget({ planName, limit, pointsLength, atLimit }: PlanSidebarWidgetProps) {
-  if (!planName && limit === null) return null
-  const pct = limit !== null ? Math.min(100, (pointsLength / limit) * 100) : 0
-  return (
-    <div className="mx-3 pt-3 pb-2.5 border-t border-gray-800/60 flex flex-col gap-2">
-      {planName && (
-        <span className="self-start inline-flex items-center px-2 py-0.5 rounded-full border
-                         text-[11px] font-medium bg-brand-500/10 text-brand-400 border-brand-500/20">
-          {planName}
-        </span>
-      )}
-      {limit !== null && (
-        <>
-          <div className="bg-gray-800 rounded-full h-1 overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all ${atLimit ? 'bg-red-500' : 'bg-brand-500'}`}
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-          <p className="text-[11px] text-gray-600 tabular-nums">
-            {pointsLength} / {limit} ubicaciones
-          </p>
-        </>
-      )}
-    </div>
-  )
-}
-
-// ── Community sidebar widget (desktop, rendered via portal) ───────────────────
-
-interface CommunitySidebarWidgetProps {
-  project: GeoProject
-  communityMapEnabled: boolean
-  communityMapDisabledTitle: string
-  communityMapDisabledDescription: string
-  subscriptionActive: boolean
-  toggling: boolean
-  onToggle: () => void
-}
-
-
-function CommunitySidebarWidget({
-  project,
-  communityMapEnabled,
-  communityMapDisabledTitle,
-  communityMapDisabledDescription,
-  subscriptionActive,
-  toggling,
-  onToggle,
-}: CommunitySidebarWidgetProps) {
-  return (
-    <div className="relative mx-3 pt-3 pb-3 border-t border-gray-800/60 flex flex-col gap-2.5">
-
-      {/* Title — uses admin-configured text when globally disabled */}
-      <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider leading-none">
-        {!communityMapEnabled && communityMapDisabledTitle
-          ? communityMapDisabledTitle
-          : 'Mapa comunitario Ubyca'}
-      </p>
-
-      {/* Subtitle */}
-      <p className="text-[11px] text-gray-600 leading-snug">
-        {!communityMapEnabled && communityMapDisabledDescription
-          ? communityMapDisabledDescription
-          : 'Amplia el alcance de tu proyecto permitiendo que más personas puedan descubrirlo'}
-      </p>
-
-      {/* Status badge */}
-      <div>
-        {project.communityEnabled ? (
-          <>
-            {project.communityStatus === 'approved' && (
-              <span className={[
-                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border',
-                subscriptionActive
-                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                  : 'bg-gray-700/30 text-gray-500 border-gray-600/20',
-              ].join(' ')}>
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                  subscriptionActive ? 'bg-emerald-400' : 'bg-gray-500'
-                }`} />
-                {subscriptionActive ? 'Visible en el mapa' : 'Aprobado'}
-              </span>
-            )}
-            {project.communityStatus === 'pending' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-amber-500/10 text-amber-400 border-amber-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-                Pendiente
-              </span>
-            )}
-            {project.communityStatus === 'rejected' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-red-500/10 text-red-400 border-red-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
-                No aprobado
-              </span>
-            )}
-            {project.communityStatus === 'hidden' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-gray-700/40 text-gray-400 border-gray-600/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-gray-500 flex-shrink-0" />
-                Oculto por Ubyca
-              </span>
-            )}
-          </>
-        ) : (
-          <span className="text-[11px] text-gray-600">No visible en el mapa</span>
-        )}
-      </div>
-
-      {/* Actions */}
-      <div className="flex gap-1.5">
-        <button
-          onClick={onToggle}
-          disabled={toggling}
-          className={[
-            'flex-1 py-1.5 rounded-md text-[11px] font-medium border transition-all duration-150 text-center focus:outline-none',
-            toggling ? 'opacity-50 cursor-wait' : 'cursor-pointer',
-            project.communityEnabled
-              ? 'text-gray-400 border-gray-700/50 bg-gray-800/80 hover:bg-gray-700/80'
-              : 'text-brand-400 border-brand-500/40 bg-brand-500/10 hover:bg-brand-500/20',
-          ].join(' ')}
-        >
-          {toggling
-            ? <span className="inline-flex items-center justify-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full border-2 border-current/30 border-t-current animate-spin" />
-              </span>
-            : project.communityEnabled ? 'Desactivar' : 'Activar'}
-        </button>
-        <button
-          onClick={() => window.open('/community', '_blank')}
-          className="flex-1 py-1.5 rounded-md text-[11px] font-medium border text-center
-                     text-gray-500 border-gray-700/40 bg-transparent hover:bg-gray-800/60
-                     transition-all duration-150 cursor-pointer focus:outline-none"
-        >
-          Previsualizar
-        </button>
-      </div>
-
-      {/* Global disabled overlay — shows both admin-configured title and description */}
-      {!communityMapEnabled && (
-        <div className="absolute inset-0 rounded-lg bg-gray-950/85 backdrop-blur-[2px]
-                        flex flex-col items-center justify-center gap-1.5 px-3 text-center z-10">
-          {communityMapDisabledTitle && (
-            <p className="text-[11px] font-semibold text-gray-200 leading-snug">
-              {communityMapDisabledTitle}
-            </p>
-          )}
-          {communityMapDisabledDescription && (
-            <p className="text-[11px] text-gray-500 leading-relaxed">
-              {communityMapDisabledDescription}
-            </p>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function WorkspacePage() {
@@ -504,6 +338,7 @@ export default function WorkspacePage() {
   const communityMapEnabled             = useSettingsStore((s) => s.communityMapEnabled)
   const communityMapDisabledTitle       = useSettingsStore((s) => s.communityMapDisabledTitle)
   const communityMapDisabledDescription = useSettingsStore((s) => s.communityMapDisabledDescription)
+  const { setWorkspace, updateProject: syncProject } = useWorkspaceStore()
 
   const [shareOpen,         setShareOpen]        = useState(false)
   const [embedOpen,         setEmbedOpen]        = useState(false)
@@ -524,6 +359,11 @@ export default function WorkspacePage() {
       .then((s) => setTotalClicks(s.clicks))
       .catch(() => setTotalClicks(0))
   }, [project?.id])
+
+  // Keep workspaceStore in sync so the sidebar widgets always reflect current data
+  useEffect(() => {
+    if (project) setWorkspace(project, points.length)
+  }, [project, points.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading || deleting) {
     return (
@@ -603,6 +443,7 @@ export default function WorkspacePage() {
         communityEnabled: !project.communityEnabled,
       })
       updateProject(updated)
+      syncProject(updated)
     } catch {
       addToast('No se pudo actualizar el mapa comunitario', 'error')
     } finally {
@@ -860,39 +701,6 @@ export default function WorkspacePage() {
               )}
             </div>
           )}
-
-          {/* Plan widget → desktop sidebar (portal; mobile sees strip above) */}
-          {(() => {
-            const slot = document.getElementById('workspace-plan-slot')
-            if (!slot) return null
-            return createPortal(
-              <PlanSidebarWidget
-                planName={subscription.planName}
-                limit={subscription.limit}
-                pointsLength={points.length}
-                atLimit={atLimit}
-              />,
-              slot,
-            )
-          })()}
-
-          {/* Community widget → desktop sidebar (portal; mobile sees card above) */}
-          {project.status === 'active' && (() => {
-            const slot = document.getElementById('workspace-community-slot')
-            if (!slot) return null
-            return createPortal(
-              <CommunitySidebarWidget
-                project={project}
-                communityMapEnabled={communityMapEnabled}
-                communityMapDisabledTitle={communityMapDisabledTitle}
-                communityMapDisabledDescription={communityMapDisabledDescription}
-                subscriptionActive={subscription.isTrialActive || subscription.status === 'active'}
-                toggling={communityToggling}
-                onToggle={handleToggleCommunity}
-              />,
-              slot,
-            )
-          })()}
 
           {/* ── Subscription strip — mobile only (desktop: sidebar plan widget) ── */}
           {(subscription.planName || subscription.limit !== null) && (

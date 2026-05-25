@@ -1,5 +1,12 @@
+import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
+import { useWorkspaceStore } from '../../store/workspaceStore'
+import { useSettingsStore } from '../../store/settingsStore'
+import { useSubscription } from '../../hooks/useSubscription'
+import { geoProjectsApi, geoPointsApi } from '../../services'
+import { LAST_PROJECT_KEY } from '../../hooks/useWorkspace'
+import type { GeoProject } from '../../types'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -32,7 +39,6 @@ function UsersIcon() {
   )
 }
 
-
 function LogoutIcon() {
   return (
     <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,6 +66,177 @@ function AccountIcon() {
   )
 }
 
+// ── Plan sidebar widget ────────────────────────────────────────────────────────
+
+function PlanSidebarWidget() {
+  const { pointsCount } = useWorkspaceStore()
+  const subscription = useSubscription()
+
+  if (!subscription.planName && subscription.limit === null) return null
+
+  const atLimit = !subscription.canAddLocation(pointsCount)
+  const pct = subscription.limit !== null
+    ? Math.min(100, (pointsCount / subscription.limit) * 100)
+    : 0
+
+  return (
+    <div className="mx-3 pt-3 pb-2.5 border-t border-gray-800/60 flex flex-col gap-2">
+      {subscription.planName && (
+        <span className="self-start inline-flex items-center px-2 py-0.5 rounded-full border
+                         text-[11px] font-medium bg-brand-500/10 text-brand-400 border-brand-500/20">
+          {subscription.planName}
+        </span>
+      )}
+      {subscription.limit !== null && (
+        <>
+          <div className="bg-gray-800 rounded-full h-1 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${atLimit ? 'bg-red-500' : 'bg-brand-500'}`}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <p className="text-[11px] text-gray-600 tabular-nums">
+            {pointsCount} / {subscription.limit} ubicaciones
+          </p>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── Community sidebar widget ───────────────────────────────────────────────────
+
+function CommunitySidebarWidget() {
+  const { project, updateProject } = useWorkspaceStore()
+  const communityMapEnabled         = useSettingsStore((s) => s.communityMapEnabled)
+  const communityMapDisabledTitle   = useSettingsStore((s) => s.communityMapDisabledTitle)
+  const communityMapDisabledDescription = useSettingsStore((s) => s.communityMapDisabledDescription)
+  const subscription = useSubscription()
+  const [toggling, setToggling] = useState(false)
+
+  if (!project || project.status !== 'active') return null
+
+  const subscriptionActive = subscription.isTrialActive || subscription.status === 'active'
+
+  async function handleToggle() {
+    if (!project || toggling) return
+    setToggling(true)
+    try {
+      const updated = await geoProjectsApi.saveProject(project.id, {
+        communityEnabled: !project.communityEnabled,
+      })
+      updateProject(updated)
+    } catch { /* silent */ }
+    finally { setToggling(false) }
+  }
+
+  return (
+    <div className="relative mx-3 pt-3 pb-3 border-t border-gray-800/60 flex flex-col gap-2.5">
+
+      {/* Title */}
+      <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider leading-none">
+        {!communityMapEnabled && communityMapDisabledTitle
+          ? communityMapDisabledTitle
+          : 'Mapa comunitario Ubyca'}
+      </p>
+
+      {/* Subtitle */}
+      <p className="text-[11px] text-gray-600 leading-snug">
+        {!communityMapEnabled && communityMapDisabledDescription
+          ? communityMapDisabledDescription
+          : 'Amplia el alcance de tu proyecto permitiendo que más personas puedan descubrirlo'}
+      </p>
+
+      {/* Status badge */}
+      <div>
+        {project.communityEnabled ? (
+          <>
+            {project.communityStatus === 'approved' && (
+              <span className={[
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border',
+                subscriptionActive
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                  : 'bg-gray-700/30 text-gray-500 border-gray-600/20',
+              ].join(' ')}>
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                  subscriptionActive ? 'bg-emerald-400' : 'bg-gray-500'
+                }`} />
+                {subscriptionActive ? 'Visible en el mapa' : 'Aprobado'}
+              </span>
+            )}
+            {project.communityStatus === 'pending' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-amber-500/10 text-amber-400 border-amber-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                Pendiente
+              </span>
+            )}
+            {project.communityStatus === 'rejected' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-red-500/10 text-red-400 border-red-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
+                No aprobado
+              </span>
+            )}
+            {project.communityStatus === 'hidden' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-gray-700/40 text-gray-400 border-gray-600/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-500 flex-shrink-0" />
+                Oculto por Ubyca
+              </span>
+            )}
+          </>
+        ) : (
+          <span className="text-[11px] text-gray-600">No visible en el mapa</span>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-1.5">
+        <button
+          onClick={handleToggle}
+          disabled={toggling}
+          className={[
+            'flex-1 py-1.5 rounded-md text-[11px] font-medium border transition-all duration-150 text-center focus:outline-none',
+            toggling ? 'opacity-50 cursor-wait' : 'cursor-pointer',
+            project.communityEnabled
+              ? 'text-gray-400 border-gray-700/50 bg-gray-800/80 hover:bg-gray-700/80'
+              : 'text-brand-400 border-brand-500/40 bg-brand-500/10 hover:bg-brand-500/20',
+          ].join(' ')}
+        >
+          {toggling
+            ? <span className="inline-flex items-center justify-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-full border-2 border-current/30 border-t-current animate-spin" />
+              </span>
+            : project.communityEnabled ? 'Desactivar' : 'Activar'}
+        </button>
+        <button
+          onClick={() => window.open('/community', '_blank')}
+          className="flex-1 py-1.5 rounded-md text-[11px] font-medium border text-center
+                     text-gray-500 border-gray-700/40 bg-transparent hover:bg-gray-800/60
+                     transition-all duration-150 cursor-pointer focus:outline-none"
+        >
+          Previsualizar
+        </button>
+      </div>
+
+      {/* Global disabled overlay */}
+      {!communityMapEnabled && (
+        <div className="absolute inset-0 rounded-lg bg-gray-950/85 backdrop-blur-[2px]
+                        flex flex-col items-center justify-center gap-1.5 px-3 text-center z-10">
+          {communityMapDisabledTitle && (
+            <p className="text-[11px] font-semibold text-gray-200 leading-snug">
+              {communityMapDisabledTitle}
+            </p>
+          )}
+          {communityMapDisabledDescription && (
+            <p className="text-[11px] text-gray-500 leading-relaxed">
+              {communityMapDisabledDescription}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Style helpers ─────────────────────────────────────────────────────────────
 
 const side = {
@@ -79,6 +256,36 @@ const bottom = {
 export default function AppShell() {
   const { logout, currentUser } = useAuthStore()
   const navigate = useNavigate()
+  const { isLoaded, setWorkspace } = useWorkspaceStore()
+  const fetchStarted = useRef(false)
+
+  // Fallback: load workspace data for sidebar when WorkspacePage hasn't done it yet.
+  // Runs once per user session; WorkspacePage overwrites with fresher data when mounted.
+  useEffect(() => {
+    if (isLoaded || !currentUser || fetchStarted.current) return
+    fetchStarted.current = true
+    let cancelled = false
+    ;(async () => {
+      try {
+        const lastId = localStorage.getItem(LAST_PROJECT_KEY)
+        let project: GeoProject | null = null
+        if (lastId) {
+          try { project = await geoProjectsApi.fetchProject(lastId) ?? null }
+          catch { /* project not found, fall through to list */ }
+        }
+        if (!project) {
+          const all = await geoProjectsApi.listProjects()
+          const match = all.find((p) => p.userId === currentUser.id) ?? all[0]
+          project = match ?? null
+        }
+        if (!cancelled && project) {
+          const pts = await geoPointsApi.listPoints(project.id)
+          if (!cancelled) setWorkspace(project, pts.length)
+        }
+      } catch { /* silent — sidebar stays empty until WorkspacePage mounts */ }
+    })()
+    return () => { cancelled = true }
+  }, [currentUser?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleLogout() {
     await logout()
@@ -137,11 +344,11 @@ export default function AppShell() {
           </NavLink>
         </nav>
 
-        {/* Slot for plan/progress widget — WorkspacePage injects here via React portal */}
-        <div id="workspace-plan-slot" />
+        {/* Plan widget — visible on all /app/* routes */}
+        <PlanSidebarWidget />
 
-        {/* Slot for community widget — WorkspacePage injects here via React portal */}
-        <div id="workspace-community-slot" />
+        {/* Community map widget — visible when a project is active */}
+        <CommunitySidebarWidget />
 
         {/* User + logout footer */}
         <div className="px-3 py-4 border-t border-gray-800 space-y-1">

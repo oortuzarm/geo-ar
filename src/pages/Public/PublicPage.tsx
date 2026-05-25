@@ -944,14 +944,17 @@ export default function PublicPage({
       const dy    = startY - e.touches[0].clientY   // positive = finger moved up
       const state = sheetStateRef.current
 
-      // ── EXPANDED: block ALL native scroll; upward gesture expands the sheet ──
+      // ── EXPANDED: the scroll area is overflow-y-hidden so content physically
+      // cannot scroll — no need to call preventDefault() eagerly. Wait for a
+      // real dead zone so the gesture feels like natural content scrolling, not
+      // window dragging. Only block browser defaults once intent is confirmed.
       if (state === 'expanded') {
-        e.preventDefault()   // eager — before dead zone, so browser never commits to scroll
         if (mode === 'idle') {
-          if (Math.abs(dy) < 4) return
+          if (Math.abs(dy) < 10) return   // 10px dead zone — gesture feels natural
           mode = dy > 0 ? 'expanding' : 'scroll'
         }
         if (mode === 'expanding') {
+          e.preventDefault()  // called only after intent is confirmed
           const expPx = expandedPx()
           const fPx   = fullPx()
           const newH  = Math.min(fPx, Math.max(expPx, expPx + dy))

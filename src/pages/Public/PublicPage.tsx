@@ -1857,7 +1857,7 @@ export default function PublicPage({
         onPointerDown={(e) => e.stopPropagation()}
         style={{
           height:     dragHeight !== null ? `${dragHeight}px` : SHEET_HEIGHT[sheetState],
-          transition: dragHeight !== null ? 'none' : 'height 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
+          transition: dragHeight !== null ? 'none' : 'height 420ms cubic-bezier(0.22, 1, 0.36, 1)',
         }}
       >
         <div className="h-full flex flex-col rounded-t-[28px] overflow-hidden

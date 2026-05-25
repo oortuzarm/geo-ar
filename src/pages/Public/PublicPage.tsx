@@ -699,15 +699,30 @@ interface MapClusterLayerProps {
   onPointClick:    (pt: GeoPoint) => void
 }
 
+// Plain-number snapshot of the map viewport.
+// Storing primitives (not a LatLngBounds object) lets React's useMemo do
+// value-equality comparison: the memo re-runs only when coordinates actually
+// change, and never misses an update due to a stale object reference.
+interface Viewport { zoom: number; west: number; south: number; east: number; north: number }
+
+function snapViewport(m: L.Map): Viewport {
+  const b = m.getBounds()
+  return { zoom: m.getZoom(), west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() }
+}
+
 function MapClusterLayer({ points, selectedPointId, onPointClick }: MapClusterLayerProps) {
   const map = useMap()
 
-  const [zoom,   setZoom]   = useState(() => map.getZoom())
-  const [bounds, setBounds] = useState(() => map.getBounds())
+  // Single atomic state: zoom + all four bounds edges as primitives.
+  // One setState call per event — no window where zoom is new but bounds are stale.
+  const [vp, setVp] = useState<Viewport>(() => snapViewport(map))
+
+  const updateViewport = useCallback(() => setVp(snapViewport(map)), [map])
 
   useMapEvents({
-    zoomend: () => { setZoom(map.getZoom()); setBounds(map.getBounds()) },
-    moveend: () => { setBounds(map.getBounds()) },
+    zoomend:   updateViewport,
+    moveend:   updateViewport,
+    viewreset: updateViewport,
   })
 
   const sc = useMemo(() => {
@@ -722,13 +737,13 @@ function MapClusterLayer({ points, selectedPointId, onPointClick }: MapClusterLa
     return instance
   }, [points])
 
-  const features = useMemo(() => {
-    const bbox: [number, number, number, number] = [
-      bounds.getWest(), bounds.getSouth(),
-      bounds.getEast(), bounds.getNorth(),
-    ]
-    return sc.getClusters(bbox, Math.floor(zoom))
-  }, [sc, zoom, bounds])
+  // Depends on six primitives — React skips recomputation when all six are
+  // unchanged (e.g. an unrelated re-render), and runs immediately when any
+  // one of them changes after zoom or pan.
+  const features = useMemo(
+    () => sc.getClusters([vp.west, vp.south, vp.east, vp.north], Math.floor(vp.zoom)),
+    [sc, vp.zoom, vp.west, vp.south, vp.east, vp.north],
+  )
 
   return (
     <>

@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
+import Supercluster from 'supercluster'
 import PublicPointMarker from '../../components/map/PublicPointMarker'
+import ClusterMarker from '../../components/map/ClusterMarker'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
 
@@ -686,6 +688,82 @@ function UnlockedContentPanel({ content, onClose }: { content: AccessResponse; o
         </div>
       </div>
     </div>
+  )
+}
+
+// ── Cluster layer (lives inside MapContainer) ─────────────────────────────────
+
+interface MapClusterLayerProps {
+  points:          GeoPoint[]
+  selectedPointId: string | null
+  onPointClick:    (pt: GeoPoint) => void
+}
+
+function MapClusterLayer({ points, selectedPointId, onPointClick }: MapClusterLayerProps) {
+  const map = useMap()
+
+  const [zoom,   setZoom]   = useState(() => map.getZoom())
+  const [bounds, setBounds] = useState(() => map.getBounds())
+
+  useMapEvents({
+    zoomend: () => { setZoom(map.getZoom()); setBounds(map.getBounds()) },
+    moveend: () => { setBounds(map.getBounds()) },
+  })
+
+  const sc = useMemo(() => {
+    const instance = new Supercluster<GeoPoint>({ radius: 80, maxZoom: 15 })
+    instance.load(
+      points.map((pt) => ({
+        type:       'Feature' as const,
+        properties: pt,
+        geometry:   { type: 'Point' as const, coordinates: [pt.longitude, pt.latitude] },
+      })),
+    )
+    return instance
+  }, [points])
+
+  const features = useMemo(() => {
+    const bbox: [number, number, number, number] = [
+      bounds.getWest(), bounds.getSouth(),
+      bounds.getEast(), bounds.getNorth(),
+    ]
+    return sc.getClusters(bbox, Math.floor(zoom))
+  }, [sc, zoom, bounds])
+
+  return (
+    <>
+      {features.map((feature) => {
+        const [lng, lat] = feature.geometry.coordinates
+
+        if ('cluster_id' in feature.properties) {
+          const { cluster_id, point_count } = feature.properties as Supercluster.ClusterProperties
+          return (
+            <ClusterMarker
+              key={`cluster-${cluster_id}`}
+              lat={lat}
+              lng={lng}
+              count={point_count}
+              onClick={() => {
+                const expansionZoom = sc.getClusterExpansionZoom(cluster_id)
+                map.flyTo([lat, lng], Math.min(expansionZoom, 20), { animate: true, duration: 0.4 })
+              }}
+            />
+          )
+        }
+
+        const pt = feature.properties as GeoPoint
+        return (
+          <PublicPointMarker
+            key={pt.id}
+            point={pt}
+            selected={pt.id === selectedPointId}
+            dimmed={selectedPointId !== null && pt.id !== selectedPointId}
+            onClick={() => onPointClick(pt)}
+            small
+          />
+        )
+      })}
+    </>
   )
 }
 
@@ -1457,15 +1535,11 @@ export default function PublicPage({
           {userLocation && (
             <UserLocationMarker lat={userLocation.latitude} lng={userLocation.longitude} />
           )}
-          {displayedPoints.map((pt) => (
-            <PublicPointMarker
-              key={pt.id}
-              point={pt}
-              selected={pt.id === selectedPointId}
-              dimmed={selectedPointId !== null && pt.id !== selectedPointId}
-              onClick={() => handlePointClick(pt)}
-            />
-          ))}
+          <MapClusterLayer
+            points={displayedPoints}
+            selectedPointId={selectedPointId}
+            onPointClick={handlePointClick}
+          />
           {routeResult && (
             <RoutePolyline
               latLngs={

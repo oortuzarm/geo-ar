@@ -12,6 +12,8 @@ const FALLBACK_SVG =
   `2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>` +
   `</svg>`
 
+const SMALL = { cardWidth: 48, cardHeight: 38, pointerH: 8, pointerHW: 6, cardRadius: 10 }
+
 /**
  * Creates a bubble-card marker icon for both the editor and public map.
  *
@@ -22,14 +24,17 @@ const FALLBACK_SVG =
  * @param active   - false → dark-gray background (inactive, editor only)
  * @param dimmed   - true → reduced opacity (unselected while another is focused)
  * @param image    - optional thumbnail URL or base64; falls back to navy + pin icon
+ * @param small    - true → compact 48×38 px variant for public clustered map
  */
 export function createGeoIcon(
   selected: boolean,
   active:   boolean,
   dimmed  = false,
   image?:  string,
+  small   = false,
 ): L.DivIcon {
-  const { cardWidth: cw, cardHeight: ch, pointerH: ph, pointerHW: phw, cardRadius: cr } = m
+  const sz = small ? SMALL : m
+  const { cardWidth: cw, cardHeight: ch, pointerH: ph, pointerHW: phw, cardRadius: cr } = sz
 
   const totalH = ch + ph
   const halfCw = cw / 2

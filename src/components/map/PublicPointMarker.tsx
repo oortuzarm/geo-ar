@@ -12,6 +12,8 @@ interface PublicPointMarkerProps {
   /** true when another point is selected — dims this pin and its radius */
   dimmed:   boolean
   onClick:  () => void
+  /** true → use compact 48×38 px icon variant (public clustered map) */
+  small?:   boolean
 }
 
 /**
@@ -24,8 +26,9 @@ export default function PublicPointMarker({
   selected,
   dimmed,
   onClick,
+  small = false,
 }: PublicPointMarkerProps) {
-  const icon = createGeoIcon(selected, point.active, dimmed, getPointCoverImage(point))
+  const icon = createGeoIcon(selected, point.active, dimmed, getPointCoverImage(point), small)
 
   const circleOptions = selected ? ar.selected : dimmed ? ar.dimmed : ar.default
 

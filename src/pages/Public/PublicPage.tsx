@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
@@ -697,48 +697,17 @@ interface MapClusterLayerProps {
   points:          GeoPoint[]
   selectedPointId: string | null
   onPointClick:    (pt: GeoPoint) => void
-  refreshKey:      number
 }
 
-// Plain-number snapshot of the map viewport.
-// Storing primitives (not a LatLngBounds object) lets React's useMemo do
-// value-equality comparison: the memo re-runs only when coordinates actually
-// change, and never misses an update due to a stale object reference.
-interface Viewport { zoom: number; west: number; south: number; east: number; north: number }
-
-function snapViewport(m: L.Map): Viewport {
-  const b = m.getBounds()
-  return { zoom: m.getZoom(), west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() }
-}
-
-function MapClusterLayer({ points, selectedPointId, onPointClick, refreshKey }: MapClusterLayerProps) {
+function MapClusterLayer({ points, selectedPointId, onPointClick }: MapClusterLayerProps) {
   const map = useMap()
 
-  // Single atomic state: zoom + all four bounds edges as primitives.
-  // One setState call per event → no window where zoom is new but bounds are stale.
-  const [vp, setVp] = useState<Viewport>(() => snapViewport(map))
-
-  // Single handler for all viewport-change events so no path is missed.
-  // Binding the same function reference avoids react-leaflet re-registering
-  // on every render from producing transiently unregistered listeners.
-  const updateViewport = useCallback(() => setVp(snapViewport(map)), [map])
-
-  // Re-snapshot the viewport when a programmatic flyTo completes (e.g. "Mi ubicación").
-  // MapController signals completion via onFlyEnd → parent increments refreshKey.
-  // This guarantees clusters refresh after the animation settles without adding
-  // more arbitrary Leaflet event listeners.
-  useEffect(() => { updateViewport() }, [refreshKey, updateViewport])
+  const [zoom,   setZoom]   = useState(() => map.getZoom())
+  const [bounds, setBounds] = useState(() => map.getBounds())
 
   useMapEvents({
-    // Fires after animated zoom (flyTo, setView, fitBounds with zoom change)
-    zoomend:   updateViewport,
-    // Fires after any pan — animated or programmatic — and after flyTo completes
-    moveend:   updateViewport,
-    // Fires when Leaflet redraws content for non-animated setView / fitBounds
-    // (called via _resetView internally, which is the non-animate path)
-    viewreset: updateViewport,
-    // Fires when the map container is resized — keeps clusters correct on layout shifts
-    resize:    updateViewport,
+    zoomend: () => { setZoom(map.getZoom()); setBounds(map.getBounds()) },
+    moveend: () => { setBounds(map.getBounds()) },
   })
 
   const sc = useMemo(() => {
@@ -753,13 +722,13 @@ function MapClusterLayer({ points, selectedPointId, onPointClick, refreshKey }: 
     return instance
   }, [points])
 
-  // Depends on six primitives — React skips recomputation when all six are
-  // unchanged (e.g. an unrelated re-render), and runs immediately when any
-  // one of them changes after zoom or pan.
-  const features = useMemo(
-    () => sc.getClusters([vp.west, vp.south, vp.east, vp.north], Math.floor(vp.zoom)),
-    [sc, vp.zoom, vp.west, vp.south, vp.east, vp.north],
-  )
+  const features = useMemo(() => {
+    const bbox: [number, number, number, number] = [
+      bounds.getWest(), bounds.getSouth(),
+      bounds.getEast(), bounds.getNorth(),
+    ]
+    return sc.getClusters(bbox, Math.floor(zoom))
+  }, [sc, zoom, bounds])
 
   return (
     <>
@@ -848,13 +817,6 @@ export default function PublicPage({
   const [flyToKey, setFlyToKey] = useState<string | null>(null)
   const [flyToTarget, setFlyToTarget] = useState<FlyTarget | null>(null)
   const flyToCounterRef = useRef(0)
-
-  // ── Cluster refresh ────────────────────────────────────────────────────────
-  // Incremented by handleFlyEnd after each programmatic flyTo settles.
-  // Passed to MapClusterLayer so it re-snapshots the viewport once the
-  // Leaflet animation has fully updated getBounds() / getZoom().
-  const [clusterRefreshKey, setClusterRefreshKey] = useState(0)
-  const handleFlyEnd = useCallback(() => setClusterRefreshKey((k) => k + 1), [])
 
   // ── Unlocked media content (video / audio / file) ────────────────────────
   // Set by handleActivate when the backend returns a non-URL content type.
@@ -1555,7 +1517,7 @@ export default function PublicPage({
           Embed: always absolute inset-0 (force mobile layout).            */}
       <div className={`absolute inset-0${isEmbed ? '' : ' md:relative md:flex-1'}`}>
         <MapContainer center={mapFallbackCenter} zoom={14} maxZoom={20} className="w-full h-full" style={mapPickMode ? { cursor: 'crosshair' } : undefined}>
-          <MapController flyKey={flyToKey} flyTarget={flyToTarget} onFlyEnd={handleFlyEnd} />
+          <MapController flyKey={flyToKey} flyTarget={flyToTarget} />
           {isEmbed && <InvalidateMapSize />}
           <MapPickHandler active={mapPickMode} onPick={handleManualLocationConfirm} />
           <PublicInitialViewController
@@ -1577,7 +1539,6 @@ export default function PublicPage({
             points={displayedPoints}
             selectedPointId={selectedPointId}
             onPointClick={handlePointClick}
-            refreshKey={clusterRefreshKey}
           />
           {routeResult && (
             <RoutePolyline

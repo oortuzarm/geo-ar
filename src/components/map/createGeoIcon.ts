@@ -12,7 +12,7 @@ const FALLBACK_SVG =
   `2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>` +
   `</svg>`
 
-const SMALL = { cardWidth: 48, cardHeight: 38, pointerH: 8, pointerHW: 6, cardRadius: 10 }
+const SMALL = { cardWidth: 58, cardHeight: 46, pointerH: 10, pointerHW: 7, cardRadius: 12 }
 
 /**
  * Creates a bubble-card marker icon for both the editor and public map.

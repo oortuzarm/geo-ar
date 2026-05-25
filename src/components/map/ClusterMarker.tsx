@@ -9,10 +9,10 @@ interface ClusterMarkerProps {
 }
 
 function buildClusterIcon(count: number): L.DivIcon {
-  const size   = count < 10 ? 36 : count < 50 ? 44 : 52
+  const size   = count < 10 ? 44 : count < 50 ? 53 : 62
   const half   = size / 2
   const label  = count < 100 ? String(count) : '99+'
-  const fs     = count < 10 ? 14 : 13
+  const fs     = count < 10 ? 16 : 15
 
   const html =
     `<div style="` +

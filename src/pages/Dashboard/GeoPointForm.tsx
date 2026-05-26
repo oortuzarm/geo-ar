@@ -63,6 +63,33 @@ function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void 
   )
 }
 
+function InfoTooltip({ text }: { text: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <span className="relative inline-flex">
+      <button
+        type="button"
+        className="text-gray-500 hover:text-gray-300 transition-colors"
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Más información"
+      >
+        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute left-6 top-0 z-50 w-64 bg-gray-800 border border-gray-700
+                       text-xs text-gray-300 p-3 rounded-lg shadow-xl pointer-events-none">
+          {text}
+        </div>
+      )}
+    </span>
+  )
+}
+
 function AvailabilityRules({
   availability,
   onChange,
@@ -91,7 +118,7 @@ function AvailabilityRules({
   return (
     <div className="space-y-2">
       <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-        Reglas de disponibilidad
+        Disponibilidad
       </span>
 
       {/* ── Schedule rule ── */}
@@ -206,7 +233,6 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
   const { canUseContentType, canUseScheduleAvailability, canUseQuotaAvailability } = usePlanFeatures()
   const mediaFileRef   = useRef<HTMLInputElement>(null)
   const galleryFileRef = useRef<HTMLInputElement>(null)
-  const [showTooltip,          setShowTooltip]          = useState(false)
   const [advancedOpen,         setAdvancedOpen]         = useState(false)
 
   // ── Gallery state ─────────────────────────────────────────────────────────
@@ -604,7 +630,64 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           )
         })()}
 
-        {/* ── Reglas de disponibilidad ───────────────────────────────────── */}
+        {/* ── Acceso ────────────────────────────────────────────────────── */}
+        <div className="space-y-2">
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Acceso
+          </span>
+
+          {/* Dentro del área — radius slider, always active */}
+          <div className="bg-gray-800/50 border border-brand-500/30 rounded-lg p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0" />
+                <span className="text-sm text-gray-300">Dentro del área</span>
+                <InfoTooltip text={RADIUS_TOOLTIP} />
+              </div>
+              <span className="text-xs text-brand-400 font-medium">Siempre activo</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min={5} max={1000} step={5}
+                value={point.activationRadius}
+                onChange={(e) => onChange({ activationRadius: parseInt(e.target.value) })}
+                className="flex-1 accent-brand-500"
+              />
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  min={1}
+                  value={point.activationRadius}
+                  onChange={(e) => onChange({ activationRadius: parseInt(e.target.value) || 10 })}
+                  className="w-16 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm
+                             text-gray-100 text-center focus:outline-none focus:ring-1 focus:ring-brand-500"
+                />
+                <span className="text-xs text-gray-500">m</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Placeholder access rules */}
+          {([
+            { label: 'Permanencia',           tooltip: 'El usuario debe permanecer dentro del área durante un tiempo mínimo para activar la experiencia.' },
+            { label: 'Secuencia',             tooltip: 'Define un orden obligatorio de activación entre distintos puntos GPS del proyecto.' },
+            { label: 'Colección',             tooltip: 'Agrupa puntos que deben activarse en conjunto para desbloquear un contenido o experiencia especial.' },
+            { label: 'Temporalidad avanzada', tooltip: 'Combina reglas de fecha, horario y zona horaria para controles de acceso complejos.' },
+          ] as { label: string; tooltip: string }[]).map(({ label, tooltip }) => (
+            <div key={label} className="bg-gray-800/50 border border-gray-800 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm text-gray-600">{label}</span>
+                  <InfoTooltip text={tooltip} />
+                </div>
+                <span className="text-xs text-gray-600">Próximamente</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Disponibilidad ─────────────────────────────────────────────── */}
         <AvailabilityRules
           availability={point.availability}
           onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
@@ -654,51 +737,6 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
               />
             </div>
           )}
-        </div>
-
-        {/* Radio de activación */}
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-1">
-            <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-              Radio de activación
-            </span>
-            <button
-              className="text-gray-500 hover:text-gray-300 relative"
-              onMouseEnter={() => setShowTooltip(true)}
-              onMouseLeave={() => setShowTooltip(false)}
-            >
-              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {showTooltip && (
-                <div className="absolute left-6 top-0 z-50 w-64 bg-gray-800 border border-gray-700
-                               text-xs text-gray-300 p-3 rounded-lg shadow-xl pointer-events-none">
-                  {RADIUS_TOOLTIP}
-                </div>
-              )}
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min={5} max={1000} step={5}
-              value={point.activationRadius}
-              onChange={(e) => onChange({ activationRadius: parseInt(e.target.value) })}
-              className="flex-1 accent-brand-500"
-            />
-            <div className="flex items-center gap-1">
-              <input
-                type="number"
-                min={1}
-                value={point.activationRadius}
-                onChange={(e) => onChange({ activationRadius: parseInt(e.target.value) || 10 })}
-                className="w-16 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm
-                           text-gray-100 text-center focus:outline-none focus:ring-1 focus:ring-brand-500"
-              />
-              <span className="text-xs text-gray-500">m</span>
-            </div>
-          </div>
         </div>
 
         {/* ── Galería del punto ─────────────────────────────────────────── */}

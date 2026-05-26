@@ -4,6 +4,7 @@ import { landingRouter, appRouter, devRouter } from './router'
 import { useAuthStore } from './store/authStore'
 import { useSettingsStore } from './store/settingsStore'
 import Spinner from './components/ui/Spinner'
+import OnboardingFlow from './pages/Onboarding/OnboardingFlow'
 
 const LANDING_HOSTS = new Set(['ubyca.com', 'www.ubyca.com'])
 const APP_HOSTS     = new Set(['studio.ubyca.com'])
@@ -18,7 +19,7 @@ function pickRouter() {
 const isLandingHost = LANDING_HOSTS.has(window.location.hostname)
 
 export default function App() {
-  const { refreshSession, isLoading, isInitialized } = useAuthStore()
+  const { refreshSession, isLoading, isInitialized, currentUser } = useAuthStore()
   const fetchPublicSettings = useSettingsStore((s) => s.fetchPublicSettings)
 
   useEffect(() => {
@@ -43,5 +44,14 @@ export default function App() {
     )
   }
 
-  return <RouterProvider router={pickRouter()} />
+  const showOnboarding =
+    currentUser !== null &&
+    currentUser.onboardingCompleted === false
+
+  return (
+    <>
+      <RouterProvider router={pickRouter()} />
+      {showOnboarding && <OnboardingFlow />}
+    </>
+  )
 }

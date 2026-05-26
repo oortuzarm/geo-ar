@@ -12,4 +12,5 @@ export interface User {
   planName:               string | null
   planSlug:               string | null
   planFeaturesConfig:     FeaturesConfig | null
+  onboardingCompleted:    boolean         // false → show onboarding flow
 }

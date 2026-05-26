@@ -19,6 +19,7 @@ import ResetPasswordPage        from './pages/Auth/ResetPasswordPage'
 import AcceptInvitationPage     from './pages/Auth/AcceptInvitationPage'
 import AdminPage                from './pages/Admin/AdminPage'
 import AdminPlansPage          from './pages/Admin/AdminPlansPage'
+import AdminOnboardingPage     from './pages/Admin/AdminOnboardingPage'
 import PlansPage               from './pages/Plans/PlansPage'
 import SelectPlanPage          from './pages/Plans/SelectPlanPage'
 import AccountPage              from './pages/Account/AccountPage'
@@ -84,8 +85,9 @@ const protectedChildren = [
   {
     element: <AdminRoute />,
     children: [
-      { path: '/admin',       element: <AdminPage /> },
-      { path: '/admin/plans', element: <AdminPlansPage /> },
+      { path: '/admin',            element: <AdminPage /> },
+      { path: '/admin/plans',      element: <AdminPlansPage /> },
+      { path: '/admin/onboarding', element: <AdminOnboardingPage /> },
     ],
   },
 ]

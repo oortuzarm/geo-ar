@@ -1994,6 +1994,13 @@ export default function AdminPage() {
             >
               Planes
             </Link>
+            <Link
+              to="/admin/onboarding"
+              className="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400
+                         hover:text-gray-200 hover:bg-gray-800 transition-colors"
+            >
+              Onboarding
+            </Link>
           </div>
 
           <div className="flex-1" />

@@ -381,8 +381,7 @@ export default function PublicPointCard({
         {/* Name + exit button */}
         <div className="flex items-start justify-between gap-2">
           <h3
-            className={`font-bold text-white leading-snug ${isDetail ? 'text-xl' : 'text-sm'}`}
-            style={isDetail ? { textShadow: '0 1px 3px rgba(0,0,0,0.45)' } : undefined}
+            className={`font-bold leading-snug ${isDetail ? 'text-xl text-gray-900' : 'text-sm text-white'}`}
           >{point.name}</h3>
           {isSelected && onExit && (
             <button
@@ -447,7 +446,7 @@ export default function PublicPointCard({
         {/* Description */}
         {point.description && (
           <div className={isDetail ? 'mt-3' : 'mt-1'}>
-            <p className={`leading-relaxed ${isDetail ? 'text-sm text-gray-200' : 'text-xs text-gray-300'}`}>
+            <p className={`leading-relaxed ${isDetail ? 'text-sm text-gray-700' : 'text-xs text-gray-300'}`}>
               {descExpanded || !isLongDesc
                 ? point.description
                 : point.description.slice(0, DESCRIPTION_LIMIT)}
@@ -476,14 +475,14 @@ export default function PublicPointCard({
         {/* Address — auto-resolved via reverse geocoding; falls back to legacy instructions */}
         {(address ?? point.instructions) && (
           <div className={`flex items-start gap-1.5 ${isDetail ? 'mt-3' : 'mt-2'}`}>
-            <svg className={`text-slate-400 flex-shrink-0 mt-0.5 ${isDetail ? 'h-4 w-4' : 'h-3.5 w-3.5'}`}
+            <svg className={`flex-shrink-0 mt-0.5 ${isDetail ? 'h-4 w-4 text-gray-400' : 'h-3.5 w-3.5 text-slate-400'}`}
               fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <p className={`line-clamp-2 ${isDetail ? 'text-sm text-slate-200' : 'text-xs text-slate-300'}`}>{address ?? point.instructions}</p>
+            <p className={`line-clamp-2 ${isDetail ? 'text-sm text-gray-600' : 'text-xs text-slate-300'}`}>{address ?? point.instructions}</p>
           </div>
         )}
 

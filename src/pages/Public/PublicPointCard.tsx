@@ -277,37 +277,39 @@ export default function PublicPointCard({
                           bg-gradient-to-t from-gray-950/70 to-transparent
                           pointer-events-none" />
           {(isNew || opBadge) && (
-            <div className="absolute bottom-2 left-2 flex items-center gap-1.5">
+            <div className="absolute bottom-3.5 left-3 flex items-center gap-2">
+              {/* Editorial — warm/subtle, secondary to the operational badge */}
               {isNew && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
-                                 bg-black/[0.45] backdrop-blur-md border border-white/[0.14]
-                                 shadow-[0_1px_6px_rgba(0,0,0,0.3)]">
+                                 bg-black/[0.4] backdrop-blur-md border border-amber-300/[0.22]
+                                 shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
                   <span className="text-[9px] leading-none">✨</span>
-                  <span className="text-[11px] font-semibold text-white/85 leading-none">Nuevo</span>
+                  <span className="text-[11px] font-medium text-amber-200/80 leading-none">Nuevo</span>
                 </span>
               )}
+              {/* Operational — more opaque, larger, higher contrast */}
               {opBadge === 'available' && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
-                                 bg-black/[0.45] backdrop-blur-md border border-white/[0.14]
-                                 shadow-[0_1px_6px_rgba(0,0,0,0.3)]">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                                 bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
+                                 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-                  <span className="text-[11px] font-semibold text-white/90 leading-none">Disponible</span>
+                  <span className="text-[12px] font-semibold text-white leading-none">Disponible</span>
                 </span>
               )}
               {opBadge === 'last-slots' && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
-                                 bg-black/[0.45] backdrop-blur-md border border-white/[0.14]
-                                 shadow-[0_1px_6px_rgba(0,0,0,0.3)]">
-                  <span className="text-[9px] leading-none">🔥</span>
-                  <span className="text-[11px] font-semibold text-white/90 leading-none">Últimos cupos</span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                                 bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
+                                 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+                  <span className="text-[10px] leading-none">🔥</span>
+                  <span className="text-[12px] font-semibold text-white leading-none">Últimos cupos</span>
                 </span>
               )}
               {opBadge === 'tomorrow' && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
-                                 bg-black/[0.45] backdrop-blur-md border border-white/[0.14]
-                                 shadow-[0_1px_6px_rgba(0,0,0,0.3)]">
-                  <span className="text-[9px] leading-none">🕒</span>
-                  <span className="text-[11px] font-semibold text-white/85 leading-none">Disponible mañana</span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                                 bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
+                                 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+                  <span className="text-[10px] leading-none">🕒</span>
+                  <span className="text-[12px] font-semibold text-white/90 leading-none">Disponible mañana</span>
                 </span>
               )}
             </div>
@@ -338,33 +340,35 @@ export default function PublicPointCard({
 
         {/* Badge system — below title when no cover image occupies the banner slot */}
         {!hasCoverBanner && (isNew || opBadge) && (
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {/* Editorial — warm/subtle */}
             {isNew && (
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full
-                               bg-black/[0.25] border border-white/[0.1]">
+                               bg-black/[0.2] border border-amber-300/[0.18]">
                 <span className="text-[9px] leading-none">✨</span>
-                <span className="text-[11px] font-semibold text-white/80 leading-none">Nuevo</span>
+                <span className="text-[11px] font-medium text-amber-200/75 leading-none">Nuevo</span>
               </span>
             )}
+            {/* Operational — more prominent */}
             {opBadge === 'available' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full
-                               bg-black/[0.25] border border-white/[0.1]">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
+                               bg-black/[0.3] border border-white/[0.15]">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-                <span className="text-[11px] font-semibold text-white/80 leading-none">Disponible</span>
+                <span className="text-[12px] font-semibold text-white leading-none">Disponible</span>
               </span>
             )}
             {opBadge === 'last-slots' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full
-                               bg-black/[0.25] border border-white/[0.1]">
-                <span className="text-[9px] leading-none">🔥</span>
-                <span className="text-[11px] font-semibold text-white/80 leading-none">Últimos cupos</span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
+                               bg-black/[0.3] border border-white/[0.15]">
+                <span className="text-[10px] leading-none">🔥</span>
+                <span className="text-[12px] font-semibold text-white leading-none">Últimos cupos</span>
               </span>
             )}
             {opBadge === 'tomorrow' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full
-                               bg-black/[0.25] border border-white/[0.1]">
-                <span className="text-[9px] leading-none">🕒</span>
-                <span className="text-[11px] font-semibold text-white/80 leading-none">Disponible mañana</span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
+                               bg-black/[0.3] border border-white/[0.15]">
+                <span className="text-[10px] leading-none">🕒</span>
+                <span className="text-[12px] font-semibold text-white/90 leading-none">Disponible mañana</span>
               </span>
             )}
           </div>

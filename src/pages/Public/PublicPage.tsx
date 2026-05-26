@@ -1888,30 +1888,36 @@ export default function PublicPage({
                 <p className="text-sm font-semibold text-gray-700 line-clamp-2 leading-snug">
                   {project.title}
                 </p>
-                <div className="flex items-center gap-1.5 mt-1.5">
+                <div className="flex items-center gap-2 mt-2">
                   <button
                     onClick={() => handleFilterChange('all')}
                     className={[
-                      'px-2.5 py-[3px] rounded-full text-[11px] font-medium',
-                      'ring-1 transition-all duration-150 active:scale-[0.95]',
+                      'px-3.5 py-1.5 rounded-full text-[11px] font-medium',
+                      'border backdrop-blur-md',
+                      'shadow-[0_2px_8px_rgba(0,0,0,0.28)]',
+                      'transition-all duration-200 active:scale-[0.95]',
                       locationFilter === 'all'
-                        ? 'bg-white/[0.15] text-white ring-white/[0.22]'
-                        : 'bg-white/[0.07] text-white/55 ring-white/[0.1]',
+                        ? 'bg-white/[0.13] text-white border-white/[0.22]'
+                        : 'bg-white/[0.05] text-white/45 border-white/[0.09] hover:bg-white/[0.09] hover:text-white/65',
                     ].join(' ')}
                   >
                     {points.length} ubicaciones
                   </button>
-                  <span className="text-white/[0.18] text-[9px] select-none">·</span>
                   <button
                     onClick={() => handleFilterChange('available')}
                     className={[
-                      'px-2.5 py-[3px] rounded-full text-[11px] font-medium',
-                      'ring-1 transition-all duration-150 active:scale-[0.95]',
+                      'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-medium',
+                      'border backdrop-blur-md',
+                      'shadow-[0_2px_8px_rgba(0,0,0,0.28)]',
+                      'transition-all duration-200 active:scale-[0.95]',
                       locationFilter === 'available'
-                        ? 'bg-emerald-400/[0.14] text-white ring-emerald-400/[0.28]'
-                        : 'bg-emerald-500/[0.07] text-emerald-400/60 ring-emerald-500/[0.12]',
+                        ? 'bg-white/[0.13] text-white border-white/[0.22]'
+                        : 'bg-white/[0.05] text-white/45 border-white/[0.09] hover:bg-white/[0.09] hover:text-white/65',
                     ].join(' ')}
                   >
+                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                      locationFilter === 'available' ? 'bg-emerald-400' : 'bg-emerald-400/40'
+                    }`} />
                     {availablePoints.length} activas
                   </button>
                 </div>
@@ -2101,28 +2107,36 @@ export default function PublicPage({
           </button>
         </div>
 
-        <div className="flex items-center gap-1.5 mb-3 -mt-1">
+        <div className="flex items-center gap-2 mb-3 -mt-1">
           <button
             onClick={() => handleFilterChange('all')}
             className={[
-              'px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-150 active:scale-95',
+              'px-3.5 py-1.5 rounded-full text-xs font-medium',
+              'border backdrop-blur-md',
+              'shadow-[0_2px_8px_rgba(0,0,0,0.2)]',
+              'transition-all duration-200 active:scale-95',
               locationFilter === 'all'
-                ? 'bg-white/[0.08] text-gray-200'
-                : 'text-gray-500 hover:text-gray-300',
+                ? 'bg-white/[0.1] text-gray-100 border-white/[0.18]'
+                : 'bg-white/[0.04] text-gray-500 border-white/[0.07] hover:bg-white/[0.08] hover:text-gray-300',
             ].join(' ')}
           >
             {points.length} ubicaciones
           </button>
-          <span className="text-gray-700 text-[10px] select-none">·</span>
           <button
             onClick={() => handleFilterChange('available')}
             className={[
-              'px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-150 active:scale-95',
+              'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium',
+              'border backdrop-blur-md',
+              'shadow-[0_2px_8px_rgba(0,0,0,0.2)]',
+              'transition-all duration-200 active:scale-95',
               locationFilter === 'available'
-                ? 'bg-green-500/[0.15] text-green-400 ring-1 ring-inset ring-green-500/30'
-                : 'text-gray-500 hover:text-gray-300',
+                ? 'bg-white/[0.1] text-gray-100 border-white/[0.18]'
+                : 'bg-white/[0.04] text-gray-500 border-white/[0.07] hover:bg-white/[0.08] hover:text-gray-300',
             ].join(' ')}
           >
+            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+              locationFilter === 'available' ? 'bg-emerald-400' : 'bg-emerald-400/35'
+            }`} />
             {availablePoints.length} activas
           </button>
         </div>

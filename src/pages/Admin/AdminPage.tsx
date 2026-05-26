@@ -1921,6 +1921,16 @@ export default function AdminPage() {
         />
       )}
 
+      {/* ── Add user modal ── */}
+      {addUserOpen && (
+        <AddUserModal
+          plans={plans}
+          saving={savingAddUser}
+          onSave={handleCreateUser}
+          onCancel={() => setAddUserOpen(false)}
+        />
+      )}
+
       {/* ── Toast notification ── */}
       {toast && (
         <div className={[

@@ -92,7 +92,7 @@ function StatusChip({
         {detail != null && (
           <button
             onClick={(e) => { e.stopPropagation(); setOpen(!open) }}
-            className={`flex items-center gap-0.5 text-[11px] opacity-60 hover:opacity-100
+            className={`flex items-center gap-0.5 text-[11px] opacity-75 hover:opacity-100
                         transition-opacity ${s.text}`}
           >
             <span>{expandLabel ?? 'Ver'}</span>
@@ -275,42 +275,42 @@ export default function PublicPointCard({
         <div className="flex justify-center items-center flex-wrap gap-2 pb-4">
           {isNew && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
-                             bg-black/[0.4] backdrop-blur-md border border-amber-300/[0.22]
-                             shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
+                             bg-black/[0.5] backdrop-blur-md border border-amber-300/[0.3]
+                             shadow-[0_1px_8px_rgba(0,0,0,0.35)]">
               <span className="text-[9px] leading-none">✨</span>
-              <span className="text-[11px] font-medium text-amber-200/80 leading-none">Nuevo</span>
+              <span className="text-[11px] font-medium text-amber-200 leading-none">Nuevo</span>
             </span>
           )}
           {opBadge === 'available' && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                             bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
-                             shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+                             bg-black/[0.65] backdrop-blur-md border border-white/[0.28]
+                             shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
               <span className="text-[12px] font-semibold text-white leading-none">Disponible</span>
             </span>
           )}
           {opBadge === 'last-slots' && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                             bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
-                             shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+                             bg-black/[0.65] backdrop-blur-md border border-white/[0.28]
+                             shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
               <span className="text-[10px] leading-none">🔥</span>
               <span className="text-[12px] font-semibold text-white leading-none">Últimos cupos</span>
             </span>
           )}
           {opBadge === 'every-day' && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                             bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
-                             shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+                             bg-black/[0.65] backdrop-blur-md border border-white/[0.28]
+                             shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
               <span className="text-[10px] leading-none">🗓️</span>
               <span className="text-[12px] font-semibold text-white leading-none">Todos los días</span>
             </span>
           )}
           {opBadge === 'tomorrow' && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                             bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
-                             shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+                             bg-black/[0.65] backdrop-blur-md border border-white/[0.28]
+                             shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
               <span className="text-[10px] leading-none">🕒</span>
-              <span className="text-[12px] font-semibold text-white/90 leading-none">Disponible mañana</span>
+              <span className="text-[12px] font-semibold text-white leading-none">Disponible mañana</span>
             </span>
           )}
         </div>
@@ -336,7 +336,7 @@ export default function PublicPointCard({
                                  bg-black/[0.4] backdrop-blur-md border border-amber-300/[0.22]
                                  shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
                   <span className="text-[9px] leading-none">✨</span>
-                  <span className="text-[11px] font-medium text-amber-200/80 leading-none">Nuevo</span>
+                  <span className="text-[11px] font-medium text-amber-200 leading-none">Nuevo</span>
                 </span>
               )}
               {/* Operational — more opaque, larger, higher contrast */}
@@ -369,7 +369,7 @@ export default function PublicPointCard({
                                  bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
                                  shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
                   <span className="text-[10px] leading-none">🕒</span>
-                  <span className="text-[12px] font-semibold text-white/90 leading-none">Disponible mañana</span>
+                  <span className="text-[12px] font-semibold text-white leading-none">Disponible mañana</span>
                 </span>
               )}
             </div>
@@ -380,7 +380,10 @@ export default function PublicPointCard({
       <div className={isDetail ? '' : 'p-3.5'}>
         {/* Name + exit button */}
         <div className="flex items-start justify-between gap-2">
-          <h3 className={`font-bold text-white leading-snug ${isDetail ? 'text-xl' : 'text-sm'}`}>{point.name}</h3>
+          <h3
+            className={`font-bold text-white leading-snug ${isDetail ? 'text-xl' : 'text-sm'}`}
+            style={isDetail ? { textShadow: '0 1px 3px rgba(0,0,0,0.45)' } : undefined}
+          >{point.name}</h3>
           {isSelected && onExit && (
             <button
               onClick={(e) => { e.stopPropagation(); onExit() }}
@@ -406,7 +409,7 @@ export default function PublicPointCard({
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full
                                bg-black/[0.2] border border-amber-300/[0.18]">
                 <span className="text-[9px] leading-none">✨</span>
-                <span className="text-[11px] font-medium text-amber-200/75 leading-none">Nuevo</span>
+                <span className="text-[11px] font-medium text-amber-200 leading-none">Nuevo</span>
               </span>
             )}
             {/* Operational — more prominent */}
@@ -435,7 +438,7 @@ export default function PublicPointCard({
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
                                bg-black/[0.3] border border-white/[0.15]">
                 <span className="text-[10px] leading-none">🕒</span>
-                <span className="text-[12px] font-semibold text-white/90 leading-none">Disponible mañana</span>
+                <span className="text-[12px] font-semibold text-white leading-none">Disponible mañana</span>
               </span>
             )}
           </div>
@@ -444,7 +447,7 @@ export default function PublicPointCard({
         {/* Description */}
         {point.description && (
           <div className={isDetail ? 'mt-3' : 'mt-1'}>
-            <p className={`text-gray-300 leading-relaxed ${isDetail ? 'text-sm' : 'text-xs'}`}>
+            <p className={`leading-relaxed ${isDetail ? 'text-sm text-gray-200' : 'text-xs text-gray-300'}`}>
               {descExpanded || !isLongDesc
                 ? point.description
                 : point.description.slice(0, DESCRIPTION_LIMIT)}
@@ -480,7 +483,7 @@ export default function PublicPointCard({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <p className={`text-slate-300 line-clamp-2 ${isDetail ? 'text-sm' : 'text-xs'}`}>{address ?? point.instructions}</p>
+            <p className={`line-clamp-2 ${isDetail ? 'text-sm text-slate-200' : 'text-xs text-slate-300'}`}>{address ?? point.instructions}</p>
           </div>
         )}
 

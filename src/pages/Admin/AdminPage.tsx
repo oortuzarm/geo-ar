@@ -7,8 +7,10 @@ import {
   deleteAdminProject, deleteAdminUser,
   updateAdminUserSubscription,
   updateAdminProjectCommunityStatus,
+  createAdminUser,
   type UpdateSubscriptionPayload,
   type SubscriptionSaveResponse,
+  type CreateAdminUserPayload,
 } from '../../services/adminApi'
 import { getAdminSettings, patchAdminSettings } from '../../services/settingsApi'
 import type { AdminUser, AdminProject, AdminMetrics, AdminPlan } from '../../types/admin.types'
@@ -825,6 +827,300 @@ function ManageSubscriptionDialog({
   )
 }
 
+// ── Add user modal ────────────────────────────────────────────────────────────
+
+function AddUserModal({
+  plans, saving, onSave, onCancel,
+}: {
+  plans: AdminPlan[]
+  saving: boolean
+  onSave: (payload: CreateAdminUserPayload) => void
+  onCancel: () => void
+}) {
+  const [email,        setEmail]        = useState('')
+  const [firstName,    setFirstName]    = useState('')
+  const [lastName,     setLastName]     = useState('')
+  const [company,      setCompany]      = useState('')
+  const [jobTitle,     setJobTitle]     = useState('')
+  const [country,      setCountry]      = useState('')
+  const [role,         setRole]         = useState<'user' | 'admin'>('user')
+  const [status,       setStatus]       = useState<'active' | 'suspended'>('active')
+  const [planId,       setPlanId]       = useState('')
+  const [subStatus,    setSubStatus]    = useState<'trial' | 'active' | 'expired' | 'canceled'>('trial')
+  const [trialEndsAt,  setTrialEndsAt]  = useState('')
+  const [customLimit,  setCustomLimit]  = useState('')
+  const [passwordMode, setPasswordMode] = useState<'auto' | 'manual'>('auto')
+  const [password,     setPassword]     = useState('')
+  const [confirmation, setConfirmation] = useState('')
+  const [forceChange,  setForceChange]  = useState(false)
+  const [error,        setError]        = useState<string | null>(null)
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape' && !saving) onCancel() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [saving, onCancel])
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+
+    if (!email.trim()) { setError('El correo es obligatorio.'); return }
+    if (passwordMode === 'manual') {
+      if (password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres.'); return }
+      if (password !== confirmation) { setError('Las contraseñas no coinciden.'); return }
+    }
+
+    onSave({
+      email:                email.trim().toLowerCase(),
+      role,
+      status,
+      planId:               planId || null,
+      subscriptionStatus:   subStatus,
+      trialEndsAt:          subStatus === 'trial' && trialEndsAt ? new Date(trialEndsAt).toISOString() : null,
+      customLocationLimit:  customLimit !== '' ? Number(customLimit) : null,
+      firstName:            firstName.trim() || undefined,
+      lastName:             lastName.trim()  || undefined,
+      company:              company.trim()   || undefined,
+      jobTitle:             jobTitle.trim()  || undefined,
+      country:              country.trim()   || undefined,
+      passwordMode,
+      password:             passwordMode === 'manual' ? password     : undefined,
+      passwordConfirmation: passwordMode === 'manual' ? confirmation : undefined,
+      forcePasswordChange:  forceChange,
+    })
+  }
+
+  const field = 'w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 appearance-none'
+  const label = 'block text-xs font-medium text-gray-400 mb-1'
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={() => { if (!saving) onCancel() }}
+      />
+      <div className="relative bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+
+          {/* Header */}
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-brand-500/15 border border-brand-500/25
+                            flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-100">Agregar usuario</h3>
+              <p className="text-xs text-gray-500">El usuario recibirá un email para activar su cuenta.</p>
+            </div>
+          </div>
+
+          {/* Identity section */}
+          <div>
+            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-3">Identidad</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2">
+                <label className={label}>Correo electrónico <span className="text-red-400">*</span></label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="usuario@ejemplo.com"
+                  required
+                  autoFocus
+                  className={`${field} placeholder-gray-600`}
+                />
+              </div>
+              <div>
+                <label className={label}>Nombre</label>
+                <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Nombre" className={`${field} placeholder-gray-600`} />
+              </div>
+              <div>
+                <label className={label}>Apellido</label>
+                <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Apellido" className={`${field} placeholder-gray-600`} />
+              </div>
+              <div>
+                <label className={label}>Empresa</label>
+                <input type="text" value={company} onChange={(e) => setCompany(e.target.value)}
+                  placeholder="Empresa" className={`${field} placeholder-gray-600`} />
+              </div>
+              <div>
+                <label className={label}>Cargo</label>
+                <input type="text" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)}
+                  placeholder="Cargo" className={`${field} placeholder-gray-600`} />
+              </div>
+              <div>
+                <label className={label}>País</label>
+                <input type="text" value={country} onChange={(e) => setCountry(e.target.value)}
+                  placeholder="País" className={`${field} placeholder-gray-600`} />
+              </div>
+              <div>
+                <label className={label}>Rol</label>
+                <select value={role} onChange={(e) => setRole(e.target.value as 'user' | 'admin')} className={field}>
+                  <option value="user">Usuario</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div>
+                <label className={label}>Estado de la cuenta</label>
+                <select value={status} onChange={(e) => setStatus(e.target.value as 'active' | 'suspended')} className={field}>
+                  <option value="active">Activo</option>
+                  <option value="suspended">Suspendido</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Subscription section */}
+          <div>
+            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-3">Suscripción</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className={label}>Plan</label>
+                <select value={planId} onChange={(e) => setPlanId(e.target.value)} className={field}>
+                  <option value="">Sin plan</option>
+                  {plans.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={label}>Estado de suscripción</label>
+                <select value={subStatus} onChange={(e) => setSubStatus(e.target.value as typeof subStatus)} className={field}>
+                  <option value="trial">Trial</option>
+                  <option value="active">Activo</option>
+                  <option value="expired">Vencido</option>
+                  <option value="canceled">Cancelado</option>
+                </select>
+              </div>
+              {subStatus === 'trial' && (
+                <div>
+                  <label className={label}>Fin del trial</label>
+                  <input type="date" value={trialEndsAt} onChange={(e) => setTrialEndsAt(e.target.value)} className={field} />
+                </div>
+              )}
+              <div>
+                <label className={label}>
+                  Límite personalizado{' '}
+                  <span className="text-gray-600 font-normal">(vacío = usa el del plan)</span>
+                </label>
+                <input
+                  type="number" min="0" value={customLimit}
+                  onChange={(e) => setCustomLimit(e.target.value)}
+                  placeholder="Ej: 100"
+                  className={`${field} placeholder-gray-600`}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Password section */}
+          <div>
+            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-3">Contraseña</p>
+            <div className="flex gap-2 mb-3">
+              {(['auto', 'manual'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setPasswordMode(mode)}
+                  className={[
+                    'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                    passwordMode === mode
+                      ? 'bg-brand-600 text-white'
+                      : 'bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700',
+                  ].join(' ')}
+                >
+                  {mode === 'auto' ? 'Automática (link de activación)' : 'Manual'}
+                </button>
+              ))}
+            </div>
+
+            {passwordMode === 'auto' ? (
+              <p className="text-xs text-gray-500 bg-gray-800/50 border border-gray-700/50 rounded-lg px-3 py-2">
+                Se generará una contraseña aleatoria y se enviará un email con un link para que el usuario la establezca.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className={label}>Contraseña <span className="text-red-400">*</span></label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Mínimo 8 caracteres"
+                    className={`${field} placeholder-gray-600`}
+                  />
+                </div>
+                <div>
+                  <label className={label}>Confirmar contraseña <span className="text-red-400">*</span></label>
+                  <input
+                    type="password"
+                    value={confirmation}
+                    onChange={(e) => setConfirmation(e.target.value)}
+                    placeholder="Repetir contraseña"
+                    className={`${field} placeholder-gray-600`}
+                  />
+                </div>
+                <div className="sm:col-span-2 flex items-center gap-2">
+                  <input
+                    id="force-change"
+                    type="checkbox"
+                    checked={forceChange}
+                    onChange={(e) => setForceChange(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-brand-500 focus:ring-brand-500"
+                  />
+                  <label htmlFor="force-change" className="text-xs text-gray-400 cursor-pointer">
+                    Forzar cambio de contraseña al primer inicio de sesión
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Error */}
+          {error && (
+            <p className="text-xs text-red-400 bg-red-950/30 border border-red-800/40 rounded-lg px-3 py-2">
+              {error}
+            </p>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-1">
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={saving}
+              className="flex-1 py-2 rounded-lg text-sm font-medium bg-gray-800 hover:bg-gray-700
+                         text-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 py-2 rounded-lg text-sm font-semibold bg-brand-600 hover:bg-brand-500
+                         text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed
+                         flex items-center justify-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Creando…
+                </>
+              ) : 'Crear usuario'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 // ── Metric card ───────────────────────────────────────────────────────────────
 
 interface MetricCardProps {
@@ -1125,6 +1421,8 @@ export default function AdminPage() {
   const [deletingWorkspaceId,   setDeletingWorkspaceId]   = useState<string | null>(null)
   const [deletingUserId,        setDeletingUserId]        = useState<string | null>(null)
   const [savingSubscription,    setSavingSubscription]    = useState(false)
+  const [addUserOpen,           setAddUserOpen]           = useState(false)
+  const [savingAddUser,         setSavingAddUser]         = useState(false)
   const [refreshing,            setRefreshing]            = useState(false)
   const [updatingCommunityId,   setUpdatingCommunityId]   = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
@@ -1309,6 +1607,22 @@ export default function AdminPage() {
     }
   }
 
+  async function handleCreateUser(payload: CreateAdminUserPayload) {
+    setSavingAddUser(true)
+    try {
+      const newUser = await createAdminUser(payload)
+      setUsers((prev) => [newUser, ...prev])
+      getAdminMetrics().then(setMetrics).catch(() => null)
+      setAddUserOpen(false)
+      setToast({ msg: `Usuario "${newUser.email}" creado correctamente.`, type: 'success' })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'No se pudo crear el usuario.'
+      setToast({ msg, type: 'error' })
+    } finally {
+      setSavingAddUser(false)
+    }
+  }
+
   function handleViewWorkspace(row: AdminUserRow) {
     if (!row.workspace) return
     window.open('/project/' + row.workspace.id, '_blank')
@@ -1480,10 +1794,26 @@ export default function AdminPage() {
           <section className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-white">Usuarios</h2>
-              <button
-                onClick={refreshData}
-                disabled={refreshing || tableLoading}
-                title="Actualizar datos desde el servidor"
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setAddUserOpen(true)}
+                  disabled={tableLoading}
+                  className={[
+                    'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium',
+                    'bg-brand-600 text-white transition-colors',
+                    tableLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-brand-500 cursor-pointer',
+                  ].join(' ')}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                  </svg>
+                  Agregar usuario
+                </button>
+                <button
+                  onClick={refreshData}
+                  disabled={refreshing || tableLoading}
+                  title="Actualizar datos desde el servidor"
                 className={[
                   'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium',
                   'border border-gray-700 text-gray-400 transition-colors',
@@ -1500,7 +1830,8 @@ export default function AdminPage() {
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 {refreshing ? 'Actualizando…' : 'Actualizar'}
-              </button>
+                </button>
+              </div>
             </div>
 
             {tableLoading ? (

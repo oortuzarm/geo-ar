@@ -243,6 +243,37 @@ export async function updateAdminProjectCommunityStatus(
   })
 }
 
+// ── Create user ───────────────────────────────────────────────────────────────
+
+export interface CreateAdminUserPayload {
+  email:                string
+  role?:                'user' | 'admin'
+  status?:              'active' | 'suspended'
+  planId?:              string | null
+  subscriptionStatus?:  'trial' | 'active' | 'expired' | 'canceled'
+  trialEndsAt?:         string | null
+  customLocationLimit?: number | null
+  // profile
+  firstName?:           string
+  lastName?:            string
+  company?:             string
+  jobTitle?:            string
+  country?:             string
+  // password
+  passwordMode:         'auto' | 'manual'
+  password?:            string
+  passwordConfirmation?: string
+  forcePasswordChange?: boolean
+}
+
+export async function createAdminUser(payload: CreateAdminUserPayload): Promise<AdminUser> {
+  const raw = await apiFetch<Record<string, unknown>>(`${BASE}/api/admin/users`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+  return normalizeUser(raw)
+}
+
 // ── User subscriptions ────────────────────────────────────────────────────────
 //
 // PATCH /api/admin/users/:userId/subscription

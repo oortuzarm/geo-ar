@@ -689,7 +689,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
             { label: 'Permanencia',           tooltip: 'El usuario debe permanecer dentro del área durante un tiempo mínimo para activar la experiencia.' },
             { label: 'Secuencia',             tooltip: 'Define un orden obligatorio de activación entre distintos puntos GPS del proyecto.' },
             { label: 'Colección',             tooltip: 'Agrupa puntos que deben activarse en conjunto para desbloquear un contenido o experiencia especial.' },
-            { label: 'Temporalidad avanzada', tooltip: 'Combina reglas de fecha, horario y zona horaria para controles de acceso complejos.' },
+            { label: 'Temporalidad',           tooltip: 'Combina reglas de fecha, horario y zona horaria para controles de acceso complejos.' },
           ] as { label: string; tooltip: string }[]).map(({ label, tooltip }) => (
             <div key={label} className="bg-gray-800/50 border border-gray-800 rounded-lg p-3">
               <div className="flex items-center justify-between">

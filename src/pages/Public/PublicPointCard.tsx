@@ -172,6 +172,12 @@ export default function PublicPointCard({
     (avail.scheduleActive && !avail.scheduleAvailable) ||
     (avail.quotaActive && !avail.quotaAvailable)
 
+  // True when schedule + quota rules are satisfied right now (regardless of radius).
+  // Used solely to decide whether to render the "Disponible" badge.
+  const isAvailableNow  = !contentUnavailableOnArrival
+  // Pre-compute once so both the image block and the title fallback agree.
+  const hasCoverBanner  = !hideImage && Boolean(getPointCoverImage(point))
+
   function openMaps() {
     window.open(mapsUrl, '_blank', 'noopener,noreferrer')
   }
@@ -240,6 +246,17 @@ export default function PublicPointCard({
           <div className="absolute inset-x-0 bottom-0 h-1/2
                           bg-gradient-to-t from-gray-950/70 to-transparent
                           pointer-events-none" />
+          {isAvailableNow && (
+            <div className="absolute bottom-2 left-2">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+                               bg-black/[0.45] backdrop-blur-md
+                               border border-white/[0.14]
+                               shadow-[0_1px_6px_rgba(0,0,0,0.35)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                <span className="text-[11px] font-semibold text-white/90 leading-none">Disponible</span>
+              </span>
+            </div>
+          )}
         </div>
       )}
 
@@ -263,6 +280,17 @@ export default function PublicPointCard({
             </button>
           )}
         </div>
+
+        {/* Disponibilidad badge — shown only when no image covers the banner slot */}
+        {!hasCoverBanner && isAvailableNow && (
+          <div className="mt-2">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full
+                             bg-black/[0.25] border border-white/[0.1]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+              <span className="text-[11px] font-semibold text-white/80 leading-none">Disponible</span>
+            </span>
+          </div>
+        )}
 
         {/* Description */}
         {point.description && (

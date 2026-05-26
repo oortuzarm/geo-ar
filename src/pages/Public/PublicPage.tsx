@@ -1893,13 +1893,12 @@ export default function PublicPage({
                   <button
                     onClick={() => handleFilterChange('all')}
                     className={[
-                      'px-3.5 py-1.5 rounded-full text-[11px] font-medium',
-                      'border backdrop-blur-md',
-                      'shadow-[0_2px_8px_rgba(0,0,0,0.28)]',
-                      'transition-all duration-200 active:scale-[0.95]',
+                      'px-3.5 py-1.5 rounded-full text-[11px] font-semibold',
+                      'border transition-all duration-200 active:scale-[0.95]',
+                      'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
                       locationFilter === 'all'
-                        ? 'bg-black/[0.28] text-white border-white/[0.22]'
-                        : 'bg-black/[0.18] text-white/50 border-white/[0.09] hover:bg-black/[0.24] hover:text-white/70',
+                        ? 'bg-gray-900 text-white border-gray-700'
+                        : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
                     ].join(' ')}
                   >
                     {points.length} ubicaciones
@@ -1907,17 +1906,16 @@ export default function PublicPage({
                   <button
                     onClick={() => handleFilterChange('available')}
                     className={[
-                      'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-medium',
-                      'border backdrop-blur-md',
-                      'shadow-[0_2px_8px_rgba(0,0,0,0.28)]',
-                      'transition-all duration-200 active:scale-[0.95]',
+                      'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold',
+                      'border transition-all duration-200 active:scale-[0.95]',
+                      'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
                       locationFilter === 'available'
-                        ? 'bg-black/[0.28] text-white border-white/[0.22]'
-                        : 'bg-black/[0.18] text-white/50 border-white/[0.09] hover:bg-black/[0.24] hover:text-white/70',
+                        ? 'bg-gray-900 text-white border-gray-700'
+                        : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
                     ].join(' ')}
                   >
                     <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                      locationFilter === 'available' ? 'bg-emerald-400' : 'bg-emerald-400/40'
+                      locationFilter === 'available' ? 'bg-emerald-400' : 'bg-emerald-500/50'
                     }`} />
                     {availablePoints.length} activas
                   </button>
@@ -2113,13 +2111,12 @@ export default function PublicPage({
           <button
             onClick={() => handleFilterChange('all')}
             className={[
-              'px-3.5 py-1.5 rounded-full text-xs font-medium',
-              'border backdrop-blur-md',
-              'shadow-[0_2px_8px_rgba(0,0,0,0.2)]',
-              'transition-all duration-200 active:scale-95',
+              'px-3.5 py-1.5 rounded-full text-xs font-semibold',
+              'border transition-all duration-200 active:scale-95',
+              'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
               locationFilter === 'all'
-                ? 'bg-black/[0.28] text-gray-100 border-white/[0.18]'
-                : 'bg-black/[0.18] text-gray-400 border-white/[0.07] hover:bg-black/[0.24] hover:text-gray-200',
+                ? 'bg-gray-900 text-white border-gray-700'
+                : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
             ].join(' ')}
           >
             {points.length} ubicaciones
@@ -2127,17 +2124,16 @@ export default function PublicPage({
           <button
             onClick={() => handleFilterChange('available')}
             className={[
-              'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium',
-              'border backdrop-blur-md',
-              'shadow-[0_2px_8px_rgba(0,0,0,0.2)]',
-              'transition-all duration-200 active:scale-95',
+              'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold',
+              'border transition-all duration-200 active:scale-95',
+              'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
               locationFilter === 'available'
-                ? 'bg-black/[0.28] text-gray-100 border-white/[0.18]'
-                : 'bg-black/[0.18] text-gray-400 border-white/[0.07] hover:bg-black/[0.24] hover:text-gray-200',
+                ? 'bg-gray-900 text-white border-gray-700'
+                : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
             ].join(' ')}
           >
             <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-              locationFilter === 'available' ? 'bg-emerald-400' : 'bg-emerald-400/35'
+              locationFilter === 'available' ? 'bg-emerald-400' : 'bg-emerald-500/50'
             }`} />
             {availablePoints.length} activas
           </button>

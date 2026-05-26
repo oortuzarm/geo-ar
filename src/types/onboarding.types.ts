@@ -57,7 +57,7 @@ export interface AdminOnboardingOption {
 }
 
 export interface OnboardingMetricsItem {
-  id:    number
+  id?:   number
   name:  string
   count: number
 }
@@ -73,4 +73,5 @@ export interface OnboardingMetrics {
   organizationTypes: OnboardingMetricsItem[]
   organizationSizes: OnboardingMetricsItem[]
   objectives:        OnboardingMetricsItem[]
+  countries:         OnboardingMetricsItem[]
 }

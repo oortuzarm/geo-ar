@@ -88,9 +88,9 @@ function DistributionCard({ title, items }: { title: string; items: OnboardingMe
       ) : (
         <div className="space-y-2.5">
           {items.map(item => (
-            <div key={item.id}>
+            <div key={item.id ?? item.name}>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-300 truncate max-w-[70%]">{item.name ?? `ID ${item.id}`}</span>
+                <span className="text-xs text-gray-300 truncate max-w-[70%]">{item.name}</span>
                 <span className="text-xs text-gray-500 tabular-nums ml-2">{item.count}</span>
               </div>
               <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
@@ -678,8 +678,9 @@ export default function AdminOnboardingPage() {
                 <DistributionCard title="Por industria" items={metrics.industries} />
                 <DistributionCard title="Por tipo de organización" items={metrics.organizationTypes} />
                 <DistributionCard title="Por tamaño de organización" items={metrics.organizationSizes} />
+                <DistributionCard title="Por objetivo principal" items={metrics.objectives} />
+                <DistributionCard title="Por país (top 10)" items={metrics.countries} />
               </div>
-              <DistributionCard title="Por objetivo principal" items={metrics.objectives} />
             </>
           )}
 

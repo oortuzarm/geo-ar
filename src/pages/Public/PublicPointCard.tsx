@@ -59,7 +59,7 @@ function ChevronDownIcon({ open }: { open: boolean }) {
 // ─── Badge system types ───────────────────────────────────────────────────────
 
 /** Operational badge rendered on each card (max 1 at a time). */
-type OpBadge = 'available' | 'last-slots' | 'tomorrow' | null
+type OpBadge = 'available' | 'last-slots' | 'every-day' | 'tomorrow' | null
 
 // ─── Status chip ──────────────────────────────────────────────────────────────
 
@@ -192,7 +192,8 @@ export default function PublicPointCard({
   // Operational (max 1, evaluated in priority order):
   //   1. available  — schedule + quota pass right now
   //   2. last-slots — quota still open but ≤ 10 remaining
-  //   3. tomorrow   — schedule blocks today; tomorrow's day passes
+  //   3. every-day  — schedule enabled and available all 7 days
+  //   4. tomorrow   — schedule blocks today; tomorrow's day passes
   const opBadge: OpBadge = (() => {
     if (isAvailableNow) return 'available'
     if (avail.quotaActive && avail.quotaAvailable &&
@@ -200,9 +201,11 @@ export default function PublicPointCard({
       return 'last-slots'
     const av = point.availability
     if (av?.scheduleEnabled && (!avail.quotaActive || avail.quotaAvailable)) {
+      const days = av.scheduleDays ?? []
+      if (days.length === 0 || days.length === 7) return 'every-day'
       const d    = new Date(); d.setDate(d.getDate() + 1)
       const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'] as const
-      const dayOk = !av.scheduleDays?.length || av.scheduleDays.includes(DAYS[d.getDay()])
+      const dayOk = days.includes(DAYS[d.getDay()])
       if (dayOk) return 'tomorrow'
     }
     return null
@@ -304,6 +307,14 @@ export default function PublicPointCard({
                   <span className="text-[12px] font-semibold text-white leading-none">Últimos cupos</span>
                 </span>
               )}
+              {opBadge === 'every-day' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                                 bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
+                                 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+                  <span className="text-[10px] leading-none">🗓️</span>
+                  <span className="text-[12px] font-semibold text-white leading-none">Todos los días</span>
+                </span>
+              )}
               {opBadge === 'tomorrow' && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                                  bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
@@ -362,6 +373,13 @@ export default function PublicPointCard({
                                bg-black/[0.3] border border-white/[0.15]">
                 <span className="text-[10px] leading-none">🔥</span>
                 <span className="text-[12px] font-semibold text-white leading-none">Últimos cupos</span>
+              </span>
+            )}
+            {opBadge === 'every-day' && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
+                               bg-black/[0.3] border border-white/[0.15]">
+                <span className="text-[10px] leading-none">🗓️</span>
+                <span className="text-[12px] font-semibold text-white leading-none">Todos los días</span>
               </span>
             )}
             {opBadge === 'tomorrow' && (

@@ -1897,8 +1897,8 @@ export default function PublicPage({
                       'shadow-[0_2px_8px_rgba(0,0,0,0.28)]',
                       'transition-all duration-200 active:scale-[0.95]',
                       locationFilter === 'all'
-                        ? 'bg-white/[0.13] text-white border-white/[0.22]'
-                        : 'bg-white/[0.05] text-white/45 border-white/[0.09] hover:bg-white/[0.09] hover:text-white/65',
+                        ? 'bg-black/[0.28] text-white border-white/[0.22]'
+                        : 'bg-black/[0.18] text-white/50 border-white/[0.09] hover:bg-black/[0.24] hover:text-white/70',
                     ].join(' ')}
                   >
                     {points.length} ubicaciones
@@ -1911,8 +1911,8 @@ export default function PublicPage({
                       'shadow-[0_2px_8px_rgba(0,0,0,0.28)]',
                       'transition-all duration-200 active:scale-[0.95]',
                       locationFilter === 'available'
-                        ? 'bg-white/[0.13] text-white border-white/[0.22]'
-                        : 'bg-white/[0.05] text-white/45 border-white/[0.09] hover:bg-white/[0.09] hover:text-white/65',
+                        ? 'bg-black/[0.28] text-white border-white/[0.22]'
+                        : 'bg-black/[0.18] text-white/50 border-white/[0.09] hover:bg-black/[0.24] hover:text-white/70',
                     ].join(' ')}
                   >
                     <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
@@ -2116,8 +2116,8 @@ export default function PublicPage({
               'shadow-[0_2px_8px_rgba(0,0,0,0.2)]',
               'transition-all duration-200 active:scale-95',
               locationFilter === 'all'
-                ? 'bg-white/[0.1] text-gray-100 border-white/[0.18]'
-                : 'bg-white/[0.04] text-gray-500 border-white/[0.07] hover:bg-white/[0.08] hover:text-gray-300',
+                ? 'bg-black/[0.28] text-gray-100 border-white/[0.18]'
+                : 'bg-black/[0.18] text-gray-400 border-white/[0.07] hover:bg-black/[0.24] hover:text-gray-200',
             ].join(' ')}
           >
             {points.length} ubicaciones
@@ -2130,8 +2130,8 @@ export default function PublicPage({
               'shadow-[0_2px_8px_rgba(0,0,0,0.2)]',
               'transition-all duration-200 active:scale-95',
               locationFilter === 'available'
-                ? 'bg-white/[0.1] text-gray-100 border-white/[0.18]'
-                : 'bg-white/[0.04] text-gray-500 border-white/[0.07] hover:bg-white/[0.08] hover:text-gray-300',
+                ? 'bg-black/[0.28] text-gray-100 border-white/[0.18]'
+                : 'bg-black/[0.18] text-gray-400 border-white/[0.07] hover:bg-black/[0.24] hover:text-gray-200',
             ].join(' ')}
           >
             <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${

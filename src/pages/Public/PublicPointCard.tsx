@@ -154,6 +154,9 @@ interface PublicPointCardProps {
   /** ISO string (point.createdAt) used for the "✨ Nuevo" editorial badge.
    *  Shown when the point was created within the last 7 days. Omit to suppress the badge. */
   pointCreatedAt?: string
+  /** When true, renders in detail-sheet layout: flat container, larger type,
+   *  badges centred at top, more spacious chips and CTA. */
+  isDetail?: boolean
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -162,7 +165,7 @@ export default function PublicPointCard({
   point, distance, isSelected, onSelect, onActivate, onExit,
   routeStatus, walkingDistanceMeters, walkingDurationSeconds,
   isActivating, accessMessage, accessFallbackUrl, address,
-  hideImage = false, pointCreatedAt,
+  hideImage = false, pointCreatedAt, isDetail = false,
 }: PublicPointCardProps) {
   const [descExpanded, setDescExpanded] = useState(false)
   const [showRouteWarning, setShowRouteWarning] = useState(false)
@@ -257,7 +260,7 @@ export default function PublicPointCard({
   return (
     <>
     <div
-      className={[
+      className={isDetail ? '' : [
         'rounded-xl border overflow-hidden transition-all duration-200 cursor-pointer',
         isSelected && avail.insideRadius
           ? 'border-brand-500/70 bg-gray-800/95 shadow-lg shadow-brand-950/50 ring-1 ring-brand-500/20'
@@ -265,11 +268,56 @@ export default function PublicPointCard({
           ? 'border-brand-500/50 bg-gray-800/90 shadow-md shadow-black/40'
           : 'border-gray-700/50 bg-gray-900/80 hover:border-gray-600/60',
       ].join(' ')}
-      onClick={onSelect}
+      onClick={isDetail ? undefined : onSelect}
     >
+      {/* DETAIL MODE: badges centred above the image */}
+      {isDetail && (isNew || opBadge) && (
+        <div className="flex justify-center items-center flex-wrap gap-2 pb-4">
+          {isNew && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+                             bg-black/[0.4] backdrop-blur-md border border-amber-300/[0.22]
+                             shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
+              <span className="text-[9px] leading-none">✨</span>
+              <span className="text-[11px] font-medium text-amber-200/80 leading-none">Nuevo</span>
+            </span>
+          )}
+          {opBadge === 'available' && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                             bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
+                             shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+              <span className="text-[12px] font-semibold text-white leading-none">Disponible</span>
+            </span>
+          )}
+          {opBadge === 'last-slots' && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                             bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
+                             shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+              <span className="text-[10px] leading-none">🔥</span>
+              <span className="text-[12px] font-semibold text-white leading-none">Últimos cupos</span>
+            </span>
+          )}
+          {opBadge === 'every-day' && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                             bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
+                             shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+              <span className="text-[10px] leading-none">🗓️</span>
+              <span className="text-[12px] font-semibold text-white leading-none">Todos los días</span>
+            </span>
+          )}
+          {opBadge === 'tomorrow' && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                             bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
+                             shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+              <span className="text-[10px] leading-none">🕒</span>
+              <span className="text-[12px] font-semibold text-white/90 leading-none">Disponible mañana</span>
+            </span>
+          )}
+        </div>
+      )}
       {/* Cover image — hidden when caller renders a full carousel above the card */}
       {!hideImage && getPointCoverImage(point) && (
-        <div className="relative h-32 overflow-hidden">
+        <div className={`relative overflow-hidden ${isDetail ? 'h-52 rounded-2xl mb-5' : 'h-32'}`}>
           <img
             src={getPointCoverImage(point)}
             alt={point.name}
@@ -279,7 +327,8 @@ export default function PublicPointCard({
           <div className="absolute inset-x-0 bottom-0 h-1/2
                           bg-gradient-to-t from-gray-950/70 to-transparent
                           pointer-events-none" />
-          {(isNew || opBadge) && (
+          {/* List mode only — detail mode shows badges above the image */}
+          {!isDetail && (isNew || opBadge) && (
             <div className="absolute bottom-3.5 left-3 flex items-center gap-2">
               {/* Editorial — warm/subtle, secondary to the operational badge */}
               {isNew && (
@@ -328,10 +377,10 @@ export default function PublicPointCard({
         </div>
       )}
 
-      <div className="p-3.5">
+      <div className={isDetail ? '' : 'p-3.5'}>
         {/* Name + exit button */}
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-white text-sm leading-snug">{point.name}</h3>
+          <h3 className={`font-bold text-white leading-snug ${isDetail ? 'text-xl' : 'text-sm'}`}>{point.name}</h3>
           {isSelected && onExit && (
             <button
               onClick={(e) => { e.stopPropagation(); onExit() }}
@@ -349,8 +398,8 @@ export default function PublicPointCard({
           )}
         </div>
 
-        {/* Badge system — below title when no cover image occupies the banner slot */}
-        {!hasCoverBanner && (isNew || opBadge) && (
+        {/* Badge system — below title when no cover image occupies the banner slot (list mode only) */}
+        {!isDetail && !hasCoverBanner && (isNew || opBadge) && (
           <div className="mt-2 flex flex-wrap items-center gap-2">
             {/* Editorial — warm/subtle */}
             {isNew && (
@@ -394,8 +443,8 @@ export default function PublicPointCard({
 
         {/* Description */}
         {point.description && (
-          <div className="mt-1">
-            <p className="text-xs text-gray-300 leading-relaxed">
+          <div className={isDetail ? 'mt-3' : 'mt-1'}>
+            <p className={`text-gray-300 leading-relaxed ${isDetail ? 'text-sm' : 'text-xs'}`}>
               {descExpanded || !isLongDesc
                 ? point.description
                 : point.description.slice(0, DESCRIPTION_LIMIT)}
@@ -423,21 +472,21 @@ export default function PublicPointCard({
 
         {/* Address — auto-resolved via reverse geocoding; falls back to legacy instructions */}
         {(address ?? point.instructions) && (
-          <div className="mt-2 flex items-start gap-1.5">
-            <svg className="h-3.5 w-3.5 text-slate-300 flex-shrink-0 mt-0.5"
+          <div className={`flex items-start gap-1.5 ${isDetail ? 'mt-3' : 'mt-2'}`}>
+            <svg className={`text-slate-400 flex-shrink-0 mt-0.5 ${isDetail ? 'h-4 w-4' : 'h-3.5 w-3.5'}`}
               fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <p className="text-xs text-slate-200 line-clamp-2">{address ?? point.instructions}</p>
+            <p className={`text-slate-300 line-clamp-2 ${isDetail ? 'text-sm' : 'text-xs'}`}>{address ?? point.instructions}</p>
           </div>
         )}
 
         {/* ── Selected: status chips + button ── */}
         {isSelected && (
-          <div className="mt-3 space-y-1.5">
+          <div className={`space-y-1.5 ${isDetail ? 'mt-6 pt-5 border-t border-white/[0.07]' : 'mt-3'}`}>
 
             {/* Location */}
             <StatusChip
@@ -471,15 +520,17 @@ export default function PublicPointCard({
             )}
 
             {/* CTA button — enabled iff avail.canAccess */}
-            <div className="pt-0.5 space-y-2">
+            <div className={`space-y-2 ${isDetail ? 'pt-2' : 'pt-0.5'}`}>
               {!avail.insideRadius && (
                 <button
                   onClick={handleNavigate}
-                  className="w-full flex items-center justify-center gap-2
-                             py-3 px-4 rounded-xl text-sm font-semibold
-                             bg-white/[0.05] border border-white/[0.12] text-gray-200
-                             hover:bg-white/[0.08] hover:text-white
-                             active:scale-[0.98] transition-all duration-150"
+                  className={[
+                    'w-full flex items-center justify-center gap-2 rounded-xl text-sm font-semibold',
+                    isDetail
+                      ? 'py-3.5 px-4 bg-white/[0.09] border border-white/[0.2] text-white hover:bg-white/[0.14] shadow-[0_1px_8px_rgba(0,0,0,0.25)]'
+                      : 'py-3 px-4 bg-white/[0.05] border border-white/[0.12] text-gray-200 hover:bg-white/[0.08] hover:text-white',
+                    'active:scale-[0.98] transition-all duration-150',
+                  ].join(' ')}
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">

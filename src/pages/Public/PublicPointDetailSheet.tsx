@@ -18,13 +18,14 @@ interface PublicPointDetailSheetProps {
   walkingDurationSeconds?: number
   address?:               string
   isEmbed?:               boolean
+  pointCreatedAt?:        string
 }
 
 export default function PublicPointDetailSheet({
   point, distance, onClose, onActivate,
   isActivating, accessMessage, accessFallbackUrl,
   routeStatus, walkingDistanceMeters, walkingDurationSeconds, address,
-  isEmbed = false,
+  isEmbed = false, pointCreatedAt,
 }: PublicPointDetailSheetProps) {
   const galleryImages = getPointGalleryImages(point)
   const hasGallery    = galleryImages.length > 0
@@ -90,6 +91,7 @@ export default function PublicPointDetailSheet({
               point={point}
               distance={distance}
               isSelected
+              isDetail
               hideImage={hasGallery}
               onSelect={() => {}}
               onActivate={onActivate}
@@ -100,6 +102,7 @@ export default function PublicPointDetailSheet({
               walkingDistanceMeters={walkingDistanceMeters}
               walkingDurationSeconds={walkingDurationSeconds}
               address={address}
+              pointCreatedAt={pointCreatedAt}
             />
           </div>
         </div>

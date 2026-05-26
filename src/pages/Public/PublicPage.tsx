@@ -2076,6 +2076,7 @@ export default function PublicPage({
           walkingDurationSeconds={routeResult?.durationSeconds}
           address={selectedPoint.instructions ?? addresses[selectedPoint.id]}
           isEmbed={isEmbed}
+          pointCreatedAt={(selectedPoint as { createdAt?: string }).createdAt ?? project?.createdAt}
         />
       )}
 

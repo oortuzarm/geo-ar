@@ -1862,9 +1862,9 @@ export default function PublicPage({
         }}
       >
         <div className="h-full flex flex-col rounded-t-[28px] overflow-hidden
-                        bg-gray-950/97 backdrop-blur-xl
-                        border-t border-white/[0.07]
-                        shadow-[0_-12px_40px_rgba(0,0,0,0.7)]">
+                        bg-white
+                        border-t border-gray-200
+                        shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
 
           {/* Drag handle — swipe down to close */}
           <div
@@ -1873,7 +1873,7 @@ export default function PublicPage({
             onTouchEnd={handleDragEnd}
           >
             <div className="flex justify-center pt-2 pb-1">
-              <div className="w-9 h-1 rounded-full bg-white/20" />
+              <div className="w-9 h-1 rounded-full bg-gray-300" />
             </div>
 
             <div className="flex items-center gap-3 px-4 pb-3">
@@ -1930,8 +1930,8 @@ export default function PublicPage({
                   setSheetState('hidden')
                 }}
                 className="flex-shrink-0 w-8 h-8 flex items-center justify-center
-                           rounded-full bg-gray-800/60 border border-white/[0.07]
-                           text-gray-400 hover:text-gray-100 hover:bg-gray-700/60
+                           rounded-full bg-gray-100 border border-gray-200
+                           text-gray-500 hover:text-gray-700 hover:bg-gray-200
                            active:scale-90 transition-all duration-150"
                 aria-label="Cerrar lista"
               >
@@ -2081,7 +2081,7 @@ export default function PublicPage({
       )}
 
       {/* ── DESKTOP PANEL (hidden on mobile, always hidden in embed) ─────────*/}
-      <div className={isEmbed ? 'hidden' : 'hidden md:block flex-shrink-0 bg-gray-950 border-t border-gray-800 px-4 pt-3 pb-4 max-h-[55vh] overflow-y-auto'}>
+      <div className={isEmbed ? 'hidden' : 'hidden md:block flex-shrink-0 bg-white border-t border-gray-200 px-4 pt-3 pb-4 max-h-[55vh] overflow-y-auto'}>
         <div className="flex items-start gap-3 mb-3">
           {project.coverImage && (
             <img
@@ -2091,15 +2091,15 @@ export default function PublicPage({
             />
           )}
           <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-gray-100 text-base leading-tight">{project.title}</h1>
+            <h1 className="font-bold text-gray-800 text-base leading-tight">{project.title}</h1>
             {project.subtitle && (
-              <p className="text-sm text-gray-400 mt-0.5">{project.subtitle}</p>
+              <p className="text-sm text-gray-500 mt-0.5">{project.subtitle}</p>
             )}
           </div>
           <button
             onClick={handleShare}
-            className="flex-shrink-0 p-2 rounded-lg text-gray-400 hover:text-gray-100
-                       hover:bg-gray-800 active:scale-95 transition-all duration-150"
+            className="flex-shrink-0 p-2 rounded-lg text-gray-500 hover:text-gray-700
+                       hover:bg-gray-100 active:scale-95 transition-all duration-150"
             title="Compartir"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

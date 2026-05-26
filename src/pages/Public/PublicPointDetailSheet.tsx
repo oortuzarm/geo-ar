@@ -43,19 +43,19 @@ export default function PublicPointDetailSheet({
       style={{ height: visible ? '72dvh' : '0dvh', transition: 'height 0.45s cubic-bezier(0.32,0.72,0,1)' }}
     >
       <div className="h-full flex flex-col rounded-t-[28px] overflow-hidden
-                      bg-gray-950/98 backdrop-blur-xl
-                      border-t border-white/[0.07]
-                      shadow-[0_-12px_40px_rgba(0,0,0,0.75)]">
+                      bg-white
+                      border-t border-gray-200
+                      shadow-[0_-4px_24px_rgba(0,0,0,0.1)]">
 
         {/* Handle + back */}
         <div className="flex-shrink-0">
           <div className="flex justify-center pt-2 pb-0">
-            <div className="w-9 h-1 rounded-full bg-white/[0.28]" />
+            <div className="w-9 h-1 rounded-full bg-gray-300" />
           </div>
-          <div className="flex items-center px-4 py-3 border-b border-white/[0.1]">
+          <div className="flex items-center px-4 py-3 border-b border-gray-200">
             <button
               onClick={onClose}
-              className="flex items-center gap-1.5 text-brand-400 hover:text-brand-300
+              className="flex items-center gap-1.5 text-brand-600 hover:text-brand-500
                          active:scale-95 transition-all duration-150 text-sm font-medium"
             >
               <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none"

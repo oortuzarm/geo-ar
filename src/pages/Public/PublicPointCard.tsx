@@ -66,10 +66,10 @@ type OpBadge = 'available' | 'last-slots' | 'every-day' | 'tomorrow' | null
 type ChipVariant = 'ok' | 'warn' | 'block' | 'neutral'
 
 const CHIP_STYLES: Record<ChipVariant, { wrap: string; text: string; divider: string }> = {
-  ok:      { wrap: 'bg-emerald-500/[0.16] border-emerald-500/30', text: 'text-emerald-300', divider: 'border-emerald-500/25' },
-  warn:    { wrap: 'bg-amber-500/[0.16] border-amber-500/30',     text: 'text-amber-300',   divider: 'border-amber-500/25'   },
-  block:   { wrap: 'bg-red-500/[0.16] border-red-500/30',         text: 'text-red-300',     divider: 'border-red-500/25'     },
-  neutral: { wrap: 'bg-gray-500/[0.12] border-gray-500/25',       text: 'text-gray-300',    divider: 'border-gray-600/60'    },
+  ok:      { wrap: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700', divider: 'border-emerald-200' },
+  warn:    { wrap: 'bg-amber-50 border-amber-200',     text: 'text-amber-700',   divider: 'border-amber-200'   },
+  block:   { wrap: 'bg-red-50 border-red-200',         text: 'text-red-700',     divider: 'border-red-200'     },
+  neutral: { wrap: 'bg-gray-100 border-gray-200',      text: 'text-gray-600',    divider: 'border-gray-200'    },
 }
 
 function StatusChip({
@@ -263,10 +263,10 @@ export default function PublicPointCard({
       className={isDetail ? '' : [
         'rounded-xl border overflow-hidden transition-all duration-200 cursor-pointer',
         isSelected && avail.insideRadius
-          ? 'border-brand-500/70 bg-gray-800/95 shadow-lg shadow-brand-950/50 ring-1 ring-brand-500/20'
+          ? 'border-brand-500/40 bg-white shadow-md shadow-brand-500/10 ring-1 ring-brand-500/15'
           : isSelected
-          ? 'border-brand-500/50 bg-gray-800/90 shadow-md shadow-black/40'
-          : 'border-gray-700/50 bg-gray-900/80 hover:border-gray-600/60',
+          ? 'border-brand-500/30 bg-white shadow-md shadow-gray-200/80'
+          : 'border-gray-200 bg-white shadow-sm hover:border-gray-300 hover:shadow-md',
       ].join(' ')}
       onClick={isDetail ? undefined : onSelect}
     >
@@ -381,14 +381,14 @@ export default function PublicPointCard({
         {/* Name + exit button */}
         <div className="flex items-start justify-between gap-2">
           <h3
-            className={`font-bold leading-snug ${isDetail ? 'text-xl text-gray-900' : 'text-sm text-white'}`}
+            className={`font-bold leading-snug ${isDetail ? 'text-xl text-gray-900' : 'text-sm text-gray-800'}`}
           >{point.name}</h3>
           {isSelected && onExit && (
             <button
               onClick={(e) => { e.stopPropagation(); onExit() }}
               className="flex-shrink-0 w-7 h-7 flex items-center justify-center
-                         rounded-full bg-gray-700/80 hover:bg-gray-600/90
-                         border border-white/[0.1] text-gray-300 hover:text-white
+                         rounded-full bg-gray-100 hover:bg-gray-200
+                         border border-gray-200 text-gray-500 hover:text-gray-700
                          active:scale-90 transition-all duration-150"
               aria-label="Cerrar"
             >
@@ -446,7 +446,7 @@ export default function PublicPointCard({
         {/* Description */}
         {point.description && (
           <div className={isDetail ? 'mt-3' : 'mt-1'}>
-            <p className={`leading-relaxed ${isDetail ? 'text-sm text-gray-700' : 'text-xs text-gray-300'}`}>
+            <p className={`leading-relaxed ${isDetail ? 'text-sm text-gray-700' : 'text-xs text-gray-600'}`}>
               {descExpanded || !isLongDesc
                 ? point.description
                 : point.description.slice(0, DESCRIPTION_LIMIT)}
@@ -475,20 +475,20 @@ export default function PublicPointCard({
         {/* Address — auto-resolved via reverse geocoding; falls back to legacy instructions */}
         {(address ?? point.instructions) && (
           <div className={`flex items-start gap-1.5 ${isDetail ? 'mt-3' : 'mt-2'}`}>
-            <svg className={`flex-shrink-0 mt-0.5 ${isDetail ? 'h-4 w-4 text-gray-400' : 'h-3.5 w-3.5 text-slate-400'}`}
+            <svg className={`flex-shrink-0 mt-0.5 ${isDetail ? 'h-4 w-4 text-gray-400' : 'h-3.5 w-3.5 text-gray-400'}`}
               fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <p className={`line-clamp-2 ${isDetail ? 'text-sm text-gray-600' : 'text-xs text-slate-300'}`}>{address ?? point.instructions}</p>
+            <p className={`line-clamp-2 ${isDetail ? 'text-sm text-gray-600' : 'text-xs text-gray-500'}`}>{address ?? point.instructions}</p>
           </div>
         )}
 
         {/* ── Selected: status chips + button ── */}
         {isSelected && (
-          <div className={`space-y-1.5 ${isDetail ? 'mt-6 pt-5 border-t border-white/[0.07]' : 'mt-3'}`}>
+          <div className={`space-y-1.5 ${isDetail ? 'mt-6 pt-5 border-t border-gray-200' : 'mt-3'}`}>
 
             {/* Location */}
             <StatusChip
@@ -529,8 +529,8 @@ export default function PublicPointCard({
                   className={[
                     'w-full flex items-center justify-center gap-2 rounded-xl text-sm font-semibold',
                     isDetail
-                      ? 'py-3.5 px-4 bg-white/[0.09] border border-white/[0.2] text-white hover:bg-white/[0.14] shadow-[0_1px_8px_rgba(0,0,0,0.25)]'
-                      : 'py-3 px-4 bg-white/[0.05] border border-white/[0.12] text-gray-200 hover:bg-white/[0.08] hover:text-white',
+                      ? 'py-3.5 px-4 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 shadow-sm'
+                      : 'py-3 px-4 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100',
                     'active:scale-[0.98] transition-all duration-150',
                   ].join(' ')}
                 >
@@ -565,8 +565,8 @@ export default function PublicPointCard({
               ) : (
                 <button
                   disabled
-                  className="w-full bg-gray-800/70 text-gray-500 font-semibold py-3.5 px-4
-                             rounded-xl text-sm cursor-not-allowed border border-gray-700/40"
+                  className="w-full bg-gray-100 text-gray-400 font-semibold py-3.5 px-4
+                             rounded-xl text-sm cursor-not-allowed border border-gray-200"
                 >
                   {point.buttonText || 'Acceder al contenido'}
                 </button>

@@ -151,8 +151,8 @@ interface PublicPointCardProps {
   address?: string
   /** When true, suppresses the cover image banner (caller renders a carousel above). */
   hideImage?: boolean
-  /** ISO string used for the "Nuevo" editorial badge. Pass project.createdAt as a proxy
-   *  until GeoPoint has its own createdAt field. Omit to suppress the badge entirely. */
+  /** ISO string (point.createdAt) used for the "✨ Nuevo" editorial badge.
+   *  Shown when the point was created within the last 7 days. Omit to suppress the badge. */
   pointCreatedAt?: string
 }
 

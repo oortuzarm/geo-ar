@@ -85,6 +85,7 @@ export interface GeoPoint {
   order: number
   availability?: GeoPointAvailability
   accessMode?: 'restricted' | 'open'
+  createdAt?: string
 }
 
 export type NominatimResult = {

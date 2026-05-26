@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import {
   getAdminUsers, getAdminProjects, getAdminMetrics,
   getAdminPlans,
+  getAdminUser,
   deleteAdminProject, deleteAdminUser,
   updateAdminUserSubscription,
   updateAdminProjectCommunityStatus,
@@ -13,7 +14,7 @@ import {
   type CreateAdminUserPayload,
 } from '../../services/adminApi'
 import { getAdminSettings, patchAdminSettings } from '../../services/settingsApi'
-import type { AdminUser, AdminProject, AdminMetrics, AdminPlan } from '../../types/admin.types'
+import type { AdminUser, AdminUserDetail, AdminProject, AdminMetrics, AdminPlan } from '../../types/admin.types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -1121,6 +1122,337 @@ function AddUserModal({
   )
 }
 
+// ── User detail drawer ────────────────────────────────────────────────────────
+
+function DetailField({ label, value }: { label: string; value?: string | number | null }) {
+  return (
+    <div>
+      <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">{label}</p>
+      <p className="text-sm text-gray-200">
+        {value != null && value !== ''
+          ? String(value)
+          : <span className="text-gray-600 italic">No disponible</span>}
+      </p>
+    </div>
+  )
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-5 first:mt-0">
+      {children}
+    </p>
+  )
+}
+
+function AccountSection({ detail }: { detail: AdminUserDetail }) {
+  return (
+    <div>
+      <SectionLabel>Identidad</SectionLabel>
+      <div className="grid grid-cols-2 gap-x-5 gap-y-4">
+        <div className="col-span-2"><DetailField label="Email" value={detail.email} /></div>
+        <DetailField label="Nombre"   value={detail.firstName} />
+        <DetailField label="Apellido" value={detail.lastName} />
+        <DetailField label="Empresa"  value={detail.company} />
+        <DetailField label="Cargo"    value={detail.jobTitle} />
+        <div className="col-span-2"><DetailField label="País" value={detail.country} /></div>
+      </div>
+
+      <SectionLabel>Acceso</SectionLabel>
+      <div className="grid grid-cols-2 gap-x-5 gap-y-4">
+        <div>
+          <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1">Rol</p>
+          <RoleBadge role={detail.role} />
+        </div>
+        <div>
+          <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1">Estado</p>
+          <UserStatusBadge status={detail.status} />
+        </div>
+        <DetailField label="Registro"   value={fmtDate(detail.createdAt)} />
+        <DetailField label="Modificado" value={fmtDate(detail.updatedAt)} />
+        <div className="col-span-2"><DetailField label="Último acceso" value={null} /></div>
+      </div>
+    </div>
+  )
+}
+
+function SubscriptionSection({ detail }: { detail: AdminUserDetail }) {
+  return (
+    <div>
+      <SectionLabel>Plan y suscripción</SectionLabel>
+      <div className="grid grid-cols-2 gap-x-5 gap-y-4">
+        <DetailField label="Plan" value={detail.planName} />
+        <div>
+          <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1">Estado</p>
+          <SubscriptionBadge status={detail.subscriptionStatus} />
+        </div>
+        <DetailField label="Trial hasta"          value={detail.trialEndsAt ? fmtDate(detail.trialEndsAt) : null} />
+        <DetailField label="Límite personalizado" value={detail.customLocationLimit} />
+        <div className="col-span-2">
+          <DetailField
+            label="Límite efectivo"
+            value={detail.effectiveLocationLimit != null ? String(detail.effectiveLocationLimit) : 'Ilimitado'}
+          />
+        </div>
+      </div>
+
+      {(detail.paddleCustomerId || detail.paddleSubscriptionId) && (
+        <>
+          <SectionLabel>Paddle</SectionLabel>
+          <div className="space-y-4">
+            <DetailField label="Customer ID"     value={detail.paddleCustomerId} />
+            <DetailField label="Subscription ID" value={detail.paddleSubscriptionId} />
+          </div>
+        </>
+      )}
+
+      <SectionLabel>Historial de pagos</SectionLabel>
+      <p className="text-sm text-gray-600 italic">Historial de pagos aún no disponible.</p>
+    </div>
+  )
+}
+
+function WorkspaceSection({ detail }: { detail: AdminUserDetail }) {
+  const ws = detail.workspace
+  if (!ws) {
+    return (
+      <div className="py-10 text-center">
+        <p className="text-sm text-gray-500">Este usuario no tiene workspace.</p>
+      </div>
+    )
+  }
+  return (
+    <div>
+      <SectionLabel>Workspace</SectionLabel>
+      <div className="grid grid-cols-2 gap-x-5 gap-y-4">
+        <div className="col-span-2"><DetailField label="Nombre" value={ws.title || 'Sin nombre'} /></div>
+        <div>
+          <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1">Estado</p>
+          <WorkspaceStatusBadge status={ws.status} />
+        </div>
+        <DetailField label="Ubicaciones"          value={ws.pointsCount} />
+        <div className="col-span-2">
+          <DetailField label="Última modificación" value={fmtDate(ws.updatedAt)} />
+        </div>
+      </div>
+      <div className="mt-5">
+        <a
+          href={`/project/${ws.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+                     bg-gray-800 hover:bg-gray-700 text-gray-200 transition-colors border border-gray-700"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+          Abrir workspace
+        </a>
+      </div>
+    </div>
+  )
+}
+
+function ActionsSection({
+  row, onManageSubscription, onDeleteWorkspace, onDeleteUser,
+}: {
+  row: AdminUserRow
+  onManageSubscription: () => void
+  onDeleteWorkspace: () => void
+  onDeleteUser: () => void
+}) {
+  const actionBtn = (
+    onClick: () => void,
+    icon: React.ReactNode,
+    title: string,
+    desc: string,
+    variant: 'default' | 'amber' | 'red',
+  ) => {
+    const border = variant === 'amber' ? 'border-amber-800/40 hover:border-amber-700/60'
+                 : variant === 'red'   ? 'border-red-800/40 hover:border-red-700/60'
+                 :                       'border-gray-700'
+    const iconBg  = variant === 'amber' ? 'bg-amber-500/10'  : variant === 'red' ? 'bg-red-500/10'  : 'bg-brand-500/10'
+    const iconCl  = variant === 'amber' ? 'text-amber-400'   : variant === 'red' ? 'text-red-400'   : 'text-brand-400'
+    const titleCl = variant === 'amber' ? 'text-amber-300'   : variant === 'red' ? 'text-red-300'   : 'text-gray-200'
+    return (
+      <button
+        onClick={onClick}
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-800
+                    hover:bg-gray-750 text-left transition-colors border ${border}`}
+      >
+        <div className={`w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0`}>
+          <span className={iconCl}>{icon}</span>
+        </div>
+        <div>
+          <p className={`text-sm font-medium ${titleCl}`}>{title}</p>
+          <p className="text-xs text-gray-500">{desc}</p>
+        </div>
+      </button>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      {actionBtn(
+        onManageSubscription,
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>,
+        'Gestionar suscripción',
+        'Cambiar plan, estado y límite de ubicaciones.',
+        'default',
+      )}
+
+      {row.workspace && actionBtn(
+        onDeleteWorkspace,
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>,
+        'Eliminar workspace',
+        'Se eliminan todos sus puntos GPS. Irreversible.',
+        'amber',
+      )}
+
+      {actionBtn(
+        onDeleteUser,
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
+        </svg>,
+        'Eliminar usuario',
+        'Elimina la cuenta y todos sus datos. Irreversible.',
+        'red',
+      )}
+    </div>
+  )
+}
+
+function UserDetailDrawer({
+  row, onClose, onManageSubscription, onDeleteWorkspace, onDeleteUser,
+}: {
+  row: AdminUserRow
+  onClose: () => void
+  onManageSubscription: (row: AdminUserRow) => void
+  onDeleteWorkspace: (row: AdminUserRow) => void
+  onDeleteUser: (row: AdminUserRow) => void
+}) {
+  type Tab = 'account' | 'subscription' | 'workspace' | 'actions'
+  const [tab,        setTab]        = useState<Tab>('account')
+  const [detail,     setDetail]     = useState<AdminUserDetail | null>(null)
+  const [loading,    setLoading]    = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLoading(true)
+    setFetchError(null)
+    setDetail(null)
+    getAdminUser(row.id)
+      .then(setDetail)
+      .catch(() => setFetchError('No se pudo cargar el detalle del usuario.'))
+      .finally(() => setLoading(false))
+  }, [row.id])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  const tabs: { key: Tab; label: string }[] = [
+    { key: 'account',      label: 'Cuenta' },
+    { key: 'subscription', label: 'Suscripción' },
+    { key: 'workspace',    label: 'Workspace' },
+    { key: 'actions',      label: 'Acciones' },
+  ]
+
+  return (
+    <>
+      {/* Overlay — below existing modals (z-9999) */}
+      <div
+        className="fixed inset-0 z-[9997] bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Drawer panel */}
+      <div className="fixed inset-y-0 right-0 z-[9998] flex flex-col w-full sm:w-[520px]
+                      bg-gray-900 border-l border-gray-800 shadow-2xl overflow-hidden">
+
+        {/* Header */}
+        <div className="flex items-start justify-between px-5 py-4 border-b border-gray-800 flex-shrink-0">
+          <div className="min-w-0 pr-3">
+            <p className="text-sm font-semibold text-gray-100 truncate">{row.email}</p>
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <RoleBadge role={row.role} />
+              <UserStatusBadge status={row.status} />
+              {row.planName && (
+                <span className="text-[10px] text-gray-400 border border-gray-700 rounded px-1.5 py-0.5">
+                  {row.planName}
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center
+                       text-gray-400 hover:text-gray-100 hover:bg-gray-800 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-gray-800 flex-shrink-0 overflow-x-auto">
+          {tabs.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={[
+                'flex-shrink-0 py-3 px-4 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap',
+                tab === key
+                  ? 'border-brand-500 text-brand-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-300',
+              ].join(' ')}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-5">
+          {loading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-8 rounded-lg" />)}
+            </div>
+          ) : fetchError ? (
+            <p className="text-sm text-red-400 bg-red-950/30 border border-red-800/40 rounded-lg px-4 py-3">
+              {fetchError}
+            </p>
+          ) : detail ? (
+            <>
+              {tab === 'account'      && <AccountSection      detail={detail} />}
+              {tab === 'subscription' && <SubscriptionSection detail={detail} />}
+              {tab === 'workspace'    && <WorkspaceSection    detail={detail} />}
+              {tab === 'actions'      && (
+                <ActionsSection
+                  row={row}
+                  onManageSubscription={() => { onClose(); onManageSubscription(row) }}
+                  onDeleteWorkspace={()     => { onClose(); onDeleteWorkspace(row) }}
+                  onDeleteUser={()          => { onClose(); onDeleteUser(row) }}
+                />
+              )}
+            </>
+          ) : null}
+        </div>
+      </div>
+    </>
+  )
+}
+
 // ── Metric card ───────────────────────────────────────────────────────────────
 
 interface MetricCardProps {
@@ -1168,7 +1500,7 @@ function Skeleton({ className = '' }: { className?: string }) {
 
 function UsersTable({
   rows, deletingWorkspaceId, deletingUserId,
-  onViewWorkspace, onDeleteWorkspace, onDeleteUser, onManageSubscription,
+  onViewWorkspace, onDeleteWorkspace, onDeleteUser, onManageSubscription, onSelectUser,
 }: {
   rows: AdminUserRow[]
   deletingWorkspaceId: string | null
@@ -1177,6 +1509,7 @@ function UsersTable({
   onDeleteWorkspace: (row: AdminUserRow) => void
   onDeleteUser: (row: AdminUserRow) => void
   onManageSubscription: (row: AdminUserRow) => void
+  onSelectUser: (row: AdminUserRow) => void
 }) {
   const [search,       setSearch]       = useState('')
   const [roleFilter,   setRoleFilter]   = useState('all')
@@ -1240,9 +1573,15 @@ function UsersTable({
                   <tr key={row.id}
                     className={`hover:bg-gray-800/30 transition-colors ${isDeletingUser ? 'opacity-50' : ''}`}>
 
-                    {/* Email */}
-                    <td className="px-5 py-3 font-medium text-gray-200 max-w-[220px]">
-                      <span className="block truncate">{row.email}</span>
+                    {/* Email — click opens detail drawer */}
+                    <td className="px-5 py-3 font-medium max-w-[220px]">
+                      <button
+                        onClick={() => onSelectUser(row)}
+                        className="block truncate text-left text-gray-200 hover:text-brand-300
+                                   hover:underline underline-offset-2 cursor-pointer transition-colors w-full"
+                      >
+                        {row.email}
+                      </button>
                     </td>
 
                     {/* Rol */}
@@ -1421,6 +1760,7 @@ export default function AdminPage() {
   const [deletingWorkspaceId,   setDeletingWorkspaceId]   = useState<string | null>(null)
   const [deletingUserId,        setDeletingUserId]        = useState<string | null>(null)
   const [savingSubscription,    setSavingSubscription]    = useState(false)
+  const [selectedUser,          setSelectedUser]          = useState<AdminUserRow | null>(null)
   const [addUserOpen,           setAddUserOpen]           = useState(false)
   const [savingAddUser,         setSavingAddUser]         = useState(false)
   const [refreshing,            setRefreshing]            = useState(false)
@@ -1851,6 +2191,7 @@ export default function AdminPage() {
                 onDeleteWorkspace={(row) => setDeleteWorkspaceTarget(row)}
                 onDeleteUser={(row) => setDeleteUserTarget(row)}
                 onManageSubscription={(row) => setManageSubTarget(row)}
+                onSelectUser={(row) => setSelectedUser(row)}
               />
             )}
           </section>
@@ -1928,6 +2269,18 @@ export default function AdminPage() {
           saving={savingAddUser}
           onSave={handleCreateUser}
           onCancel={() => setAddUserOpen(false)}
+        />
+      )}
+
+      {/* ── User detail drawer ── */}
+      {selectedUser && (
+        <UserDetailDrawer
+          key={selectedUser.id}
+          row={selectedUser}
+          onClose={() => setSelectedUser(null)}
+          onManageSubscription={(row) => { setSelectedUser(null); setManageSubTarget(row) }}
+          onDeleteWorkspace={(row)     => { setSelectedUser(null); setDeleteWorkspaceTarget(row) }}
+          onDeleteUser={(row)          => { setSelectedUser(null); setDeleteUserTarget(row) }}
         />
       )}
 

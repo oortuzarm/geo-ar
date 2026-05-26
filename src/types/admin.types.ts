@@ -15,6 +15,23 @@ export interface AdminUser {
   updatedAt:              string
 }
 
+export interface AdminUserDetail extends AdminUser {
+  firstName:            string | null
+  lastName:             string | null
+  company:              string | null
+  jobTitle:             string | null
+  country:              string | null
+  paddleCustomerId:     string | null
+  paddleSubscriptionId: string | null
+  workspace: {
+    id:          string
+    title:       string
+    status:      'draft' | 'active' | 'inactive'
+    pointsCount: number
+    updatedAt:   string
+  } | null
+}
+
 export interface AdminProject {
   id:               string
   title:            string

@@ -66,7 +66,7 @@
  */
 
 import { apiFetch } from '../lib/apiFetch'
-import type { AdminUser, AdminProject, AdminMetrics, AdminPlan, CreatePlanPayload, UpdatePlanPayload } from '../types/admin.types'
+import type { AdminUser, AdminUserDetail, AdminProject, AdminMetrics, AdminPlan, CreatePlanPayload, UpdatePlanPayload } from '../types/admin.types'
 import type { FeaturesConfig } from '../lib/planFeatureRegistry'
 import { DEFAULT_FEATURES_CONFIG } from '../lib/planFeatureRegistry'
 
@@ -139,6 +139,28 @@ export async function getAdminUsers(opts: { cacheBust?: boolean } = {}): Promise
     id: u.id, planId: u.planId, planName: u.planName, subscriptionStatus: u.subscriptionStatus,
   })))
   return users
+}
+
+export async function getAdminUser(id: string): Promise<AdminUserDetail> {
+  const raw = await apiFetch<Record<string, unknown>>(`${BASE}/api/admin/users/${id}`)
+  const ws  = raw.workspace as Record<string, unknown> | null | undefined
+  return {
+    ...normalizeUser(raw),
+    firstName:            (raw.firstName            ?? raw.first_name            ?? null) as string | null,
+    lastName:             (raw.lastName             ?? raw.last_name             ?? null) as string | null,
+    company:              (raw.company              ?? null)                              as string | null,
+    jobTitle:             (raw.jobTitle             ?? raw.job_title             ?? null) as string | null,
+    country:              (raw.country              ?? null)                              as string | null,
+    paddleCustomerId:     (raw.paddleCustomerId     ?? raw.paddle_customer_id     ?? null) as string | null,
+    paddleSubscriptionId: (raw.paddleSubscriptionId ?? raw.paddle_subscription_id ?? null) as string | null,
+    workspace: ws ? {
+      id:          ws.id          as string,
+      title:       (ws.title ?? '') as string,
+      status:      ws.status      as 'draft' | 'active' | 'inactive',
+      pointsCount: ((ws.pointsCount ?? ws.points_count ?? 0)) as number,
+      updatedAt:   (ws.updatedAt  ?? ws.updated_at ?? '') as string,
+    } : null,
+  }
 }
 
 export async function getAdminProjects(): Promise<AdminProject[]> {

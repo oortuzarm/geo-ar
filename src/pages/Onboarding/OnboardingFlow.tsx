@@ -252,7 +252,7 @@ export default function OnboardingFlow() {
                 </div>
 
                 <div className="space-y-4">
-                  <FieldGroup label="Nombre del workspace">
+                  <FieldGroup label="Nombre del proyecto">
                     <input
                       type="text"
                       className={INPUT_CLS}
@@ -292,7 +292,7 @@ export default function OnboardingFlow() {
                     ¿Para qué vas a usar Ubyca?
                   </h2>
                   <p className="text-sm text-gray-500 mt-1">
-                    Elegí el que mejor describe tu proyecto.
+                    Elige el que mejor describe tu proyecto.
                   </p>
                 </div>
 
@@ -340,7 +340,7 @@ export default function OnboardingFlow() {
                 className="space-y-5"
               >
                 <div>
-                  <StepLabel>Sobre vos</StepLabel>
+                  <StepLabel>Sobre ti</StepLabel>
                   <h2 className="text-xl font-semibold text-white leading-snug">
                     Un poco más de contexto
                   </h2>
@@ -434,7 +434,7 @@ export default function OnboardingFlow() {
         >
           {saveError && (
             <p className="text-xs text-red-400 text-center">
-              No se pudo guardar. Intentá de nuevo.
+              No se pudo guardar. Intenta de nuevo.
             </p>
           )}
           <div className="flex items-center justify-between gap-3">
@@ -444,7 +444,7 @@ export default function OnboardingFlow() {
               disabled={saving}
               className="text-sm text-gray-500 hover:text-gray-300 transition-colors disabled:opacity-40"
             >
-              {step === 1 ? 'Completar después' : 'Saltear'}
+              {step === 1 ? 'Completar después' : 'Saltar'}
             </button>
 
             <button

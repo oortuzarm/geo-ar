@@ -71,3 +71,10 @@ export function updateAdminOnboardingOption(id: number, payload: Partial<AdminOn
 export function deleteAdminOnboardingOption(id: number): Promise<void> {
   return apiFetch<void>(url(`/api/admin/onboarding_options/${id}`), { method: 'DELETE' })
 }
+
+export function reorderAdminOnboardingOptions(ids: number[]): Promise<void> {
+  return apiFetch<void>(url('/api/admin/onboarding_options/reorder'), {
+    method: 'PATCH',
+    body:   JSON.stringify({ ids }),
+  })
+}

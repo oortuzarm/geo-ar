@@ -6,6 +6,7 @@ import {
   updateAdminOnboardingCategory, deleteAdminOnboardingCategory,
   getAdminOnboardingOptions, createAdminOnboardingOption,
   updateAdminOnboardingOption, deleteAdminOnboardingOption,
+  reorderAdminOnboardingOptions,
 } from '../../services/onboardingApi'
 import type { AdminOnboardingCategory, AdminOnboardingOption } from '../../types/onboarding.types'
 
@@ -209,6 +210,7 @@ export default function AdminOnboardingPage() {
   const [editingOptId,  setEditingOptId]  = useState<number | null>(null)
   const [addingOptGroup,setAddingOptGroup]= useState<OptionGroup | null>(null)
   const [savingOpt,     setSavingOpt]     = useState(false)
+  const [reorderingOpt, setReorderingOpt] = useState(false)
 
   const [activeGroup,   setActiveGroup]   = useState<OptionGroup>('industry')
 
@@ -309,7 +311,40 @@ export default function AdminOnboardingPage() {
     }
   }
 
-  const groupedOpts = options.filter(o => o.group === activeGroup)
+  async function handleMoveOpt(optId: number, direction: 'up' | 'down') {
+    const sorted = options
+      .filter(o => o.group === activeGroup)
+      .sort((a, b) => a.position - b.position)
+
+    const idx = sorted.findIndex(o => o.id === optId)
+    if (idx === -1) return
+    if (direction === 'up' && idx === 0) return
+    if (direction === 'down' && idx === sorted.length - 1) return
+
+    const swapped = [...sorted]
+    const neighborIdx = direction === 'up' ? idx - 1 : idx + 1
+    ;[swapped[idx], swapped[neighborIdx]] = [swapped[neighborIdx], swapped[idx]]
+
+    const reordered = swapped.map((o, i) => ({ ...o, position: i + 1 }))
+
+    setOptions(os => [
+      ...os.filter(o => o.group !== activeGroup),
+      ...reordered,
+    ])
+
+    setReorderingOpt(true)
+    try {
+      await reorderAdminOnboardingOptions(reordered.map(o => o.id))
+    } catch {
+      load()
+    } finally {
+      setReorderingOpt(false)
+    }
+  }
+
+  const groupedOpts = options
+    .filter(o => o.group === activeGroup)
+    .sort((a, b) => a.position - b.position)
 
   if (loading) {
     return (
@@ -436,7 +471,7 @@ export default function AdminOnboardingPage() {
           </div>
 
           <div className="space-y-1">
-            {groupedOpts.map(opt => (
+            {groupedOpts.map((opt, index) => (
               <div key={opt.id}>
                 {editingOptId === opt.id ? (
                   <OptionEditor
@@ -453,7 +488,27 @@ export default function AdminOnboardingPage() {
                     saving={savingOpt}
                   />
                 ) : (
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-800/50 group">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-800/50 group">
+                    <div className="flex flex-col">
+                      <button
+                        onClick={() => handleMoveOpt(opt.id, 'up')}
+                        disabled={index === 0 || reorderingOpt}
+                        className="w-5 h-4 flex items-center justify-center text-gray-600 hover:text-gray-300 disabled:opacity-20 disabled:cursor-default transition-colors"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleMoveOpt(opt.id, 'down')}
+                        disabled={index === groupedOpts.length - 1 || reorderingOpt}
+                        className="w-5 h-4 flex items-center justify-center text-gray-600 hover:text-gray-300 disabled:opacity-20 disabled:cursor-default transition-colors"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
                     <span className="text-xs text-gray-600 w-5 text-right tabular-nums">{opt.position}</span>
                     <span className="flex-1 text-sm text-gray-200">{opt.name}</span>
                     <span className="text-xs text-gray-600">{opt.slug}</span>

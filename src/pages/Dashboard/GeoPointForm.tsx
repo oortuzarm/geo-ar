@@ -81,7 +81,7 @@ function InfoTooltip({ text }: { text: string }) {
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 top-0 z-50 w-56 max-w-[calc(100vw-32px)]
+        <div className="absolute right-0 top-full mt-2 z-50 w-56 max-w-[260px]
                        bg-gray-800 border border-gray-700
                        text-xs text-gray-300 p-3 rounded-lg shadow-xl pointer-events-none
                        whitespace-normal break-words">

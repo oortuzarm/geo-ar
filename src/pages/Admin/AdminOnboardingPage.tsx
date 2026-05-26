@@ -7,12 +7,19 @@ import {
   getAdminOnboardingOptions, createAdminOnboardingOption,
   updateAdminOnboardingOption, deleteAdminOnboardingOption,
   reorderAdminOnboardingOptions,
+  getAdminOnboardingMetrics,
 } from '../../services/onboardingApi'
-import type { AdminOnboardingCategory, AdminOnboardingOption } from '../../types/onboarding.types'
+import type {
+  AdminOnboardingCategory,
+  AdminOnboardingOption,
+  OnboardingMetrics,
+  OnboardingMetricsItem,
+} from '../../types/onboarding.types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type OptionGroup = 'industry' | 'org_type' | 'org_size' | 'objective'
+type Tab = 'config' | 'metrics'
 
 const GROUP_LABELS: Record<OptionGroup, string> = {
   industry:  'Industria',
@@ -55,6 +62,47 @@ function SectionHeader({ title, action }: { title: string; action?: React.ReactN
     <div className="flex items-center justify-between mb-4">
       <h3 className="text-sm font-semibold text-gray-200">{title}</h3>
       {action}
+    </div>
+  )
+}
+
+// ── Metrics helpers ───────────────────────────────────────────────────────────
+
+function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">{label}</p>
+      <p className="text-2xl font-semibold text-white tabular-nums">{value}</p>
+      {sub && <p className="text-xs text-gray-500 mt-0.5">{sub}</p>}
+    </div>
+  )
+}
+
+function DistributionCard({ title, items }: { title: string; items: OnboardingMetricsItem[] }) {
+  const max = items[0]?.count ?? 1
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+      <p className="text-sm font-semibold text-gray-200 mb-4">{title}</p>
+      {items.length === 0 ? (
+        <p className="text-xs text-gray-600 text-center py-4">Sin datos</p>
+      ) : (
+        <div className="space-y-2.5">
+          {items.map(item => (
+            <div key={item.id}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-300 truncate max-w-[70%]">{item.name ?? `ID ${item.id}`}</span>
+                <span className="text-xs text-gray-500 tabular-nums ml-2">{item.count}</span>
+              </div>
+              <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-brand-600 rounded-full transition-all"
+                  style={{ width: `${Math.round((item.count / max) * 100)}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -199,20 +247,26 @@ export default function AdminOnboardingPage() {
   const { currentUser } = useAuthStore()
   const navigate = useNavigate()
 
+  const [activeTab, setActiveTab] = useState<Tab>('config')
+
   const [categories, setCategories] = useState<AdminOnboardingCategory[]>([])
   const [options,    setOptions]    = useState<AdminOnboardingOption[]>([])
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState<string | null>(null)
 
-  const [editingCatId,  setEditingCatId]  = useState<number | 'new' | null>(null)
-  const [savingCat,     setSavingCat]     = useState(false)
+  const [metrics,        setMetrics]        = useState<OnboardingMetrics | null>(null)
+  const [metricsLoading, setMetricsLoading] = useState(false)
+  const [metricsError,   setMetricsError]   = useState<string | null>(null)
 
-  const [editingOptId,  setEditingOptId]  = useState<number | null>(null)
-  const [addingOptGroup,setAddingOptGroup]= useState<OptionGroup | null>(null)
-  const [savingOpt,     setSavingOpt]     = useState(false)
-  const [reorderingOpt, setReorderingOpt] = useState(false)
+  const [editingCatId,   setEditingCatId]   = useState<number | 'new' | null>(null)
+  const [savingCat,      setSavingCat]      = useState(false)
 
-  const [activeGroup,   setActiveGroup]   = useState<OptionGroup>('industry')
+  const [editingOptId,   setEditingOptId]   = useState<number | null>(null)
+  const [addingOptGroup, setAddingOptGroup] = useState<OptionGroup | null>(null)
+  const [savingOpt,      setSavingOpt]      = useState(false)
+  const [reorderingOpt,  setReorderingOpt]  = useState(false)
+
+  const [activeGroup, setActiveGroup] = useState<OptionGroup>('industry')
 
   useEffect(() => {
     if (currentUser?.role !== 'admin') { navigate('/app'); return }
@@ -233,6 +287,26 @@ export default function AdminOnboardingPage() {
       setError('Error al cargar datos de onboarding.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function loadMetrics() {
+    setMetricsLoading(true)
+    setMetricsError(null)
+    try {
+      const data = await getAdminOnboardingMetrics()
+      setMetrics(data)
+    } catch {
+      setMetricsError('Error al cargar métricas.')
+    } finally {
+      setMetricsLoading(false)
+    }
+  }
+
+  function handleTabChange(tab: Tab) {
+    setActiveTab(tab)
+    if (tab === 'metrics' && metrics === null && !metricsLoading) {
+      loadMetrics()
     }
   }
 
@@ -367,181 +441,250 @@ export default function AdminOnboardingPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-base font-semibold text-white">Configuración de onboarding</h1>
             <p className="text-xs text-gray-500 mt-0.5">
               Categorías y opciones que se muestran en el flujo de bienvenida
             </p>
           </div>
         </div>
+
+        {/* Tab bar */}
+        <div className="max-w-4xl mx-auto px-6 flex gap-0">
+          {(['config', 'metrics'] as Tab[]).map(tab => (
+            <button
+              key={tab}
+              onClick={() => handleTabChange(tab)}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === tab
+                  ? 'border-brand-500 text-white'
+                  : 'border-transparent text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              {tab === 'config' ? 'Configuración' : 'Métricas'}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-10">
+      {/* ── Config tab ──────────────────────────────────────────────────────── */}
+      {activeTab === 'config' && (
+        <div className="max-w-4xl mx-auto px-6 py-8 space-y-10">
 
-        {error && (
-          <p className="text-sm text-red-400 bg-red-950/40 border border-red-800/40 rounded-xl px-4 py-3">
-            {error}
-          </p>
-        )}
-
-        {/* ── Categories ──────────────────────────────────────────────── */}
-        <section className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-          <SectionHeader
-            title="Categorías (Paso 2 — tarjetas visuales)"
-            action={
-              <button
-                className={BTN_GHOST}
-                onClick={() => setEditingCatId('new')}
-                disabled={editingCatId !== null}
-              >
-                + Agregar
-              </button>
-            }
-          />
-
-          {editingCatId === 'new' && (
-            <div className="mb-4">
-              <CategoryEditor
-                onSave={f => handleSaveCat(f)}
-                onCancel={() => setEditingCatId(null)}
-                saving={savingCat}
-              />
-            </div>
+          {error && (
+            <p className="text-sm text-red-400 bg-red-950/40 border border-red-800/40 rounded-xl px-4 py-3">
+              {error}
+            </p>
           )}
 
-          {categories.length === 0 ? (
-            <p className="text-sm text-gray-600 text-center py-6">No hay categorías. Agregá la primera.</p>
-          ) : (
-            <div className="space-y-2">
-              {categories.map(cat => (
-                <div key={cat.id}>
-                  {editingCatId === cat.id ? (
-                    <CategoryEditor
+          {/* Categories */}
+          <section className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+            <SectionHeader
+              title="Categorías (Paso 2 — tarjetas visuales)"
+              action={
+                <button
+                  className={BTN_GHOST}
+                  onClick={() => setEditingCatId('new')}
+                  disabled={editingCatId !== null}
+                >
+                  + Agregar
+                </button>
+              }
+            />
+
+            {editingCatId === 'new' && (
+              <div className="mb-4">
+                <CategoryEditor
+                  onSave={f => handleSaveCat(f)}
+                  onCancel={() => setEditingCatId(null)}
+                  saving={savingCat}
+                />
+              </div>
+            )}
+
+            {categories.length === 0 ? (
+              <p className="text-sm text-gray-600 text-center py-6">No hay categorías. Agregá la primera.</p>
+            ) : (
+              <div className="space-y-2">
+                {categories.map(cat => (
+                  <div key={cat.id}>
+                    {editingCatId === cat.id ? (
+                      <CategoryEditor
+                        initial={{
+                          name:     cat.name,
+                          slug:     cat.slug,
+                          iconName: cat.iconName ?? '',
+                          position: String(cat.position),
+                          active:   cat.active,
+                        }}
+                        onSave={f => handleSaveCat(f, cat.id)}
+                        onCancel={() => setEditingCatId(null)}
+                        saving={savingCat}
+                      />
+                    ) : (
+                      <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-800/50 group">
+                        <span className="text-xl w-8 text-center">{cat.iconName ?? '•'}</span>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm text-gray-200">{cat.name}</span>
+                          <span className="text-xs text-gray-600 ml-2">{cat.slug}</span>
+                        </div>
+                        <span className="text-xs text-gray-600 tabular-nums">{cat.usageCount} usos</span>
+                        <Badge active={cat.active} />
+                        <div className="hidden group-hover:flex items-center gap-1">
+                          <button className={BTN_GHOST} onClick={() => setEditingCatId(cat.id)}>Editar</button>
+                          <button className={BTN_DANGER} onClick={() => handleDeleteCat(cat.id)}>Eliminar</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Options */}
+          <section className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+            <SectionHeader title="Opciones (Paso 3 — selectores)" />
+
+            {/* Group tabs */}
+            <div className="flex gap-1 mb-5 bg-gray-800/60 rounded-lg p-1 w-fit">
+              {(Object.keys(GROUP_LABELS) as OptionGroup[]).map(g => (
+                <button
+                  key={g}
+                  onClick={() => { setActiveGroup(g); setEditingOptId(null); setAddingOptGroup(null) }}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                    activeGroup === g
+                      ? 'bg-gray-700 text-white'
+                      : 'text-gray-500 hover:text-gray-300'
+                  }`}
+                >
+                  {GROUP_LABELS[g]}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-1">
+              {groupedOpts.map((opt, index) => (
+                <div key={opt.id}>
+                  {editingOptId === opt.id ? (
+                    <OptionEditor
+                      group={activeGroup}
                       initial={{
-                        name:     cat.name,
-                        slug:     cat.slug,
-                        iconName: cat.iconName ?? '',
-                        position: String(cat.position),
-                        active:   cat.active,
+                        group:    opt.group as OptionGroup,
+                        name:     opt.name,
+                        slug:     opt.slug,
+                        position: String(opt.position),
+                        active:   opt.active,
                       }}
-                      onSave={f => handleSaveCat(f, cat.id)}
-                      onCancel={() => setEditingCatId(null)}
-                      saving={savingCat}
+                      onSave={f => handleSaveOpt(f, opt.id)}
+                      onCancel={() => setEditingOptId(null)}
+                      saving={savingOpt}
                     />
                   ) : (
-                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-800/50 group">
-                      <span className="text-xl w-8 text-center">{cat.iconName ?? '•'}</span>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-sm text-gray-200">{cat.name}</span>
-                        <span className="text-xs text-gray-600 ml-2">{cat.slug}</span>
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-800/50 group">
+                      <div className="flex flex-col">
+                        <button
+                          onClick={() => handleMoveOpt(opt.id, 'up')}
+                          disabled={index === 0 || reorderingOpt}
+                          className="w-5 h-4 flex items-center justify-center text-gray-600 hover:text-gray-300 disabled:opacity-20 disabled:cursor-default transition-colors"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleMoveOpt(opt.id, 'down')}
+                          disabled={index === groupedOpts.length - 1 || reorderingOpt}
+                          className="w-5 h-4 flex items-center justify-center text-gray-600 hover:text-gray-300 disabled:opacity-20 disabled:cursor-default transition-colors"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
                       </div>
-                      <span className="text-xs text-gray-600 tabular-nums">{cat.usageCount} usos</span>
-                      <Badge active={cat.active} />
+                      <span className="text-xs text-gray-600 w-5 text-right tabular-nums">{opt.position}</span>
+                      <span className="flex-1 text-sm text-gray-200">{opt.name}</span>
+                      <span className="text-xs text-gray-600">{opt.slug}</span>
+                      <span className="text-xs text-gray-600 tabular-nums">{opt.usageCount}</span>
+                      <Badge active={opt.active} />
                       <div className="hidden group-hover:flex items-center gap-1">
-                        <button className={BTN_GHOST} onClick={() => setEditingCatId(cat.id)}>Editar</button>
-                        <button className={BTN_DANGER} onClick={() => handleDeleteCat(cat.id)}>Eliminar</button>
+                        <button className={BTN_GHOST} onClick={() => setEditingOptId(opt.id)}>Editar</button>
+                        <button className={BTN_DANGER} onClick={() => handleDeleteOpt(opt.id)}>Eliminar</button>
                       </div>
                     </div>
                   )}
                 </div>
               ))}
+
+              {addingOptGroup === activeGroup ? (
+                <OptionEditor
+                  group={activeGroup}
+                  onSave={f => handleSaveOpt(f)}
+                  onCancel={() => setAddingOptGroup(null)}
+                  saving={savingOpt}
+                />
+              ) : (
+                <button
+                  className="mt-2 w-full py-2 text-xs text-gray-600 hover:text-gray-400 border border-dashed border-gray-800 hover:border-gray-700 rounded-xl transition-colors"
+                  onClick={() => { setAddingOptGroup(activeGroup); setEditingOptId(null) }}
+                >
+                  + Agregar opción
+                </button>
+              )}
+            </div>
+          </section>
+
+        </div>
+      )}
+
+      {/* ── Metrics tab ─────────────────────────────────────────────────────── */}
+      {activeTab === 'metrics' && (
+        <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
+
+          {metricsLoading && (
+            <div className="flex justify-center py-16">
+              <div className="w-6 h-6 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
             </div>
           )}
-        </section>
 
-        {/* ── Options ─────────────────────────────────────────────────── */}
-        <section className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-          <SectionHeader title="Opciones (Paso 3 — selectores)" />
-
-          {/* Group tabs */}
-          <div className="flex gap-1 mb-5 bg-gray-800/60 rounded-lg p-1 w-fit">
-            {(Object.keys(GROUP_LABELS) as OptionGroup[]).map(g => (
+          {metricsError && (
+            <div className="flex items-center gap-3 text-sm text-red-400 bg-red-950/40 border border-red-800/40 rounded-xl px-4 py-3">
+              <span>{metricsError}</span>
               <button
-                key={g}
-                onClick={() => { setActiveGroup(g); setEditingOptId(null); setAddingOptGroup(null) }}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                  activeGroup === g
-                    ? 'bg-gray-700 text-white'
-                    : 'text-gray-500 hover:text-gray-300'
-                }`}
+                className="ml-auto text-xs underline hover:no-underline"
+                onClick={loadMetrics}
               >
-                {GROUP_LABELS[g]}
+                Reintentar
               </button>
-            ))}
-          </div>
+            </div>
+          )}
 
-          <div className="space-y-1">
-            {groupedOpts.map((opt, index) => (
-              <div key={opt.id}>
-                {editingOptId === opt.id ? (
-                  <OptionEditor
-                    group={activeGroup}
-                    initial={{
-                      group:    opt.group as OptionGroup,
-                      name:     opt.name,
-                      slug:     opt.slug,
-                      position: String(opt.position),
-                      active:   opt.active,
-                    }}
-                    onSave={f => handleSaveOpt(f, opt.id)}
-                    onCancel={() => setEditingOptId(null)}
-                    saving={savingOpt}
-                  />
-                ) : (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-800/50 group">
-                    <div className="flex flex-col">
-                      <button
-                        onClick={() => handleMoveOpt(opt.id, 'up')}
-                        disabled={index === 0 || reorderingOpt}
-                        className="w-5 h-4 flex items-center justify-center text-gray-600 hover:text-gray-300 disabled:opacity-20 disabled:cursor-default transition-colors"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => handleMoveOpt(opt.id, 'down')}
-                        disabled={index === groupedOpts.length - 1 || reorderingOpt}
-                        className="w-5 h-4 flex items-center justify-center text-gray-600 hover:text-gray-300 disabled:opacity-20 disabled:cursor-default transition-colors"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                    </div>
-                    <span className="text-xs text-gray-600 w-5 text-right tabular-nums">{opt.position}</span>
-                    <span className="flex-1 text-sm text-gray-200">{opt.name}</span>
-                    <span className="text-xs text-gray-600">{opt.slug}</span>
-                    <span className="text-xs text-gray-600 tabular-nums">{opt.usageCount}</span>
-                    <Badge active={opt.active} />
-                    <div className="hidden group-hover:flex items-center gap-1">
-                      <button className={BTN_GHOST} onClick={() => setEditingOptId(opt.id)}>Editar</button>
-                      <button className={BTN_DANGER} onClick={() => handleDeleteOpt(opt.id)}>Eliminar</button>
-                    </div>
-                  </div>
-                )}
+          {metrics && !metricsLoading && (
+            <>
+              {/* Totals */}
+              <div className="grid grid-cols-3 gap-4">
+                <StatCard label="Usuarios totales" value={metrics.totals.users} />
+                <StatCard label="Completaron onboarding" value={metrics.totals.completed} />
+                <StatCard
+                  label="Tasa de completado"
+                  value={`${metrics.totals.completionRate}%`}
+                  sub={`${metrics.totals.completed} de ${metrics.totals.users} usuarios`}
+                />
               </div>
-            ))}
 
-            {addingOptGroup === activeGroup ? (
-              <OptionEditor
-                group={activeGroup}
-                onSave={f => handleSaveOpt(f)}
-                onCancel={() => setAddingOptGroup(null)}
-                saving={savingOpt}
-              />
-            ) : (
-              <button
-                className="mt-2 w-full py-2 text-xs text-gray-600 hover:text-gray-400 border border-dashed border-gray-800 hover:border-gray-700 rounded-xl transition-colors"
-                onClick={() => { setAddingOptGroup(activeGroup); setEditingOptId(null) }}
-              >
-                + Agregar opción
-              </button>
-            )}
-          </div>
-        </section>
+              {/* Distributions */}
+              <div className="grid grid-cols-2 gap-4">
+                <DistributionCard title="Por categoría" items={metrics.categories} />
+                <DistributionCard title="Por industria" items={metrics.industries} />
+                <DistributionCard title="Por tipo de organización" items={metrics.organizationTypes} />
+                <DistributionCard title="Por tamaño de organización" items={metrics.organizationSizes} />
+              </div>
+              <DistributionCard title="Por objetivo principal" items={metrics.objectives} />
+            </>
+          )}
 
-      </div>
+        </div>
+      )}
     </div>
   )
 }

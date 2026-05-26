@@ -55,3 +55,22 @@ export interface AdminOnboardingOption {
   createdAt:  string
   updatedAt:  string
 }
+
+export interface OnboardingMetricsItem {
+  id:    number
+  name:  string
+  count: number
+}
+
+export interface OnboardingMetrics {
+  totals: {
+    users:          number
+    completed:      number
+    completionRate: number
+  }
+  categories:        OnboardingMetricsItem[]
+  industries:        OnboardingMetricsItem[]
+  organizationTypes: OnboardingMetricsItem[]
+  organizationSizes: OnboardingMetricsItem[]
+  objectives:        OnboardingMetricsItem[]
+}

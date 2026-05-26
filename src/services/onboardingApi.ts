@@ -4,6 +4,7 @@ import type {
   OnboardingSubmitPayload,
   AdminOnboardingCategory,
   AdminOnboardingOption,
+  OnboardingMetrics,
 } from '../types/onboarding.types'
 
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
@@ -77,4 +78,8 @@ export function reorderAdminOnboardingOptions(ids: number[]): Promise<void> {
     method: 'PATCH',
     body:   JSON.stringify({ ids }),
   })
+}
+
+export function getAdminOnboardingMetrics(): Promise<OnboardingMetrics> {
+  return apiFetch<OnboardingMetrics>(url('/api/admin/onboarding/metrics'))
 }

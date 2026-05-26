@@ -65,14 +65,25 @@ function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void 
 
 function InfoTooltip({ text }: { text: string }) {
   const [open, setOpen] = useState(false)
+  const [pos,  setPos]  = useState({ top: 0, right: 24 })
+  const btnRef = useRef<HTMLButtonElement>(null)
+
+  function measure() {
+    if (!btnRef.current) return
+    const rect = btnRef.current.getBoundingClientRect()
+    const top  = Math.min(rect.bottom + 8, window.innerHeight - 160)
+    setPos({ top, right: 24 })
+  }
+
   return (
-    <span className="relative inline-flex">
+    <span className="inline-flex">
       <button
+        ref={btnRef}
         type="button"
         className="text-gray-500 hover:text-gray-300 transition-colors"
-        onMouseEnter={() => setOpen(true)}
+        onMouseEnter={() => { measure(); setOpen(true)  }}
         onMouseLeave={() => setOpen(false)}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => { if (!open) measure(); setOpen((v) => !v) }}
         aria-label="Más información"
       >
         <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,10 +92,13 @@ function InfoTooltip({ text }: { text: string }) {
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-2 z-50 w-56 max-w-[260px]
-                       bg-gray-800 border border-gray-700
-                       text-xs text-gray-300 p-3 rounded-lg shadow-xl pointer-events-none
-                       whitespace-normal break-words">
+        <div
+          className="fixed z-[9999] w-64 max-w-[260px]
+                     bg-gray-800 border border-gray-700
+                     text-xs text-gray-300 p-3 rounded-lg shadow-xl pointer-events-none
+                     whitespace-normal break-words"
+          style={{ top: pos.top, right: pos.right }}
+        >
           {text}
         </div>
       )}

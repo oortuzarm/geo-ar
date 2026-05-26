@@ -1645,6 +1645,7 @@ export default function PublicPage({
             pt.id === selectedPointId && routeResult ? routeResult.durationSeconds : undefined
           }
           address={pt.instructions ?? addresses[pt.id]}
+          pointCreatedAt={project?.createdAt}
         />
       </div>
     ))

@@ -56,6 +56,11 @@ function ChevronDownIcon({ open }: { open: boolean }) {
   )
 }
 
+// ─── Badge system types ───────────────────────────────────────────────────────
+
+/** Operational badge rendered on each card (max 1 at a time). */
+type OpBadge = 'available' | 'last-slots' | 'tomorrow' | null
+
 // ─── Status chip ──────────────────────────────────────────────────────────────
 
 type ChipVariant = 'ok' | 'warn' | 'block' | 'neutral'
@@ -146,6 +151,9 @@ interface PublicPointCardProps {
   address?: string
   /** When true, suppresses the cover image banner (caller renders a carousel above). */
   hideImage?: boolean
+  /** ISO string used for the "Nuevo" editorial badge. Pass project.createdAt as a proxy
+   *  until GeoPoint has its own createdAt field. Omit to suppress the badge entirely. */
+  pointCreatedAt?: string
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -154,7 +162,7 @@ export default function PublicPointCard({
   point, distance, isSelected, onSelect, onActivate, onExit,
   routeStatus, walkingDistanceMeters, walkingDurationSeconds,
   isActivating, accessMessage, accessFallbackUrl, address,
-  hideImage = false,
+  hideImage = false, pointCreatedAt,
 }: PublicPointCardProps) {
   const [descExpanded, setDescExpanded] = useState(false)
   const [showRouteWarning, setShowRouteWarning] = useState(false)
@@ -172,11 +180,33 @@ export default function PublicPointCard({
     (avail.scheduleActive && !avail.scheduleAvailable) ||
     (avail.quotaActive && !avail.quotaAvailable)
 
-  // True when schedule + quota rules are satisfied right now (regardless of radius).
-  // Used solely to decide whether to render the "Disponible" badge.
-  const isAvailableNow  = !contentUnavailableOnArrival
-  // Pre-compute once so both the image block and the title fallback agree.
-  const hasCoverBanner  = !hideImage && Boolean(getPointCoverImage(point))
+  const isAvailableNow = !contentUnavailableOnArrival
+  const hasCoverBanner = !hideImage && Boolean(getPointCoverImage(point))
+
+  // ── Badge computation ───────────────────────────────────────────────────────
+  // Editorial: point/project published within the last 7 days.
+  const isNew = Boolean(
+    pointCreatedAt &&
+    Date.now() - new Date(pointCreatedAt).getTime() < 7 * 24 * 60 * 60 * 1000,
+  )
+  // Operational (max 1, evaluated in priority order):
+  //   1. available  — schedule + quota pass right now
+  //   2. last-slots — quota still open but ≤ 10 remaining
+  //   3. tomorrow   — schedule blocks today; tomorrow's day passes
+  const opBadge: OpBadge = (() => {
+    if (isAvailableNow) return 'available'
+    if (avail.quotaActive && avail.quotaAvailable &&
+        avail.quotaRemaining !== undefined && avail.quotaRemaining <= 10)
+      return 'last-slots'
+    const av = point.availability
+    if (av?.scheduleEnabled && (!avail.quotaActive || avail.quotaAvailable)) {
+      const d    = new Date(); d.setDate(d.getDate() + 1)
+      const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'] as const
+      const dayOk = !av.scheduleDays?.length || av.scheduleDays.includes(DAYS[d.getDay()])
+      if (dayOk) return 'tomorrow'
+    }
+    return null
+  })()
 
   function openMaps() {
     window.open(mapsUrl, '_blank', 'noopener,noreferrer')
@@ -246,15 +276,40 @@ export default function PublicPointCard({
           <div className="absolute inset-x-0 bottom-0 h-1/2
                           bg-gradient-to-t from-gray-950/70 to-transparent
                           pointer-events-none" />
-          {isAvailableNow && (
-            <div className="absolute bottom-2 left-2">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
-                               bg-black/[0.45] backdrop-blur-md
-                               border border-white/[0.14]
-                               shadow-[0_1px_6px_rgba(0,0,0,0.35)]">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-                <span className="text-[11px] font-semibold text-white/90 leading-none">Disponible</span>
-              </span>
+          {(isNew || opBadge) && (
+            <div className="absolute bottom-2 left-2 flex items-center gap-1.5">
+              {isNew && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+                                 bg-black/[0.45] backdrop-blur-md border border-white/[0.14]
+                                 shadow-[0_1px_6px_rgba(0,0,0,0.3)]">
+                  <span className="text-[9px] leading-none">✨</span>
+                  <span className="text-[11px] font-semibold text-white/85 leading-none">Nuevo</span>
+                </span>
+              )}
+              {opBadge === 'available' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+                                 bg-black/[0.45] backdrop-blur-md border border-white/[0.14]
+                                 shadow-[0_1px_6px_rgba(0,0,0,0.3)]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                  <span className="text-[11px] font-semibold text-white/90 leading-none">Disponible</span>
+                </span>
+              )}
+              {opBadge === 'last-slots' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+                                 bg-black/[0.45] backdrop-blur-md border border-white/[0.14]
+                                 shadow-[0_1px_6px_rgba(0,0,0,0.3)]">
+                  <span className="text-[9px] leading-none">🔥</span>
+                  <span className="text-[11px] font-semibold text-white/90 leading-none">Últimos cupos</span>
+                </span>
+              )}
+              {opBadge === 'tomorrow' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+                                 bg-black/[0.45] backdrop-blur-md border border-white/[0.14]
+                                 shadow-[0_1px_6px_rgba(0,0,0,0.3)]">
+                  <span className="text-[9px] leading-none">🕒</span>
+                  <span className="text-[11px] font-semibold text-white/85 leading-none">Disponible mañana</span>
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -281,14 +336,37 @@ export default function PublicPointCard({
           )}
         </div>
 
-        {/* Disponibilidad badge — shown only when no image covers the banner slot */}
-        {!hasCoverBanner && isAvailableNow && (
-          <div className="mt-2">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full
-                             bg-black/[0.25] border border-white/[0.1]">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-              <span className="text-[11px] font-semibold text-white/80 leading-none">Disponible</span>
-            </span>
+        {/* Badge system — below title when no cover image occupies the banner slot */}
+        {!hasCoverBanner && (isNew || opBadge) && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {isNew && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full
+                               bg-black/[0.25] border border-white/[0.1]">
+                <span className="text-[9px] leading-none">✨</span>
+                <span className="text-[11px] font-semibold text-white/80 leading-none">Nuevo</span>
+              </span>
+            )}
+            {opBadge === 'available' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full
+                               bg-black/[0.25] border border-white/[0.1]">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                <span className="text-[11px] font-semibold text-white/80 leading-none">Disponible</span>
+              </span>
+            )}
+            {opBadge === 'last-slots' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full
+                               bg-black/[0.25] border border-white/[0.1]">
+                <span className="text-[9px] leading-none">🔥</span>
+                <span className="text-[11px] font-semibold text-white/80 leading-none">Últimos cupos</span>
+              </span>
+            )}
+            {opBadge === 'tomorrow' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full
+                               bg-black/[0.25] border border-white/[0.1]">
+                <span className="text-[9px] leading-none">🕒</span>
+                <span className="text-[11px] font-semibold text-white/80 leading-none">Disponible mañana</span>
+              </span>
+            )}
           </div>
         )}
 

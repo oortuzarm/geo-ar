@@ -7,19 +7,16 @@ export interface OnboardingCategory {
 }
 
 export interface OnboardingOption {
-  id:   number
-  name: string
-  slug: string
+  id:       number
+  group:    'industry' | 'org_type' | 'org_size' | 'objective'
+  name:     string
+  slug:     string
+  position: number
 }
 
 export interface OnboardingConfig {
   categories: OnboardingCategory[]
-  options: {
-    industry:  OnboardingOption[]
-    org_type:  OnboardingOption[]
-    org_size:  OnboardingOption[]
-    objective: OnboardingOption[]
-  }
+  options:    OnboardingOption[]
 }
 
 export interface OnboardingSubmitPayload {

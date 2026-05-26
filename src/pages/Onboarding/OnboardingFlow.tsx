@@ -206,7 +206,11 @@ export default function OnboardingFlow() {
   }
 
   const categories = config?.categories ?? []
-  const opts       = config?.options
+  const allOptions = config?.options   ?? []
+
+  // Safe per-group filter — resilient to empty/partial API responses.
+  const byGroup = (group: string) =>
+    allOptions.filter(o => o.group === group)
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center
@@ -354,7 +358,7 @@ export default function OnboardingFlow() {
                       onChange={(e) => setForm(f => ({ ...f, industryId: e.target.value ? Number(e.target.value) : null }))}
                     >
                       <option value="">Industria</option>
-                      {opts?.industry.map(o => (
+                      {byGroup('industry').map(o => (
                         <option key={o.id} value={o.id}>{o.name}</option>
                       ))}
                     </select>
@@ -384,7 +388,7 @@ export default function OnboardingFlow() {
                       onChange={(e) => setForm(f => ({ ...f, orgTypeId: e.target.value ? Number(e.target.value) : null }))}
                     >
                       <option value="">Tipo de org.</option>
-                      {opts?.org_type.map(o => (
+                      {byGroup('org_type').map(o => (
                         <option key={o.id} value={o.id}>{o.name}</option>
                       ))}
                     </select>
@@ -398,7 +402,7 @@ export default function OnboardingFlow() {
                       onChange={(e) => setForm(f => ({ ...f, orgSizeId: e.target.value ? Number(e.target.value) : null }))}
                     >
                       <option value="">Tamaño</option>
-                      {opts?.org_size.map(o => (
+                      {byGroup('org_size').map(o => (
                         <option key={o.id} value={o.id}>{o.name}</option>
                       ))}
                     </select>
@@ -412,7 +416,7 @@ export default function OnboardingFlow() {
                       onChange={(e) => setForm(f => ({ ...f, objectiveId: e.target.value ? Number(e.target.value) : null }))}
                     >
                       <option value="">Objetivo principal</option>
-                      {opts?.objective.map(o => (
+                      {byGroup('objective').map(o => (
                         <option key={o.id} value={o.id}>{o.name}</option>
                       ))}
                     </select>

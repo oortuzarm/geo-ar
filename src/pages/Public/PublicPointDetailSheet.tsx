@@ -44,8 +44,8 @@ export default function PublicPointDetailSheet({
     >
       <div className="h-full flex flex-col rounded-t-[28px] overflow-hidden
                       bg-white
-                      border-t border-gray-200
-                      shadow-[0_-4px_24px_rgba(0,0,0,0.1)]">
+                      border-t border-gray-300/60
+                      shadow-[0_-8px_32px_rgba(0,0,0,0.14),0_-2px_8px_rgba(0,0,0,0.07)]">
 
         {/* Handle + back */}
         <div className="flex-shrink-0">

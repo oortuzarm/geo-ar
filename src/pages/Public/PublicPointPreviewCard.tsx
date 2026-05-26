@@ -60,15 +60,15 @@ export default function PublicPointPreviewCard({
   return (
     <div className="geo-preview-enter rounded-2xl overflow-hidden
                     bg-white
-                    border border-gray-200
-                    shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+                    border border-gray-300/70
+                    shadow-[0_4px_24px_rgba(0,0,0,0.13),0_1px_4px_rgba(0,0,0,0.07)]">
 
       <div className="flex gap-3 p-3">
         {getPointCoverImage(point) && (
           <img
             src={getPointCoverImage(point)}
             alt={point.name}
-            className="w-[68px] h-[68px] rounded-xl object-cover flex-shrink-0 ring-1 ring-gray-100"
+            className="w-[68px] h-[68px] rounded-xl object-cover flex-shrink-0 ring-1 ring-black/[0.07]"
           />
         )}
 

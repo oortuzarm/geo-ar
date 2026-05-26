@@ -263,10 +263,10 @@ export default function PublicPointCard({
       className={isDetail ? '' : [
         'rounded-xl border overflow-hidden transition-all duration-200 cursor-pointer',
         isSelected && avail.insideRadius
-          ? 'border-brand-500/40 bg-white shadow-md shadow-brand-500/10 ring-1 ring-brand-500/15'
+          ? 'border-brand-500/40 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.10),0_1px_4px_rgba(0,0,0,0.06)] ring-1 ring-brand-500/15'
           : isSelected
-          ? 'border-brand-500/30 bg-white shadow-md shadow-gray-200/80'
-          : 'border-gray-200 bg-white shadow-sm hover:border-gray-300 hover:shadow-md',
+          ? 'border-brand-500/30 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.10),0_1px_4px_rgba(0,0,0,0.06)]'
+          : 'border-gray-200/80 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.05)] hover:border-gray-300 hover:shadow-[0_4px_20px_rgba(0,0,0,0.11),0_2px_6px_rgba(0,0,0,0.06)]',
       ].join(' ')}
       onClick={isDetail ? undefined : onSelect}
     >
@@ -324,6 +324,8 @@ export default function PublicPointCard({
             className="w-full h-full object-cover"
             loading="lazy"
           />
+          {/* Inset ring — prevents white/pale images from bleeding into the white card surface */}
+          <div className="absolute inset-0 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.07)] pointer-events-none" />
           <div className="absolute inset-x-0 bottom-0 h-1/2
                           bg-gradient-to-t from-gray-950/70 to-transparent
                           pointer-events-none" />
@@ -529,8 +531,8 @@ export default function PublicPointCard({
                   className={[
                     'w-full flex items-center justify-center gap-2 rounded-xl text-sm font-semibold',
                     isDetail
-                      ? 'py-3.5 px-4 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 shadow-sm'
-                      : 'py-3 px-4 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100',
+                      ? 'py-3.5 px-4 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.05)]'
+                      : 'py-3 px-4 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.07)]',
                     'active:scale-[0.98] transition-all duration-150',
                   ].join(' ')}
                 >
@@ -566,7 +568,8 @@ export default function PublicPointCard({
                 <button
                   disabled
                   className="w-full bg-gray-100 text-gray-400 font-semibold py-3.5 px-4
-                             rounded-xl text-sm cursor-not-allowed border border-gray-200"
+                             rounded-xl text-sm cursor-not-allowed border border-gray-200
+                             shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
                 >
                   {point.buttonText || 'Acceder al contenido'}
                 </button>

@@ -1254,91 +1254,13 @@ function WorkspaceSection({ detail }: { detail: AdminUserDetail }) {
   )
 }
 
-function ActionsSection({
-  row, onManageSubscription, onDeleteWorkspace, onDeleteUser,
-}: {
-  row: AdminUserRow
-  onManageSubscription: () => void
-  onDeleteWorkspace: () => void
-  onDeleteUser: () => void
-}) {
-  const actionBtn = (
-    onClick: () => void,
-    icon: React.ReactNode,
-    title: string,
-    desc: string,
-    variant: 'default' | 'amber' | 'red',
-  ) => {
-    const border = variant === 'amber' ? 'border-amber-800/40 hover:border-amber-700/60'
-                 : variant === 'red'   ? 'border-red-800/40 hover:border-red-700/60'
-                 :                       'border-gray-700'
-    const iconBg  = variant === 'amber' ? 'bg-amber-500/10'  : variant === 'red' ? 'bg-red-500/10'  : 'bg-brand-500/10'
-    const iconCl  = variant === 'amber' ? 'text-amber-400'   : variant === 'red' ? 'text-red-400'   : 'text-brand-400'
-    const titleCl = variant === 'amber' ? 'text-amber-300'   : variant === 'red' ? 'text-red-300'   : 'text-gray-200'
-    return (
-      <button
-        onClick={onClick}
-        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-800
-                    hover:bg-gray-750 text-left transition-colors border ${border}`}
-      >
-        <div className={`w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0`}>
-          <span className={iconCl}>{icon}</span>
-        </div>
-        <div>
-          <p className={`text-sm font-medium ${titleCl}`}>{title}</p>
-          <p className="text-xs text-gray-500">{desc}</p>
-        </div>
-      </button>
-    )
-  }
-
-  return (
-    <div className="space-y-2">
-      {actionBtn(
-        onManageSubscription,
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>,
-        'Gestionar suscripción',
-        'Cambiar plan, estado y límite de ubicaciones.',
-        'default',
-      )}
-
-      {row.workspace && actionBtn(
-        onDeleteWorkspace,
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-        </svg>,
-        'Eliminar workspace',
-        'Se eliminan todos sus puntos GPS. Irreversible.',
-        'amber',
-      )}
-
-      {actionBtn(
-        onDeleteUser,
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
-        </svg>,
-        'Eliminar usuario',
-        'Elimina la cuenta y todos sus datos. Irreversible.',
-        'red',
-      )}
-    </div>
-  )
-}
-
 function UserDetailDrawer({
-  row, onClose, onManageSubscription, onDeleteWorkspace, onDeleteUser,
+  row, onClose,
 }: {
   row: AdminUserRow
   onClose: () => void
-  onManageSubscription: (row: AdminUserRow) => void
-  onDeleteWorkspace: (row: AdminUserRow) => void
-  onDeleteUser: (row: AdminUserRow) => void
 }) {
-  type Tab = 'account' | 'subscription' | 'workspace' | 'actions'
+  type Tab = 'account' | 'subscription' | 'workspace'
   const [tab,        setTab]        = useState<Tab>('account')
   const [detail,     setDetail]     = useState<AdminUserDetail | null>(null)
   const [loading,    setLoading]    = useState(true)
@@ -1364,7 +1286,6 @@ function UserDetailDrawer({
     { key: 'account',      label: 'Cuenta' },
     { key: 'subscription', label: 'Suscripción' },
     { key: 'workspace',    label: 'Workspace' },
-    { key: 'actions',      label: 'Acciones' },
   ]
 
   return (
@@ -1437,14 +1358,6 @@ function UserDetailDrawer({
               {tab === 'account'      && <AccountSection      detail={detail} />}
               {tab === 'subscription' && <SubscriptionSection detail={detail} />}
               {tab === 'workspace'    && <WorkspaceSection    detail={detail} />}
-              {tab === 'actions'      && (
-                <ActionsSection
-                  row={row}
-                  onManageSubscription={() => { onClose(); onManageSubscription(row) }}
-                  onDeleteWorkspace={()     => { onClose(); onDeleteWorkspace(row) }}
-                  onDeleteUser={()          => { onClose(); onDeleteUser(row) }}
-                />
-              )}
             </>
           ) : null}
         </div>
@@ -2278,9 +2191,6 @@ export default function AdminPage() {
           key={selectedUser.id}
           row={selectedUser}
           onClose={() => setSelectedUser(null)}
-          onManageSubscription={(row) => { setSelectedUser(null); setManageSubTarget(row) }}
-          onDeleteWorkspace={(row)     => { setSelectedUser(null); setDeleteWorkspaceTarget(row) }}
-          onDeleteUser={(row)          => { setSelectedUser(null); setDeleteUserTarget(row) }}
         />
       )}
 

@@ -57,12 +57,33 @@ export default function TemporaryPreviewPage() {
           return
         }
         const resolvedPoints = data.geoPoints ?? data.points ?? []
-        console.log('[DwellDebug][TemporaryPreviewPage] points received:', resolvedPoints.length,
-          '| first point dwell fields:', resolvedPoints[0]
-            ? { id: resolvedPoints[0].id, requiresDwellTime: resolvedPoints[0].requiresDwellTime, dwellTimeSeconds: resolvedPoints[0].dwellTimeSeconds }
+
+        // Restore dwell settings from the sidecar stored at preview creation time.
+        // The backend temporary_previews endpoint may not preserve requiresDwellTime /
+        // dwellTimeSeconds through its storage layer (e.g. Rails strong-param filtering).
+        // The sidecar uses ?? so it never overwrites a field already returned by the API.
+        let finalPoints = resolvedPoints
+        const dwellSidecarRaw = token ? localStorage.getItem(`preview_dwell_${token}`) : null
+        if (dwellSidecarRaw) {
+          try {
+            const sidecar = JSON.parse(dwellSidecarRaw) as Record<string, { requiresDwellTime?: boolean; dwellTimeSeconds?: number }>
+            finalPoints = resolvedPoints.map((p) => ({
+              ...p,
+              requiresDwellTime: p.requiresDwellTime ?? sidecar[p.id]?.requiresDwellTime,
+              dwellTimeSeconds:  p.dwellTimeSeconds  ?? sidecar[p.id]?.dwellTimeSeconds,
+            }))
+            console.log('[DwellDebug][temporary] TemporaryPreviewPage — dwell sidecar applied | token:', token?.slice(0, 8))
+          } catch {
+            console.warn('[DwellDebug][temporary] TemporaryPreviewPage — failed to parse dwell sidecar')
+          }
+        }
+
+        console.log('[DwellDebug][temporary] TemporaryPreviewPage — final points:', finalPoints.length,
+          '| first point dwell fields:', finalPoints[0]
+            ? { id: finalPoints[0].id, requiresDwellTime: finalPoints[0].requiresDwellTime, dwellTimeSeconds: finalPoints[0].dwellTimeSeconds }
             : '(no points)')
         setProject(data.project)
-        setPoints(resolvedPoints)
+        setPoints(finalPoints)
         setPageState('ok')
       })
       .catch((err) => {

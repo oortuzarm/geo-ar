@@ -54,9 +54,21 @@ export async function fetchTemporaryPreview(token: string): Promise<TemporaryPre
   const rawPoints = (
     (raw.geoPoints ?? raw.geo_points ?? raw.points) as Record<string, unknown>[] | undefined
   ) ?? []
+
+  // Log raw fields BEFORE normalization to diagnose whether the backend preserves dwell data.
+  console.log('[DwellDebug][temporary] fetchTemporaryPreview — raw first point dwell fields:',
+    rawPoints[0]
+      ? {
+          requiresDwellTime:   rawPoints[0].requiresDwellTime,
+          requires_dwell_time: rawPoints[0].requires_dwell_time,
+          dwellTimeSeconds:    rawPoints[0].dwellTimeSeconds,
+          dwell_time_seconds:  rawPoints[0].dwell_time_seconds,
+        }
+      : '(no points)')
+
   const geoPoints = rawPoints.map(normalizeGeoPoint)
 
-  console.log('[DwellDebug] fetchTemporaryPreview — first point dwell fields:',
+  console.log('[DwellDebug][temporary] fetchTemporaryPreview — normalized first point dwell fields:',
     geoPoints[0]
       ? { id: geoPoints[0].id, requiresDwellTime: geoPoints[0].requiresDwellTime, dwellTimeSeconds: geoPoints[0].dwellTimeSeconds }
       : '(no points)')

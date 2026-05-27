@@ -241,6 +241,21 @@ export default function TryPage() {
 
       // Track the new token as the only active preview for this demo session.
       localStorage.setItem(DEMO_PREVIEW_TOKEN_KEY, token)
+
+      // Persist dwell settings keyed by token so TemporaryPreviewPage can restore them
+      // if the backend doesn't preserve requiresDwellTime/dwellTimeSeconds through its
+      // temporary_previews storage (e.g. due to strong-param filtering).
+      const dwellSidecar: Record<string, { requiresDwellTime?: boolean; dwellTimeSeconds?: number }> = {}
+      for (const pt of cleanPoints) {
+        if (pt.requiresDwellTime !== undefined || pt.dwellTimeSeconds !== undefined) {
+          dwellSidecar[pt.id] = { requiresDwellTime: pt.requiresDwellTime, dwellTimeSeconds: pt.dwellTimeSeconds }
+        }
+      }
+      if (Object.keys(dwellSidecar).length > 0) {
+        localStorage.setItem(`preview_dwell_${token}`, JSON.stringify(dwellSidecar))
+        console.info('[DwellDebug][temporary] Dwell sidecar stored | token:', token.slice(0, 8), '| points:', Object.keys(dwellSidecar).length)
+      }
+
       console.info('[TryPage] handlePreviewOpen returning:', { url, token: token.slice(0, 8) + '…' })
       return { url, token }
     } catch (err) {

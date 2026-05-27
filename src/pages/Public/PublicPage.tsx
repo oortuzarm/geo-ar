@@ -1139,6 +1139,10 @@ export default function PublicPage({
   useEffect(() => {
     if (prefetched) {
       const activePoints = prefetched.points.filter((p) => p.active)
+      console.log('[DwellDebug][temporary] PublicPage prefetched — active points:', activePoints.length,
+        '| first point dwell:', activePoints[0]
+          ? { id: activePoints[0].id, requiresDwellTime: activePoints[0].requiresDwellTime, dwellTimeSeconds: activePoints[0].dwellTimeSeconds }
+          : '(none)')
       const proj = prefetched.project
       if (!isEmbed) {
         const ogImage = resolveOgImage(proj.coverImage)

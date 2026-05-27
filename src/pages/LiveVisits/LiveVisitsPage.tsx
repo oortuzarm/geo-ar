@@ -105,7 +105,7 @@ export default function LiveVisitsPage() {
 
   // Build per-point activeNow map from API response
   const activeNowMap: Record<string, number> = {}
-  liveData?.points.forEach((p) => { activeNowMap[p.pointId] = p.activeNow })
+  liveData?.points.forEach((p) => { activeNowMap[p.id] = p.activeNow })
 
   const ranked = points
     .map((p) => ({

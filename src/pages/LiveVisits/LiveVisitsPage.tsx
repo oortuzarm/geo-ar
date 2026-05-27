@@ -1,10 +1,25 @@
-import { useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import GpsIntensityMap, { mockPointIntensity } from '../../components/map/GpsIntensityMap'
 import type { IntensityLevel } from '../../components/map/GpsIntensityMap'
 import Spinner from '../../components/ui/Spinner'
 
-// ── Shared live dot ───────────────────────────────────────────────────────────
+// ── Mock data helpers (deterministic per point id) ────────────────────────────
+
+function mockPeopleCount(pointId: string): number {
+  const sum = pointId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
+  return 5 + (sum % 20) // 5–24 people
+}
+
+function mockVsLastHour(pointId: string): string {
+  const sum = pointId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
+  const pct = 10 + (sum % 45)
+  return sum % 4 === 0 ? `-${pct}%` : `+${pct}%`
+}
+
+const MOCK_PEAK_HOUR = '18:00–19:00'
+
+// ── Shared components ─────────────────────────────────────────────────────────
 
 function LiveDot({ size = 'md' }: { size?: 'sm' | 'md' }) {
   const dim = size === 'sm' ? 'h-1.5 w-1.5' : 'h-2 w-2'
@@ -16,111 +31,40 @@ function LiveDot({ size = 'md' }: { size?: 'sm' | 'md' }) {
   )
 }
 
-// ── Informative modal ─────────────────────────────────────────────────────────
-
-function LiveVisitsModal({ onClose }: { onClose: () => void }) {
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [onClose])
-
+function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-sm bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-6 space-y-5">
-
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2.5">
-            <LiveDot />
-            <h3 className="text-base font-semibold text-gray-100">Visitas en Vivo</h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-600 hover:text-gray-300 transition-colors -mt-1 -mr-1 p-1"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <p className="text-sm text-gray-400 leading-relaxed">
-          Pronto podrás ver en tiempo real cuántas personas se encuentran dentro de cada zona de
-          activación de tu proyecto GPS, con tendencias horarias y comparativas históricas.
-        </p>
-
-        <button
-          onClick={onClose}
-          className="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white text-sm
-                     font-medium rounded-lg transition-colors"
-        >
-          Entendido
-        </button>
-      </div>
-    </div>
+    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{children}</p>
   )
 }
 
-// ── Feature / marketing card ──────────────────────────────────────────────────
-
-function LiveVisitsFeatureCard({ onOpenModal }: { onOpenModal: () => void }) {
+function StatTile({
+  label, value, valueClass = 'text-2xl text-gray-100',
+}: {
+  label:       string
+  value:       string | number
+  valueClass?: string
+}) {
   return (
-    <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl p-5 space-y-4">
-      <div className="flex items-center gap-2.5">
-        <LiveDot />
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider leading-none">
-          Visitas en Vivo
-        </p>
-        <span className="inline-flex items-center px-2 py-0.5 rounded-full border text-[11px] font-medium
-                         bg-brand-500/10 text-brand-400 border-brand-500/20">
-          Premium
-        </span>
-      </div>
-
-      <p className="text-sm text-gray-400 leading-relaxed">
-        Visualiza cuántas personas se encuentran dentro de tus zonas de activación en tiempo real
-        y toma decisiones dinámicas sobre tus proyectos GPS.
+    <div className="bg-gray-900/70 border border-white/[0.07] rounded-xl px-4 py-3.5 flex flex-col gap-1.5">
+      <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide leading-none">
+        {label}
       </p>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="bg-gray-800/60 border border-white/[0.04] rounded-xl px-4 py-3 flex flex-col gap-1">
-          <p className="text-3xl font-bold tabular-nums text-emerald-400 leading-none">18</p>
-          <p className="text-xs text-gray-500 leading-none mt-1">personas dentro del área</p>
-        </div>
-        <div className="bg-gray-800/60 border border-white/[0.04] rounded-xl px-4 py-3 flex flex-col gap-1">
-          <p className="text-3xl font-bold tabular-nums text-brand-400 leading-none">+42%</p>
-          <p className="text-xs text-gray-500 leading-none mt-1">vs última hora</p>
-        </div>
-        <div className="bg-gray-800/60 border border-white/[0.04] rounded-xl px-4 py-3 flex flex-col gap-1">
-          <p className="text-xl font-bold tabular-nums text-gray-200 leading-none">18:00–19:00</p>
-          <p className="text-xs text-gray-500 leading-none mt-1">hora más activa</p>
-        </div>
-      </div>
-
-      <div>
-        <button
-          onClick={onOpenModal}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500
-                     text-white text-sm font-medium rounded-lg transition-colors"
-        >
-          <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>
-          Ver visitas en vivo
-        </button>
-      </div>
+      <p className={`font-bold tabular-nums leading-none ${valueClass}`}>{value}</p>
     </div>
   )
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// ── Intensity badge ───────────────────────────────────────────────────────────
 
-const INTENSITY_LABEL: Record<IntensityLevel, string> = { low: 'Baja', medium: 'Media', high: 'Alta' }
-const INTENSITY_DOT:   Record<IntensityLevel, string> = {
+const INTENSITY_BADGE: Record<IntensityLevel, string> = {
+  low:    'bg-green-500/10  text-green-400  border-green-500/20',
+  medium: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+  high:   'bg-red-500/10   text-red-400    border-red-500/20',
+}
+const INTENSITY_LABEL: Record<IntensityLevel, string> = {
+  low: 'Baja', medium: 'Media', high: 'Alta',
+}
+const INTENSITY_DOT: Record<IntensityLevel, string> = {
   low: 'bg-green-500', medium: 'bg-yellow-500', high: 'bg-red-500',
 }
 
@@ -128,7 +72,6 @@ const INTENSITY_DOT:   Record<IntensityLevel, string> = {
 
 export default function LiveVisitsPage() {
   const { points, loading } = useWorkspace()
-  const [modalOpen, setModalOpen] = useState(false)
 
   if (loading) {
     return (
@@ -138,8 +81,18 @@ export default function LiveVisitsPage() {
     )
   }
 
-  const highPoints     = points.filter((p) => mockPointIntensity(p.id) === 'high')
-  const mostActiveName = highPoints[0]?.name || points[0]?.name || '—'
+  // Build enriched, sorted mock dataset once
+  const ranked = points
+    .map((p) => ({
+      point:      p,
+      people:     mockPeopleCount(p.id),
+      vsLastHour: mockVsLastHour(p.id),
+      intensity:  mockPointIntensity(p.id),
+    }))
+    .sort((a, b) => b.people - a.people)
+
+  const totalPeople = ranked.reduce((s, x) => s + x.people, 0)
+  const top         = ranked[0]
 
   return (
     <div className="text-gray-100">
@@ -158,51 +111,162 @@ export default function LiveVisitsPage() {
       {/* ── Main ───────────────────────────────────────────────────────────── */}
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
 
-        {/* Feature / marketing card */}
-        <LiveVisitsFeatureCard onOpenModal={() => setModalOpen(true)} />
+        {/* ── 1. General ─────────────────────────────────────────────────────── */}
+        <section className="space-y-3">
+          <SectionLabel>General</SectionLabel>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <StatTile
+              label="Personas activas ahora"
+              value={points.length > 0 ? totalPeople : 0}
+              valueClass="text-2xl text-emerald-400"
+            />
+            <StatTile
+              label="Vs última hora"
+              value="+38%"
+              valueClass="text-2xl text-brand-400"
+            />
+            <StatTile
+              label="Hora más activa"
+              value={MOCK_PEAK_HOUR}
+              valueClass="text-base text-gray-200"
+            />
+          </div>
+        </section>
 
-        {/* ── GPS Intensity Map ─────────────────────────────────────────────── */}
+        {/* ── 2. Punto GPS más activo ────────────────────────────────────────── */}
+        {top && (
+          <section className="space-y-3">
+            <SectionLabel>Punto GPS más activo</SectionLabel>
+            <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl p-5 space-y-4">
+
+              {/* Point name + intensity badge */}
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center
+                                 text-[10px] font-bold bg-brand-500/20 border border-brand-500/30 text-brand-400">
+                  1
+                </span>
+                <p className="text-base font-semibold text-gray-100 truncate flex-1">
+                  {top.point.name || 'Sin nombre'}
+                </p>
+                <span className={`flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full
+                                  border text-[10px] font-medium ${INTENSITY_BADGE[top.intensity]}`}>
+                  {INTENSITY_LABEL[top.intensity]} actividad
+                </span>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="bg-gray-800/60 border border-white/[0.04] rounded-xl px-4 py-3 flex flex-col gap-1.5">
+                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide leading-none">
+                    Personas en área
+                  </p>
+                  <p className="text-2xl font-bold tabular-nums text-emerald-400 leading-none">
+                    {top.people}
+                  </p>
+                </div>
+                <div className="bg-gray-800/60 border border-white/[0.04] rounded-xl px-4 py-3 flex flex-col gap-1.5">
+                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide leading-none">
+                    Vs última hora
+                  </p>
+                  <p className={`text-2xl font-bold tabular-nums leading-none ${
+                    top.vsLastHour.startsWith('-') ? 'text-red-400' : 'text-brand-400'
+                  }`}>
+                    {top.vsLastHour}
+                  </p>
+                </div>
+                <div className="bg-gray-800/60 border border-white/[0.04] rounded-xl px-4 py-3 flex flex-col gap-1.5">
+                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide leading-none">
+                    Horas más activas
+                  </p>
+                  <p className="text-base font-bold tabular-nums text-gray-200 leading-none">
+                    {MOCK_PEAK_HOUR}
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </section>
+        )}
+
+        {/* ── 3. Mapa de Intensidad GPS ──────────────────────────────────────── */}
         <section className="space-y-4">
 
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              Mapa de Intensidad GPS
-            </p>
+            <SectionLabel>Mapa de Intensidad GPS</SectionLabel>
             <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
               <LiveDot size="sm" />
               En vivo
             </span>
           </div>
 
-          {/* Summary stats */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-gray-900/70 border border-white/[0.07] rounded-xl px-4 py-3 flex flex-col gap-1.5">
-              <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide leading-none">
-                Personas activas ahora
-              </p>
-              <p className="text-2xl font-bold tabular-nums text-emerald-400 leading-none">18</p>
-            </div>
-            <div className="bg-gray-900/70 border border-white/[0.07] rounded-xl px-4 py-3 flex flex-col gap-1.5">
-              <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide leading-none">
-                Zona más activa
-              </p>
-              <p className="text-sm font-semibold text-gray-200 leading-tight truncate">
-                {mostActiveName}
-              </p>
-            </div>
-            <div className="bg-gray-900/70 border border-white/[0.07] rounded-xl px-4 py-3 flex flex-col gap-1.5">
-              <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide leading-none">
-                Peak hoy
-              </p>
-              <p className="text-sm font-semibold text-gray-200 leading-tight">34 pers · 17:45</p>
-            </div>
-          </div>
-
-          {/* Map */}
           {points.length > 0 ? (
-            <div className="rounded-2xl overflow-hidden border border-gray-800" style={{ height: '420px' }}>
-              <GpsIntensityMap points={points} />
-            </div>
+            <>
+              <div className="rounded-2xl overflow-hidden border border-gray-800" style={{ height: '420px' }}>
+                <GpsIntensityMap points={points} />
+              </div>
+
+              {/* Legend */}
+              <div className="flex items-center gap-5 flex-wrap">
+                <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
+                  Intensidad:
+                </span>
+                {(['low', 'medium', 'high'] as IntensityLevel[]).map((level) => (
+                  <span key={level} className="flex items-center gap-1.5 text-xs text-gray-400">
+                    <span className={`w-3 h-3 rounded-full ${INTENSITY_DOT[level]} opacity-80 flex-shrink-0`} />
+                    {INTENSITY_LABEL[level]}
+                  </span>
+                ))}
+                <span className="text-[11px] text-gray-600 ml-auto">Radio máx. 1.000 m por zona</span>
+              </div>
+
+              {/* ── 4. Ranking de zonas ─────────────────────────────────────── */}
+              <div className="space-y-2">
+                <SectionLabel>Ranking de zonas activas</SectionLabel>
+                <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl overflow-hidden">
+                  {ranked.map(({ point, people, vsLastHour, intensity }, idx) => (
+                    <div
+                      key={point.id}
+                      className={`flex items-center gap-3 sm:gap-4 px-4 py-3 ${
+                        idx < ranked.length - 1 ? 'border-b border-gray-800/60' : ''
+                      }`}
+                    >
+                      {/* Rank badge */}
+                      <span className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center
+                                        text-[10px] font-bold border ${
+                        idx === 0
+                          ? 'bg-brand-500/20 border-brand-500/30 text-brand-400'
+                          : 'bg-gray-800 border-gray-700/60 text-gray-500'
+                      }`}>
+                        {idx + 1}
+                      </span>
+
+                      {/* Point name */}
+                      <span className="flex-1 text-sm font-medium text-gray-200 truncate min-w-0">
+                        {point.name || 'Sin nombre'}
+                      </span>
+
+                      {/* Intensity badge — hidden on very small screens */}
+                      <span className={`hidden xs:inline-flex flex-shrink-0 items-center px-2 py-0.5
+                                        rounded-full border text-[10px] font-medium ${INTENSITY_BADGE[intensity]}`}>
+                        {INTENSITY_LABEL[intensity]}
+                      </span>
+
+                      {/* Vs last hour */}
+                      <span className={`text-xs font-medium tabular-nums flex-shrink-0 ${
+                        vsLastHour.startsWith('-') ? 'text-red-400' : 'text-brand-400'
+                      }`}>
+                        {vsLastHour}
+                      </span>
+
+                      {/* People count */}
+                      <span className="text-sm font-semibold text-emerald-400 tabular-nums flex-shrink-0">
+                        {people} pers.
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
           ) : (
             <div className="rounded-2xl border border-gray-800 bg-gray-900/50 flex flex-col
                             items-center justify-center gap-3 py-20 text-center">
@@ -213,25 +277,9 @@ export default function LiveVisitsPage() {
             </div>
           )}
 
-          {/* Legend */}
-          <div className="flex items-center gap-5 flex-wrap">
-            <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
-              Intensidad:
-            </span>
-            {(['low', 'medium', 'high'] as IntensityLevel[]).map((level) => (
-              <span key={level} className="flex items-center gap-1.5 text-xs text-gray-400">
-                <span className={`w-3 h-3 rounded-full ${INTENSITY_DOT[level]} opacity-80 flex-shrink-0`} />
-                {INTENSITY_LABEL[level]}
-              </span>
-            ))}
-            <span className="text-[11px] text-gray-600 ml-auto">Radio máx. 1.000 m por zona</span>
-          </div>
-
         </section>
 
       </main>
-
-      {modalOpen && <LiveVisitsModal onClose={() => setModalOpen(false)} />}
     </div>
   )
 }

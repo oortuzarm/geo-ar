@@ -159,6 +159,15 @@ export default function LiveVisitsPage() {
               valueClass="text-base text-gray-200"
             />
           </div>
+
+          <p className="flex items-start gap-1.5 text-[11px] text-gray-600 leading-relaxed">
+            <svg className="w-3 h-3 flex-shrink-0 mt-px text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Las métricas representan dispositivos activos físicamente dentro de las áreas GPS configuradas.
+            Una sesión permanece activa hasta 45 segundos después del último heartbeat recibido.
+          </p>
         </section>
 
         {/* ── 2. Punto GPS más activo (solo cuando hay visitantes) ───────────── */}

@@ -22,6 +22,24 @@ function normalizeProject(raw: Record<string, unknown>): GeoProject {
   } as GeoProject
 }
 
+function normalizePoint(raw: Record<string, unknown>): GeoPoint {
+  const requiresDwellTime = raw.requiresDwellTime ?? raw.requires_dwell_time
+  const dwellTimeSeconds  = raw.dwellTimeSeconds  ?? raw.dwell_time_seconds
+  return {
+    ...raw,
+    geoProjectId:      (raw.geoProjectId     ?? raw.geo_project_id)     as string,
+    lookiarUrl:        (raw.lookiarUrl        ?? raw.lookiar_url)        as string | undefined,
+    contentType:       (raw.contentType       ?? raw.content_type)       as string | undefined,
+    contentData:       (raw.contentData       ?? raw.content_data)       as unknown,
+    activationRadius:  Number(raw.activationRadius ?? raw.activation_radius ?? 50),
+    buttonText:        (raw.buttonText        ?? raw.button_text)        as string | undefined,
+    accessMode:        (raw.accessMode        ?? raw.access_mode)        as string | undefined,
+    requiresDwellTime: requiresDwellTime != null ? Boolean(requiresDwellTime) : undefined,
+    dwellTimeSeconds:  dwellTimeSeconds  != null ? Number(dwellTimeSeconds)   : undefined,
+    createdAt:         (raw.createdAt         ?? raw.created_at)         as string | undefined,
+  } as GeoPoint
+}
+
 export class RemoteGeoRepository implements IGeoRepository {
   private readonly base: string
   // Local IndexedDB used purely as an offline cache
@@ -107,7 +125,8 @@ export class RemoteGeoRepository implements IGeoRepository {
     const endpoint = this.url(`/api/geo_projects/${projectId}/geo_points`)
     console.log('[RemoteGeoRepository] listPoints →', endpoint)
     try {
-      const points = await apiFetch<GeoPoint[]>(endpoint)
+      const raw = await apiFetch<Record<string, unknown>[]>(endpoint)
+      const points = raw.map(normalizePoint)
       void this.cachePoints(points)
       return points
     } catch (err) {
@@ -118,29 +137,37 @@ export class RemoteGeoRepository implements IGeoRepository {
     }
   }
 
-  createPoint(data: Partial<GeoPoint> & { geoProjectId: string }): Promise<GeoPoint> {
-    return apiFetch<GeoPoint>(
+  async createPoint(data: Partial<GeoPoint> & { geoProjectId: string }): Promise<GeoPoint> {
+    const raw = await apiFetch<Record<string, unknown>>(
       this.url(`/api/geo_projects/${data.geoProjectId}/geo_points`),
       { method: 'POST', body: JSON.stringify(data) },
     )
+    return normalizePoint(raw)
   }
 
-  savePoint(id: string, updates: Partial<GeoPoint>): Promise<GeoPoint> {
+  async savePoint(id: string, updates: Partial<GeoPoint>): Promise<GeoPoint> {
     // Images are base64 strings that can be several hundred KB; allow extra time.
     const hasImage = typeof updates.image === 'string' && updates.image.startsWith('data:')
-    return apiFetch<GeoPoint>(this.url(`/api/geo_points/${id}`), {
+    const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_points/${id}`), {
       method: 'PUT',
       body: JSON.stringify(updates),
       timeout: hasImage ? 30_000 : 15_000,
     })
+    return normalizePoint(raw)
   }
 
   async removePoint(id: string): Promise<void> {
     await apiFetch<void>(this.url(`/api/geo_points/${id}`), { method: 'DELETE' })
   }
 
-  listPublicPoints(projectId: string): Promise<GeoPoint[]> {
-    return apiFetch<GeoPoint[]>(this.url(`/api/public/geo_projects/${projectId}/geo_points`))
+  async listPublicPoints(projectId: string): Promise<GeoPoint[]> {
+    const raw = await apiFetch<Record<string, unknown>[]>(
+      this.url(`/api/public/geo_projects/${projectId}/geo_points`),
+    )
+    const points = raw.map(normalizePoint)
+    console.log('[RemoteGeoRepository] listPublicPoints — sample point dwell fields:',
+      points[0] ? { requiresDwellTime: points[0].requiresDwellTime, dwellTimeSeconds: points[0].dwellTimeSeconds } : '(no points)')
+    return points
   }
 
   requestPointAccess(projectId: string, pointId: string, lat: number, lng: number, accessMode?: string): Promise<AccessResponse> {

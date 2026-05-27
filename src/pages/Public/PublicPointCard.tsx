@@ -250,6 +250,17 @@ export default function PublicPointCard({
   // CTA is gated by dwell when required and not yet completed
   const dwellBlocking  = dwellRequired && !dwellCompleted
 
+  if (dwellRequired) {
+    console.log('[PublicPointCard] point:', point.id,
+      '| requiresDwellTime:', point.requiresDwellTime,
+      '| dwellTimeSeconds:', point.dwellTimeSeconds,
+      '| dwellState:', dwellState,
+      '| dwellBlocking:', dwellBlocking,
+      '| avail.canAccess:', avail.canAccess,
+      '| insideRadius:', avail.insideRadius,
+      '| dwellProgress:', dwellProgress)
+  }
+
   // ── Location chip derivation ──────────────────────────────────────────────
   let locationLabel: string
   let locationVariant: ChipVariant
@@ -548,6 +559,18 @@ export default function PublicPointCard({
             )}
 
             {/* Dwell chip — only when this point requires permanence */}
+            {dwellRequired && avail.insideRadius && dwellState === 'idle' && (
+              <div className="rounded-xl border px-3 py-2.5 bg-amber-50 border-amber-200">
+                <div className="flex items-center gap-2">
+                  <span className="text-amber-700 text-sm">⏳</span>
+                  <span className="text-xs font-medium flex-1 leading-none text-amber-700">
+                    Permanencia requerida · {dwellProgress
+                      ? formatDwellTime(dwellProgress.total)
+                      : formatDwellTime(point.dwellTimeSeconds ?? 60)} en el área
+                  </span>
+                </div>
+              </div>
+            )}
             {dwellRequired && dwellState === 'running' && dwellProgress && (
               <div className="rounded-xl border px-3 py-2.5 bg-amber-50 border-amber-200 space-y-2">
                 <div className="flex items-center gap-2">

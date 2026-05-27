@@ -569,9 +569,9 @@ export default function PublicPointCard({
                 <div className="flex items-center gap-2">
                   <span className="text-amber-700 text-sm">⏳</span>
                   <span className="text-xs font-medium flex-1 leading-none text-amber-700">
-                    Permanencia requerida · {dwellProgress
+                    Quédate {dwellProgress
                       ? formatDwellTime(dwellProgress.total)
-                      : formatDwellTime(point.dwellTimeSeconds ?? 60)} en el área
+                      : formatDwellTime(point.dwellTimeSeconds ?? 60)} para desbloquear
                   </span>
                 </div>
               </div>
@@ -579,7 +579,7 @@ export default function PublicPointCard({
             {dwellRequired && dwellCompleted && (
               <StatusChip
                 icon={<span className="text-sm">✅</span>}
-                label="Acceso desbloqueado"
+                label="Experiencia desbloqueada"
                 variant="ok"
               />
             )}
@@ -648,7 +648,7 @@ export default function PublicPointCard({
                       />
                       <span className="relative flex items-center justify-center gap-2">
                         <span className="text-base leading-none select-none">⏳</span>
-                        Permanece {formatDwellTime(Math.max(0, dwellProgress.total - dwellProgress.elapsed))}
+                        Desbloqueando experiencia · {formatDwellTime(Math.max(0, dwellProgress.total - dwellProgress.elapsed))}
                       </span>
                     </>
                   ) : (

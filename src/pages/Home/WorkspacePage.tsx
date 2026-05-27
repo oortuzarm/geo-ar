@@ -14,6 +14,8 @@ import Modal from '../../components/ui/Modal'
 import ShareModal from '../../components/ui/ShareModal'
 import PreviewQRModal from '../Dashboard/PreviewQRModal'
 import WorkspaceMap from '../../components/map/WorkspaceMap'
+import GpsIntensityMap, { mockPointIntensity } from '../../components/map/GpsIntensityMap'
+import type { IntensityLevel } from '../../components/map/GpsIntensityMap'
 import UpgradeModal from '../../components/subscription/UpgradeModal'
 import { useSubscription } from '../../hooks/useSubscription'
 import { useSettingsStore } from '../../store/settingsStore'
@@ -902,6 +904,77 @@ export default function WorkspacePage() {
 
           {/* ── Live Visits ───────────────────────────────────────────── */}
           <LiveVisitsCard onOpen={() => setLiveVisitsOpen(true)} />
+
+          {/* ── GPS Intensity Map ─────────────────────────────────────── */}
+          {(() => {
+            const LABEL: Record<IntensityLevel, string> = { low: 'Baja', medium: 'Media', high: 'Alta' }
+            const DOT:   Record<IntensityLevel, string> = {
+              low: 'bg-green-500', medium: 'bg-yellow-500', high: 'bg-red-500',
+            }
+            const highPoints   = points.filter((p) => mockPointIntensity(p.id) === 'high')
+            const mostActiveName = highPoints[0]?.name || points[0]?.name || '—'
+            return (
+              <section className="space-y-4">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <SectionLabel>Mapa de Intensidad GPS</SectionLabel>
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                    </span>
+                    En vivo
+                  </span>
+                </div>
+
+                {/* Summary strip */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-gray-900/70 border border-white/[0.07] rounded-xl px-4 py-3 flex flex-col gap-1.5">
+                    <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide leading-none">
+                      Personas activas ahora
+                    </p>
+                    <p className="text-2xl font-bold tabular-nums text-emerald-400 leading-none">18</p>
+                  </div>
+                  <div className="bg-gray-900/70 border border-white/[0.07] rounded-xl px-4 py-3 flex flex-col gap-1.5">
+                    <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide leading-none">
+                      Zona más activa
+                    </p>
+                    <p className="text-sm font-semibold text-gray-200 leading-tight truncate">
+                      {mostActiveName}
+                    </p>
+                  </div>
+                  <div className="bg-gray-900/70 border border-white/[0.07] rounded-xl px-4 py-3 flex flex-col gap-1.5">
+                    <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide leading-none">
+                      Peak hoy
+                    </p>
+                    <p className="text-sm font-semibold text-gray-200 leading-tight">34 pers · 17:45</p>
+                  </div>
+                </div>
+
+                {/* Map */}
+                <div
+                  className="rounded-2xl overflow-hidden border border-gray-800"
+                  style={{ height: '320px' }}
+                >
+                  <GpsIntensityMap points={points} />
+                </div>
+
+                {/* Legend */}
+                <div className="flex items-center gap-5 flex-wrap">
+                  <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
+                    Intensidad:
+                  </span>
+                  {(['low', 'medium', 'high'] as IntensityLevel[]).map((level) => (
+                    <span key={level} className="flex items-center gap-1.5 text-xs text-gray-400">
+                      <span className={`w-3 h-3 rounded-full ${DOT[level]} opacity-80 flex-shrink-0`} />
+                      {LABEL[level]}
+                    </span>
+                  ))}
+                  <span className="text-[11px] text-gray-600 ml-auto">Radio máx. 1.000 m por zona</span>
+                </div>
+              </section>
+            )
+          })()}
 
           {/* ── Map ───────────────────────────────────────────────────── */}
           <section>

@@ -113,6 +113,33 @@ export function trackRadiusEnter(
   postEvent('radius_enter', projectId, pointId, location)
 }
 
+/** Fires once per (projectId, pointId, calendar day, browser). Call when dwell timer starts. */
+export function trackDwellStarted(
+  projectId: string,
+  pointId: string,
+  location?: { latitude: number; longitude: number } | null,
+): void {
+  const key = `analytics:dwell_started:${projectId}:${pointId}:${todayStr()}`
+  if (alreadyFiredToday(key)) return
+  postEvent('dwell_started', projectId, pointId, location)
+}
+
+/** Fires once per (projectId, pointId, calendar day, browser). Call when dwell timer completes. */
+export function trackDwellCompleted(
+  projectId: string,
+  pointId: string,
+  location?: { latitude: number; longitude: number } | null,
+): void {
+  const key = `analytics:dwell_completed:${projectId}:${pointId}:${todayStr()}`
+  if (alreadyFiredToday(key)) return
+  postEvent('dwell_completed', projectId, pointId, location)
+}
+
+/** Fires every time the user exits the area before completing dwell. Not deduplicated. */
+export function trackDwellCancelled(projectId: string, pointId: string): void {
+  postEvent('dwell_cancelled', projectId, pointId)
+}
+
 /**
  * Fires on every real click — not deduplicated across time.
  * Only suppresses clicks within a 500ms window to prevent accidental double-taps.

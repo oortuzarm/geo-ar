@@ -246,7 +246,7 @@ function isMediaContentData(data: GeoPoint['contentData']): data is MediaContent
 
 export default function GeoPointForm({ point, onChange, onDelete, onClose, onSave, onMediaOrphaned, hideHeader = false }: GeoPointFormProps) {
   const editorMode = useEditorMode()
-  const { canUseContentType, canUseScheduleAvailability, canUseQuotaAvailability } = usePlanFeatures()
+  const { canUseContentType, canUseScheduleAvailability, canUseQuotaAvailability, canUseDwellTime } = usePlanFeatures()
   const mediaFileRef   = useRef<HTMLInputElement>(null)
   const galleryFileRef = useRef<HTMLInputElement>(null)
   const [advancedOpen,         setAdvancedOpen]         = useState(false)
@@ -710,6 +710,50 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           canUseSchedule={canUseScheduleAvailability}
           canUseQuota={canUseQuotaAvailability}
         />
+
+        {/* ── Permanencia ────────────────────────────────────────────────── */}
+        {canUseDwellTime && (
+          <div className="space-y-2">
+            <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              Permanencia
+            </span>
+            <div className="bg-gray-800/50 border border-gray-800 rounded-lg p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-300">Requerir permanencia</span>
+                <Toggle
+                  enabled={point.requiresDwellTime ?? false}
+                  onToggle={() => {
+                    const next = !(point.requiresDwellTime ?? false)
+                    onChange({
+                      requiresDwellTime: next,
+                      dwellTimeSeconds:  next ? (point.dwellTimeSeconds ?? 180) : 0,
+                    })
+                  }}
+                />
+              </div>
+              {(point.requiresDwellTime ?? false) && (
+                <>
+                  <p className="text-xs text-gray-500">
+                    El usuario deberá permanecer dentro del área para desbloquear el contenido.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      label="Minutos requeridos"
+                      type="number"
+                      min={1}
+                      max={240}
+                      value={Math.max(1, Math.round((point.dwellTimeSeconds ?? 180) / 60))}
+                      onChange={(e) => {
+                        const mins = Math.min(240, Math.max(1, parseInt(e.target.value, 10) || 1))
+                        onChange({ dwellTimeSeconds: mins * 60 })
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Coordenadas — dentro de sección colapsable */}
         <div>

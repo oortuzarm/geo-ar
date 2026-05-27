@@ -14,6 +14,9 @@
 
 import type { GeoPoint, AccessResponse } from '../types'
 import { repository } from '../repositories'
+import { apiFetch } from '../lib/apiFetch'
+
+const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/$/, '')
 
 export function listPoints(geoProjectId: string): Promise<GeoPoint[]> {
   return repository.listPoints(geoProjectId)
@@ -45,4 +48,17 @@ export function requestPointAccess(
   accessMode?: string,
 ): Promise<AccessResponse> {
   return repository.requestPointAccess(projectId, pointId, lat, lng, accessMode)
+}
+
+export function completeDwellTime(
+  projectId: string,
+  pointId: string,
+  lat: number,
+  lng: number,
+  startedAt: number,
+): Promise<{ unlocked: boolean }> {
+  return apiFetch<{ unlocked: boolean }>(
+    `${API_BASE}/api/public/geo_projects/${projectId}/geo_points/${pointId}/complete_dwell`,
+    { method: 'POST', body: JSON.stringify({ latitude: lat, longitude: lng, startedAt }) },
+  )
 }

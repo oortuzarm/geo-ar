@@ -9,6 +9,7 @@ export interface PlanFeatures {
   canUseQuotaAvailability:     boolean
   canUseAnalytics:             boolean
   canUseMembers:               boolean
+  canUseDwellTime:             boolean
 }
 
 export function usePlanFeatures(): PlanFeatures {
@@ -26,5 +27,6 @@ export function usePlanFeatures(): PlanFeatures {
     canUseQuotaAvailability:    config.availability_quota    ?? true,
     canUseAnalytics:            config.analytics             ?? true,
     canUseMembers:              config.members               ?? true,
+    canUseDwellTime:            config.dwell_time            ?? true,
   }
 }

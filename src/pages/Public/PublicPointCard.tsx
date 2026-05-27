@@ -134,6 +134,19 @@ function QuotaDetail({ avail }: { avail: PointAvailability }) {
 
 export type RouteStatus = 'idle' | 'loading' | 'ok' | 'error' | 'no-location'
 
+export interface DwellProgress {
+  state: 'idle' | 'running' | 'completed'
+  elapsed: number  // seconds
+  total: number    // seconds
+  showResetMessage?: boolean
+}
+
+function formatDwellTime(secs: number): string {
+  const m = Math.floor(secs / 60)
+  const s = secs % 60
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
 interface PublicPointCardProps {
   point: GeoPoint
   distance: number | null
@@ -157,6 +170,7 @@ interface PublicPointCardProps {
   /** When true, renders in detail-sheet layout: flat container, larger type,
    *  badges centred at top, more spacious chips and CTA. */
   isDetail?: boolean
+  dwellProgress?: DwellProgress
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -166,6 +180,7 @@ export default function PublicPointCard({
   routeStatus, walkingDistanceMeters, walkingDurationSeconds,
   isActivating, accessMessage, accessFallbackUrl, address,
   hideImage = false, pointCreatedAt, isDetail = false,
+  dwellProgress,
 }: PublicPointCardProps) {
   const [descExpanded, setDescExpanded] = useState(false)
   const [showRouteWarning, setShowRouteWarning] = useState(false)
@@ -228,6 +243,13 @@ export default function PublicPointCard({
     }
   }
 
+  // ── Dwell helpers ─────────────────────────────────────────────────────────
+  const dwellRequired  = point.requiresDwellTime ?? false
+  const dwellState     = dwellProgress?.state ?? 'idle'
+  const dwellCompleted = dwellState === 'completed'
+  // CTA is gated by dwell when required and not yet completed
+  const dwellBlocking  = dwellRequired && !dwellCompleted
+
   // ── Location chip derivation ──────────────────────────────────────────────
   let locationLabel: string
   let locationVariant: ChipVariant
@@ -240,9 +262,11 @@ export default function PublicPointCard({
     locationLabel   = 'Dentro del área'
     locationVariant = 'ok'
   } else {
-    locationLabel   = avail.distanceToEdge !== null && avail.distanceToEdge > 0
-      ? `A ${formatDistance(avail.distanceToEdge)} del área`
-      : 'Fuera del área'
+    locationLabel   = dwellRequired
+      ? 'Acercate al lugar para comenzar'
+      : avail.distanceToEdge !== null && avail.distanceToEdge > 0
+        ? `A ${formatDistance(avail.distanceToEdge)} del área`
+        : 'Fuera del área'
     locationVariant = 'block'
 
     if (routeStatus === 'ok' && walkingDistanceMeters !== undefined) {
@@ -523,7 +547,37 @@ export default function PublicPointCard({
               />
             )}
 
-            {/* CTA button — enabled iff avail.canAccess */}
+            {/* Dwell chip — only when this point requires permanence */}
+            {dwellRequired && dwellState === 'running' && dwellProgress && (
+              <div className="rounded-xl border px-3 py-2.5 bg-amber-50 border-amber-200 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-amber-700 text-sm">⏳</span>
+                  <span className="text-xs font-medium flex-1 leading-none text-amber-700">
+                    Permanencia en progreso · {formatDwellTime(dwellProgress.elapsed)} / {formatDwellTime(dwellProgress.total)}
+                  </span>
+                </div>
+                <div className="w-full bg-amber-200/60 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="bg-amber-500 h-1.5 rounded-full transition-all duration-1000"
+                    style={{ width: `${Math.min(100, (dwellProgress.elapsed / dwellProgress.total) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            {dwellRequired && dwellCompleted && (
+              <StatusChip
+                icon={<span className="text-sm">✅</span>}
+                label="Acceso desbloqueado"
+                variant="ok"
+              />
+            )}
+            {dwellRequired && dwellProgress?.showResetMessage && (
+              <p className="text-xs text-amber-600 text-center px-1 leading-snug">
+                Saliste del área. El tiempo se reinició.
+              </p>
+            )}
+
+            {/* CTA button — enabled iff avail.canAccess and dwell not blocking */}
             <div className={`space-y-2 ${isDetail ? 'pt-2' : 'pt-0.5'}`}>
               {!avail.insideRadius && (
                 <button

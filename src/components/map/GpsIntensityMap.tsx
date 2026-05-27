@@ -1,25 +1,25 @@
-import { Fragment, useEffect } from 'react'
-import { Circle, MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
+import { useEffect } from 'react'
+import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
 import { createGeoIcon } from './createGeoIcon'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
-import { intensityFromCount } from '../../utils/liveVisits'
+import IntensityLayer, { INTENSITY_CIRCLE_STYLE } from './IntensityLayer'
 import type { GeoPoint } from '../../types'
 
-// ── Intensity helpers ─────────────────────────────────────────────────────────
+// Re-export so callers (LiveVisitsPage) can keep their existing import paths.
+export type { IntensityLevel } from './IntensityLayer'
 
-export type IntensityLevel = 'low' | 'medium' | 'high'
+// ── Mock helpers (used when no real activeNow data is available) ───────────────
 
-const CIRCLE_STYLE: Record<IntensityLevel, { color: string; fillColor: string; fillOpacity: number }> = {
-  low:    { color: '#22c55e', fillColor: '#22c55e', fillOpacity: 0.18 },
-  medium: { color: '#eab308', fillColor: '#eab308', fillOpacity: 0.22 },
-  high:   { color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.28 },
-}
-
-// Deterministic mock intensity per point — same value on every render.
-export function mockPointIntensity(pointId: string): IntensityLevel {
+export function mockPointIntensity(pointId: string): 'low' | 'medium' | 'high' {
   const sum = pointId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
   const b = sum % 3
   return b === 0 ? 'low' : b === 1 ? 'medium' : 'high'
+}
+
+// A count that maps each mock level to the correct intensityFromCount bucket.
+function mockCount(pointId: string): number {
+  const level = mockPointIntensity(pointId)
+  return level === 'high' ? 10 : level === 'medium' ? 4 : 0
 }
 
 // ── Map internals ─────────────────────────────────────────────────────────────
@@ -43,11 +43,19 @@ function FitBounds({ points }: { points: GeoPoint[] }) {
 // ── Public component ──────────────────────────────────────────────────────────
 
 export interface GpsIntensityMapProps {
-  points:    GeoPoint[]
-  activeNow?: Record<string, number>  // pointId → active visitor count; overrides mock
+  points:     GeoPoint[]
+  activeNow?: Record<string, number>  // pointId → active visitor count; omit to use mock
 }
 
 export default function GpsIntensityMap({ points, activeNow }: GpsIntensityMapProps) {
+  // Build a normalised activeNow map so IntensityLayer always receives required prop.
+  const resolvedActiveNow: Record<string, number> = {}
+  points.forEach((p) => {
+    resolvedActiveNow[p.id] = activeNow !== undefined
+      ? (activeNow[p.id] ?? 0)
+      : mockCount(p.id)
+  })
+
   return (
     <MapContainer
       center={[-33.4489, -70.6693]}
@@ -63,27 +71,17 @@ export default function GpsIntensityMap({ points, activeNow }: GpsIntensityMapPr
         maxZoom={20}
       />
       <FitBounds points={points} />
-      {points.map((point) => {
-        const level = activeNow !== undefined
-          ? intensityFromCount(activeNow[point.id] ?? 0)
-          : mockPointIntensity(point.id)
-        const style = CIRCLE_STYLE[level]
-        return (
-          <Fragment key={point.id}>
-            {/* Intensity area — capped at 1 000 m, drawn below the marker */}
-            <Circle
-              center={[point.latitude, point.longitude]}
-              radius={Math.min(point.activationRadius, 1000)}
-              pathOptions={{ ...style, weight: 1.5, opacity: 0.7 }}
-            />
-            {/* Pin on top */}
-            <Marker
-              position={[point.latitude, point.longitude]}
-              icon={createGeoIcon(false, point.active, false, getPointCoverImage(point))}
-            />
-          </Fragment>
-        )
-      })}
+      <IntensityLayer points={points} activeNow={resolvedActiveNow} />
+      {points.map((point) => (
+        <Marker
+          key={point.id}
+          position={[point.latitude, point.longitude]}
+          icon={createGeoIcon(false, point.active, false, getPointCoverImage(point))}
+        />
+      ))}
     </MapContainer>
   )
 }
+
+// Keep INTENSITY_CIRCLE_STYLE available for any external consumer.
+export { INTENSITY_CIRCLE_STYLE }

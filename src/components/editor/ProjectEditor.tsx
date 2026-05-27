@@ -27,6 +27,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import DashboardMap from '../map/DashboardMap'
+import { fetchLiveVisits } from '../../services/liveVisitsApi'
 import MapStyleToggle from '../map/MapStyleToggle'
 import POISearch from '../map/POISearch'
 import { useMapStyle } from '../../hooks/useMapStyle'
@@ -132,6 +133,10 @@ export default function ProjectEditor({
   const [poiResults, setPoiResults]             = useState<PoiSearchResult[]>([])
   const [limitOpen, setLimitOpen]               = useState(false)
 
+  // ── Intensity GPS overlay ───────────────────────────────────────────────────
+  const [intensityOn, setIntensityOn]               = useState(false)
+  const [intensityActiveNow, setIntensityActiveNow] = useState<Record<string, number> | null>(null)
+
   // ── GPS / location state ────────────────────────────────────────────────────
   const [editorUserPos, setEditorUserPos] = useState<{ lat: number; lng: number; accuracy: number } | null>(null)
   const locationWatchRef  = useRef<number | null>(null)
@@ -161,6 +166,25 @@ export default function ProjectEditor({
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
   }, [])
+
+  useEffect(() => {
+    if (!intensityOn || !project?.id) { setIntensityActiveNow(null); return }
+    let cancelled = false
+
+    const load = async () => {
+      try {
+        const data = await fetchLiveVisits(project.id)
+        if (cancelled) return
+        const map: Record<string, number> = {}
+        data.points.forEach((p) => { map[p.id] = p.activeNow })
+        setIntensityActiveNow(map)
+      } catch { /* keep previous data on error */ }
+    }
+
+    load()
+    const timer = setInterval(load, 15_000)
+    return () => { cancelled = true; clearInterval(timer) }
+  }, [intensityOn, project?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Warn on accidental navigation only in real mode with unsaved changes
   useEffect(() => {
@@ -657,6 +681,24 @@ export default function ProjectEditor({
             <div className="flex items-center gap-2 flex-shrink-0">
               {mode === 'real' ? (
                 <>
+                  <button
+                    onClick={() => setIntensityOn((v) => !v)}
+                    className={`flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-medium
+                                border transition-colors flex-shrink-0 ${
+                      intensityOn
+                        ? 'bg-emerald-900/40 border-emerald-600 text-emerald-300'
+                        : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-300'
+                    }`}
+                    title="Capa de intensidad GPS en vivo"
+                  >
+                    {intensityOn && (
+                      <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                      </span>
+                    )}
+                    Intensidad GPS
+                  </button>
                   <Button variant="ghost" size="sm" onClick={() => { void openPreview() }}>
                     Previsualizar
                   </Button>
@@ -996,6 +1038,7 @@ export default function ProjectEditor({
               onPoiCreate={handlePoiCreateFromPopup}
               userPos={editorUserPos}
               mapStyleId={mapStyleId}
+              intensityActiveNow={intensityOn && intensityActiveNow ? intensityActiveNow : undefined}
             />
 
             {/* Map style toggle — desktop only; mobile version lives in the bottom bar */}
@@ -1014,6 +1057,21 @@ export default function ProjectEditor({
                 <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
 
                 <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setIntensityOn((v) => !v)}
+                    className={`flex items-center justify-center w-9 h-9 rounded-lg border shadow-lg transition-colors ${
+                      intensityOn
+                        ? 'bg-emerald-900/80 border-emerald-600 text-emerald-400'
+                        : 'bg-gray-900/95 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                    }`}
+                    aria-label="Intensidad GPS"
+                    title="Intensidad GPS en vivo"
+                  >
+                    <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M8.288 15.038a5.25 5.25 0 017.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12 20.25h.008v.008H12v-.008z" />
+                    </svg>
+                  </button>
                   <button
                     onClick={() => { setMobileProjectOpen(false); setListDrawerOpen(true) }}
                     className="flex items-center gap-1.5 bg-gray-900/95 border border-gray-700

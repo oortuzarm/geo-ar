@@ -5,6 +5,7 @@ import { useGeoStore } from '../../store/geoStore'
 import type { Map as LeafletMap } from 'leaflet'
 import { haversineDistance } from '../../features/geolocation/haversine'
 import GeoPointMarker from './GeoPointMarker'
+import IntensityLayer from './IntensityLayer'
 import type { GeoPoint, PoiSearchResult, MapBounds } from '../../types'
 import { getMapTileUrl, MAP_ATTRIBUTION, type MapStyleId } from '../../config/mapStyles'
 
@@ -127,6 +128,7 @@ interface DashboardMapProps {
   onPoiCreate?: (result: PoiSearchResult) => void
   userPos?: UserPos | null
   mapStyleId?: MapStyleId
+  intensityActiveNow?: Record<string, number>
 }
 
 export default function DashboardMap({
@@ -140,6 +142,7 @@ export default function DashboardMap({
   onPoiCreate,
   userPos = null,
   mapStyleId = 'streets',
+  intensityActiveNow,
 }: DashboardMapProps) {
   const { mapCenter, mapZoom } = useGeoStore()
 
@@ -162,6 +165,10 @@ export default function DashboardMap({
       <ClickHandler onMapClick={onMapClick} />
       {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} />}
       <UserLocationLayer userPos={userPos} />
+
+      {intensityActiveNow && (
+        <IntensityLayer points={points} activeNow={intensityActiveNow} />
+      )}
 
       {points.map((point) => (
         <GeoPointMarker

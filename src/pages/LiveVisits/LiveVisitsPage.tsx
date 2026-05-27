@@ -1,16 +1,14 @@
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useWorkspace } from '../../hooks/useWorkspace'
-import GpsIntensityMap, { mockPointIntensity } from '../../components/map/GpsIntensityMap'
+import GpsIntensityMap from '../../components/map/GpsIntensityMap'
 import type { IntensityLevel } from '../../components/map/GpsIntensityMap'
 import Spinner from '../../components/ui/Spinner'
+import { fetchLiveVisits } from '../../services/liveVisitsApi'
+import type { LiveVisitsResponse } from '../../services/liveVisitsApi'
+import { intensityFromCount } from '../../utils/liveVisits'
 
-// ── Mock data helpers (deterministic per point id) ────────────────────────────
-
-function mockPeopleCount(pointId: string): number {
-  const sum = pointId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
-  return 5 + (sum % 20) // 5–24 people
-}
-
+// vsLastHour and peak hour remain mocked until the backend provides trend data.
 function mockVsLastHour(pointId: string): string {
   const sum = pointId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
   const pct = 10 + (sum % 45)
@@ -71,7 +69,31 @@ const INTENSITY_DOT: Record<IntensityLevel, string> = {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function LiveVisitsPage() {
-  const { points, loading } = useWorkspace()
+  const { project, points, loading } = useWorkspace()
+  const [liveData, setLiveData] = useState<LiveVisitsResponse | null>(null)
+
+  // Polling: fetch live data every 15 s while the page is open.
+  useEffect(() => {
+    if (!project?.id) return
+    let cancelled = false
+
+    const load = async () => {
+      try {
+        const data = await fetchLiveVisits(project!.id)
+        if (!cancelled) setLiveData(data)
+      } catch {
+        // silently keep previous data on error
+      }
+    }
+
+    load()
+    const timer = setInterval(load, 15_000)
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+      setLiveData(null)
+    }
+  }, [project?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
@@ -81,18 +103,24 @@ export default function LiveVisitsPage() {
     )
   }
 
-  // Build enriched, sorted mock dataset once
+  // Build per-point activeNow map from API response
+  const activeNowMap: Record<string, number> = {}
+  liveData?.points.forEach((p) => { activeNowMap[p.pointId] = p.activeNow })
+
   const ranked = points
     .map((p) => ({
       point:      p,
-      people:     mockPeopleCount(p.id),
+      people:     activeNowMap[p.id] ?? 0,
       vsLastHour: mockVsLastHour(p.id),
-      intensity:  mockPointIntensity(p.id),
+      intensity:  intensityFromCount(activeNowMap[p.id] ?? 0),
     }))
     .sort((a, b) => b.people - a.people)
 
-  const totalPeople = ranked.reduce((s, x) => s + x.people, 0)
-  const top         = ranked[0]
+  const totalPeople = liveData?.activeNow ?? 0
+  const top         = ranked.find((r) => r.people > 0) ?? null
+
+  // "—" while first fetch is in progress; real number once data arrives
+  const activeNowDisplay: string | number = liveData === null ? '—' : totalPeople
 
   return (
     <div className="text-gray-100">
@@ -103,7 +131,7 @@ export default function LiveVisitsPage() {
           <LiveDot />
           <h1 className="font-bold text-gray-100">Visitas en Vivo</h1>
           <span className="hidden sm:inline text-xs text-gray-600">
-            Datos simulados · backend próximamente
+            Actualización cada 15 s
           </span>
         </div>
       </header>
@@ -117,7 +145,7 @@ export default function LiveVisitsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <StatTile
               label="Personas activas ahora"
-              value={points.length > 0 ? totalPeople : 0}
+              value={activeNowDisplay}
               valueClass="text-2xl text-emerald-400"
             />
             <StatTile
@@ -133,7 +161,7 @@ export default function LiveVisitsPage() {
           </div>
         </section>
 
-        {/* ── 2. Punto GPS más activo ────────────────────────────────────────── */}
+        {/* ── 2. Punto GPS más activo (solo cuando hay visitantes) ───────────── */}
         {top && (
           <section className="space-y-3">
             <SectionLabel>Punto GPS más activo</SectionLabel>
@@ -202,7 +230,7 @@ export default function LiveVisitsPage() {
           {points.length > 0 ? (
             <>
               <div className="rounded-2xl overflow-hidden border border-gray-800" style={{ height: '420px' }}>
-                <GpsIntensityMap points={points} />
+                <GpsIntensityMap points={points} activeNow={activeNowMap} />
               </div>
 
               {/* Legend */}
@@ -222,49 +250,58 @@ export default function LiveVisitsPage() {
               {/* ── 4. Ranking de zonas ─────────────────────────────────────── */}
               <div className="space-y-2">
                 <SectionLabel>Ranking de zonas activas</SectionLabel>
-                <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl overflow-hidden">
-                  {ranked.map(({ point, people, vsLastHour, intensity }, idx) => (
-                    <div
-                      key={point.id}
-                      className={`flex items-center gap-3 sm:gap-4 px-4 py-3 ${
-                        idx < ranked.length - 1 ? 'border-b border-gray-800/60' : ''
-                      }`}
-                    >
-                      {/* Rank badge */}
-                      <span className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center
-                                        text-[10px] font-bold border ${
-                        idx === 0
-                          ? 'bg-brand-500/20 border-brand-500/30 text-brand-400'
-                          : 'bg-gray-800 border-gray-700/60 text-gray-500'
-                      }`}>
-                        {idx + 1}
-                      </span>
 
-                      {/* Point name */}
-                      <span className="flex-1 text-sm font-medium text-gray-200 truncate min-w-0">
-                        {point.name || 'Sin nombre'}
-                      </span>
+                {liveData !== null && totalPeople === 0 ? (
+                  <div className="bg-gray-900/50 border border-gray-800 rounded-2xl px-6 py-10 text-center">
+                    <p className="text-sm text-gray-500">
+                      No hay personas activas dentro de tus áreas GPS en este momento.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl overflow-hidden">
+                    {ranked.map(({ point, people, vsLastHour, intensity }, idx) => (
+                      <div
+                        key={point.id}
+                        className={`flex items-center gap-3 sm:gap-4 px-4 py-3 ${
+                          idx < ranked.length - 1 ? 'border-b border-gray-800/60' : ''
+                        }`}
+                      >
+                        {/* Rank badge */}
+                        <span className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center
+                                          text-[10px] font-bold border ${
+                          idx === 0
+                            ? 'bg-brand-500/20 border-brand-500/30 text-brand-400'
+                            : 'bg-gray-800 border-gray-700/60 text-gray-500'
+                        }`}>
+                          {idx + 1}
+                        </span>
 
-                      {/* Intensity badge — hidden on very small screens */}
-                      <span className={`hidden xs:inline-flex flex-shrink-0 items-center px-2 py-0.5
-                                        rounded-full border text-[10px] font-medium ${INTENSITY_BADGE[intensity]}`}>
-                        {INTENSITY_LABEL[intensity]}
-                      </span>
+                        {/* Point name */}
+                        <span className="flex-1 text-sm font-medium text-gray-200 truncate min-w-0">
+                          {point.name || 'Sin nombre'}
+                        </span>
 
-                      {/* Vs last hour */}
-                      <span className={`text-xs font-medium tabular-nums flex-shrink-0 ${
-                        vsLastHour.startsWith('-') ? 'text-red-400' : 'text-brand-400'
-                      }`}>
-                        {vsLastHour}
-                      </span>
+                        {/* Intensity badge — hidden on very small screens */}
+                        <span className={`hidden xs:inline-flex flex-shrink-0 items-center px-2 py-0.5
+                                          rounded-full border text-[10px] font-medium ${INTENSITY_BADGE[intensity]}`}>
+                          {INTENSITY_LABEL[intensity]}
+                        </span>
 
-                      {/* People count */}
-                      <span className="text-sm font-semibold text-emerald-400 tabular-nums flex-shrink-0">
-                        {people} pers.
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                        {/* Vs last hour */}
+                        <span className={`text-xs font-medium tabular-nums flex-shrink-0 ${
+                          vsLastHour.startsWith('-') ? 'text-red-400' : 'text-brand-400'
+                        }`}>
+                          {vsLastHour}
+                        </span>
+
+                        {/* People count */}
+                        <span className="text-sm font-semibold text-emerald-400 tabular-nums flex-shrink-0">
+                          {people} pers.
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           ) : (

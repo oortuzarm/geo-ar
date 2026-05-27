@@ -2,6 +2,7 @@ import { Fragment, useEffect } from 'react'
 import { Circle, MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
 import { createGeoIcon } from './createGeoIcon'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
+import { intensityFromCount } from '../../utils/liveVisits'
 import type { GeoPoint } from '../../types'
 
 // ── Intensity helpers ─────────────────────────────────────────────────────────
@@ -42,10 +43,11 @@ function FitBounds({ points }: { points: GeoPoint[] }) {
 // ── Public component ──────────────────────────────────────────────────────────
 
 export interface GpsIntensityMapProps {
-  points: GeoPoint[]
+  points:    GeoPoint[]
+  activeNow?: Record<string, number>  // pointId → active visitor count; overrides mock
 }
 
-export default function GpsIntensityMap({ points }: GpsIntensityMapProps) {
+export default function GpsIntensityMap({ points, activeNow }: GpsIntensityMapProps) {
   return (
     <MapContainer
       center={[-33.4489, -70.6693]}
@@ -62,7 +64,9 @@ export default function GpsIntensityMap({ points }: GpsIntensityMapProps) {
       />
       <FitBounds points={points} />
       {points.map((point) => {
-        const level = mockPointIntensity(point.id)
+        const level = activeNow !== undefined
+          ? intensityFromCount(activeNow[point.id] ?? 0)
+          : mockPointIntensity(point.id)
         const style = CIRCLE_STYLE[level]
         return (
           <Fragment key={point.id}>

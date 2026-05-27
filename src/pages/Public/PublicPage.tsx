@@ -11,6 +11,8 @@ import { ApiError } from '../../lib/apiFetch'
 import { haversineDistance } from '../../features/geolocation/haversine'
 import { reverseGeocode } from '../../features/geolocation/geocoding'
 import { trackRadiusEnter, trackPointClick, trackDwellStarted, trackDwellCompleted, trackDwellCancelled } from '../../lib/analytics'
+import { getLiveVisitSessionId } from '../../utils/liveVisits'
+import { sendHeartbeat } from '../../services/liveVisitsApi'
 import { fetchWalkingRoute } from '../../features/routing/orsClient'
 import type { RouteResult } from '../../features/routing/orsClient'
 import type { RouteStatus, DwellProgress } from './PublicPointCard'
@@ -861,7 +863,8 @@ export default function PublicPage({
   const lastRoutePositionRef = useRef<{ lat: number; lng: number } | null>(null)
   const routeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pointsRef = useRef<GeoPoint[]>([])
-  const wasInsideRef = useRef<Record<string, boolean>>({})
+  const wasInsideRef      = useRef<Record<string, boolean>>({})
+  const userLocationRef   = useRef<UserLocation | null>(null)
   // Ref for the mobile bottom sheet — used to call L.DomEvent.disableClickPropagation
   // so Leaflet's internal tap/click detection cannot fire through the sheet.
   const sheetRef = useRef<HTMLDivElement>(null)
@@ -1110,7 +1113,8 @@ export default function PublicPage({
 
   useGeolocation(locationActive)
 
-  useEffect(() => { pointsRef.current = points }, [points])
+  useEffect(() => { pointsRef.current    = points       }, [points])
+  useEffect(() => { userLocationRef.current = userLocation }, [userLocation])
 
   // Reverse-geocode each point's address when the point list changes.
   // Requests are staggered 300ms apart to respect Nominatim's rate limit.
@@ -1329,6 +1333,30 @@ export default function PublicPage({
     }, 1000)
     return () => clearInterval(interval)
   }, [hasRunningDwell])
+
+  // ── Live-visit heartbeat — 15-second interval ────────────────────────────
+  // Sends a presence ping for every GPS point the user is inside.
+  // Fire-and-forget: errors are swallowed so they never surface to the visitor.
+  useEffect(() => {
+    if (!id) return // skip in /temporary preview (no project id)
+    const sessionId = getLiveVisitSessionId()
+    const timer = setInterval(() => {
+      const loc = userLocationRef.current
+      if (!loc) return
+      for (const pt of pointsRef.current) {
+        const dist = haversineDistance(loc.latitude, loc.longitude, pt.latitude, pt.longitude)
+        if (dist <= pt.activationRadius) {
+          sendHeartbeat(pt.id, {
+            session_id: sessionId,
+            lat:        loc.latitude,
+            lng:        loc.longitude,
+            accuracy:   loc.accuracy,
+          }).catch(() => {})
+        }
+      }
+    }, 15_000)
+    return () => clearInterval(timer)
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Dwell completion side-effects ─────────────────────────────────────────
   // Fires trackDwellCompleted + completeDwellTime once per completed point.

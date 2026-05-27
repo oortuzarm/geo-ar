@@ -1075,16 +1075,11 @@ export default function ProjectEditor({
               <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
             </div>
 
-            {/* Intensity mode selector — floats above map controls when intensity is on */}
+            {/* Intensity mode selector — mobile only (desktop uses topbar control) */}
             {intensityOn && (
-              <>
-                <div className="hidden lg:flex absolute bottom-[68px] right-4 z-[999]">
-                  <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
-                </div>
-                <div className="lg:hidden absolute bottom-[80px] left-1/2 -translate-x-1/2 z-[999]">
-                  <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
-                </div>
-              </>
+              <div className="lg:hidden absolute bottom-[80px] left-1/2 -translate-x-1/2 z-[999]">
+                <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
+              </div>
             )}
 
             {/* ── Mobile bottom control bar ─────────────────────────────────────

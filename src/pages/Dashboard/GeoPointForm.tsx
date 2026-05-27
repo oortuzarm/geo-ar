@@ -684,54 +684,57 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
             </div>
           </div>
 
-          {/* Permanencia — configuración completa inline */}
-          {canUseDwellTime && (
-            <div className={`bg-gray-800/50 border rounded-lg p-3 space-y-3 ${
-              (point.requiresDwellTime ?? false) ? 'border-brand-500/30' : 'border-gray-700'
-            }`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                    (point.requiresDwellTime ?? false) ? 'bg-brand-500' : 'bg-gray-600'
-                  }`} />
-                  <span className={`text-sm ${(point.requiresDwellTime ?? false) ? 'text-gray-300' : 'text-gray-400'}`}>
-                    Permanencia
-                  </span>
-                  <InfoTooltip text="El usuario debe permanecer dentro del área durante un tiempo mínimo para activar la experiencia." />
-                </div>
-                <Toggle
-                  enabled={point.requiresDwellTime ?? false}
-                  onToggle={() => {
-                    const next = !(point.requiresDwellTime ?? false)
-                    onChange({
-                      requiresDwellTime: next,
-                      dwellTimeSeconds:  next ? (point.dwellTimeSeconds ?? 180) : 0,
-                    })
-                  }}
-                />
+          {/* Permanencia — always visible; locked when plan excludes the feature */}
+          <div className={`bg-gray-800/50 border rounded-lg p-3 space-y-3 ${
+            canUseDwellTime && (point.requiresDwellTime ?? false) ? 'border-brand-500/30' : 'border-gray-800'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                  canUseDwellTime && (point.requiresDwellTime ?? false) ? 'bg-brand-500' : 'bg-gray-600'
+                }`} />
+                <span className={`text-sm ${canUseDwellTime ? ((point.requiresDwellTime ?? false) ? 'text-gray-300' : 'text-gray-400') : 'text-gray-600'}`}>
+                  Permanencia
+                </span>
+                <InfoTooltip text="El usuario debe permanecer dentro del área durante un tiempo mínimo para activar la experiencia." />
               </div>
-              {(point.requiresDwellTime ?? false) && (
-                <>
-                  <p className="text-xs text-gray-500">
-                    El usuario deberá permanecer dentro del área para desbloquear el contenido.
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      label="Minutos requeridos"
-                      type="number"
-                      min={1}
-                      max={240}
-                      value={Math.max(1, Math.round((point.dwellTimeSeconds ?? 180) / 60))}
-                      onChange={(e) => {
-                        const mins = Math.min(240, Math.max(1, parseInt(e.target.value, 10) || 1))
-                        onChange({ dwellTimeSeconds: mins * 60 })
-                      }}
-                    />
-                  </div>
-                </>
-              )}
+              {canUseDwellTime
+                ? (
+                  <Toggle
+                    enabled={point.requiresDwellTime ?? false}
+                    onToggle={() => {
+                      const next = !(point.requiresDwellTime ?? false)
+                      onChange({
+                        requiresDwellTime: next,
+                        dwellTimeSeconds:  next ? (point.dwellTimeSeconds ?? 180) : 0,
+                      })
+                    }}
+                  />
+                )
+                : <span className="text-xs text-gray-600" title="Esta función no está disponible en tu plan actual.">🔒 No disponible</span>
+              }
             </div>
-          )}
+            {canUseDwellTime && (point.requiresDwellTime ?? false) && (
+              <>
+                <p className="text-xs text-gray-500">
+                  El usuario deberá permanecer dentro del área para desbloquear el contenido.
+                </p>
+                <div className="flex items-center gap-2">
+                  <Input
+                    label="Minutos requeridos"
+                    type="number"
+                    min={1}
+                    max={240}
+                    value={Math.max(1, Math.round((point.dwellTimeSeconds ?? 180) / 60))}
+                    onChange={(e) => {
+                      const mins = Math.min(240, Math.max(1, parseInt(e.target.value, 10) || 1))
+                      onChange({ dwellTimeSeconds: mins * 60 })
+                    }}
+                  />
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Placeholder rules — not yet implemented */}
           {([

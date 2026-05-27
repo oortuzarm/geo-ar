@@ -684,64 +684,21 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
             </div>
           </div>
 
-          {/* Permanencia — feature available; configuration in the PERMANENCIA section below */}
-          <div className={`bg-gray-800/50 border rounded-lg p-3 ${
-            (point.requiresDwellTime ?? false) ? 'border-brand-500/30' : 'border-gray-700'
-          }`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                  (point.requiresDwellTime ?? false) ? 'bg-brand-500' : 'bg-gray-600'
-                }`} />
-                <span className={`text-sm ${(point.requiresDwellTime ?? false) ? 'text-gray-300' : 'text-gray-400'}`}>
-                  Permanencia
-                </span>
-                <InfoTooltip text="El usuario debe permanecer dentro del área durante un tiempo mínimo para activar la experiencia." />
-              </div>
-              {(point.requiresDwellTime ?? false) ? (
-                <span className="text-xs text-brand-400 font-medium">
-                  {Math.round((point.dwellTimeSeconds ?? 180) / 60)} min
-                </span>
-              ) : (
-                <span className="text-xs text-gray-600">Inactivo</span>
-              )}
-            </div>
-          </div>
-
-          {/* Placeholder rules — not yet implemented */}
-          {([
-            { label: 'Colección',    tooltip: 'Agrupa puntos que deben activarse en conjunto para desbloquear un contenido o experiencia especial.' },
-            { label: 'Temporalidad', tooltip: 'Combina reglas de fecha, horario y zona horaria para controles de acceso complejos.' },
-          ] as { label: string; tooltip: string }[]).map(({ label, tooltip }) => (
-            <div key={label} className="bg-gray-800/50 border border-gray-800 rounded-lg p-3">
+          {/* Permanencia — configuración completa inline */}
+          {canUseDwellTime && (
+            <div className={`bg-gray-800/50 border rounded-lg p-3 space-y-3 ${
+              (point.requiresDwellTime ?? false) ? 'border-brand-500/30' : 'border-gray-700'
+            }`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm text-gray-600">{label}</span>
-                  <InfoTooltip text={tooltip} />
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                    (point.requiresDwellTime ?? false) ? 'bg-brand-500' : 'bg-gray-600'
+                  }`} />
+                  <span className={`text-sm ${(point.requiresDwellTime ?? false) ? 'text-gray-300' : 'text-gray-400'}`}>
+                    Permanencia
+                  </span>
+                  <InfoTooltip text="El usuario debe permanecer dentro del área durante un tiempo mínimo para activar la experiencia." />
                 </div>
-                <span className="text-xs text-gray-600">Próximamente</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* ── Disponibilidad ─────────────────────────────────────────────── */}
-        <AvailabilityRules
-          availability={point.availability}
-          onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
-          canUseSchedule={canUseScheduleAvailability}
-          canUseQuota={canUseQuotaAvailability}
-        />
-
-        {/* ── Permanencia ────────────────────────────────────────────────── */}
-        {canUseDwellTime && (
-          <div className="space-y-2">
-            <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-              Permanencia
-            </span>
-            <div className="bg-gray-800/50 border border-gray-800 rounded-lg p-3 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-300">Requerir permanencia</span>
                 <Toggle
                   enabled={point.requiresDwellTime ?? false}
                   onToggle={() => {
@@ -774,8 +731,33 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
                 </>
               )}
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Placeholder rules — not yet implemented */}
+          {([
+            { label: 'Colección',    tooltip: 'Agrupa puntos que deben activarse en conjunto para desbloquear un contenido o experiencia especial.' },
+            { label: 'Temporalidad', tooltip: 'Combina reglas de fecha, horario y zona horaria para controles de acceso complejos.' },
+          ] as { label: string; tooltip: string }[]).map(({ label, tooltip }) => (
+            <div key={label} className="bg-gray-800/50 border border-gray-800 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm text-gray-600">{label}</span>
+                  <InfoTooltip text={tooltip} />
+                </div>
+                <span className="text-xs text-gray-600">Próximamente</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Disponibilidad ─────────────────────────────────────────────── */}
+        <AvailabilityRules
+          availability={point.availability}
+          onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
+          canUseSchedule={canUseScheduleAvailability}
+          canUseQuota={canUseQuotaAvailability}
+        />
+
 
         {/* Coordenadas — dentro de sección colapsable */}
         <div>

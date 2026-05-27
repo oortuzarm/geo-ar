@@ -110,15 +110,17 @@ function InfoTooltip({ text }: { text: string }) {
 function AvailabilityRules({
   availability,
   onChange,
-  canUseSchedule  = true,
-  canUseQuota     = true,
+  canUseSchedule   = true,
+  canUseQuota      = true,
+  canUseLiveVisits = true,
   onUpgradeClick,
 }: {
-  availability:    GeoPointAvailability | undefined
-  onChange:        (updates: Partial<GeoPointAvailability>) => void
-  canUseSchedule?: boolean
-  canUseQuota?:    boolean
-  onUpgradeClick?: () => void
+  availability:      GeoPointAvailability | undefined
+  onChange:          (updates: Partial<GeoPointAvailability>) => void
+  canUseSchedule?:   boolean
+  canUseQuota?:      boolean
+  canUseLiveVisits?: boolean
+  onUpgradeClick?:   () => void
 }) {
   const scheduleEnabled = availability?.scheduleEnabled ?? false
   const scheduleDays    = availability?.scheduleDays ?? []
@@ -126,6 +128,10 @@ function AvailabilityRules({
   const endTime         = availability?.scheduleEndTime ?? ''
   const quotaEnabled    = availability?.quotaEnabled ?? false
   const quotaLimit      = availability?.quotaLimit ?? 1
+
+  // Mock-only state — not persisted to API until the feature ships.
+  const [liveVisitsEnabled,    setLiveVisitsEnabled]    = useState(false)
+  const [liveVisitsMinPeople,  setLiveVisitsMinPeople]  = useState(10)
 
   function toggleDay(day: string) {
     const next = scheduleDays.includes(day)
@@ -243,6 +249,58 @@ function AvailabilityRules({
           </>
         )}
       </div>
+
+      {/* ── Live visits activation rule ── */}
+      <div
+        className={`bg-gray-800/50 border border-gray-800 rounded-lg p-3 space-y-3 ${!canUseLiveVisits ? 'cursor-pointer' : ''}`}
+        onClick={!canUseLiveVisits ? onUpgradeClick : undefined}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className={`text-sm ${canUseLiveVisits ? 'text-gray-300' : 'text-gray-600'}`}>
+              Activación por visitas en vivo
+            </span>
+          </div>
+          {canUseLiveVisits
+            ? (
+              <Toggle
+                enabled={liveVisitsEnabled}
+                onToggle={() => setLiveVisitsEnabled((v) => !v)}
+              />
+            )
+            : <span className="text-xs text-gray-600" title="Esta función no está disponible en tu plan actual.">🔒 No disponible</span>
+          }
+        </div>
+
+        {canUseLiveVisits && liveVisitsEnabled && (
+          <>
+            <p className="text-xs text-gray-500">
+              Activa esta experiencia cuando haya una cantidad mínima de personas dentro del área GPS en tiempo real.
+            </p>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                Mínimo de personas dentro del área
+              </label>
+              <input
+                type="number"
+                min={1}
+                placeholder="10"
+                value={liveVisitsMinPeople}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10)
+                  if (!isNaN(val) && val >= 1) setLiveVisitsMinPeople(val)
+                }}
+                className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm
+                           text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500
+                           focus:border-transparent transition-colors w-full"
+              />
+            </div>
+            <p className="text-xs text-gray-500">
+              La experiencia se activará automáticamente cuando se detecten al menos {liveVisitsMinPeople} personas dentro de esta zona.
+            </p>
+          </>
+        )}
+      </div>
     </div>
   )
 }
@@ -255,7 +313,7 @@ function isMediaContentData(data: GeoPoint['contentData']): data is MediaContent
 
 export default function GeoPointForm({ point, onChange, onDelete, onClose, onSave, onMediaOrphaned, hideHeader = false }: GeoPointFormProps) {
   const editorMode = useEditorMode()
-  const { canUseContentType, canUseScheduleAvailability, canUseQuotaAvailability, canUseDwellTime } = usePlanFeatures()
+  const { canUseContentType, canUseScheduleAvailability, canUseQuotaAvailability, canUseDwellTime, canUseLiveVisits } = usePlanFeatures()
   const mediaFileRef   = useRef<HTMLInputElement>(null)
   const galleryFileRef = useRef<HTMLInputElement>(null)
   const [advancedOpen,         setAdvancedOpen]         = useState(false)
@@ -772,6 +830,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
           canUseSchedule={canUseScheduleAvailability}
           canUseQuota={canUseQuotaAvailability}
+          canUseLiveVisits={canUseLiveVisits}
           onUpgradeClick={() => setUpgradeOpen(true)}
         />
 

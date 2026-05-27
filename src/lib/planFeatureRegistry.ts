@@ -8,6 +8,7 @@ export interface FeaturesConfig {
   analytics?:             boolean
   members?:               boolean
   dwell_time?:            boolean
+  live_visits?:           boolean
   [key: string]:          unknown
 }
 
@@ -31,6 +32,7 @@ export const BOOLEAN_FEATURES: BooleanFeatureMeta[] = [
   { key: 'analytics',             label: 'Analíticas' },
   { key: 'members',               label: 'Miembros del equipo' },
   { key: 'dwell_time',            label: 'Permanencia' },
+  { key: 'live_visits',           label: 'Visitas en Vivo' },
 ]
 
 // Permissive defaults — users without a plan (admin, legacy) get everything.
@@ -41,4 +43,5 @@ export const DEFAULT_FEATURES_CONFIG: Required<FeaturesConfig> = {
   analytics:             true,
   members:               true,
   dwell_time:            true,
+  live_visits:           true,
 }

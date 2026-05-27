@@ -10,6 +10,7 @@ export interface PlanFeatures {
   canUseAnalytics:             boolean
   canUseMembers:               boolean
   canUseDwellTime:             boolean
+  canUseLiveVisits:            boolean
 }
 
 export function usePlanFeatures(): PlanFeatures {
@@ -28,5 +29,6 @@ export function usePlanFeatures(): PlanFeatures {
     canUseAnalytics:            config.analytics             ?? true,
     canUseMembers:              config.members               ?? true,
     canUseDwellTime:            config.dwell_time            ?? true,
+    canUseLiveVisits:           config.live_visits           ?? true,
   }
 }

@@ -91,9 +91,16 @@ export class RemoteGeoRepository implements IGeoRepository {
     const hasImage =
       (typeof project.coverImage === 'string' && project.coverImage.startsWith('data:')) ||
       points.some((p) => typeof p.image === 'string' && p.image.startsWith('data:'))
+    // Send snake_case dwell fields alongside camelCase so Rails accepts them
+    // regardless of whether the backend has camelCase param conversion configured.
+    const serializedPoints = points.map((p) => ({
+      ...p,
+      requires_dwell_time: p.requiresDwellTime,
+      dwell_time_seconds:  p.dwellTimeSeconds,
+    }))
     const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_projects/${id}/sync`), {
       method: 'PATCH',
-      body: JSON.stringify({ ...project, geoPoints: points }),
+      body: JSON.stringify({ ...project, geoPoints: serializedPoints }),
       timeout: hasImage ? 60_000 : 30_000,
     })
     return normalizeProject(raw)
@@ -122,9 +129,14 @@ export class RemoteGeoRepository implements IGeoRepository {
   }
 
   async createPoint(data: Partial<GeoPoint> & { geoProjectId: string }): Promise<GeoPoint> {
+    const body = {
+      ...data,
+      ...('requiresDwellTime' in data ? { requires_dwell_time: data.requiresDwellTime } : {}),
+      ...('dwellTimeSeconds'  in data ? { dwell_time_seconds:  data.dwellTimeSeconds  } : {}),
+    }
     const raw = await apiFetch<Record<string, unknown>>(
       this.url(`/api/geo_projects/${data.geoProjectId}/geo_points`),
-      { method: 'POST', body: JSON.stringify(data) },
+      { method: 'POST', body: JSON.stringify(body) },
     )
     return normalizeGeoPoint(raw)
   }
@@ -132,9 +144,14 @@ export class RemoteGeoRepository implements IGeoRepository {
   async savePoint(id: string, updates: Partial<GeoPoint>): Promise<GeoPoint> {
     // Images are base64 strings that can be several hundred KB; allow extra time.
     const hasImage = typeof updates.image === 'string' && updates.image.startsWith('data:')
+    const body = {
+      ...updates,
+      ...('requiresDwellTime' in updates ? { requires_dwell_time: updates.requiresDwellTime } : {}),
+      ...('dwellTimeSeconds'  in updates ? { dwell_time_seconds:  updates.dwellTimeSeconds  } : {}),
+    }
     const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_points/${id}`), {
       method: 'PUT',
-      body: JSON.stringify(updates),
+      body: JSON.stringify(body),
       timeout: hasImage ? 30_000 : 15_000,
     })
     return normalizeGeoPoint(raw)
@@ -146,7 +163,8 @@ export class RemoteGeoRepository implements IGeoRepository {
 
   async listPublicPoints(projectId: string): Promise<GeoPoint[]> {
     const raw = await apiFetch<Record<string, unknown>[]>(
-      this.url(`/api/public/geo_projects/${projectId}/geo_points`),
+      `${this.url(`/api/public/geo_projects/${projectId}/geo_points`)}?_cb=${Date.now()}`,
+      { cache: 'no-store' },
     )
     const points = raw.map(normalizeGeoPoint)
     console.log('[RemoteGeoRepository] listPublicPoints — sample point dwell fields:',

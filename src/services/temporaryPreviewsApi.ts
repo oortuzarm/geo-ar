@@ -26,9 +26,16 @@ export function createTemporaryPreview(
   project: GeoProject,
   points: GeoPoint[],
 ): Promise<TemporaryPreviewCreated> {
+  // Send snake_case dwell fields alongside camelCase so Rails stores them
+  // regardless of whether the backend has camelCase param conversion configured.
+  const serializedPoints = points.map((p) => ({
+    ...p,
+    requires_dwell_time: p.requiresDwellTime,
+    dwell_time_seconds:  p.dwellTimeSeconds,
+  }))
   return apiFetch<TemporaryPreviewCreated>(`${BASE}/api/temporary_previews`, {
     method: 'POST',
-    body: JSON.stringify({ project, points }),
+    body: JSON.stringify({ project, points: serializedPoints }),
   })
 }
 

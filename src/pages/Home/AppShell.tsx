@@ -10,6 +10,16 @@ import type { GeoProject } from '../../types'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
+// Activity/pulse icon — conveys real-time monitoring
+function LiveVisitsIcon() {
+  return (
+    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M22 12h-4l-3 9L9 3l-3 9H2" />
+    </svg>
+  )
+}
+
 function MapPinIcon() {
   return (
     <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -315,6 +325,14 @@ export default function AppShell() {
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-0.5">
           <NavLink
+            to="/app/live-visits"
+            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
+          >
+            <LiveVisitsIcon />
+            Visitas en Vivo
+            {/* Future: live badge — e.g. <span className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> */}
+          </NavLink>
+          <NavLink
             to="/app" end
             className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
           >
@@ -389,6 +407,13 @@ export default function AppShell() {
           className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t border-gray-800 bg-gray-900"
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
+          <NavLink
+            to="/app/live-visits"
+            className={({ isActive }) => `${bottom.link} ${isActive ? bottom.active : bottom.idle}`}
+          >
+            <LiveVisitsIcon />
+            En Vivo
+          </NavLink>
           <NavLink
             to="/app" end
             className={({ isActive }) => `${bottom.link} ${isActive ? bottom.active : bottom.idle}`}

@@ -4,6 +4,7 @@ import LandingV2Page            from './pages/Landing/LandingV2Page'
 import ContactPage              from './pages/Contact/ContactPage'
 import AppShell                 from './pages/Home/AppShell'
 import WorkspacePage            from './pages/Home/WorkspacePage'
+import LiveVisitsPage           from './pages/LiveVisits/LiveVisitsPage'
 import HomePage                 from './pages/Home/HomePage'
 import SettingsPage             from './pages/Settings/SettingsPage'
 import MetricsPage              from './pages/Metrics/MetricsPage'
@@ -68,6 +69,7 @@ const protectedChildren = [
     element: <AppShell />,
     children: [
       { index: true,        element: <WorkspacePage /> },
+      { path: 'live-visits', element: <LiveVisitsPage /> },
       { path: 'metrics',    element: <MetricsPage /> },
       { path: 'members',    element: <MembersPage /> },
       { path: 'account',    element: <AccountPage /> },

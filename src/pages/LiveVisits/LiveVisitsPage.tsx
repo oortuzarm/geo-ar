@@ -15,7 +15,6 @@ function mockVsLastHour(pointId: string): string {
   return sum % 4 === 0 ? `-${pct}%` : `+${pct}%`
 }
 
-const MOCK_PEAK_HOUR = '18:00–19:00'
 
 // ── Shared components ─────────────────────────────────────────────────────────
 
@@ -36,11 +35,12 @@ function SectionLabel({ children }: { children: ReactNode }) {
 }
 
 function StatTile({
-  label, value, valueClass = 'text-2xl text-gray-100',
+  label, value, valueClass = 'text-2xl text-gray-100', hint,
 }: {
   label:       string
   value:       string | number
   valueClass?: string
+  hint?:       string
 }) {
   return (
     <div className="bg-gray-900/70 border border-white/[0.07] rounded-xl px-4 py-3.5 flex flex-col gap-1.5">
@@ -48,6 +48,9 @@ function StatTile({
         {label}
       </p>
       <p className={`font-bold tabular-nums leading-none ${valueClass}`}>{value}</p>
+      {hint && (
+        <p className="text-[10px] text-gray-600 leading-none">{hint}</p>
+      )}
     </div>
   )
 }
@@ -123,6 +126,9 @@ export default function LiveVisitsPage() {
   // "—" while first fetch is in progress; real number once data arrives
   const activeNowDisplay: string | number = liveData === null ? '—' : totalPeople
 
+  const peakLabel = liveData?.peakToday?.label ?? null
+  const peakHint  = liveData?.peakToday != null ? `${liveData.peakToday.count} registros` : undefined
+
   return (
     <div className="text-gray-100">
 
@@ -156,8 +162,9 @@ export default function LiveVisitsPage() {
             />
             <StatTile
               label="Hora más activa"
-              value={MOCK_PEAK_HOUR}
-              valueClass="text-base text-gray-200"
+              value={peakLabel ?? 'Sin datos todavía'}
+              valueClass={`text-base ${peakLabel ? 'text-gray-200' : 'text-gray-600'}`}
+              hint={peakHint}
             />
           </div>
 
@@ -216,9 +223,12 @@ export default function LiveVisitsPage() {
                   <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide leading-none">
                     Horas más activas
                   </p>
-                  <p className="text-base font-bold tabular-nums text-gray-200 leading-none">
-                    {MOCK_PEAK_HOUR}
+                  <p className={`text-base font-bold tabular-nums leading-none ${peakLabel ? 'text-gray-200' : 'text-gray-600'}`}>
+                    {peakLabel ?? 'Sin datos todavía'}
                   </p>
+                  {peakHint && (
+                    <p className="text-[10px] text-gray-600 leading-none">{peakHint}</p>
+                  )}
                 </div>
               </div>
 

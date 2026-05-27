@@ -16,7 +16,7 @@ export interface LiveVisitsResponse {
   mostActivePoint:      LiveVisitPoint | null
   points:               LiveVisitPoint[]
   lastHourDeltaPercent: number | null
-  peakToday:            string | null
+  peakToday:            { label: string; count: number } | null
 }
 
 export function fetchLiveVisits(projectId: string): Promise<LiveVisitsResponse> {

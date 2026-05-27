@@ -10,9 +10,10 @@ interface GeoPointMarkerProps {
   selected: boolean
   onClick: (id: string) => void
   onDragEnd: (id: string, lat: number, lng: number) => void
+  dimmed?: boolean
 }
 
-export default function GeoPointMarker({ point, selected, onClick, onDragEnd }: GeoPointMarkerProps) {
+export default function GeoPointMarker({ point, selected, onClick, onDragEnd, dimmed = false }: GeoPointMarkerProps) {
   const markerRef  = useRef<L.Marker | null>(null)
   const circleRef  = useRef<L.Circle | null>(null)
   const isDragging = useRef(false)
@@ -73,6 +74,7 @@ export default function GeoPointMarker({ point, selected, onClick, onDragEnd }: 
         position={[point.latitude, point.longitude]}
         icon={icon}
         draggable
+        opacity={dimmed ? 0.3 : 1}
         zIndexOffset={selected ? 1000 : 0}
         eventHandlers={{ click: () => onClick(point.id) }}
       />
@@ -84,17 +86,18 @@ export default function GeoPointMarker({ point, selected, onClick, onDragEnd }: 
           center={[point.latitude, point.longitude]}
           radius={point.activationRadius}
           pathOptions={selected ? {
-            // Colors from theme; editor uses dashed + slightly tighter fill
             color:       mapTheme.activationRadius.selected.color,
             fillColor:   mapTheme.activationRadius.selected.fillColor,
-            fillOpacity: 0.10,
-            weight:      2,
+            fillOpacity: dimmed ? 0.03 : 0.10,
+            opacity:     dimmed ? 0.15 : 1,
+            weight:      dimmed ? 0.5 : 2,
             dashArray:   '6 4',
           } : {
             color:       mapTheme.activationRadius.default.color,
             fillColor:   mapTheme.activationRadius.default.fillColor,
-            fillOpacity: 0.04,
-            weight:      1,
+            fillOpacity: dimmed ? 0.01 : 0.04,
+            opacity:     dimmed ? 0.10 : 1,
+            weight:      dimmed ? 0.5 : 1,
             dashArray:   '4 4',
           }}
         />

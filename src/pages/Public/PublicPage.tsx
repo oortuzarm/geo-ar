@@ -1344,20 +1344,57 @@ export default function PublicPage({
     if (!id) return // skip in /temporary preview (no project id)
     const sessionId = getLiveVisitSessionId()
     const timer = setInterval(() => {
-      const loc = userLocationRef.current
-      if (!loc) return
-      for (const pt of pointsRef.current) {
-        if (!pt.active) continue // toggle lateral izquierdo desactivado → no medir
-        const dist = haversineDistance(loc.latitude, loc.longitude, pt.latitude, pt.longitude)
-        if (dist <= pt.activationRadius) {
-          sendHeartbeat(pt.id, {
-            session_id: sessionId,
-            lat:        loc.latitude,
-            lng:        loc.longitude,
-            accuracy:   loc.accuracy,
-          }).catch(() => {})
+      const loc   = userLocationRef.current
+      const all   = pointsRef.current
+      const active = all.filter((p) => p.active)
+
+      if (import.meta.env.DEV) {
+        console.group('[LiveVisits] heartbeat tick')
+        console.log('puntos totales cargados:', all.length, '| puntos activos evaluados:', active.length)
+      }
+
+      if (!loc) {
+        if (import.meta.env.DEV) {
+          console.warn('[LiveVisits] sin ubicación disponible — heartbeat omitido')
+          console.groupEnd()
+        }
+        return
+      }
+
+      if (import.meta.env.DEV) {
+        console.log('ubicación del usuario → lat:', loc.latitude, '| lng:', loc.longitude, '| accuracy:', loc.accuracy, 'm')
+      }
+
+      for (const pt of active) {
+        const dist    = haversineDistance(loc.latitude, loc.longitude, pt.latitude, pt.longitude)
+        const inside  = dist <= pt.activationRadius
+
+        if (import.meta.env.DEV) {
+          console.log(
+            `  punto "${pt.name || pt.id}"`,
+            '| id:', pt.id,
+            '| active:', pt.active,
+            '| pt.lat:', pt.latitude, 'pt.lng:', pt.longitude,
+            '| radio:', pt.activationRadius, 'm',
+            '| distancia:', Math.round(dist), 'm',
+            '| dentro del radio:', inside,
+          )
+        }
+
+        if (inside) {
+          const payload = { session_id: sessionId, lat: loc.latitude, lng: loc.longitude, accuracy: loc.accuracy }
+          if (import.meta.env.DEV) {
+            console.log('  → enviando heartbeat | geoPointId:', pt.id, '| payload:', payload)
+          }
+          sendHeartbeat(pt.id, payload).catch(() => {})
+        } else {
+          if (import.meta.env.DEV) {
+            console.log('  → heartbeat omitido | razón: fuera del radio (distancia', Math.round(dist), 'm > radio', pt.activationRadius, 'm)')
+          }
         }
       }
+
+      if (import.meta.env.DEV) console.groupEnd()
     }, 15_000)
     return () => clearInterval(timer)
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps

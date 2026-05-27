@@ -25,6 +25,23 @@ export function fetchLiveVisits(projectId: string): Promise<LiveVisitsResponse> 
   )
 }
 
+export interface HistoricalIntensityPoint {
+  id:    string
+  name:  string
+  count: number  // radius_enter events in the period
+}
+
+export interface HistoricalIntensityResponse {
+  period: string  // e.g. "7d"
+  points: HistoricalIntensityPoint[]
+}
+
+export function fetchHistoricalIntensity(projectId: string): Promise<HistoricalIntensityResponse> {
+  return apiFetch<HistoricalIntensityResponse>(
+    `${API_BASE}/api/geo_projects/${projectId}/historical_intensity?days=7`,
+  )
+}
+
 export function sendHeartbeat(
   geoPointId: string,
   payload: { session_id: string; lat: number; lng: number; accuracy: number },

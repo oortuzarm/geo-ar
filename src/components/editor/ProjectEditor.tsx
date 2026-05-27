@@ -27,7 +27,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import DashboardMap from '../map/DashboardMap'
-import { fetchLiveVisits } from '../../services/liveVisitsApi'
+import IntensityModeSelector from '../map/IntensityModeSelector'
+import type { IntensityMode } from '../map/IntensityModeSelector'
+import { fetchLiveVisits, fetchHistoricalIntensity } from '../../services/liveVisitsApi'
 import MapStyleToggle from '../map/MapStyleToggle'
 import POISearch from '../map/POISearch'
 import { useMapStyle } from '../../hooks/useMapStyle'
@@ -135,6 +137,7 @@ export default function ProjectEditor({
 
   // ── Intensity GPS overlay ───────────────────────────────────────────────────
   const [intensityOn, setIntensityOn]               = useState(false)
+  const [intensityMode, setIntensityMode]           = useState<IntensityMode>('live')
   const [intensityActiveNow, setIntensityActiveNow] = useState<Record<string, number> | null>(null)
 
   // ── GPS / location state ────────────────────────────────────────────────────
@@ -171,20 +174,32 @@ export default function ProjectEditor({
     if (!intensityOn || !project?.id) { setIntensityActiveNow(null); return }
     let cancelled = false
 
-    const load = async () => {
-      try {
-        const data = await fetchLiveVisits(project.id)
-        if (cancelled) return
-        const map: Record<string, number> = {}
-        data.points.forEach((p) => { map[p.id] = p.activeNow })
-        setIntensityActiveNow(map)
-      } catch { /* keep previous data on error */ }
+    if (intensityMode === 'live') {
+      const load = async () => {
+        try {
+          const data = await fetchLiveVisits(project.id)
+          if (cancelled) return
+          const map: Record<string, number> = {}
+          data.points.forEach((p) => { map[p.id] = p.activeNow })
+          setIntensityActiveNow(map)
+        } catch { /* keep previous data on error */ }
+      }
+      load()
+      const timer = setInterval(load, 15_000)
+      return () => { cancelled = true; clearInterval(timer) }
     }
 
-    load()
-    const timer = setInterval(load, 15_000)
-    return () => { cancelled = true; clearInterval(timer) }
-  }, [intensityOn, project?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+    // historical — fetch once on mode/project change
+    fetchHistoricalIntensity(project.id)
+      .then((data) => {
+        if (cancelled) return
+        const map: Record<string, number> = {}
+        data.points.forEach((p) => { map[p.id] = p.count })
+        setIntensityActiveNow(map)
+      })
+      .catch(() => { /* keep previous data on error */ })
+    return () => { cancelled = true }
+  }, [intensityOn, intensityMode, project?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Warn on accidental navigation only in real mode with unsaved changes
   useEffect(() => {
@@ -681,24 +696,38 @@ export default function ProjectEditor({
             <div className="flex items-center gap-2 flex-shrink-0">
               {mode === 'real' ? (
                 <>
-                  <button
-                    onClick={() => setIntensityOn((v) => !v)}
-                    className={`flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-medium
-                                border transition-colors flex-shrink-0 ${
-                      intensityOn
-                        ? 'bg-emerald-900/40 border-emerald-600 text-emerald-300'
-                        : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-300'
-                    }`}
-                    title="Capa de intensidad GPS en vivo"
-                  >
-                    {intensityOn && (
-                      <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                  {intensityOn ? (
+                    <div className="flex items-center gap-2 flex-shrink-0 bg-emerald-900/20
+                                    border border-emerald-800/50 rounded-full pl-3 pr-1 h-8">
+                      <span className="text-xs font-medium text-emerald-400 whitespace-nowrap">
+                        Intensidad GPS
                       </span>
-                    )}
-                    Intensidad GPS
-                  </button>
+                      <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
+                      <button
+                        onClick={() => setIntensityOn(false)}
+                        aria-label="Cerrar intensidad GPS"
+                        className="flex items-center justify-center w-5 h-5 rounded-full
+                                   text-gray-500 hover:text-gray-200 hover:bg-gray-700/60
+                                   transition-colors flex-shrink-0"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                            d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setIntensityOn(true)}
+                      className="flex items-center px-3 h-8 rounded-full text-xs font-medium
+                                 border transition-colors flex-shrink-0
+                                 bg-gray-800 border-gray-700 text-gray-400
+                                 hover:border-gray-500 hover:text-gray-300"
+                      title="Ver intensidad GPS"
+                    >
+                      Intensidad GPS
+                    </button>
+                  )}
                   <Button variant="ghost" size="sm" onClick={() => { void openPreview() }}>
                     Previsualizar
                   </Button>
@@ -1045,6 +1074,18 @@ export default function ProjectEditor({
             <div className="hidden lg:block absolute bottom-8 right-4 z-[999]">
               <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
             </div>
+
+            {/* Intensity mode selector — floats above map controls when intensity is on */}
+            {intensityOn && (
+              <>
+                <div className="hidden lg:flex absolute bottom-[68px] right-4 z-[999]">
+                  <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
+                </div>
+                <div className="lg:hidden absolute bottom-[80px] left-1/2 -translate-x-1/2 z-[999]">
+                  <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
+                </div>
+              </>
+            )}
 
             {/* ── Mobile bottom control bar ─────────────────────────────────────
                 Layout: [Mapa/Satélite]  [☰ · n]  [+]                          */}

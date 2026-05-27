@@ -3,18 +3,19 @@ import type { ReactNode } from 'react'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import GpsIntensityMap from '../../components/map/GpsIntensityMap'
 import type { IntensityLevel } from '../../components/map/GpsIntensityMap'
+import IntensityModeSelector from '../../components/map/IntensityModeSelector'
+import type { IntensityMode } from '../../components/map/IntensityModeSelector'
 import Spinner from '../../components/ui/Spinner'
-import { fetchLiveVisits } from '../../services/liveVisitsApi'
+import { fetchLiveVisits, fetchHistoricalIntensity } from '../../services/liveVisitsApi'
 import type { LiveVisitsResponse } from '../../services/liveVisitsApi'
 import { intensityFromCount } from '../../utils/liveVisits'
 
-// vsLastHour and peak hour remain mocked until the backend provides trend data.
+// vsLastHour remains mocked until the backend provides trend data.
 function mockVsLastHour(pointId: string): string {
   const sum = pointId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
   const pct = 10 + (sum % 45)
   return sum % 4 === 0 ? `-${pct}%` : `+${pct}%`
 }
-
 
 // ── Shared components ─────────────────────────────────────────────────────────
 
@@ -55,7 +56,7 @@ function StatTile({
   )
 }
 
-// ── Intensity badge ───────────────────────────────────────────────────────────
+// ── Intensity badge (for live-mode ranked list) ───────────────────────────────
 
 const INTENSITY_BADGE: Record<IntensityLevel, string> = {
   low:    'bg-green-500/10  text-green-400  border-green-500/20',
@@ -65,15 +66,22 @@ const INTENSITY_BADGE: Record<IntensityLevel, string> = {
 const INTENSITY_LABEL: Record<IntensityLevel, string> = {
   low: 'Baja', medium: 'Media', high: 'Alta',
 }
+// Legend dot colors match the IntensityLayer visual system (emerald → cyan).
 const INTENSITY_DOT: Record<IntensityLevel, string> = {
-  low: 'bg-green-500', medium: 'bg-yellow-500', high: 'bg-red-500',
+  low:    'bg-emerald-200',
+  medium: 'bg-emerald-500',
+  high:   'bg-cyan-500',
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function LiveVisitsPage() {
   const { project, points, loading } = useWorkspace()
-  const [liveData, setLiveData] = useState<LiveVisitsResponse | null>(null)
+
+  const [liveData,    setLiveData]    = useState<LiveVisitsResponse | null>(null)
+  const [intensityMode, setIntensityMode] = useState<IntensityMode>('live')
+  const [historicalMap, setHistoricalMap] = useState<Record<string, number> | null>(null)
+  const [historicalLoading, setHistoricalLoading] = useState(false)
 
   // Polling: fetch live data every 15 s while the page is open.
   useEffect(() => {
@@ -98,6 +106,25 @@ export default function LiveVisitsPage() {
     }
   }, [project?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Historical: fetch once when mode is switched to 'historical'.
+  useEffect(() => {
+    if (!project?.id || intensityMode !== 'historical') { setHistoricalMap(null); return }
+    let cancelled = false
+    setHistoricalLoading(true)
+
+    fetchHistoricalIntensity(project.id)
+      .then((data) => {
+        if (cancelled) return
+        const map: Record<string, number> = {}
+        data.points.forEach((p) => { map[p.id] = p.count })
+        setHistoricalMap(map)
+      })
+      .catch(() => { /* keep null on error */ })
+      .finally(() => { if (!cancelled) setHistoricalLoading(false) })
+
+    return () => { cancelled = true }
+  }, [project?.id, intensityMode]) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-32">
@@ -106,9 +133,14 @@ export default function LiveVisitsPage() {
     )
   }
 
-  // Build per-point activeNow map from API response
+  // Build per-point activeNow map from live API response.
   const activeNowMap: Record<string, number> = {}
   liveData?.points.forEach((p) => { activeNowMap[p.id] = p.activeNow })
+
+  // Which data drives the map depends on the current mode.
+  const mapActiveNow: Record<string, number> = intensityMode === 'live'
+    ? activeNowMap
+    : (historicalMap ?? {})
 
   const ranked = points
     .map((p) => ({
@@ -123,7 +155,6 @@ export default function LiveVisitsPage() {
   const activeRanked = ranked.filter((r) => r.people > 0)
   const top          = activeRanked[0] ?? null
 
-  // "—" while first fetch is in progress; real number once data arrives
   const activeNowDisplay: string | number = liveData === null ? '—' : totalPeople
 
   const peakLabel = liveData?.peakToday?.label ?? null
@@ -241,16 +272,18 @@ export default function LiveVisitsPage() {
 
           <div className="flex items-center justify-between">
             <SectionLabel>Mapa de Intensidad GPS</SectionLabel>
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
-              <LiveDot size="sm" />
-              En vivo
-            </span>
+            <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
           </div>
 
           {points.length > 0 ? (
             <>
-              <div className="rounded-2xl overflow-hidden border border-gray-800" style={{ height: '420px' }}>
-                <GpsIntensityMap points={points} activeNow={activeNowMap} />
+              <div className="relative rounded-2xl overflow-hidden border border-gray-800" style={{ height: '420px' }}>
+                <GpsIntensityMap points={points} activeNow={mapActiveNow} />
+                {intensityMode === 'historical' && historicalLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-950/70 backdrop-blur-sm">
+                    <Spinner size="lg" />
+                  </div>
+                )}
               </div>
 
               {/* Legend */}
@@ -264,7 +297,9 @@ export default function LiveVisitsPage() {
                     {INTENSITY_LABEL[level]}
                   </span>
                 ))}
-                <span className="text-[11px] text-gray-600 ml-auto">Radio máx. 1.000 m por zona</span>
+                <span className="text-[11px] text-gray-600 ml-auto">
+                  {intensityMode === 'historical' ? 'Últimos 7 días · relativa al máximo' : 'Radio máx. 1.000 m por zona'}
+                </span>
               </div>
 
               {/* ── 4. Ranking de zonas ─────────────────────────────────────── */}

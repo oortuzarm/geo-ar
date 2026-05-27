@@ -10,6 +10,7 @@ import { useEditorMode } from '../../contexts/EditorModeContext'
 import { usePlanFeatures } from '../../hooks/usePlanFeatures'
 import { normalizeUrl, isValidUrl } from '../../lib/urlUtils'
 import type { PointImage } from '../../types'
+import UpgradeModal from '../../components/subscription/UpgradeModal'
 
 interface GeoPointFormProps {
   point: GeoPoint
@@ -109,13 +110,15 @@ function InfoTooltip({ text }: { text: string }) {
 function AvailabilityRules({
   availability,
   onChange,
-  canUseSchedule = true,
-  canUseQuota    = true,
+  canUseSchedule  = true,
+  canUseQuota     = true,
+  onUpgradeClick,
 }: {
-  availability:   GeoPointAvailability | undefined
-  onChange:       (updates: Partial<GeoPointAvailability>) => void
+  availability:    GeoPointAvailability | undefined
+  onChange:        (updates: Partial<GeoPointAvailability>) => void
   canUseSchedule?: boolean
   canUseQuota?:    boolean
+  onUpgradeClick?: () => void
 }) {
   const scheduleEnabled = availability?.scheduleEnabled ?? false
   const scheduleDays    = availability?.scheduleDays ?? []
@@ -138,7 +141,10 @@ function AvailabilityRules({
       </span>
 
       {/* ── Schedule rule ── */}
-      <div className="bg-gray-800/50 border border-gray-800 rounded-lg p-3 space-y-3">
+      <div
+        className={`bg-gray-800/50 border border-gray-800 rounded-lg p-3 space-y-3 ${!canUseSchedule ? 'cursor-pointer' : ''}`}
+        onClick={!canUseSchedule ? onUpgradeClick : undefined}
+      >
         <div className="flex items-center justify-between">
           <span className={`text-sm ${canUseSchedule ? 'text-gray-300' : 'text-gray-600'}`}>Disponible por horario</span>
           {canUseSchedule
@@ -200,7 +206,10 @@ function AvailabilityRules({
       </div>
 
       {/* ── Quota rule ── */}
-      <div className="bg-gray-800/50 border border-gray-800 rounded-lg p-3 space-y-3">
+      <div
+        className={`bg-gray-800/50 border border-gray-800 rounded-lg p-3 space-y-3 ${!canUseQuota ? 'cursor-pointer' : ''}`}
+        onClick={!canUseQuota ? onUpgradeClick : undefined}
+      >
         <div className="flex items-center justify-between">
           <span className={`text-sm ${canUseQuota ? 'text-gray-300' : 'text-gray-600'}`}>Disponible por cupos</span>
           {canUseQuota
@@ -250,6 +259,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
   const mediaFileRef   = useRef<HTMLInputElement>(null)
   const galleryFileRef = useRef<HTMLInputElement>(null)
   const [advancedOpen,         setAdvancedOpen]         = useState(false)
+  const [upgradeOpen,          setUpgradeOpen]          = useState(false)
 
   // ── Gallery state ─────────────────────────────────────────────────────────
   // Migrate from legacy `image` field on first open — becomes position-0 cover.
@@ -685,9 +695,12 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           </div>
 
           {/* Permanencia — always visible; locked when plan excludes the feature */}
-          <div className={`bg-gray-800/50 border rounded-lg p-3 space-y-3 ${
-            canUseDwellTime && (point.requiresDwellTime ?? false) ? 'border-brand-500/30' : 'border-gray-800'
-          }`}>
+          <div
+            className={`bg-gray-800/50 border rounded-lg p-3 space-y-3 ${
+              canUseDwellTime && (point.requiresDwellTime ?? false) ? 'border-brand-500/30' : 'border-gray-800'
+            } ${!canUseDwellTime ? 'cursor-pointer' : ''}`}
+            onClick={!canUseDwellTime ? () => setUpgradeOpen(true) : undefined}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
@@ -759,6 +772,7 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
           canUseSchedule={canUseScheduleAvailability}
           canUseQuota={canUseQuotaAvailability}
+          onUpgradeClick={() => setUpgradeOpen(true)}
         />
 
 
@@ -986,6 +1000,10 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
           {isSaving ? 'Subiendo archivo…' : 'Guardar'}
         </Button>
       </div>
+
+      {upgradeOpen && (
+        <UpgradeModal reason="feature" onClose={() => setUpgradeOpen(false)} />
+      )}
     </div>
   )
 }

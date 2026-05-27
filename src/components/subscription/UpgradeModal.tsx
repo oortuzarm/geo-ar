@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 interface UpgradeModalProps {
   onClose: () => void
-  reason?: 'limit' | 'expired' | 'general'
+  reason?: 'limit' | 'expired' | 'general' | 'feature'
 }
 
 const COPY: Record<NonNullable<UpgradeModalProps['reason']>, { title: string; body: string }> = {
@@ -18,6 +18,10 @@ const COPY: Record<NonNullable<UpgradeModalProps['reason']>, { title: string; bo
   general: {
     title: 'Actualizar plan',
     body:  'Actualiza tu plan para acceder a más funciones y ubicaciones.',
+  },
+  feature: {
+    title: 'Mejora tu plan',
+    body:  'Mejora tu plan para acceder a esta función.',
   },
 }
 

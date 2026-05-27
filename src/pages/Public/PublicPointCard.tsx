@@ -8,6 +8,7 @@ import type { PointAvailability } from '../../features/geolocation/availability'
 import type { GeoPoint } from '../../types'
 import Modal from '../../components/ui/Modal'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
+import { getDwellAccessState } from '../../lib/dwellAccess'
 
 const DESCRIPTION_LIMIT = 140
 
@@ -243,23 +244,27 @@ export default function PublicPointCard({
     }
   }
 
-  // ── Dwell helpers ─────────────────────────────────────────────────────────
-  const dwellRequired  = point.requiresDwellTime ?? false
+  // ── Dwell helpers (via shared motor) ─────────────────────────────────────
+  const dwell = getDwellAccessState(
+    point,
+    distance,
+    dwellProgress?.state,
+    dwellProgress?.elapsed,
+  )
+  const dwellRequired  = dwell.requiresDwell
   const dwellState     = dwellProgress?.state ?? 'idle'
-  const dwellCompleted = dwellState === 'completed'
-  // CTA is gated by dwell when required and not yet completed
-  const dwellBlocking  = dwellRequired && !dwellCompleted
+  const dwellBlocking  = dwell.blocksAccess
+  const dwellCompleted = dwell.isCompleted
 
-  if (dwellRequired) {
-    console.log('[PublicPointCard] point:', point.id,
-      '| requiresDwellTime:', point.requiresDwellTime,
-      '| dwellTimeSeconds:', point.dwellTimeSeconds,
-      '| dwellState:', dwellState,
-      '| dwellBlocking:', dwellBlocking,
-      '| avail.canAccess:', avail.canAccess,
-      '| insideRadius:', avail.insideRadius,
-      '| dwellProgress:', dwellProgress)
-  }
+  const isCtaBlocked = !avail.canAccess || dwellBlocking
+  console.log('[DwellDebug][card] point:', point.id,
+    '| requiresDwellTime:', point.requiresDwellTime,
+    '| dwellTimeSeconds:', point.dwellTimeSeconds,
+    '| insideRadius:', avail.insideRadius,
+    '| dwellState:', dwellState,
+    '| blocksAccess:', dwellBlocking,
+    '| avail.canAccess:', avail.canAccess,
+    '| isCtaBlocked:', isCtaBlocked)
 
   // ── Location chip derivation ──────────────────────────────────────────────
   let locationLabel: string

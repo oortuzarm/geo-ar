@@ -2,6 +2,7 @@ import type { IGeoRepository } from './IGeoRepository'
 import type { GeoProject, GeoPoint, AccessResponse } from '../types'
 import { apiFetch, ApiError } from '../lib/apiFetch'
 import { LocalGeoRepository } from './LocalGeoRepository'
+import { normalizeGeoPoint } from '../lib/normalizeGeoPoint'
 
 // Rails may return snake_case keys. Map the ones that would otherwise be silently undefined.
 function normalizeProject(raw: Record<string, unknown>): GeoProject {
@@ -22,23 +23,6 @@ function normalizeProject(raw: Record<string, unknown>): GeoProject {
   } as GeoProject
 }
 
-function normalizePoint(raw: Record<string, unknown>): GeoPoint {
-  const requiresDwellTime = raw.requiresDwellTime ?? raw.requires_dwell_time
-  const dwellTimeSeconds  = raw.dwellTimeSeconds  ?? raw.dwell_time_seconds
-  return {
-    ...raw,
-    geoProjectId:      (raw.geoProjectId     ?? raw.geo_project_id)     as string,
-    lookiarUrl:        (raw.lookiarUrl        ?? raw.lookiar_url)        as string | undefined,
-    contentType:       (raw.contentType       ?? raw.content_type)       as string | undefined,
-    contentData:       (raw.contentData       ?? raw.content_data)       as unknown,
-    activationRadius:  Number(raw.activationRadius ?? raw.activation_radius ?? 50),
-    buttonText:        (raw.buttonText        ?? raw.button_text)        as string | undefined,
-    accessMode:        (raw.accessMode        ?? raw.access_mode)        as string | undefined,
-    requiresDwellTime: requiresDwellTime != null ? Boolean(requiresDwellTime) : undefined,
-    dwellTimeSeconds:  dwellTimeSeconds  != null ? Number(dwellTimeSeconds)   : undefined,
-    createdAt:         (raw.createdAt         ?? raw.created_at)         as string | undefined,
-  } as GeoPoint
-}
 
 export class RemoteGeoRepository implements IGeoRepository {
   private readonly base: string
@@ -126,7 +110,7 @@ export class RemoteGeoRepository implements IGeoRepository {
     console.log('[RemoteGeoRepository] listPoints →', endpoint)
     try {
       const raw = await apiFetch<Record<string, unknown>[]>(endpoint)
-      const points = raw.map(normalizePoint)
+      const points = raw.map(normalizeGeoPoint)
       void this.cachePoints(points)
       return points
     } catch (err) {
@@ -142,7 +126,7 @@ export class RemoteGeoRepository implements IGeoRepository {
       this.url(`/api/geo_projects/${data.geoProjectId}/geo_points`),
       { method: 'POST', body: JSON.stringify(data) },
     )
-    return normalizePoint(raw)
+    return normalizeGeoPoint(raw)
   }
 
   async savePoint(id: string, updates: Partial<GeoPoint>): Promise<GeoPoint> {
@@ -153,7 +137,7 @@ export class RemoteGeoRepository implements IGeoRepository {
       body: JSON.stringify(updates),
       timeout: hasImage ? 30_000 : 15_000,
     })
-    return normalizePoint(raw)
+    return normalizeGeoPoint(raw)
   }
 
   async removePoint(id: string): Promise<void> {
@@ -164,7 +148,7 @@ export class RemoteGeoRepository implements IGeoRepository {
     const raw = await apiFetch<Record<string, unknown>[]>(
       this.url(`/api/public/geo_projects/${projectId}/geo_points`),
     )
-    const points = raw.map(normalizePoint)
+    const points = raw.map(normalizeGeoPoint)
     console.log('[RemoteGeoRepository] listPublicPoints — sample point dwell fields:',
       points[0] ? { requiresDwellTime: points[0].requiresDwellTime, dwellTimeSeconds: points[0].dwellTimeSeconds } : '(no points)')
     return points

@@ -1256,7 +1256,8 @@ export default function PublicPage({
   useEffect(() => {
     if (!userLocation || !id) return
     for (const pt of points) {
-      console.log('[Dwell] checking pt:', pt.id,
+      console.log('[DwellDebug][hysteresis] route:', isTemporaryPreview ? 'temporary' : 'public',
+        '| pt:', pt.id,
         '| requiresDwellTime:', pt.requiresDwellTime,
         '| dwellTimeSeconds:', pt.dwellTimeSeconds)
       if (!(pt.requiresDwellTime ?? false) || !pt.dwellTimeSeconds) continue
@@ -1267,7 +1268,8 @@ export default function PublicPage({
       const entry    = dwellMapRef.current[pt.id]
       const isInside = dist <= pt.activationRadius
       const isExited = dist > pt.activationRadius + 20
-      console.log('[Dwell] pt:', pt.id,
+      console.log('[DwellDebug][hysteresis] route:', isTemporaryPreview ? 'temporary' : 'public',
+        '| pt:', pt.id,
         '| dist:', dist.toFixed(0) + 'm', '| radius:', pt.activationRadius + 'm',
         '| isInside:', isInside, '| isExited:', isExited,
         '| entry.state:', entry?.state ?? 'none')
@@ -1725,7 +1727,8 @@ export default function PublicPage({
     const progress = !entry
       ? { state: 'idle' as const, elapsed: 0, total: pt.dwellTimeSeconds ?? 60, showResetMessage: false }
       : { state: entry.state, elapsed: entry.elapsed, total: entry.total, showResetMessage: entry.showResetMessage }
-    console.log('[DwellProgress] ptId:', ptId,
+    console.log('[DwellDebug][progress] route:', isTemporaryPreview ? 'temporary' : 'public',
+      '| ptId:', ptId,
       '| requiresDwellTime:', pt.requiresDwellTime,
       '| dwellTimeSeconds:', pt.dwellTimeSeconds,
       '| state:', progress.state,

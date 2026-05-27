@@ -56,8 +56,13 @@ export default function TemporaryPreviewPage() {
           setPageState('expired')
           return
         }
+        const resolvedPoints = data.geoPoints ?? data.points ?? []
+        console.log('[DwellDebug][TemporaryPreviewPage] points received:', resolvedPoints.length,
+          '| first point dwell fields:', resolvedPoints[0]
+            ? { id: resolvedPoints[0].id, requiresDwellTime: resolvedPoints[0].requiresDwellTime, dwellTimeSeconds: resolvedPoints[0].dwellTimeSeconds }
+            : '(no points)')
         setProject(data.project)
-        setPoints(data.geoPoints ?? data.points ?? [])
+        setPoints(resolvedPoints)
         setPageState('ok')
       })
       .catch((err) => {

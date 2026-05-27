@@ -77,7 +77,6 @@ export default function GpsIntensityMap({ points, activeNow }: GpsIntensityMapPr
           key={point.id}
           position={[point.latitude, point.longitude]}
           icon={createGeoIcon(false, point.active, false, getPointCoverImage(point))}
-          opacity={0.3}
         />
       ))}
     </MapContainer>

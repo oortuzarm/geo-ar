@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
 import { createGeoIcon } from './createGeoIcon'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
-import IntensityLayer, { INTENSITY_CIRCLE_STYLE } from './IntensityLayer'
+import IntensityLayer from './IntensityLayer'
 import type { GeoPoint } from '../../types'
 
 // Re-export so callers (LiveVisitsPage) can keep their existing import paths.
@@ -16,10 +16,11 @@ export function mockPointIntensity(pointId: string): 'low' | 'medium' | 'high' {
   return b === 0 ? 'low' : b === 1 ? 'medium' : 'high'
 }
 
-// A count that maps each mock level to the correct intensityFromCount bucket.
+// Mock counts chosen so relative logic maps each mock level correctly:
+// max will be 100 → high=100 (100%), medium=50 (50%), low=0 (0%)
 function mockCount(pointId: string): number {
   const level = mockPointIntensity(pointId)
-  return level === 'high' ? 10 : level === 'medium' ? 4 : 0
+  return level === 'high' ? 100 : level === 'medium' ? 50 : 0
 }
 
 // ── Map internals ─────────────────────────────────────────────────────────────
@@ -48,7 +49,6 @@ export interface GpsIntensityMapProps {
 }
 
 export default function GpsIntensityMap({ points, activeNow }: GpsIntensityMapProps) {
-  // Build a normalised activeNow map so IntensityLayer always receives required prop.
   const resolvedActiveNow: Record<string, number> = {}
   points.forEach((p) => {
     resolvedActiveNow[p.id] = activeNow !== undefined
@@ -82,6 +82,3 @@ export default function GpsIntensityMap({ points, activeNow }: GpsIntensityMapPr
     </MapContainer>
   )
 }
-
-// Keep INTENSITY_CIRCLE_STYLE available for any external consumer.
-export { INTENSITY_CIRCLE_STYLE }

@@ -116,8 +116,9 @@ export default function LiveVisitsPage() {
     }))
     .sort((a, b) => b.people - a.people)
 
-  const totalPeople = liveData?.activeNow ?? 0
-  const top         = ranked.find((r) => r.people > 0) ?? null
+  const totalPeople  = liveData?.activeNow ?? 0
+  const activeRanked = ranked.filter((r) => r.people > 0)
+  const top          = activeRanked[0] ?? null
 
   // "—" while first fetch is in progress; real number once data arrives
   const activeNowDisplay: string | number = liveData === null ? '—' : totalPeople
@@ -260,19 +261,13 @@ export default function LiveVisitsPage() {
               <div className="space-y-2">
                 <SectionLabel>Ranking de zonas activas</SectionLabel>
 
-                {liveData !== null && totalPeople === 0 ? (
-                  <div className="bg-gray-900/50 border border-gray-800 rounded-2xl px-6 py-10 text-center">
-                    <p className="text-sm text-gray-500">
-                      No hay personas activas dentro de tus áreas GPS en este momento.
-                    </p>
-                  </div>
-                ) : (
+                {activeRanked.length > 0 ? (
                   <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl overflow-hidden">
-                    {ranked.map(({ point, people, vsLastHour, intensity }, idx) => (
+                    {activeRanked.map(({ point, people }, idx) => (
                       <div
                         key={point.id}
                         className={`flex items-center gap-3 sm:gap-4 px-4 py-3 ${
-                          idx < ranked.length - 1 ? 'border-b border-gray-800/60' : ''
+                          idx < activeRanked.length - 1 ? 'border-b border-gray-800/60' : ''
                         }`}
                       >
                         {/* Rank badge */}
@@ -290,17 +285,18 @@ export default function LiveVisitsPage() {
                           {point.name || 'Sin nombre'}
                         </span>
 
-                        {/* Intensity badge — hidden on very small screens */}
-                        <span className={`hidden xs:inline-flex flex-shrink-0 items-center px-2 py-0.5
-                                          rounded-full border text-[10px] font-medium ${INTENSITY_BADGE[intensity]}`}>
-                          {INTENSITY_LABEL[intensity]}
+                        {/* Radius */}
+                        <span className="hidden sm:inline text-[11px] text-gray-600 tabular-nums flex-shrink-0">
+                          {point.activationRadius} m
                         </span>
 
-                        {/* Vs last hour */}
-                        <span className={`text-xs font-medium tabular-nums flex-shrink-0 ${
-                          vsLastHour.startsWith('-') ? 'text-red-400' : 'text-brand-400'
-                        }`}>
-                          {vsLastHour}
+                        {/* En vivo badge */}
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-500 flex-shrink-0">
+                          <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                          </span>
+                          En vivo
                         </span>
 
                         {/* People count */}
@@ -310,7 +306,16 @@ export default function LiveVisitsPage() {
                       </div>
                     ))}
                   </div>
-                )}
+                ) : liveData !== null ? (
+                  <div className="bg-gray-900/50 border border-gray-800 rounded-2xl px-6 py-10 text-center space-y-2">
+                    <p className="text-sm text-gray-500">
+                      No hay zonas activas en este momento.
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      Cuando una persona entre dentro del radio GPS de un punto, aparecerá aquí automáticamente.
+                    </p>
+                  </div>
+                ) : null}
               </div>
             </>
           ) : (

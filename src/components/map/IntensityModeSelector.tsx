@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 export type IntensityMode = 'live' | 'historical'
 
@@ -7,16 +8,24 @@ interface Props {
   onChange: (mode: IntensityMode) => void
 }
 
+interface TooltipPos {
+  top:   number
+  right: number
+}
+
 export default function IntensityModeSelector({ mode, onChange }: Props) {
-  const [showInfo, setShowInfo]   = useState(false)
-  const [tooltipDir, setTooltipDir] = useState<'up' | 'down'>('up')
+  const [showInfo, setShowInfo]     = useState(false)
+  const [tooltipPos, setTooltipPos] = useState<TooltipPos | null>(null)
   const infoRef = useRef<HTMLSpanElement>(null)
 
   const handleInfoClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (!showInfo && infoRef.current) {
-      const top = infoRef.current.getBoundingClientRect().top
-      setTooltipDir(top < 150 ? 'down' : 'up')
+      const rect = infoRef.current.getBoundingClientRect()
+      setTooltipPos({
+        top:   rect.bottom + 12,
+        right: window.innerWidth - rect.right - 4,
+      })
     }
     setShowInfo((v) => !v)
   }
@@ -34,6 +43,7 @@ export default function IntensityModeSelector({ mode, onChange }: Props) {
 
   return (
     <div className="inline-flex items-center bg-gray-900 border border-gray-700/60 rounded-full p-[3px] gap-[2px]">
+      {/* En vivo */}
       <button
         onClick={() => onChange('live')}
         className={`flex items-center gap-1.5 px-3 h-[26px] rounded-full text-[11px] font-medium
@@ -54,6 +64,7 @@ export default function IntensityModeSelector({ mode, onChange }: Props) {
         En vivo
       </button>
 
+      {/* Histórica */}
       <button
         onClick={() => onChange('historical')}
         className={`flex items-center gap-1.5 px-3 h-[26px] rounded-full text-[11px] font-medium
@@ -71,28 +82,37 @@ export default function IntensityModeSelector({ mode, onChange }: Props) {
         )}
         Histórica
 
+        {/* "?" icon — stop propagation so it doesn't toggle the mode */}
         <span
           ref={infoRef}
           onClick={handleInfoClick}
-          className="relative flex-shrink-0 w-3.5 h-3.5 rounded-full border border-gray-500 text-gray-400
-                     hover:border-gray-300 hover:text-gray-200 flex items-center justify-center
-                     text-[9px] font-bold leading-none cursor-pointer transition-colors"
+          className={`flex-shrink-0 w-3.5 h-3.5 rounded-full border flex items-center justify-center
+                      text-[9px] font-bold leading-none cursor-pointer transition-colors ml-0.5
+                      ${showInfo
+                        ? 'border-gray-300 text-gray-200'
+                        : 'border-gray-500 text-gray-400 hover:border-gray-300 hover:text-gray-200'
+                      }`}
         >
           ?
-          {showInfo && (
-            <span
-              className={`absolute right-0 w-56 bg-gray-800 border border-gray-700/60
-                          rounded-xl shadow-xl px-3 py-2.5 z-[9999] pointer-events-none
-                          text-left font-normal text-[11px] text-gray-300 leading-relaxed
-                          ${tooltipDir === 'down' ? 'top-full mt-2' : 'bottom-full mb-2'}`}
-            >
-              Visualiza las zonas con mayor actividad acumulada en el tiempo.
-              <br />
-              La intensidad se calcula relativa a la zona con mayor actividad.
-            </span>
-          )}
         </span>
       </button>
+
+      {/* Tooltip — rendered at body level via portal so it escapes all clipping contexts */}
+      {showInfo && tooltipPos && createPortal(
+        <div
+          style={{ position: 'fixed', top: tooltipPos.top, right: tooltipPos.right, zIndex: 99999 }}
+          className="w-64 bg-gray-900/95 backdrop-blur-sm border border-gray-700/70
+                     rounded-xl shadow-2xl px-4 py-3 pointer-events-none"
+        >
+          <p className="text-[12px] text-gray-200 leading-relaxed whitespace-normal break-words">
+            Visualiza las zonas con mayor actividad acumulada en el tiempo.
+          </p>
+          <p className="text-[12px] text-gray-400 leading-relaxed whitespace-normal break-words mt-1.5">
+            La intensidad se calcula relativa a la zona con mayor actividad.
+          </p>
+        </div>,
+        document.body,
+      )}
     </div>
   )
 }

@@ -140,6 +140,7 @@ export default function ProjectEditor({
   const tier2TimerRef     = useRef<ReturnType<typeof setTimeout> | null>(null)
   const tier3TimerRef     = useRef<ReturnType<typeof setTimeout> | null>(null)
   const desktopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const dwellSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [locationPhase, setLocationPhase]           = useState<LocationPhase>('idle')
   const [currentGpsAccuracy, setCurrentGpsAccuracy] = useState<number | null>(null)
@@ -316,6 +317,17 @@ export default function ProjectEditor({
       ])
     }
     onAfterPointChange?.()
+
+    // Dwell fields are not reliably propagated by the PATCH sync endpoint.
+    // Persist them immediately via the same PUT path used for GPS coordinate changes.
+    if ('requiresDwellTime' in updates || 'dwellTimeSeconds' in updates) {
+      const pointId = selectedPointId
+      if (dwellSaveTimerRef.current) clearTimeout(dwellSaveTimerRef.current)
+      dwellSaveTimerRef.current = setTimeout(() => {
+        const saved = useGeoStore.getState().points.find((p) => p.id === pointId)
+        if (saved) void onSavePointCoords(saved.id, saved.latitude, saved.longitude)
+      }, 800)
+    }
   }
 
   async function handleToggleActive(id: string) {

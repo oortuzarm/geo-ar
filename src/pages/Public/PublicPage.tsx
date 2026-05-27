@@ -1335,7 +1335,10 @@ export default function PublicPage({
   }, [hasRunningDwell])
 
   // ── Live-visit heartbeat — 15-second interval ────────────────────────────
-  // Sends a presence ping for every GPS point the user is inside.
+  // Live visits mide presencia física dentro del radio GPS de puntos activos,
+  // independiente de disponibilidad del contenido.
+  // Solo se evalúa pt.active (toggle del editor); horario, cupos, CTA y
+  // reglas de acceso no se consideran aquí.
   // Fire-and-forget: errors are swallowed so they never surface to the visitor.
   useEffect(() => {
     if (!id) return // skip in /temporary preview (no project id)
@@ -1344,6 +1347,7 @@ export default function PublicPage({
       const loc = userLocationRef.current
       if (!loc) return
       for (const pt of pointsRef.current) {
+        if (!pt.active) continue // toggle lateral izquierdo desactivado → no medir
         const dist = haversineDistance(loc.latitude, loc.longitude, pt.latitude, pt.longitude)
         if (dist <= pt.activationRadius) {
           sendHeartbeat(pt.id, {

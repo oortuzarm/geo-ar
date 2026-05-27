@@ -563,7 +563,7 @@ export default function PublicPointCard({
               />
             )}
 
-            {/* Dwell chip — only when this point requires permanence */}
+            {/* Dwell chip — shows context when permanence is required */}
             {dwellRequired && avail.insideRadius && dwellState === 'idle' && (
               <div className="rounded-xl border px-3 py-2.5 bg-amber-50 border-amber-200">
                 <div className="flex items-center gap-2">
@@ -573,22 +573,6 @@ export default function PublicPointCard({
                       ? formatDwellTime(dwellProgress.total)
                       : formatDwellTime(point.dwellTimeSeconds ?? 60)} en el área
                   </span>
-                </div>
-              </div>
-            )}
-            {dwellRequired && dwellState === 'running' && dwellProgress && (
-              <div className="rounded-xl border px-3 py-2.5 bg-amber-50 border-amber-200 space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-amber-700 text-sm">⏳</span>
-                  <span className="text-xs font-medium flex-1 leading-none text-amber-700">
-                    Permanencia en progreso · {formatDwellTime(dwellProgress.elapsed)} / {formatDwellTime(dwellProgress.total)}
-                  </span>
-                </div>
-                <div className="w-full bg-amber-200/60 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="bg-amber-500 h-1.5 rounded-full transition-all duration-1000"
-                    style={{ width: `${Math.min(100, (dwellProgress.elapsed / dwellProgress.total) * 100)}%` }}
-                  />
                 </div>
               </div>
             )}
@@ -649,11 +633,27 @@ export default function PublicPointCard({
               ) : (
                 <button
                   disabled
-                  className="w-full bg-gray-100 text-gray-400 font-semibold py-3.5 px-4
-                             rounded-xl text-sm cursor-not-allowed border border-gray-200
-                             shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+                  className={[
+                    'w-full relative overflow-hidden font-semibold py-3.5 px-4 rounded-xl text-sm cursor-not-allowed',
+                    dwell.isRunning
+                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                      : 'bg-gray-100 text-gray-400 border border-gray-200 shadow-[0_1px_3px_rgba(0,0,0,0.06)]',
+                  ].join(' ')}
                 >
-                  {point.buttonText || 'Acceder al contenido'}
+                  {dwell.isRunning && dwellProgress ? (
+                    <>
+                      <div
+                        className="absolute inset-y-0 left-0 bg-amber-400/25 transition-[width] duration-1000 ease-linear"
+                        style={{ width: `${Math.min(100, (dwellProgress.elapsed / dwellProgress.total) * 100)}%` }}
+                      />
+                      <span className="relative flex items-center justify-center gap-2">
+                        <span className="text-base leading-none select-none">⏳</span>
+                        Permanece {formatDwellTime(Math.max(0, dwellProgress.total - dwellProgress.elapsed))}
+                      </span>
+                    </>
+                  ) : (
+                    point.buttonText || 'Acceder al contenido'
+                  )}
                 </button>
               )}
 

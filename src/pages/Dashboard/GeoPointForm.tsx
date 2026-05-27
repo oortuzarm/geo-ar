@@ -258,7 +258,7 @@ function AvailabilityRules({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <span className={`text-sm ${canUseLiveVisits ? 'text-gray-300' : 'text-gray-600'}`}>
-              Activación por visitas en vivo
+              Visitas en vivo
             </span>
           </div>
           {canUseLiveVisits

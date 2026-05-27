@@ -298,7 +298,7 @@ export default function LiveVisitsPage() {
                   </span>
                 ))}
                 <span className="text-[11px] text-gray-600 ml-auto">
-                  {intensityMode === 'historical' ? 'Últimos 7 días · relativa al máximo' : 'Radio máx. 1.000 m por zona'}
+                  {intensityMode === 'historical' ? 'Acumulado histórico · relativa al máximo' : 'Radio máx. 1.000 m por zona'}
                 </span>
               </div>
 

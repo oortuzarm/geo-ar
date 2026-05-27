@@ -38,7 +38,7 @@ export interface HistoricalIntensityResponse {
 
 export function fetchHistoricalIntensity(projectId: string): Promise<HistoricalIntensityResponse> {
   return apiFetch<HistoricalIntensityResponse>(
-    `${API_BASE}/api/geo_projects/${projectId}/historical_intensity?days=7`,
+    `${API_BASE}/api/geo_projects/${projectId}/historical_intensity`,
   )
 }
 

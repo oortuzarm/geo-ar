@@ -29,6 +29,7 @@ export default function IntensityModeSelector({ mode, onChange }: Props) {
       </button>
       <button
         onClick={() => onChange('historical')}
+        title={'Visualiza las zonas con mayor actividad acumulada en el tiempo.\nLa intensidad se calcula relativa a la zona con mayor actividad.'}
         className={`flex items-center gap-1.5 px-3 h-[26px] rounded-full text-[11px] font-medium
                     transition-all whitespace-nowrap ${
           mode === 'historical'

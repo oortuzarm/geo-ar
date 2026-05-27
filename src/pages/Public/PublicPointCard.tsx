@@ -597,7 +597,7 @@ export default function PublicPointCard({
                   Cómo llegar
                 </button>
               )}
-              {avail.canAccess ? (
+              {avail.canAccess && !dwellBlocking ? (
                 <button
                   onClick={(e) => { e.stopPropagation(); onActivate() }}
                   disabled={isActivating}

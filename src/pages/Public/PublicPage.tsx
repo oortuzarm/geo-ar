@@ -10,10 +10,10 @@ import { ApiError } from '../../lib/apiFetch'
 
 import { haversineDistance } from '../../features/geolocation/haversine'
 import { reverseGeocode } from '../../features/geolocation/geocoding'
-import { trackRadiusEnter, trackPointClick } from '../../lib/analytics'
+import { trackRadiusEnter, trackPointClick, trackDwellStarted, trackDwellCompleted, trackDwellCancelled } from '../../lib/analytics'
 import { fetchWalkingRoute } from '../../features/routing/orsClient'
 import type { RouteResult } from '../../features/routing/orsClient'
-import type { RouteStatus } from './PublicPointCard'
+import type { RouteStatus, DwellProgress } from './PublicPointCard'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { useMapStyle } from '../../hooks/useMapStyle'
 import { useGeoStore } from '../../store/geoStore'
@@ -798,6 +798,14 @@ function MapClusterLayer({ points, selectedPointId, onPointClick }: MapClusterLa
   )
 }
 
+interface DwellEntry {
+  state:            'idle' | 'running' | 'completed'
+  elapsed:          number
+  total:            number
+  startedAt:        number | null
+  showResetMessage: boolean
+}
+
 export default function PublicPage({
   isEmbed = false,
   prefetched,
@@ -824,6 +832,11 @@ export default function PublicPage({
     fallbackUrl?: string
   } | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // ── Dwell timer state ─────────────────────────────────────────────────────
+  const [dwellMap, setDwellMap] = useState<Record<string, DwellEntry>>({})
+  const dwellMapRef             = useRef<Record<string, DwellEntry>>({})
+  const dwellCompletionFiredRef = useRef<Set<string>>(new Set())
 
   // ── Mobile interaction state ──────────────────────────────────────────────
   const [mobileState, setMobileState] = useState<MobileState>('clean')
@@ -908,6 +921,8 @@ export default function PublicPage({
 
   // Keep sheetStateRef in sync so native touch handlers can read current state.
   useEffect(() => { sheetStateRef.current = sheetState }, [sheetState])
+  // Keep dwellMapRef in sync so GPS hysteresis effect reads latest dwell state.
+  useEffect(() => { dwellMapRef.current = dwellMap }, [dwellMap])
 
   // Airbnb-style scroll-to-expand: the gesture lives on gestureLayerRef (a non-scrolling
   // wrapper), NOT on the scroll container itself.  This prevents the browser from ever
@@ -1234,6 +1249,90 @@ export default function PublicPage({
       wasInsideRef.current[pt.id] = isInside
     }
   }, [userLocation, points, id])
+
+  // ── Dwell timer — GPS hysteresis ─────────────────────────────────────────
+  // Entry threshold : dist ≤ activationRadius  (mirrors the access check)
+  // Exit  threshold : dist > activationRadius + 20 m  (hysteresis gap)
+  useEffect(() => {
+    if (!userLocation || !id) return
+    for (const pt of points) {
+      if (!(pt.requiresDwellTime ?? false) || !pt.dwellTimeSeconds) continue
+      const dist = haversineDistance(
+        userLocation.latitude, userLocation.longitude,
+        pt.latitude, pt.longitude,
+      )
+      const entry    = dwellMapRef.current[pt.id]
+      const isInside = dist <= pt.activationRadius
+      const isExited = dist > pt.activationRadius + 20
+
+      if (isInside && (!entry || entry.state === 'idle')) {
+        setDwellMap((prev) => ({
+          ...prev,
+          [pt.id]: {
+            state: 'running', elapsed: 0, total: pt.dwellTimeSeconds!,
+            startedAt: Date.now(), showResetMessage: false,
+          },
+        }))
+        trackDwellStarted(id, pt.id, userLocation)
+      } else if (isExited && entry?.state === 'running') {
+        const capturedId = pt.id
+        setDwellMap((prev) => ({
+          ...prev,
+          [capturedId]: {
+            ...prev[capturedId],
+            state: 'idle', elapsed: 0, startedAt: null, showResetMessage: true,
+          },
+        }))
+        trackDwellCancelled(id, pt.id)
+        setTimeout(() => {
+          setDwellMap((prev) => {
+            if (!prev[capturedId]?.showResetMessage) return prev
+            return { ...prev, [capturedId]: { ...prev[capturedId], showResetMessage: false } }
+          })
+        }, 3500)
+      }
+    }
+  }, [userLocation, points, id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Dwell interval — 1-second tick ────────────────────────────────────────
+  const hasRunningDwell = Object.values(dwellMap).some((e) => e.state === 'running')
+  useEffect(() => {
+    if (!hasRunningDwell) return
+    const interval = setInterval(() => {
+      setDwellMap((prev) => {
+        if (!Object.values(prev).some((e) => e.state === 'running')) return prev
+        const next: Record<string, DwellEntry> = {}
+        for (const [ptId, entry] of Object.entries(prev)) {
+          if (entry.state !== 'running') { next[ptId] = entry; continue }
+          const newElapsed = entry.elapsed + 1
+          next[ptId] = newElapsed >= entry.total
+            ? { ...entry, state: 'completed', elapsed: entry.total }
+            : { ...entry, elapsed: newElapsed }
+        }
+        return next
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [hasRunningDwell])
+
+  // ── Dwell completion side-effects ─────────────────────────────────────────
+  // Fires trackDwellCompleted + completeDwellTime once per completed point.
+  useEffect(() => {
+    for (const [ptId, entry] of Object.entries(dwellMap)) {
+      if (entry.state !== 'completed') continue
+      if (dwellCompletionFiredRef.current.has(ptId)) continue
+      if (!id || !entry.startedAt) continue
+      dwellCompletionFiredRef.current.add(ptId)
+      const capturedStartedAt = entry.startedAt
+      trackDwellCompleted(id, ptId, userLocation)
+      void geoPointsApi.completeDwellTime(
+        id, ptId,
+        userLocation?.latitude  ?? 0,
+        userLocation?.longitude ?? 0,
+        capturedStartedAt,
+      ).catch(() => {})
+    }
+  }, [dwellMap]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Route calculation ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -1613,6 +1712,13 @@ export default function PublicPage({
   const availablePoints = points.filter(isPointAvailableNow)
   const displayedPoints = locationFilter === 'available' ? availablePoints : points
 
+  function getDwellProgress(ptId: string, pt: GeoPoint): DwellProgress | undefined {
+    if (!(pt.requiresDwellTime ?? false)) return undefined
+    const entry = dwellMap[ptId]
+    if (!entry) return { state: 'idle', elapsed: 0, total: pt.dwellTimeSeconds ?? 60, showResetMessage: false }
+    return { state: entry.state, elapsed: entry.elapsed, total: entry.total, showResetMessage: entry.showResetMessage }
+  }
+
   // ── Shared card list renderer ──────────────────────────────────────────────
   // cardRefsProp: which ref map to populate (mobile or desktop)
   function renderPoints(cardRefsProp: React.MutableRefObject<Record<string, HTMLDivElement | null>>) {
@@ -1646,6 +1752,7 @@ export default function PublicPage({
           }
           address={pt.instructions ?? addresses[pt.id]}
           pointCreatedAt={pt.createdAt}
+          dwellProgress={getDwellProgress(pt.id, pt)}
         />
       </div>
     ))
@@ -2075,6 +2182,7 @@ export default function PublicPage({
           address={selectedPoint.instructions ?? addresses[selectedPoint.id]}
           isEmbed={isEmbed}
           pointCreatedAt={(selectedPoint as { createdAt?: string }).createdAt ?? project?.createdAt}
+          dwellProgress={getDwellProgress(selectedPoint.id, selectedPoint)}
         />
       )}
 

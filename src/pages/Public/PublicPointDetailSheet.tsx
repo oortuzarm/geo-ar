@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import PublicPointCard from './PublicPointCard'
 import PointImageCarousel from '../../components/public/PointImageCarousel'
 import type { GeoPoint } from '../../types'
-import type { RouteStatus } from './PublicPointCard'
+import type { RouteStatus, DwellProgress } from './PublicPointCard'
 import { getPointGalleryImages } from '../../lib/pointImageUtils'
 
 interface PublicPointDetailSheetProps {
@@ -19,13 +19,14 @@ interface PublicPointDetailSheetProps {
   address?:               string
   isEmbed?:               boolean
   pointCreatedAt?:        string
+  dwellProgress?:         DwellProgress
 }
 
 export default function PublicPointDetailSheet({
   point, distance, onClose, onActivate,
   isActivating, accessMessage, accessFallbackUrl,
   routeStatus, walkingDistanceMeters, walkingDurationSeconds, address,
-  isEmbed = false, pointCreatedAt,
+  isEmbed = false, pointCreatedAt, dwellProgress,
 }: PublicPointDetailSheetProps) {
   const galleryImages = getPointGalleryImages(point)
   const hasGallery    = galleryImages.length > 0
@@ -103,6 +104,7 @@ export default function PublicPointDetailSheet({
               walkingDurationSeconds={walkingDurationSeconds}
               address={address}
               pointCreatedAt={pointCreatedAt}
+              dwellProgress={dwellProgress}
             />
           </div>
         </div>

@@ -1237,7 +1237,7 @@ export default function PublicPage({
 
   // ── Radius-enter tracking + haptic feedback ────────────────────────────────
   useEffect(() => {
-    if (!userLocation || !id) return
+    if (!userLocation) return
     for (const pt of points) {
       const dist = haversineDistance(
         userLocation.latitude, userLocation.longitude,
@@ -1246,8 +1246,8 @@ export default function PublicPage({
       const isInside  = dist <= pt.activationRadius
       const wasInside = wasInsideRef.current[pt.id] ?? false
       if (!wasInside && isInside) {
-        trackRadiusEnter(id, pt.id, userLocation)
-        // Subtle haptic pulse when entering the activation area
+        // id may be undefined in /temporary preview — skip analytics, still vibrate
+        if (id) trackRadiusEnter(id, pt.id, userLocation)
         if ('vibrate' in navigator) navigator.vibrate(20)
       }
       wasInsideRef.current[pt.id] = isInside
@@ -1258,7 +1258,9 @@ export default function PublicPage({
   // Entry threshold : dist ≤ activationRadius  (mirrors the access check)
   // Exit  threshold : dist > activationRadius + 20 m  (hysteresis gap)
   useEffect(() => {
-    if (!userLocation || !id) return
+    // id may be undefined in /temporary preview (route param is "token", not "id").
+    // The timer logic never needs id — only analytics calls do.
+    if (!userLocation) return
     for (const pt of points) {
       console.log('[DwellDebug][hysteresis] route:', isTemporaryPreview ? 'temporary' : 'public',
         '| pt:', pt.id,
@@ -1286,7 +1288,7 @@ export default function PublicPage({
             startedAt: Date.now(), showResetMessage: false,
           },
         }))
-        trackDwellStarted(id, pt.id, userLocation)
+        if (id) trackDwellStarted(id, pt.id, userLocation)
       } else if (isExited && entry?.state === 'running') {
         const capturedId = pt.id
         setDwellMap((prev) => ({
@@ -1296,7 +1298,7 @@ export default function PublicPage({
             state: 'idle', elapsed: 0, startedAt: null, showResetMessage: true,
           },
         }))
-        trackDwellCancelled(id, pt.id)
+        if (id) trackDwellCancelled(id, pt.id)
         setTimeout(() => {
           setDwellMap((prev) => {
             if (!prev[capturedId]?.showResetMessage) return prev

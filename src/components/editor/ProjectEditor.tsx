@@ -25,6 +25,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import DashboardMap from '../map/DashboardMap'
 import IntensityModeSelector from '../map/IntensityModeSelector'
@@ -139,6 +140,9 @@ export default function ProjectEditor({
   const [intensityOn, setIntensityOn]               = useState(false)
   const [intensityMode, setIntensityMode]           = useState<IntensityMode>('live')
   const [intensityActiveNow, setIntensityActiveNow] = useState<Record<string, number> | null>(null)
+  const [showIntensityPopover, setShowIntensityPopover] = useState(false)
+  const [intensityPopoverPos, setIntensityPopoverPos]   = useState<{ top: number; right: number } | null>(null)
+  const intensityBtnRef = useRef<HTMLButtonElement>(null)
 
   // ── GPS / location state ────────────────────────────────────────────────────
   const [editorUserPos, setEditorUserPos] = useState<{ lat: number; lng: number; accuracy: number } | null>(null)
@@ -838,11 +842,38 @@ export default function ProjectEditor({
                 onCreatePoint={handlePoiCreatePoint}
                 onResultsChange={setPoiResults}
               />
-              <div className="lg:hidden flex justify-end mt-2">
+              <div className="lg:hidden flex items-center justify-end gap-2 mt-2">
+                {/* Intensity GPS toggle — tap to enable/open mode selector */}
+                <button
+                  ref={intensityBtnRef}
+                  onClick={() => {
+                    const rect = intensityBtnRef.current?.getBoundingClientRect()
+                    if (rect) setIntensityPopoverPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right })
+                    if (!intensityOn) {
+                      setIntensityOn(true)
+                      setShowIntensityPopover(true)
+                    } else {
+                      setShowIntensityPopover((v) => !v)
+                    }
+                  }}
+                  className={`flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-lg border shadow-lg transition-colors ${
+                    intensityOn
+                      ? 'bg-emerald-900/80 border-emerald-600 text-emerald-400'
+                      : 'bg-gray-900/95 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                  }`}
+                  aria-label="Intensidad GPS"
+                >
+                  <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M8.288 15.038a5.25 5.25 0 017.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12 20.25h.008v.008H12v-.008z" />
+                  </svg>
+                </button>
+
+                {/* GPS location button */}
                 <button
                   onClick={handleMyLocation}
                   disabled={locatingUser}
-                  className="bg-gray-900/95 border border-gray-700 rounded-lg p-2
+                  className="flex-shrink-0 bg-gray-900/95 border border-gray-700 rounded-lg p-2
                              shadow-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
                   title="Mi ubicación"
                 >
@@ -1075,15 +1106,37 @@ export default function ProjectEditor({
               <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
             </div>
 
-            {/* Intensity mode selector — mobile only (desktop uses topbar control) */}
-            {intensityOn && (
-              <div className="lg:hidden absolute bottom-[80px] left-1/2 -translate-x-1/2 z-[999]">
-                <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
-              </div>
+            {/* Mobile intensity mode popover — portal so it floats above all overlays */}
+            {showIntensityPopover && intensityPopoverPos && createPortal(
+              <>
+                <div
+                  className="fixed inset-0 z-[99990]"
+                  onClick={() => setShowIntensityPopover(false)}
+                />
+                <div
+                  className="fixed z-[99999] bg-gray-900/97 backdrop-blur-sm
+                              border border-gray-700/70 rounded-xl shadow-2xl
+                              flex items-center gap-2 px-3 py-2"
+                  style={{ top: intensityPopoverPos.top, right: intensityPopoverPos.right }}
+                >
+                  <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
+                  <button
+                    onClick={() => { setIntensityOn(false); setShowIntensityPopover(false) }}
+                    className="flex items-center justify-center w-5 h-5 rounded-full flex-shrink-0
+                               text-gray-500 hover:text-gray-200 hover:bg-gray-700/60 transition-colors"
+                    aria-label="Desactivar intensidad GPS"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </>,
+              document.body,
             )}
 
             {/* ── Mobile bottom control bar ─────────────────────────────────────
-                Layout: [Mapa/Satélite]  [☰ · n]  [+]                          */}
+                Layout: [Mapa/Satélite]  [☰ · n]  [settings]  [+]             */}
             <div
               className="lg:hidden absolute inset-x-0 bottom-8 z-[1000]"
               style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom, 8px))' }}
@@ -1093,21 +1146,6 @@ export default function ProjectEditor({
                 <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
 
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setIntensityOn((v) => !v)}
-                    className={`flex items-center justify-center w-9 h-9 rounded-lg border shadow-lg transition-colors ${
-                      intensityOn
-                        ? 'bg-emerald-900/80 border-emerald-600 text-emerald-400'
-                        : 'bg-gray-900/95 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
-                    }`}
-                    aria-label="Intensidad GPS"
-                    title="Intensidad GPS en vivo"
-                  >
-                    <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M8.288 15.038a5.25 5.25 0 017.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12 20.25h.008v.008H12v-.008z" />
-                    </svg>
-                  </button>
                   <button
                     onClick={() => { setMobileProjectOpen(false); setListDrawerOpen(true) }}
                     className="flex items-center gap-1.5 bg-gray-900/95 border border-gray-700

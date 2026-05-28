@@ -16,14 +16,13 @@ function formatDate(iso?: string): string {
     .replace('.', '')
 }
 
-type SortKey = 'default' | 'name' | 'date' | 'entries' | 'clicks'
+type SortKey = 'name' | 'date' | 'entries' | 'clicks'
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: 'default',  label: 'Orden'    },
-  { key: 'name',     label: 'Nombre'   },
-  { key: 'date',     label: 'Fecha'    },
-  { key: 'entries',  label: 'Entradas' },
-  { key: 'clicks',   label: 'Clics'    },
+  { key: 'name',    label: 'Nombre'   },
+  { key: 'date',    label: 'Fecha'    },
+  { key: 'entries', label: 'Entradas' },
+  { key: 'clicks',  label: 'Clics'    },
 ]
 
 interface GeoPointsListProps {
@@ -62,7 +61,7 @@ export default function GeoPointsList({
   const [isWorking, setIsWorking] = useState(false)
 
   // ── Sort ────────────────────────────────────────────────────────────────────
-  const [sortKey, setSortKey] = useState<SortKey>('default')
+  const [sortKey, setSortKey] = useState<SortKey>('name')
   const [analyticsMap, setAnalyticsMap] = useState<Record<string, PointAnalytics> | null>(null)
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
 
@@ -96,7 +95,7 @@ export default function GeoPointsList({
       })
     } else if (sortKey === 'entries') {
       arr.sort((a, b) => (analyticsMap?.[b.id]?.radiusEntries ?? 0) - (analyticsMap?.[a.id]?.radiusEntries ?? 0))
-    } else if (sortKey === 'clicks') {
+    } else {
       arr.sort((a, b) => (analyticsMap?.[b.id]?.clicks ?? 0) - (analyticsMap?.[a.id]?.clicks ?? 0))
     }
     return arr

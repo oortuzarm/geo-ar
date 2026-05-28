@@ -195,6 +195,9 @@ export default function ProjectEditor({
 
   useEffect(() => {
     if (!intensityOn || !project?.id) { setIntensityActiveNow(null); return }
+    // Clear any data from the previous mode immediately — avoids showing
+    // live counts through the historical palette (or vice versa) while loading.
+    setIntensityActiveNow(null)
     let cancelled = false
 
     if (intensityMode === 'live') {
@@ -1175,6 +1178,7 @@ export default function ProjectEditor({
               userPos={editorUserPos}
               mapStyleId={intensityOn ? 'toner' : mapStyleId}
               intensityActiveNow={intensityOn && intensityActiveNow ? intensityActiveNow : undefined}
+              intensityMode={intensityMode}
               hidePoints={hidePoints}
             />
 

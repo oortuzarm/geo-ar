@@ -8,41 +8,66 @@ interface Props {
   onChange: (mode: IntensityMode) => void
 }
 
-interface TooltipPos {
-  top:   number
-  right: number
+interface TooltipPos { top: number; right: number }
+
+const TOOLTIP_TEXT: Record<IntensityMode, string> = {
+  live:       'Cantidad de personas actualmente dentro de las áreas.',
+  historical: 'Acumulación histórica de personas que ingresaron a las áreas.',
 }
 
 export default function IntensityModeSelector({ mode, onChange }: Props) {
-  const [showInfo, setShowInfo]     = useState(false)
+  const [activeInfo, setActiveInfo] = useState<IntensityMode | null>(null)
   const [tooltipPos, setTooltipPos] = useState<TooltipPos | null>(null)
-  const infoRef = useRef<HTMLSpanElement>(null)
 
-  const handleInfoClick = (e: React.MouseEvent) => {
+  const liveInfoRef       = useRef<HTMLSpanElement>(null)
+  const historicalInfoRef = useRef<HTMLSpanElement>(null)
+
+  function handleInfoClick(which: IntensityMode, e: React.MouseEvent) {
     e.stopPropagation()
-    if (!showInfo && infoRef.current) {
-      const rect = infoRef.current.getBoundingClientRect()
-      setTooltipPos({
-        top:   rect.bottom + 12,
-        right: window.innerWidth - rect.right - 4,
-      })
+    const ref = which === 'live' ? liveInfoRef : historicalInfoRef
+    if (activeInfo !== which && ref.current) {
+      const rect = ref.current.getBoundingClientRect()
+      setTooltipPos({ top: rect.bottom + 12, right: window.innerWidth - rect.right - 4 })
+      setActiveInfo(which)
+    } else {
+      setActiveInfo(null)
     }
-    setShowInfo((v) => !v)
   }
 
   useEffect(() => {
-    if (!showInfo) return
+    if (!activeInfo) return
     const handler = (e: MouseEvent) => {
-      if (infoRef.current && !infoRef.current.contains(e.target as Node)) {
-        setShowInfo(false)
-      }
+      const target = e.target as Node
+      const insideLive       = liveInfoRef.current?.contains(target)
+      const insideHistorical = historicalInfoRef.current?.contains(target)
+      if (!insideLive && !insideHistorical) setActiveInfo(null)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [showInfo])
+  }, [activeInfo])
+
+  function InfoIcon({ which }: { which: IntensityMode }) {
+    const ref    = which === 'live' ? liveInfoRef : historicalInfoRef
+    const active = activeInfo === which
+    return (
+      <span
+        ref={ref}
+        onClick={(e) => handleInfoClick(which, e)}
+        className={`flex-shrink-0 w-3.5 h-3.5 rounded-full border flex items-center justify-center
+                    text-[9px] font-bold leading-none cursor-pointer transition-colors ml-0.5
+                    ${active
+                      ? 'border-gray-300 text-gray-200'
+                      : 'border-gray-500 text-gray-400 hover:border-gray-300 hover:text-gray-200'
+                    }`}
+      >
+        ?
+      </span>
+    )
+  }
 
   return (
     <div className="inline-flex items-center bg-gray-900 border border-gray-700/60 rounded-full p-[3px] gap-[2px]">
+
       {/* En vivo */}
       <button
         onClick={() => onChange('live')}
@@ -62,6 +87,7 @@ export default function IntensityModeSelector({ mode, onChange }: Props) {
           <span className="w-1.5 h-1.5 rounded-full bg-gray-600 flex-shrink-0" />
         )}
         En vivo
+        <InfoIcon which="live" />
       </button>
 
       {/* Histórica */}
@@ -81,34 +107,18 @@ export default function IntensityModeSelector({ mode, onChange }: Props) {
           </svg>
         )}
         Histórica
-
-        {/* "?" icon — stop propagation so it doesn't toggle the mode */}
-        <span
-          ref={infoRef}
-          onClick={handleInfoClick}
-          className={`flex-shrink-0 w-3.5 h-3.5 rounded-full border flex items-center justify-center
-                      text-[9px] font-bold leading-none cursor-pointer transition-colors ml-0.5
-                      ${showInfo
-                        ? 'border-gray-300 text-gray-200'
-                        : 'border-gray-500 text-gray-400 hover:border-gray-300 hover:text-gray-200'
-                      }`}
-        >
-          ?
-        </span>
+        <InfoIcon which="historical" />
       </button>
 
-      {/* Tooltip — rendered at body level via portal so it escapes all clipping contexts */}
-      {showInfo && tooltipPos && createPortal(
+      {/* Single portal — renders the active tooltip at body level */}
+      {activeInfo && tooltipPos && createPortal(
         <div
           style={{ position: 'fixed', top: tooltipPos.top, right: tooltipPos.right, zIndex: 99999 }}
-          className="w-64 bg-gray-900/95 backdrop-blur-sm border border-gray-700/70
+          className="w-60 bg-gray-900/95 backdrop-blur-sm border border-gray-700/70
                      rounded-xl shadow-2xl px-4 py-3 pointer-events-none"
         >
           <p className="text-[12px] text-gray-200 leading-relaxed whitespace-normal break-words">
-            Visualiza las zonas con mayor actividad acumulada en el tiempo.
-          </p>
-          <p className="text-[12px] text-gray-400 leading-relaxed whitespace-normal break-words mt-1.5">
-            La intensidad se calcula relativa a la zona con mayor actividad.
+            {TOOLTIP_TEXT[activeInfo]}
           </p>
         </div>,
         document.body,

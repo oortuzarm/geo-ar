@@ -100,16 +100,16 @@ const LIVE: Palette = {
   },
   core: {
     low: {
-      fillColor: '#6ee7b7', fillOpacity: 0.55,
-      color: '#34d399', weight: 2, opacity: 0.80,
+      fillColor: '#6ee7b7', fillOpacity: 0.12,
+      color: '#34d399', weight: 1.5, opacity: 0.55,
     },
     medium: {
-      fillColor: '#34d399', fillOpacity: 0.72,
-      color: '#10b981', weight: 2.5, opacity: 0.95,
+      fillColor: '#34d399', fillOpacity: 0.20,
+      color: '#10b981', weight: 2, opacity: 0.75,
     },
     high: {
-      fillColor: '#86efac', fillOpacity: 0.88,
-      color: '#4ade80', weight: 3, opacity: 1.0,
+      fillColor: '#86efac', fillOpacity: 0.30,
+      color: '#4ade80', weight: 2.5, opacity: 0.95,
     },
   },
   // Halos are intentionally tight — glow stays within the geographic area.

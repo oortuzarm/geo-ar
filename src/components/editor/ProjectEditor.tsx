@@ -856,14 +856,14 @@ export default function ProjectEditor({
                       setShowIntensityPopover((v) => !v)
                     }
                   }}
-                  className={`flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-lg border shadow-lg transition-colors ${
+                  className={`flex-shrink-0 rounded-lg border p-2 shadow-lg transition-colors ${
                     intensityOn
                       ? 'bg-emerald-900/80 border-emerald-600 text-emerald-400'
                       : 'bg-gray-900/95 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
                   }`}
                   aria-label="Intensidad GPS"
                 >
-                  <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d="M8.288 15.038a5.25 5.25 0 017.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12 20.25h.008v.008H12v-.008z" />
                   </svg>

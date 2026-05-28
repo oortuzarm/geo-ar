@@ -1097,7 +1097,7 @@ export default function ProjectEditor({
               onBoundsChange={setMapBounds}
               onPoiCreate={handlePoiCreateFromPopup}
               userPos={editorUserPos}
-              mapStyleId={mapStyleId}
+              mapStyleId={intensityOn ? 'toner' : mapStyleId}
               intensityActiveNow={intensityOn && intensityActiveNow ? intensityActiveNow : undefined}
             />
 

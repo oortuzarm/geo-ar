@@ -11,6 +11,12 @@ export const MAP_STYLES = {
     tile: 'hybrid',
     ext: 'jpg',
   },
+  toner: {
+    id: 'toner' as const,
+    label: 'Toner',
+    tile: 'toner-v2',
+    ext: 'png',
+  },
 }
 
 export type MapStyleId = keyof typeof MAP_STYLES

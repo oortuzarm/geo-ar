@@ -1,12 +1,23 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Modal from '../../components/ui/Modal'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
+import { fetchProjectAnalyticsByPoint, type PointAnalytics } from '../../lib/analytics'
 import type { GeoPoint } from '../../types'
 
 function urlDomain(url: string): string {
   try { return new URL(url).hostname.replace('www.', '') }
   catch { return url.replace('https://', '').split('/')[0] }
 }
+
+type SortKey = 'default' | 'name' | 'date' | 'entries' | 'clicks'
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: 'default',  label: 'Orden'    },
+  { key: 'name',     label: 'Nombre'   },
+  { key: 'date',     label: 'Fecha'    },
+  { key: 'entries',  label: 'Entradas' },
+  { key: 'clicks',   label: 'Clics'    },
+]
 
 interface GeoPointsListProps {
   points: GeoPoint[]
@@ -21,6 +32,8 @@ interface GeoPointsListProps {
   onClose?: () => void
   /** Hides "Puntos GPS (N)" when idle — use in sidebar where the tab already provides that context */
   hideIdleTitle?: boolean
+  /** Required to enable analytics-based sort options (Entradas, Clics) */
+  projectId?: string
 }
 
 export default function GeoPointsList({
@@ -34,11 +47,55 @@ export default function GeoPointsList({
   onBulkDeactivate,
   onClose,
   hideIdleTitle = false,
+  projectId,
 }: GeoPointsListProps) {
   const [selectionMode, setSelectionMode] = useState(false)
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set())
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [isWorking, setIsWorking] = useState(false)
+
+  // ── Sort ────────────────────────────────────────────────────────────────────
+  const [sortKey, setSortKey] = useState<SortKey>('default')
+  const [analyticsMap, setAnalyticsMap] = useState<Record<string, PointAnalytics> | null>(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+
+  // Fetch analytics lazily when user selects a metric-based sort
+  useEffect(() => {
+    if ((sortKey !== 'entries' && sortKey !== 'clicks') || !projectId) return
+    if (analyticsMap !== null) return   // already fetched
+    let cancelled = false
+    setAnalyticsLoading(true)
+    fetchProjectAnalyticsByPoint(projectId)
+      .then((data) => {
+        if (cancelled) return
+        const map: Record<string, PointAnalytics> = {}
+        data.forEach((row) => { map[row.pointId] = row })
+        setAnalyticsMap(map)
+      })
+      .catch(() => { /* keep analyticsMap null → fallback to 0 counts */ })
+      .finally(() => { if (!cancelled) setAnalyticsLoading(false) })
+    return () => { cancelled = true }
+  }, [sortKey, projectId, analyticsMap])
+
+  const sortedPoints = useMemo(() => {
+    const arr = [...points]
+    if (sortKey === 'name') {
+      arr.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }))
+    } else if (sortKey === 'date') {
+      arr.sort((a, b) => {
+        const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0
+        const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0
+        return tb - ta   // newest first
+      })
+    } else if (sortKey === 'entries') {
+      arr.sort((a, b) => (analyticsMap?.[b.id]?.radiusEntries ?? 0) - (analyticsMap?.[a.id]?.radiusEntries ?? 0))
+    } else if (sortKey === 'clicks') {
+      arr.sort((a, b) => (analyticsMap?.[b.id]?.clicks ?? 0) - (analyticsMap?.[a.id]?.clicks ?? 0))
+    }
+    return arr
+  }, [points, sortKey, analyticsMap])
+
+  // ── Selection ───────────────────────────────────────────────────────────────
 
   // Keep checkedIds clean when points are removed externally (per-point delete from form)
   useEffect(() => {
@@ -53,15 +110,11 @@ export default function GeoPointsList({
   const allChecked = points.length > 0 && checkedCount === points.length
   const someChecked = checkedCount > 0 && !allChecked
 
-  // Derive activation states of the current selection
   const selectedPoints = points.filter((p) => checkedIds.has(p.id))
-  const allActive = selectedPoints.length > 0 && selectedPoints.every((p) => p.active)
+  const allActive   = selectedPoints.length > 0 && selectedPoints.every((p) => p.active)
   const allInactive = selectedPoints.length > 0 && selectedPoints.every((p) => !p.active)
-  // mixed = neither allActive nor allInactive (implicit — used to decide which buttons to show)
 
-  function enterSelectionMode() {
-    setSelectionMode(true)
-  }
+  function enterSelectionMode() { setSelectionMode(true) }
 
   function exitSelectionMode() {
     setSelectionMode(false)
@@ -85,34 +138,32 @@ export default function GeoPointsList({
 
   async function handleBulkActivate() {
     setIsWorking(true)
-    try {
-      await onBulkActivate(Array.from(checkedIds))
-    } finally {
-      setIsWorking(false)
-      exitSelectionMode()
-    }
+    try { await onBulkActivate(Array.from(checkedIds)) }
+    finally { setIsWorking(false); exitSelectionMode() }
   }
 
   async function handleBulkDeactivate() {
     setIsWorking(true)
-    try {
-      await onBulkDeactivate(Array.from(checkedIds))
-    } finally {
-      setIsWorking(false)
-      exitSelectionMode()
-    }
+    try { await onBulkDeactivate(Array.from(checkedIds)) }
+    finally { setIsWorking(false); exitSelectionMode() }
   }
 
   async function handleBulkDelete() {
     setIsWorking(true)
-    try {
-      await onBulkDelete(Array.from(checkedIds))
-    } finally {
-      setIsWorking(false)
-      setConfirmDelete(false)
-      exitSelectionMode()
-    }
+    try { await onBulkDelete(Array.from(checkedIds)) }
+    finally { setIsWorking(false); setConfirmDelete(false); exitSelectionMode() }
   }
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+
+  function metricValue(pointId: string): number | null {
+    if (sortKey !== 'entries' && sortKey !== 'clicks') return null
+    if (!analyticsMap) return null
+    const row = analyticsMap[pointId]
+    return sortKey === 'entries' ? (row?.radiusEntries ?? 0) : (row?.clicks ?? 0)
+  }
+
+  // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
@@ -193,11 +244,37 @@ export default function GeoPointsList({
         </div>
       </div>
 
+      {/* ── Sort bar ── */}
+      {!selectionMode && points.length > 1 && (
+        <div className="flex items-center gap-1 px-3 py-2 border-b border-gray-800/60 overflow-x-auto [scrollbar-width:none]">
+          {SORT_OPTIONS.map((opt) => {
+            const active = sortKey === opt.key
+            const loading = analyticsLoading && active && (opt.key === 'entries' || opt.key === 'clicks')
+            return (
+              <button
+                key={opt.key}
+                onClick={() => setSortKey(opt.key)}
+                className={[
+                  'flex items-center gap-1 flex-shrink-0 px-2 py-1 rounded-md text-[11px] font-medium transition-colors',
+                  active
+                    ? 'bg-gray-700/80 text-gray-100'
+                    : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/60',
+                ].join(' ')}
+              >
+                {loading ? (
+                  <span className="inline-block w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />
+                ) : null}
+                {opt.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       {/* ── Bulk action bar — only in selection mode with ≥1 checked ── */}
       {selectionMode && checkedCount > 0 && (
         <div className="flex items-center gap-3 px-3 py-2 bg-gray-800/70 border-b border-gray-800">
 
-          {/* Activar — shown when all inactive OR mixed */}
           {!allActive && (
             <button
               onClick={handleBulkActivate}
@@ -213,12 +290,10 @@ export default function GeoPointsList({
             </button>
           )}
 
-          {/* Separator between Activar and Desactivar (only when both are shown) */}
           {!allActive && !allInactive && (
             <span className="text-gray-700 select-none">·</span>
           )}
 
-          {/* Desactivar — shown when all active OR mixed */}
           {!allInactive && (
             <button
               onClick={handleBulkDeactivate}
@@ -236,7 +311,6 @@ export default function GeoPointsList({
 
           <span className="text-gray-700 select-none">·</span>
 
-          {/* Eliminar — always shown, icon only */}
           <button
             onClick={() => setConfirmDelete(true)}
             disabled={isWorking}
@@ -263,9 +337,10 @@ export default function GeoPointsList({
           </div>
         ) : (
           <ul className="py-1">
-            {points.map((point) => {
+            {sortedPoints.map((point) => {
               const checked = checkedIds.has(point.id)
               const isEditing = selectedId === point.id && !selectionMode
+              const metric = metricValue(point.id)
               return (
                 <li key={point.id}>
                   <div
@@ -340,8 +415,15 @@ export default function GeoPointsList({
                       </p>
                     </div>
 
-                    {/* Individual active toggle — always available, hidden in selection mode to reduce noise */}
-                    {!selectionMode && (
+                    {/* Metric badge — shown when sorted by analytics */}
+                    {metric !== null && !selectionMode && (
+                      <span className="flex-shrink-0 text-[11px] tabular-nums text-gray-400 font-medium min-w-[2rem] text-right">
+                        {metric > 999 ? `${(metric / 1000).toFixed(1)}k` : metric}
+                      </span>
+                    )}
+
+                    {/* Individual active toggle — hidden in selection mode and when showing metric badge */}
+                    {!selectionMode && metric === null && (
                       <button
                         onClick={(e) => { e.stopPropagation(); onToggleActive(point.id) }}
                         className={[

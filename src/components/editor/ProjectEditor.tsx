@@ -823,6 +823,7 @@ export default function ProjectEditor({
                   onBulkDeactivate={handleBulkDeactivate}
                   onBulkDelete={handleBulkDelete}
                   hideIdleTitle
+                  projectId={project?.id}
                 />
               ) : (
                 <ProjectPanel onMarkUnsaved={() => onMarkUnsaved?.()} />
@@ -1240,6 +1241,7 @@ export default function ProjectEditor({
                 onBulkDeactivate={handleBulkDeactivate}
                 onBulkDelete={handleBulkDelete}
                 onClose={() => setListDrawerOpen(false)}
+                projectId={project?.id}
               />
             </div>
           </div>

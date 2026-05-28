@@ -112,21 +112,20 @@ const LIVE: Palette = {
       color: '#4ade80', weight: 3, opacity: 1.0,
     },
   },
+  // Halos are intentionally tight — glow stays within the geographic area.
+  // Intensity is expressed through fillOpacity, not spatial expansion.
   halo: {
     low: [
-      { radiusFactor: 3.0, fillColor: '#a7f3d0', fillOpacity: 0.28 },
-      { radiusFactor: 1.8, fillColor: '#6ee7b7', fillOpacity: 0.40 },
+      { radiusFactor: 1.25, fillColor: '#a7f3d0', fillOpacity: 0.25 },
     ],
     medium: [
-      { radiusFactor: 5.0, fillColor: '#34d399', fillOpacity: 0.14 },
-      { radiusFactor: 3.5, fillColor: '#34d399', fillOpacity: 0.32 },
-      { radiusFactor: 2.2, fillColor: '#34d399', fillOpacity: 0.50 },
+      { radiusFactor: 1.45, fillColor: '#34d399', fillOpacity: 0.22 },
+      { radiusFactor: 1.18, fillColor: '#34d399', fillOpacity: 0.38 },
     ],
     high: [
-      { radiusFactor: 8.0, fillColor: '#4ade80', fillOpacity: 0.08 },
-      { radiusFactor: 6.0, fillColor: '#4ade80', fillOpacity: 0.18 },
-      { radiusFactor: 4.0, fillColor: '#4ade80', fillOpacity: 0.36 },
-      { radiusFactor: 2.5, fillColor: '#86efac', fillOpacity: 0.56 },
+      { radiusFactor: 1.65, fillColor: '#4ade80', fillOpacity: 0.20 },
+      { radiusFactor: 1.35, fillColor: '#4ade80', fillOpacity: 0.40 },
+      { radiusFactor: 1.12, fillColor: '#86efac', fillOpacity: 0.55 },
     ],
   },
 }

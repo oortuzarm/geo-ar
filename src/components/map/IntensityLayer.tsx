@@ -133,17 +133,20 @@ const LIVE: Palette = {
 // ── Historical palette ────────────────────────────────────────────────────────
 //
 // Used ONLY by /project/:id "Histórica" mode.
-// Extreme contrast between levels — differences must be obvious from a distance.
+// Visual hierarchy based on rank — differences must be immediately obvious.
 //
-//   inactive → ghost ring reference
-//   low      → fillOpacity ~0.22 — tenue, non-competing
-//   medium   → fillOpacity ~0.52 — clearly active, perceptible glow
-//   high     → fillOpacity ~0.88 — dominant, near-solid, massive territorial halo
+//   inactive → fillOpacity 0.06 — barely visible ghost
+//   low      → fillOpacity 0.22 — soft, visible but non-competing
+//   medium   → fillOpacity 0.52 — clearly active
+//   high     → fillOpacity 0.88 — dominant, near-solid
+//
+// Halos stay contained (max 3.5×) — intensity expressed via fill density and
+// border weight, not territorial expansion.
 
 const HISTORICAL: Palette = {
   inactive: {
-    fillColor: '#a7f3d0', fillOpacity: 0.10,
-    color: '#6ee7b7', weight: 1, opacity: 0.28, interactive: false,
+    fillColor: '#a7f3d0', fillOpacity: 0.06,
+    color: '#6ee7b7', weight: 0.5, opacity: 0.20, interactive: false,
   },
   core: {
     low: {
@@ -151,7 +154,7 @@ const HISTORICAL: Palette = {
       fillOpacity: 0.22,
       color: '#34d399',       // emerald-400
       weight: 1.5,
-      opacity: 0.55,
+      opacity: 0.60,
     },
     medium: {
       fillColor: '#34d399',   // emerald-400
@@ -170,17 +173,16 @@ const HISTORICAL: Palette = {
   },
   halo: {
     low: [
-      { radiusFactor: 2.0, fillColor: '#a7f3d0', fillOpacity: 0.16 },
+      { radiusFactor: 1.5, fillColor: '#a7f3d0', fillOpacity: 0.18 },
     ],
     medium: [
-      { radiusFactor: 5.0, fillColor: '#34d399', fillOpacity: 0.18 },
-      { radiusFactor: 3.0, fillColor: '#34d399', fillOpacity: 0.40 },
+      { radiusFactor: 2.5, fillColor: '#34d399', fillOpacity: 0.22 },
+      { radiusFactor: 1.6, fillColor: '#34d399', fillOpacity: 0.42 },
     ],
     high: [
-      { radiusFactor: 12.0, fillColor: '#4ade80', fillOpacity: 0.10 },
-      { radiusFactor:  9.0, fillColor: '#4ade80', fillOpacity: 0.22 },
-      { radiusFactor:  6.0, fillColor: '#4ade80', fillOpacity: 0.45 },
-      { radiusFactor:  3.5, fillColor: '#86efac', fillOpacity: 0.70 },
+      { radiusFactor: 3.5, fillColor: '#4ade80', fillOpacity: 0.18 },
+      { radiusFactor: 2.2, fillColor: '#4ade80', fillOpacity: 0.40 },
+      { radiusFactor: 1.4, fillColor: '#86efac', fillOpacity: 0.62 },
     ],
   },
 }

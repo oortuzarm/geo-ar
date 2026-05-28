@@ -6,13 +6,19 @@ export type IntensityLevel = 'low' | 'medium' | 'high'
 
 // ── Relative intensity ────────────────────────────────────────────────────────
 //
-// Intensity is relative to the busiest zone at this moment, not fixed thresholds.
-// This ensures useful visual contrast for both small venues (2 visitors) and
-// large ones (thousands). Zones with 0 visitors are always "low".
+// Sqrt normalization: sqrt(count / max) vs the naive count/max.
+//
+// Historical data is almost always skewed — one zone with 50 entries, others
+// with 1-6. With linear normalization, 6/50 = 12% → "low" for everything
+// except the busiest. Sqrt compresses the high end and amplifies the low end:
+//   sqrt(6/50) ≈ 35% → "medium" instead of "low"
+//   sqrt(4/6)  ≈ 82% → "high" for the second busiest in a tight cluster
+//
+// count = 0 must be handled by the caller — this function only receives counts > 0.
 
 export function relativeIntensity(count: number, max: number): IntensityLevel {
   if (max === 0 || count === 0) return 'low'
-  const pct = count / max
+  const pct = Math.sqrt(count / max)
   if (pct >= 0.67) return 'high'
   if (pct >= 0.34) return 'medium'
   return 'low'
@@ -48,12 +54,22 @@ const CORE: Record<IntensityLevel, object> = {
   },
 }
 
+// Rendered for zones with count = 0: almost invisible — indicates the zone
+// exists but has no recorded activity. No halos, no fill glow.
+const INACTIVE_CORE = {
+  fillColor: '#a7f3d0',
+  fillOpacity: 0.04,
+  color: '#6ee7b7',
+  weight: 0.5,
+  opacity: 0.12,
+  interactive: false,
+} as const
+
 // ── Layered glow halos ────────────────────────────────────────────────────────
 //
 // Each level has an array of halo rings rendered from outermost to innermost.
 // The falloff from inner (bright) → outer (faint) creates a natural glow.
-// radiusFactor is a multiplier of the core geographic radius — it only affects
-// the visual size, never the actual activation zone.
+// radiusFactor multiplies the core geographic radius — visual only.
 
 interface HaloRing {
   radiusFactor: number
@@ -97,9 +113,23 @@ export default function IntensityLayer({ points, activeNow }: Props) {
     <>
       {points.map((point) => {
         const count  = activeNow[point.id] ?? 0
-        const level  = relativeIntensity(count, max)
         const radius = Math.min(point.activationRadius, 1000)
-        const halos  = HALO[level] ?? []
+
+        // Zones with zero activity render as a nearly invisible ghost ring —
+        // they don't compete with real-activity zones and have no halo.
+        if (count === 0) {
+          return (
+            <Circle
+              key={point.id}
+              center={[point.latitude, point.longitude]}
+              radius={radius}
+              pathOptions={INACTIVE_CORE}
+            />
+          )
+        }
+
+        const level = relativeIntensity(count, max)
+        const halos = HALO[level] ?? []
 
         return (
           <Fragment key={point.id}>

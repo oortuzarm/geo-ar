@@ -838,11 +838,14 @@ export default function ProjectEditor({
                 onCreatePoint={handlePoiCreatePoint}
                 onResultsChange={setPoiResults}
               />
-              <div className="lg:hidden flex justify-end mt-2">
+              <div className="lg:hidden flex items-center justify-end gap-2 mt-2">
+                {intensityOn && (
+                  <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
+                )}
                 <button
                   onClick={handleMyLocation}
                   disabled={locatingUser}
-                  className="bg-gray-900/95 border border-gray-700 rounded-lg p-2
+                  className="flex-shrink-0 bg-gray-900/95 border border-gray-700 rounded-lg p-2
                              shadow-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
                   title="Mi ubicación"
                 >
@@ -1074,13 +1077,6 @@ export default function ProjectEditor({
             <div className="hidden lg:block absolute bottom-8 right-4 z-[999]">
               <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
             </div>
-
-            {/* Intensity mode selector — mobile only (desktop uses topbar control) */}
-            {intensityOn && (
-              <div className="lg:hidden absolute bottom-[80px] left-1/2 -translate-x-1/2 z-[999]">
-                <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
-              </div>
-            )}
 
             {/* ── Mobile bottom control bar ─────────────────────────────────────
                 Layout: [Mapa/Satélite]  [☰ · n]  [+]                          */}

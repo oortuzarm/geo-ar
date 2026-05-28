@@ -10,9 +10,16 @@ interface GeoPointMarkerProps {
   selected: boolean
   onClick: (id: string) => void
   onDragEnd: (id: string, lat: number, lng: number) => void
+  /** Reduce marker icon to ~30% opacity — used when intensity GPS is active */
+  dimmed?: boolean
+  /** Hide marker icon completely — does NOT affect the activation radius circle */
+  hidden?: boolean
 }
 
-export default function GeoPointMarker({ point, selected, onClick, onDragEnd }: GeoPointMarkerProps) {
+export default function GeoPointMarker({
+  point, selected, onClick, onDragEnd,
+  dimmed = false, hidden = false,
+}: GeoPointMarkerProps) {
   const markerRef  = useRef<L.Marker | null>(null)
   const circleRef  = useRef<L.Circle | null>(null)
   const isDragging = useRef(false)
@@ -64,6 +71,15 @@ export default function GeoPointMarker({ point, selected, onClick, onDragEnd }: 
     }
   }, []) // stable: same Leaflet instance lives as long as this component (keyed by point.id)
 
+  // Smooth marker icon opacity — direct DOM manipulation so CSS transitions apply.
+  // hidden > dimmed > normal. The Circle (radius) is intentionally unaffected.
+  useEffect(() => {
+    const el = markerRef.current?.getElement()
+    if (!el) return
+    el.style.transition = 'opacity 0.35s ease'
+    el.style.opacity    = hidden ? '0' : dimmed ? '0.3' : '1'
+  }, [dimmed, hidden])
+
   const icon = createGeoIcon(selected, point.active, false, getPointCoverImage(point))
 
   return (
@@ -77,24 +93,26 @@ export default function GeoPointMarker({ point, selected, onClick, onDragEnd }: 
         eventHandlers={{ click: () => onClick(point.id) }}
       />
 
-      {/* Circle is always mounted for active points so circleRef is populated during drag */}
+      {/* Circle is always mounted for active points so circleRef is populated during drag.
+          Its opacity is driven only by `dimmed` — `hidden` never affects it. */}
       {point.active && (
         <Circle
           ref={circleRef}
           center={[point.latitude, point.longitude]}
           radius={point.activationRadius}
           pathOptions={selected ? {
-            // Colors from theme; editor uses dashed + slightly tighter fill
             color:       mapTheme.activationRadius.selected.color,
             fillColor:   mapTheme.activationRadius.selected.fillColor,
-            fillOpacity: 0.10,
-            weight:      2,
+            fillOpacity: dimmed ? 0.03 : 0.10,
+            opacity:     dimmed ? 0.15 : 1,
+            weight:      dimmed ? 0.5 : 2,
             dashArray:   '6 4',
           } : {
             color:       mapTheme.activationRadius.default.color,
             fillColor:   mapTheme.activationRadius.default.fillColor,
-            fillOpacity: 0.04,
-            weight:      1,
+            fillOpacity: dimmed ? 0.01 : 0.04,
+            opacity:     dimmed ? 0.10 : 1,
+            weight:      dimmed ? 0.5 : 1,
             dashArray:   '4 4',
           }}
         />

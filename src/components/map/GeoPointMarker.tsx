@@ -10,15 +10,13 @@ interface GeoPointMarkerProps {
   selected: boolean
   onClick: (id: string) => void
   onDragEnd: (id: string, lat: number, lng: number) => void
-  /** Reduce marker icon to ~30% opacity — used when intensity GPS is active */
-  dimmed?: boolean
   /** Hide marker icon completely — does NOT affect the activation radius circle */
   hidden?: boolean
 }
 
 export default function GeoPointMarker({
   point, selected, onClick, onDragEnd,
-  dimmed = false, hidden = false,
+  hidden = false,
 }: GeoPointMarkerProps) {
   const markerRef  = useRef<L.Marker | null>(null)
   const circleRef  = useRef<L.Circle | null>(null)
@@ -71,14 +69,14 @@ export default function GeoPointMarker({
     }
   }, []) // stable: same Leaflet instance lives as long as this component (keyed by point.id)
 
-  // Smooth marker icon opacity — direct DOM manipulation so CSS transitions apply.
-  // hidden > dimmed > normal. The Circle (radius) is intentionally unaffected.
+  // Smooth marker icon opacity — direct DOM so CSS transitions apply.
+  // Only `hidden` controls opacity; intensity GPS never affects pins.
   useEffect(() => {
     const el = markerRef.current?.getElement()
     if (!el) return
     el.style.transition = 'opacity 0.35s ease'
-    el.style.opacity    = hidden ? '0' : dimmed ? '0.3' : '1'
-  }, [dimmed, hidden])
+    el.style.opacity    = hidden ? '0' : '1'
+  }, [hidden])
 
   const icon = createGeoIcon(selected, point.active, false, getPointCoverImage(point))
 
@@ -93,8 +91,7 @@ export default function GeoPointMarker({
         eventHandlers={{ click: () => onClick(point.id) }}
       />
 
-      {/* Circle is always mounted for active points so circleRef is populated during drag.
-          Its opacity is driven only by `dimmed` — `hidden` never affects it. */}
+      {/* Circle is always mounted for active points so circleRef is populated during drag */}
       {point.active && (
         <Circle
           ref={circleRef}
@@ -103,16 +100,14 @@ export default function GeoPointMarker({
           pathOptions={selected ? {
             color:       mapTheme.activationRadius.selected.color,
             fillColor:   mapTheme.activationRadius.selected.fillColor,
-            fillOpacity: dimmed ? 0.03 : 0.10,
-            opacity:     dimmed ? 0.15 : 1,
-            weight:      dimmed ? 0.5 : 2,
+            fillOpacity: 0.10,
+            weight:      2,
             dashArray:   '6 4',
           } : {
             color:       mapTheme.activationRadius.default.color,
             fillColor:   mapTheme.activationRadius.default.fillColor,
-            fillOpacity: dimmed ? 0.01 : 0.04,
-            opacity:     dimmed ? 0.10 : 1,
-            weight:      dimmed ? 0.5 : 1,
+            fillOpacity: 0.04,
+            weight:      1,
             dashArray:   '4 4',
           }}
         />

@@ -219,12 +219,17 @@ export default function ProjectEditor({
     fetchHistoricalIntensity(project.id)
       .then((data) => {
         if (cancelled) return
-        const map: Record<string, number> = {}
-        data.points.forEach((p) => { map[p.id] = p.count })
         if (import.meta.env.DEV) {
-          console.log('[ProjectEditor] historical data received:', data.points.map((p) => ({ id: p.id, name: p.name, count: p.count })))
-          console.log('[ProjectEditor] activeNow map built:', map)
+          console.log('[ProjectEditor] raw historical response (first 3):', JSON.stringify(data.points.slice(0, 3)))
           console.log('[ProjectEditor] store point ids:', useGeoStore.getState().points.map((p) => p.id))
+        }
+        const map: Record<string, number> = {}
+        data.points.forEach((p) => {
+          const id = p.pointId ?? p.id
+          if (id) map[id] = p.count
+        })
+        if (import.meta.env.DEV) {
+          console.log('[ProjectEditor] activeNow map built:', map)
         }
         setIntensityActiveNow(map)
       })

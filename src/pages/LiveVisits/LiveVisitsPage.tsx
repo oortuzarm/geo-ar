@@ -116,7 +116,10 @@ export default function LiveVisitsPage() {
       .then((data) => {
         if (cancelled) return
         const map: Record<string, number> = {}
-        data.points.forEach((p) => { map[p.id] = p.count })
+        data.points.forEach((p) => {
+          const id = p.pointId ?? p.id
+          if (id) map[id] = p.count
+        })
         setHistoricalMap(map)
       })
       .catch(() => { /* keep null on error */ })

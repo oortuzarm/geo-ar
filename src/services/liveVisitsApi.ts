@@ -26,9 +26,10 @@ export function fetchLiveVisits(projectId: string): Promise<LiveVisitsResponse> 
 }
 
 export interface HistoricalIntensityPoint {
-  id:    string
-  name:  string
-  count: number  // radius_enter events in the period
+  pointId: string   // geo_point UUID — serialized as pointId by the Rails API
+  id?:     string   // fallback in case older API versions use id
+  name:    string
+  count:   number   // radius_enter events in the period
 }
 
 export interface HistoricalIntensityResponse {

@@ -221,6 +221,11 @@ export default function ProjectEditor({
         if (cancelled) return
         const map: Record<string, number> = {}
         data.points.forEach((p) => { map[p.id] = p.count })
+        if (import.meta.env.DEV) {
+          console.log('[ProjectEditor] historical data received:', data.points.map((p) => ({ id: p.id, name: p.name, count: p.count })))
+          console.log('[ProjectEditor] activeNow map built:', map)
+          console.log('[ProjectEditor] store point ids:', useGeoStore.getState().points.map((p) => p.id))
+        }
         setIntensityActiveNow(map)
       })
       .catch(() => { /* keep previous data on error */ })

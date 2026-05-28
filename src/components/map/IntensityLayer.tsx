@@ -206,6 +206,20 @@ export default function IntensityLayer({ points, activeNow, mode = 'live' }: Pro
     ? points.reduce((m, p) => Math.max(m, activeNow[p.id] ?? 0), 0)
     : 0
 
+  // ── Temporary diagnostic log — remove after confirming data flow ───────────
+  if (import.meta.env.DEV) {
+    const summary = points.map((p) => ({
+      id:    p.id,
+      name:  p.name,
+      count: activeNow[p.id] ?? 'MISSING',
+      level: mode === 'historical'
+        ? (historicalLevelMap?.get(p.id) ?? ((activeNow[p.id] ?? 0) === 0 ? 'inactive' : 'MISSING'))
+        : ((activeNow[p.id] ?? 0) === 0 ? 'inactive' : relativeIntensity(activeNow[p.id] ?? 0, liveMax)),
+    }))
+    console.log('[IntensityLayer] mode:', mode, '| activeNow keys:', Object.keys(activeNow), '| classification:', summary)
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
   return (
     <>
       {points.map((point) => {
@@ -226,6 +240,11 @@ export default function IntensityLayer({ points, activeNow, mode = 'live' }: Pro
         const level = mode === 'historical'
           ? (historicalLevelMap!.get(point.id) ?? 'low')
           : relativeIntensity(count, liveMax)
+
+        if (import.meta.env.DEV) {
+          const coreStyle = palette.core[level] as Record<string, unknown>
+          console.log(`[IntensityLayer] point="${point.name}" count=${count} level=${level} fillOpacity=${coreStyle.fillOpacity}`)
+        }
 
         const halos = palette.halo[level]
 

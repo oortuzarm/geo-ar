@@ -1168,6 +1168,7 @@ export default function ProjectEditor({
               userPos={editorUserPos}
               mapStyleId={intensityOn ? 'toner' : mapStyleId}
               intensityActiveNow={intensityOn && intensityActiveNow ? intensityActiveNow : undefined}
+              intensityMode={intensityMode}
               hidePoints={hidePoints}
             />
 

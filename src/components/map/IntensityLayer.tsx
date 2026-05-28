@@ -6,8 +6,8 @@ export type IntensityLevel = 'low' | 'medium' | 'high'
 
 // ── Relative intensity ────────────────────────────────────────────────────────
 //
-// Sqrt normalization so skewed historical distributions (one very busy zone,
-// many quiet ones) still produce visible contrast across all levels.
+// Sqrt normalization: compresses outlier dominance and amplifies small-count
+// differences — essential for skewed historical distributions.
 
 export function relativeIntensity(count: number, max: number): IntensityLevel {
   if (max === 0 || count === 0) return 'low'
@@ -17,91 +17,121 @@ export function relativeIntensity(count: number, max: number): IntensityLevel {
   return 'low'
 }
 
-// ── Color palette ─────────────────────────────────────────────────────────────
-//
-//   inactive → emerald-200 ghost — zone boundary reference only
-//   low      → emerald-300 / emerald-400 — clearly active, visible mass
-//   medium   → emerald-400 / emerald-500 — strong territorial presence
-//   high     → green-400  / green-500   — dominant energy field
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-// Zones with count = 0: visible reference boundary, no halos.
-const INACTIVE_CORE = {
-  fillColor:   '#a7f3d0',   // emerald-200
-  fillOpacity: 0.09,
-  color:       '#6ee7b7',   // emerald-300
-  weight:      1,
-  opacity:     0.28,
-  interactive: false,
-} as const
+interface HaloRing { radiusFactor: number; fillColor: string; fillOpacity: number }
 
-const CORE: Record<IntensityLevel, object> = {
-  low: {
-    fillColor:   '#6ee7b7',   // emerald-300 — warm, clearly active
-    fillOpacity: 0.38,
-    color:       '#34d399',   // emerald-400
-    weight:      1.5,
-    opacity:     0.65,
-  },
-  medium: {
-    fillColor:   '#34d399',   // emerald-400
-    fillOpacity: 0.55,
-    color:       '#10b981',   // emerald-500
-    weight:      2,
-    opacity:     0.88,
-  },
-  high: {
-    fillColor:   '#4ade80',   // green-400
-    fillOpacity: 0.72,
-    color:       '#22c55e',   // green-500
-    weight:      2.5,
-    opacity:     1.0,
-  },
-}
-
-// ── Layered glow halos ────────────────────────────────────────────────────────
-//
-// Rings are rendered outermost-first (natural falloff: faint outer → bright inner).
-// radiusFactor multiplies the core geographic radius — visual only, no zone change.
-//
-//   low    → 2 rings — soft ambient glow
-//   medium → 3 rings — clear multi-layer presence
-//   high   → 4 rings — dominant energy field
-
-interface HaloRing {
-  radiusFactor: number
-  fillColor:    string
-  fillOpacity:  number
-}
-
-const HALO: Record<IntensityLevel, HaloRing[]> = {
-  low: [
-    { radiusFactor: 2.2, fillColor: '#a7f3d0', fillOpacity: 0.18 },
-    { radiusFactor: 1.5, fillColor: '#6ee7b7', fillOpacity: 0.26 },
-  ],
-  medium: [
-    { radiusFactor: 3.8, fillColor: '#34d399', fillOpacity: 0.09 },
-    { radiusFactor: 2.6, fillColor: '#34d399', fillOpacity: 0.22 },
-    { radiusFactor: 1.7, fillColor: '#34d399', fillOpacity: 0.34 },
-  ],
-  high: [
-    { radiusFactor: 5.5, fillColor: '#4ade80', fillOpacity: 0.06 },
-    { radiusFactor: 4.0, fillColor: '#4ade80', fillOpacity: 0.15 },
-    { radiusFactor: 2.8, fillColor: '#4ade80', fillOpacity: 0.28 },
-    { radiusFactor: 1.8, fillColor: '#4ade80', fillOpacity: 0.42 },
-  ],
+interface Palette {
+  inactive: object
+  core:     Record<IntensityLevel, object>
+  halo:     Record<IntensityLevel, HaloRing[]>
 }
 
 const HALO_BASE = { color: 'transparent', weight: 0, opacity: 0, interactive: false } as const
+
+// ── Live palette — DO NOT MODIFY ──────────────────────────────────────────────
+//
+// This palette is used by both /app/live-visits and /project/:id "En vivo".
+// Any visual changes to live mode must happen here ONLY.
+
+const LIVE: Palette = {
+  inactive: {
+    fillColor: '#a7f3d0', fillOpacity: 0.12,
+    color: '#6ee7b7', weight: 1, opacity: 0.32, interactive: false,
+  },
+  core: {
+    low: {
+      fillColor: '#6ee7b7', fillOpacity: 0.55,
+      color: '#34d399', weight: 2, opacity: 0.80,
+    },
+    medium: {
+      fillColor: '#34d399', fillOpacity: 0.72,
+      color: '#10b981', weight: 2.5, opacity: 0.95,
+    },
+    high: {
+      fillColor: '#86efac', fillOpacity: 0.88,
+      color: '#4ade80', weight: 3, opacity: 1.0,
+    },
+  },
+  halo: {
+    low: [
+      { radiusFactor: 3.0, fillColor: '#a7f3d0', fillOpacity: 0.28 },
+      { radiusFactor: 1.8, fillColor: '#6ee7b7', fillOpacity: 0.40 },
+    ],
+    medium: [
+      { radiusFactor: 5.0, fillColor: '#34d399', fillOpacity: 0.14 },
+      { radiusFactor: 3.5, fillColor: '#34d399', fillOpacity: 0.32 },
+      { radiusFactor: 2.2, fillColor: '#34d399', fillOpacity: 0.50 },
+    ],
+    high: [
+      { radiusFactor: 8.0, fillColor: '#4ade80', fillOpacity: 0.08 },
+      { radiusFactor: 6.0, fillColor: '#4ade80', fillOpacity: 0.18 },
+      { radiusFactor: 4.0, fillColor: '#4ade80', fillOpacity: 0.36 },
+      { radiusFactor: 2.5, fillColor: '#86efac', fillOpacity: 0.56 },
+    ],
+  },
+}
+
+// ── Historical palette — extreme territorial heatmap ─────────────────────────
+//
+// Used ONLY by /project/:id "Histórica" mode.
+// Designed to dominate the map visually: massive halos, high opacity cores,
+// radical gap between levels. Differences must be obvious from a distance.
+//
+//   inactive → ghost ring reference
+//   low      → clearly active, soft territorial mass
+//   medium   → strong presence, multi-layer glow
+//   high     → dominant energy field, map-covering halo
+
+const HISTORICAL: Palette = {
+  inactive: {
+    fillColor: '#a7f3d0', fillOpacity: 0.14,
+    color: '#6ee7b7', weight: 1, opacity: 0.35, interactive: false,
+  },
+  core: {
+    low: {
+      fillColor: '#6ee7b7', fillOpacity: 0.70,
+      color: '#10b981', weight: 3, opacity: 0.90,
+    },
+    medium: {
+      fillColor: '#34d399', fillOpacity: 0.85,
+      color: '#059669', weight: 3.5, opacity: 1.0,
+    },
+    high: {
+      fillColor: '#bbf7d0', fillOpacity: 0.95,   // green-200 — maximum luminosity
+      color: '#22c55e', weight: 5, opacity: 1.0,
+    },
+  },
+  halo: {
+    low: [
+      { radiusFactor: 4.0, fillColor: '#a7f3d0', fillOpacity: 0.36 },
+      { radiusFactor: 2.5, fillColor: '#6ee7b7', fillOpacity: 0.55 },
+    ],
+    medium: [
+      { radiusFactor: 7.0, fillColor: '#34d399', fillOpacity: 0.18 },
+      { radiusFactor: 5.0, fillColor: '#34d399', fillOpacity: 0.38 },
+      { radiusFactor: 3.0, fillColor: '#34d399', fillOpacity: 0.62 },
+    ],
+    high: [
+      { radiusFactor: 12.0, fillColor: '#4ade80', fillOpacity: 0.10 },
+      { radiusFactor:  9.0, fillColor: '#4ade80', fillOpacity: 0.22 },
+      { radiusFactor:  6.0, fillColor: '#4ade80', fillOpacity: 0.45 },
+      { radiusFactor:  3.5, fillColor: '#86efac', fillOpacity: 0.70 },
+    ],
+  },
+}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface Props {
   points:    GeoPoint[]
   activeNow: Record<string, number>
+  mode?:     'live' | 'historical'
 }
 
-export default function IntensityLayer({ points, activeNow }: Props) {
-  const max = points.reduce((m, p) => Math.max(m, activeNow[p.id] ?? 0), 0)
+export default function IntensityLayer({ points, activeNow, mode = 'live' }: Props) {
+  const palette = mode === 'historical' ? HISTORICAL : LIVE
+  const max     = points.reduce((m, p) => Math.max(m, activeNow[p.id] ?? 0), 0)
 
   return (
     <>
@@ -109,20 +139,19 @@ export default function IntensityLayer({ points, activeNow }: Props) {
         const count  = activeNow[point.id] ?? 0
         const radius = Math.min(point.activationRadius, 1000)
 
-        // count = 0: faint ghost ring — zone reference, no halos
         if (count === 0) {
           return (
             <Circle
               key={point.id}
               center={[point.latitude, point.longitude]}
               radius={radius}
-              pathOptions={INACTIVE_CORE}
+              pathOptions={palette.inactive}
             />
           )
         }
 
         const level = relativeIntensity(count, max)
-        const halos = HALO[level]
+        const halos = palette.halo[level]
 
         return (
           <Fragment key={point.id}>
@@ -141,7 +170,7 @@ export default function IntensityLayer({ points, activeNow }: Props) {
             <Circle
               center={[point.latitude, point.longitude]}
               radius={radius}
-              pathOptions={{ ...CORE[level], interactive: false }}
+              pathOptions={{ ...palette.core[level], interactive: false }}
             />
           </Fragment>
         )

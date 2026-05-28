@@ -88,10 +88,26 @@ interface Palette {
 
 const HALO_BASE = { color: 'transparent', weight: 0, opacity: 0, interactive: false } as const
 
+// ── Shared halo geometry ──────────────────────────────────────────────────────
+//
+// Both modes use the same radiusFactor multipliers so the halo geometry is
+// consistent. Visual intensity difference between modes comes from fillOpacity,
+// not from different ring sizes. Rings are rendered outermost → innermost.
+//
+//   low    → 1 ring  (max 1.4× real radius)
+//   medium → 2 rings (max 2.0×)
+//   high   → 3 rings (max 2.5×)
+
+const HALO_FACTORS: Record<IntensityLevel, number[]> = {
+  low:    [1.4],
+  medium: [2.0, 1.4],
+  high:   [2.5, 1.8, 1.35],
+}
+
 // ── Live palette ──────────────────────────────────────────────────────────────
 //
 // Used by "En vivo" and by /app/live-visits (mode defaults to 'live').
-// DO NOT modify this palette when working on historical visuals.
+// Lower fillOpacity — map remains fully readable underneath.
 
 const LIVE: Palette = {
   inactive: {
@@ -99,33 +115,22 @@ const LIVE: Palette = {
     color: '#6ee7b7', weight: 1, opacity: 0.32, interactive: false,
   },
   core: {
-    low: {
-      fillColor: '#6ee7b7', fillOpacity: 0.12,
-      color: '#34d399', weight: 1.5, opacity: 0.55,
-    },
-    medium: {
-      fillColor: '#34d399', fillOpacity: 0.20,
-      color: '#10b981', weight: 2, opacity: 0.75,
-    },
-    high: {
-      fillColor: '#86efac', fillOpacity: 0.30,
-      color: '#4ade80', weight: 2.5, opacity: 0.95,
-    },
+    low:    { fillColor: '#6ee7b7', fillOpacity: 0.12, color: '#34d399', weight: 1.5, opacity: 0.55 },
+    medium: { fillColor: '#34d399', fillOpacity: 0.20, color: '#10b981', weight: 2,   opacity: 0.75 },
+    high:   { fillColor: '#86efac', fillOpacity: 0.30, color: '#4ade80', weight: 2.5, opacity: 0.95 },
   },
-  // Halos are intentionally tight — glow stays within the geographic area.
-  // Intensity is expressed through fillOpacity, not spatial expansion.
   halo: {
     low: [
-      { radiusFactor: 1.25, fillColor: '#a7f3d0', fillOpacity: 0.25 },
+      { radiusFactor: HALO_FACTORS.low[0],    fillColor: '#a7f3d0', fillOpacity: 0.22 },
     ],
     medium: [
-      { radiusFactor: 1.45, fillColor: '#34d399', fillOpacity: 0.22 },
-      { radiusFactor: 1.18, fillColor: '#34d399', fillOpacity: 0.38 },
+      { radiusFactor: HALO_FACTORS.medium[0], fillColor: '#34d399', fillOpacity: 0.16 },
+      { radiusFactor: HALO_FACTORS.medium[1], fillColor: '#34d399', fillOpacity: 0.30 },
     ],
     high: [
-      { radiusFactor: 1.65, fillColor: '#4ade80', fillOpacity: 0.20 },
-      { radiusFactor: 1.35, fillColor: '#4ade80', fillOpacity: 0.40 },
-      { radiusFactor: 1.12, fillColor: '#86efac', fillOpacity: 0.55 },
+      { radiusFactor: HALO_FACTORS.high[0],   fillColor: '#4ade80', fillOpacity: 0.14 },
+      { radiusFactor: HALO_FACTORS.high[1],   fillColor: '#4ade80', fillOpacity: 0.28 },
+      { radiusFactor: HALO_FACTORS.high[2],   fillColor: '#86efac', fillOpacity: 0.44 },
     ],
   },
 }
@@ -133,15 +138,13 @@ const LIVE: Palette = {
 // ── Historical palette ────────────────────────────────────────────────────────
 //
 // Used ONLY by /project/:id "Histórica" mode.
-// Visual hierarchy based on rank — differences must be immediately obvious.
+// Same halo radiusFactor geometry as LIVE — only fillOpacity is higher to
+// express historical accumulation more visibly.
 //
 //   inactive → fillOpacity 0.06 — barely visible ghost
 //   low      → fillOpacity 0.22 — soft, visible but non-competing
 //   medium   → fillOpacity 0.52 — clearly active
 //   high     → fillOpacity 0.88 — dominant, near-solid
-//
-// Halos stay contained (max 3.5×) — intensity expressed via fill density and
-// border weight, not territorial expansion.
 
 const HISTORICAL: Palette = {
   inactive: {
@@ -149,40 +152,22 @@ const HISTORICAL: Palette = {
     color: '#6ee7b7', weight: 0.5, opacity: 0.20, interactive: false,
   },
   core: {
-    low: {
-      fillColor: '#6ee7b7',   // emerald-300
-      fillOpacity: 0.22,
-      color: '#34d399',       // emerald-400
-      weight: 1.5,
-      opacity: 0.60,
-    },
-    medium: {
-      fillColor: '#34d399',   // emerald-400
-      fillOpacity: 0.52,
-      color: '#10b981',       // emerald-500
-      weight: 3,
-      opacity: 0.90,
-    },
-    high: {
-      fillColor: '#bbf7d0',   // green-200 — maximum luminosity
-      fillOpacity: 0.88,
-      color: '#22c55e',       // green-500
-      weight: 5,
-      opacity: 1.0,
-    },
+    low:    { fillColor: '#6ee7b7', fillOpacity: 0.22, color: '#34d399', weight: 1.5, opacity: 0.60 },
+    medium: { fillColor: '#34d399', fillOpacity: 0.52, color: '#10b981', weight: 3,   opacity: 0.90 },
+    high:   { fillColor: '#bbf7d0', fillOpacity: 0.88, color: '#22c55e', weight: 5,   opacity: 1.0  },
   },
   halo: {
     low: [
-      { radiusFactor: 1.5, fillColor: '#a7f3d0', fillOpacity: 0.18 },
+      { radiusFactor: HALO_FACTORS.low[0],    fillColor: '#a7f3d0', fillOpacity: 0.28 },
     ],
     medium: [
-      { radiusFactor: 2.5, fillColor: '#34d399', fillOpacity: 0.22 },
-      { radiusFactor: 1.6, fillColor: '#34d399', fillOpacity: 0.42 },
+      { radiusFactor: HALO_FACTORS.medium[0], fillColor: '#34d399', fillOpacity: 0.24 },
+      { radiusFactor: HALO_FACTORS.medium[1], fillColor: '#34d399', fillOpacity: 0.48 },
     ],
     high: [
-      { radiusFactor: 3.5, fillColor: '#4ade80', fillOpacity: 0.18 },
-      { radiusFactor: 2.2, fillColor: '#4ade80', fillOpacity: 0.40 },
-      { radiusFactor: 1.4, fillColor: '#86efac', fillOpacity: 0.62 },
+      { radiusFactor: HALO_FACTORS.high[0],   fillColor: '#4ade80', fillOpacity: 0.22 },
+      { radiusFactor: HALO_FACTORS.high[1],   fillColor: '#4ade80', fillOpacity: 0.44 },
+      { radiusFactor: HALO_FACTORS.high[2],   fillColor: '#86efac', fillOpacity: 0.68 },
     ],
   },
 }

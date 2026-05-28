@@ -18,32 +18,36 @@ export function relativeIntensity(count: number, max: number): IntensityLevel {
   return 'low'
 }
 
-// ── Color palette: activity / intelligence aesthetic ──────────────────────────
+// ── Color palette: pure green intensity ramp ──────────────────────────────────
 //
-// Green spectrum (calm, live) for low and medium. Electric cyan for high
-// activity — visible, premium, never reads as danger or alert.
+// Single green family across all three levels. Brightness and saturation
+// increase with activity — never reads as alert or danger.
+//
+//   low    → emerald-200 / emerald-300 — quiet, translucent presence
+//   medium → emerald-400 / emerald-500 — visible movement
+//   high   → green-400  / green-500   — brilliant, energetic (no cyan)
 
 const CORE: Record<IntensityLevel, object> = {
   low: {
-    fillColor: '#6ee7b7',   // emerald-200 — quiet presence
-    fillOpacity: 0.13,
-    color: '#34d399',       // emerald-400
+    fillColor: '#a7f3d0',   // emerald-200 — quiet presence
+    fillOpacity: 0.18,
+    color: '#6ee7b7',       // emerald-300
     weight: 1,
-    opacity: 0.30,
+    opacity: 0.35,
   },
   medium: {
-    fillColor: '#10b981',   // emerald-500 — visible movement
-    fillOpacity: 0.22,
-    color: '#059669',       // emerald-600
+    fillColor: '#34d399',   // emerald-400 — visible movement
+    fillOpacity: 0.30,
+    color: '#10b981',       // emerald-500
     weight: 1.5,
-    opacity: 0.65,
+    opacity: 0.72,
   },
   high: {
-    fillColor: '#06b6d4',   // cyan-500 — electric, intelligent
-    fillOpacity: 0.32,
-    color: '#0891b2',       // cyan-600
+    fillColor: '#4ade80',   // green-400 — brilliant, intense
+    fillOpacity: 0.45,
+    color: '#22c55e',       // green-500
     weight: 2,
-    opacity: 0.90,
+    opacity: 0.95,
   },
 }
 
@@ -52,8 +56,8 @@ const HALO: Partial<Record<IntensityLevel, { radiusFactor: number; style: object
   medium: {
     radiusFactor: 1.30,
     style: {
-      fillColor: '#10b981',
-      fillOpacity: 0.06,
+      fillColor: '#34d399',   // emerald-400
+      fillOpacity: 0.07,
       color: 'transparent',
       weight: 0,
       opacity: 0,
@@ -62,8 +66,8 @@ const HALO: Partial<Record<IntensityLevel, { radiusFactor: number; style: object
   high: {
     radiusFactor: 1.45,
     style: {
-      fillColor: '#22d3ee',   // cyan-400
-      fillOpacity: 0.09,
+      fillColor: '#4ade80',   // green-400
+      fillOpacity: 0.11,
       color: 'transparent',
       weight: 0,
       opacity: 0,

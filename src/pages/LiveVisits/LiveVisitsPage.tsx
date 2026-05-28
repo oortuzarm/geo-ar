@@ -66,11 +66,11 @@ const INTENSITY_BADGE: Record<IntensityLevel, string> = {
 const INTENSITY_LABEL: Record<IntensityLevel, string> = {
   low: 'Baja', medium: 'Media', high: 'Alta',
 }
-// Legend dot colors match the IntensityLayer visual system (emerald → cyan).
+// Legend dot colors mirror the IntensityLayer green ramp.
 const INTENSITY_DOT: Record<IntensityLevel, string> = {
   low:    'bg-emerald-200',
-  medium: 'bg-emerald-500',
-  high:   'bg-cyan-500',
+  medium: 'bg-emerald-400',
+  high:   'bg-green-400',
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────

@@ -6,8 +6,15 @@ export type IntensityLevel = 'low' | 'medium' | 'high'
 
 // ── Relative intensity ────────────────────────────────────────────────────────
 //
-// Sqrt normalization so skewed historical distributions (one very busy zone,
-// many quiet ones) still produce visible contrast across all levels.
+// Sqrt normalization: sqrt(count / max) vs the naive count/max.
+//
+// Historical data is almost always skewed — one zone with 50 entries, others
+// with 1-6. With linear normalization, 6/50 = 12% → "low" for everything
+// except the busiest. Sqrt compresses the high end and amplifies the low end:
+//   sqrt(6/50) ≈ 35% → "medium" instead of "low"
+//   sqrt(4/6)  ≈ 82% → "high" for the second busiest in a tight cluster
+//
+// count = 0 must be handled by the caller — this function only receives counts > 0.
 
 export function relativeIntensity(count: number, max: number): IntensityLevel {
   if (max === 0 || count === 0) return 'low'
@@ -17,55 +24,52 @@ export function relativeIntensity(count: number, max: number): IntensityLevel {
   return 'low'
 }
 
-// ── Color palette ─────────────────────────────────────────────────────────────
+// ── Color palette: pure green intensity ramp ──────────────────────────────────
 //
-//   inactive → emerald-200 ghost — zone boundary reference only
-//   low      → emerald-300 / emerald-400 — clearly active, visible mass
-//   medium   → emerald-400 / emerald-500 — strong territorial presence
-//   high     → green-400  / green-500   — dominant energy field
-
-// Zones with count = 0: visible reference boundary, no halos.
-const INACTIVE_CORE = {
-  fillColor:   '#a7f3d0',   // emerald-200
-  fillOpacity: 0.09,
-  color:       '#6ee7b7',   // emerald-300
-  weight:      1,
-  opacity:     0.28,
-  interactive: false,
-} as const
+//   low    → emerald-200 / emerald-300 — quiet, translucent presence
+//   medium → emerald-400 / emerald-500 — visible movement
+//   high   → green-400  / green-500   — brilliant, energetic (no cyan)
 
 const CORE: Record<IntensityLevel, object> = {
   low: {
-    fillColor:   '#6ee7b7',   // emerald-300 — warm, clearly active
-    fillOpacity: 0.38,
-    color:       '#34d399',   // emerald-400
-    weight:      1.5,
-    opacity:     0.65,
+    fillColor: '#a7f3d0',   // emerald-200
+    fillOpacity: 0.18,
+    color: '#6ee7b7',       // emerald-300
+    weight: 1,
+    opacity: 0.35,
   },
   medium: {
-    fillColor:   '#34d399',   // emerald-400
-    fillOpacity: 0.55,
-    color:       '#10b981',   // emerald-500
-    weight:      2,
-    opacity:     0.88,
+    fillColor: '#34d399',   // emerald-400
+    fillOpacity: 0.30,
+    color: '#10b981',       // emerald-500
+    weight: 1.5,
+    opacity: 0.72,
   },
   high: {
-    fillColor:   '#4ade80',   // green-400
-    fillOpacity: 0.72,
-    color:       '#22c55e',   // green-500
-    weight:      2.5,
-    opacity:     1.0,
+    fillColor: '#4ade80',   // green-400
+    fillOpacity: 0.45,
+    color: '#22c55e',       // green-500
+    weight: 2,
+    opacity: 0.95,
   },
 }
 
+// Rendered for zones with count = 0: almost invisible — indicates the zone
+// exists but has no recorded activity. No halos, no fill glow.
+const INACTIVE_CORE = {
+  fillColor: '#a7f3d0',
+  fillOpacity: 0.04,
+  color: '#6ee7b7',
+  weight: 0.5,
+  opacity: 0.12,
+  interactive: false,
+} as const
+
 // ── Layered glow halos ────────────────────────────────────────────────────────
 //
-// Rings are rendered outermost-first (natural falloff: faint outer → bright inner).
-// radiusFactor multiplies the core geographic radius — visual only, no zone change.
-//
-//   low    → 2 rings — soft ambient glow
-//   medium → 3 rings — clear multi-layer presence
-//   high   → 4 rings — dominant energy field
+// Each level has an array of halo rings rendered from outermost to innermost.
+// The falloff from inner (bright) → outer (faint) creates a natural glow.
+// radiusFactor multiplies the core geographic radius — visual only.
 
 interface HaloRing {
   radiusFactor: number
@@ -73,25 +77,27 @@ interface HaloRing {
   fillOpacity:  number
 }
 
-const HALO: Record<IntensityLevel, HaloRing[]> = {
+const HALO: Partial<Record<IntensityLevel, HaloRing[]>> = {
+  // Low: single soft ambient ring
   low: [
-    { radiusFactor: 2.2, fillColor: '#a7f3d0', fillOpacity: 0.18 },
-    { radiusFactor: 1.5, fillColor: '#6ee7b7', fillOpacity: 0.26 },
+    { radiusFactor: 1.7, fillColor: '#a7f3d0', fillOpacity: 0.10 },
   ],
+
+  // Medium: two-ring glow — inner brighter, outer wider and dimmer
   medium: [
-    { radiusFactor: 3.8, fillColor: '#34d399', fillOpacity: 0.09 },
-    { radiusFactor: 2.6, fillColor: '#34d399', fillOpacity: 0.22 },
-    { radiusFactor: 1.7, fillColor: '#34d399', fillOpacity: 0.34 },
+    { radiusFactor: 2.8, fillColor: '#34d399', fillOpacity: 0.07 },
+    { radiusFactor: 1.9, fillColor: '#34d399', fillOpacity: 0.16 },
   ],
+
+  // High: three-ring energy field — layered falloff for strong glow
   high: [
-    { radiusFactor: 5.5, fillColor: '#4ade80', fillOpacity: 0.06 },
-    { radiusFactor: 4.0, fillColor: '#4ade80', fillOpacity: 0.15 },
-    { radiusFactor: 2.8, fillColor: '#4ade80', fillOpacity: 0.28 },
-    { radiusFactor: 1.8, fillColor: '#4ade80', fillOpacity: 0.42 },
+    { radiusFactor: 4.0, fillColor: '#4ade80', fillOpacity: 0.05 },
+    { radiusFactor: 2.7, fillColor: '#4ade80', fillOpacity: 0.13 },
+    { radiusFactor: 1.8, fillColor: '#4ade80', fillOpacity: 0.24 },
   ],
 }
 
-const HALO_BASE = { color: 'transparent', weight: 0, opacity: 0, interactive: false } as const
+const HALO_STYLE_BASE = { color: 'transparent', weight: 0, opacity: 0, interactive: false } as const
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -109,7 +115,8 @@ export default function IntensityLayer({ points, activeNow }: Props) {
         const count  = activeNow[point.id] ?? 0
         const radius = Math.min(point.activationRadius, 1000)
 
-        // count = 0: faint ghost ring — zone reference, no halos
+        // Zones with zero activity render as a nearly invisible ghost ring —
+        // they don't compete with real-activity zones and have no halo.
         if (count === 0) {
           return (
             <Circle
@@ -122,17 +129,18 @@ export default function IntensityLayer({ points, activeNow }: Props) {
         }
 
         const level = relativeIntensity(count, max)
-        const halos = HALO[level]
+        const halos = HALO[level] ?? []
 
         return (
           <Fragment key={point.id}>
+            {/* Outermost ring first so inner rings paint on top */}
             {halos.map((halo, i) => (
               <Circle
                 key={i}
                 center={[point.latitude, point.longitude]}
                 radius={radius * halo.radiusFactor}
                 pathOptions={{
-                  ...HALO_BASE,
+                  ...HALO_STYLE_BASE,
                   fillColor:   halo.fillColor,
                   fillOpacity: halo.fillOpacity,
                 }}

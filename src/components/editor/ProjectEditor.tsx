@@ -303,18 +303,24 @@ export default function ProjectEditor({
         return
       }
 
-      if (isMobile) {
-        if (fabPlacementMode) {
-          setFabPlacementMode(false)
-          await openNewPoint(lat, lng)
-        }
-        return
+      // Mobile FAB placement mode: tap creates a point at the tapped location
+      if (isMobile && fabPlacementMode) {
+        setFabPlacementMode(false)
+        await openNewPoint(lat, lng)
       }
-
-      await openNewPoint(lat, lng)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [project, selectedPointId, isMobile, fabPlacementMode, locationPhase],
+  )
+
+  // Desktop only: double-click creates a new point at that location
+  const handleMapDblClick = useCallback(
+    async (lat: number, lng: number) => {
+      if (isMobile || !project) return
+      await openNewPoint(lat, lng)
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isMobile, project],
   )
 
   async function handleAddPoint() {
@@ -1029,7 +1035,7 @@ export default function ProjectEditor({
                              text-sm text-gray-400 whitespace-nowrap">
                 {isMobile
                   ? 'Usa el botón + para agregar el primer punto'
-                  : 'Haz clic en el mapa para agregar el primer punto'}
+                  : 'Doble clic en el mapa para agregar el primer punto'}
               </div>
             )}
 
@@ -1160,6 +1166,7 @@ export default function ProjectEditor({
               points={effectiveMapPoints}
               selectedPointId={selectedPointId}
               onMapClick={handleMapClick}
+              onMapDblClick={handleMapDblClick}
               onMarkerClick={handleSelectPoint}
               onMarkerDragEnd={handleMarkerDragEnd}
               poiResults={poiResults}

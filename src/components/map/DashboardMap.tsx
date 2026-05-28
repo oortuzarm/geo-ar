@@ -55,6 +55,19 @@ function ClickHandler({ onMapClick }: ClickHandlerProps) {
   return null
 }
 
+interface DblClickHandlerProps {
+  onMapDblClick: (lat: number, lng: number) => void
+}
+
+function DblClickHandler({ onMapDblClick }: DblClickHandlerProps) {
+  useMapEvents({
+    dblclick(e) {
+      onMapDblClick(e.latlng.lat, e.latlng.lng)
+    },
+  })
+  return null
+}
+
 interface BoundsTrackerProps {
   onBoundsChange: (bounds: MapBounds) => void
 }
@@ -121,6 +134,7 @@ interface DashboardMapProps {
   points: GeoPoint[]
   selectedPointId: string | null
   onMapClick: (lat: number, lng: number) => void
+  onMapDblClick: (lat: number, lng: number) => void
   onMarkerClick: (id: string) => void
   onMarkerDragEnd: (id: string, lat: number, lng: number) => void
   poiResults?: PoiSearchResult[]
@@ -136,6 +150,7 @@ export default function DashboardMap({
   points,
   selectedPointId,
   onMapClick,
+  onMapDblClick,
   onMarkerClick,
   onMarkerDragEnd,
   poiResults = [],
@@ -153,6 +168,7 @@ export default function DashboardMap({
       center={mapCenter}
       zoom={mapZoom}
       maxZoom={20}
+      doubleClickZoom={false}
       className="w-full h-full"
       style={{ width: '100%', height: '100%', background: '#111827', zIndex: 0 }}
     >
@@ -165,6 +181,7 @@ export default function DashboardMap({
       <MapController />
       <MapViewTracker />
       <ClickHandler onMapClick={onMapClick} />
+      <DblClickHandler onMapDblClick={onMapDblClick} />
       {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} />}
       <UserLocationLayer userPos={userPos} />
 

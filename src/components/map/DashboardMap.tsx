@@ -129,7 +129,6 @@ interface DashboardMapProps {
   userPos?: UserPos | null
   mapStyleId?: MapStyleId
   intensityActiveNow?: Record<string, number>
-  intensityMode?: 'live' | 'historical'
   hidePoints?: boolean
 }
 
@@ -145,7 +144,6 @@ export default function DashboardMap({
   userPos = null,
   mapStyleId = 'streets',
   intensityActiveNow,
-  intensityMode = 'live',
   hidePoints = false,
 }: DashboardMapProps) {
   const { mapCenter, mapZoom } = useGeoStore()
@@ -171,7 +169,7 @@ export default function DashboardMap({
       <UserLocationLayer userPos={userPos} />
 
       {intensityActiveNow && (
-        <IntensityLayer points={points} activeNow={intensityActiveNow} mode={intensityMode} />
+        <IntensityLayer points={points} activeNow={intensityActiveNow} />
       )}
 
       {points.map((point) => (

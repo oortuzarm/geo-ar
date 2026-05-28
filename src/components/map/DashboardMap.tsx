@@ -129,7 +129,6 @@ interface DashboardMapProps {
   userPos?: UserPos | null
   mapStyleId?: MapStyleId
   intensityActiveNow?: Record<string, number>
-  hidePoints?: boolean
 }
 
 export default function DashboardMap({
@@ -144,7 +143,6 @@ export default function DashboardMap({
   userPos = null,
   mapStyleId = 'streets',
   intensityActiveNow,
-  hidePoints = false,
 }: DashboardMapProps) {
   const { mapCenter, mapZoom } = useGeoStore()
 
@@ -179,8 +177,6 @@ export default function DashboardMap({
           selected={point.id === selectedPointId}
           onClick={onMarkerClick}
           onDragEnd={onMarkerDragEnd}
-          dimmed={!!intensityActiveNow && point.id !== selectedPointId}
-          hidden={hidePoints && point.id !== selectedPointId}
         />
       ))}
 

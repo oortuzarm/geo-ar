@@ -142,7 +142,8 @@ export default function ProjectEditor({
   const [intensityActiveNow, setIntensityActiveNow] = useState<Record<string, number> | null>(null)
   const [showIntensityPopover, setShowIntensityPopover] = useState(false)
   const [intensityPopoverPos, setIntensityPopoverPos]   = useState<{ top: number; right: number } | null>(null)
-  const intensityBtnRef = useRef<HTMLButtonElement>(null)
+  const intensityBtnRef     = useRef<HTMLButtonElement>(null)
+  const intensityPopoverRef = useRef<HTMLDivElement>(null)
 
   // ── GPS / location state ────────────────────────────────────────────────────
   const [editorUserPos, setEditorUserPos] = useState<{ lat: number; lng: number; accuracy: number } | null>(null)
@@ -173,6 +174,23 @@ export default function ProjectEditor({
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
   }, [])
+
+  // Close intensity popover on outside tap/click — no backdrop needed so map stays interactive
+  useEffect(() => {
+    if (!showIntensityPopover) return
+    const close = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node
+      if (intensityBtnRef.current?.contains(target)) return
+      if (intensityPopoverRef.current?.contains(target)) return
+      setShowIntensityPopover(false)
+    }
+    document.addEventListener('mousedown', close)
+    document.addEventListener('touchstart', close, { passive: true })
+    return () => {
+      document.removeEventListener('mousedown', close)
+      document.removeEventListener('touchstart', close)
+    }
+  }, [showIntensityPopover])
 
   useEffect(() => {
     if (!intensityOn || !project?.id) { setIntensityActiveNow(null); return }
@@ -1107,32 +1125,27 @@ export default function ProjectEditor({
               <MapStyleToggle styleId={mapStyleId} onStyleChange={setMapStyle} />
             </div>
 
-            {/* Mobile intensity mode popover — portal so it floats above all overlays */}
+            {/* Mobile intensity mode popover — portal, no backdrop so map stays interactive */}
             {showIntensityPopover && intensityPopoverPos && createPortal(
-              <>
-                <div
-                  className="fixed inset-0 z-[99990]"
-                  onClick={() => setShowIntensityPopover(false)}
-                />
-                <div
-                  className="fixed z-[99999] bg-gray-900/97 backdrop-blur-sm
-                              border border-gray-700/70 rounded-xl shadow-2xl
-                              flex items-center gap-2 px-3 py-2"
-                  style={{ top: intensityPopoverPos.top, right: intensityPopoverPos.right }}
+              <div
+                ref={intensityPopoverRef}
+                className="fixed z-[99999] flex items-center gap-1.5
+                           bg-gray-900/97 backdrop-blur-sm border border-gray-700/60
+                           rounded-2xl shadow-xl px-2 py-1.5"
+                style={{ top: intensityPopoverPos.top, right: intensityPopoverPos.right }}
+              >
+                <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
+                <button
+                  onClick={() => { setIntensityOn(false); setShowIntensityPopover(false) }}
+                  className="flex items-center justify-center w-5 h-5 rounded-full flex-shrink-0
+                             text-gray-500 hover:text-gray-200 hover:bg-gray-700/60 transition-colors"
+                  aria-label="Desactivar intensidad GPS"
                 >
-                  <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
-                  <button
-                    onClick={() => { setIntensityOn(false); setShowIntensityPopover(false) }}
-                    className="flex items-center justify-center w-5 h-5 rounded-full flex-shrink-0
-                               text-gray-500 hover:text-gray-200 hover:bg-gray-700/60 transition-colors"
-                    aria-label="Desactivar intensidad GPS"
-                  >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </>,
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>,
               document.body,
             )}
 

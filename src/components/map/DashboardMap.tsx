@@ -177,7 +177,6 @@ export default function DashboardMap({
           selected={point.id === selectedPointId}
           onClick={onMarkerClick}
           onDragEnd={onMarkerDragEnd}
-          dimmed={!!intensityActiveNow && point.id !== selectedPointId}
         />
       ))}
 

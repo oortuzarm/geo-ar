@@ -10,10 +10,9 @@ interface GeoPointMarkerProps {
   selected: boolean
   onClick: (id: string) => void
   onDragEnd: (id: string, lat: number, lng: number) => void
-  dimmed?: boolean
 }
 
-export default function GeoPointMarker({ point, selected, onClick, onDragEnd, dimmed = false }: GeoPointMarkerProps) {
+export default function GeoPointMarker({ point, selected, onClick, onDragEnd }: GeoPointMarkerProps) {
   const markerRef  = useRef<L.Marker | null>(null)
   const circleRef  = useRef<L.Circle | null>(null)
   const isDragging = useRef(false)
@@ -65,15 +64,6 @@ export default function GeoPointMarker({ point, selected, onClick, onDragEnd, di
     }
   }, []) // stable: same Leaflet instance lives as long as this component (keyed by point.id)
 
-  // Smooth opacity via direct DOM manipulation — react-leaflet's opacity prop calls
-  // setOpacity() which sets style.opacity without any CSS transition.
-  useEffect(() => {
-    const el = markerRef.current?.getElement()
-    if (!el) return
-    el.style.transition = 'opacity 0.35s ease'
-    el.style.opacity    = dimmed ? '0.3' : '1'
-  }, [dimmed])
-
   const icon = createGeoIcon(selected, point.active, false, getPointCoverImage(point))
 
   return (
@@ -94,18 +84,17 @@ export default function GeoPointMarker({ point, selected, onClick, onDragEnd, di
           center={[point.latitude, point.longitude]}
           radius={point.activationRadius}
           pathOptions={selected ? {
+            // Colors from theme; editor uses dashed + slightly tighter fill
             color:       mapTheme.activationRadius.selected.color,
             fillColor:   mapTheme.activationRadius.selected.fillColor,
-            fillOpacity: dimmed ? 0.03 : 0.10,
-            opacity:     dimmed ? 0.15 : 1,
-            weight:      dimmed ? 0.5 : 2,
+            fillOpacity: 0.10,
+            weight:      2,
             dashArray:   '6 4',
           } : {
             color:       mapTheme.activationRadius.default.color,
             fillColor:   mapTheme.activationRadius.default.fillColor,
-            fillOpacity: dimmed ? 0.01 : 0.04,
-            opacity:     dimmed ? 0.10 : 1,
-            weight:      dimmed ? 0.5 : 1,
+            fillOpacity: 0.04,
+            weight:      1,
             dashArray:   '4 4',
           }}
         />

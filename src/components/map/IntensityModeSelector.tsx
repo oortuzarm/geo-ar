@@ -8,11 +8,23 @@ interface Props {
   onChange: (mode: IntensityMode) => void
 }
 
-interface TooltipPos { top: number; right: number }
+interface TooltipPos { top: number; left: number }
 
 const TOOLTIP_TEXT: Record<IntensityMode, string> = {
   live:       'Cantidad de personas actualmente dentro de las áreas.',
   historical: 'Acumulación histórica de personas que ingresaron a las áreas.',
+}
+
+const TOOLTIP_W   = 240  // matches w-60
+const VIEWPORT_PAD = 8   // min distance from viewport edge
+
+function calcTooltipPos(ref: React.RefObject<HTMLSpanElement>): TooltipPos | null {
+  if (!ref.current) return null
+  const rect    = ref.current.getBoundingClientRect()
+  // Prefer right-aligned to the trigger, clamp so it never exits the viewport
+  const idealLeft = rect.right - TOOLTIP_W
+  const left      = Math.max(VIEWPORT_PAD, Math.min(idealLeft, window.innerWidth - TOOLTIP_W - VIEWPORT_PAD))
+  return { top: rect.bottom + 12, left }
 }
 
 export default function IntensityModeSelector({ mode, onChange }: Props) {
@@ -24,10 +36,9 @@ export default function IntensityModeSelector({ mode, onChange }: Props) {
 
   function handleInfoClick(which: IntensityMode, e: React.MouseEvent) {
     e.stopPropagation()
-    const ref = which === 'live' ? liveInfoRef : historicalInfoRef
-    if (activeInfo !== which && ref.current) {
-      const rect = ref.current.getBoundingClientRect()
-      setTooltipPos({ top: rect.bottom + 12, right: window.innerWidth - rect.right - 4 })
+    if (activeInfo !== which) {
+      const ref = which === 'live' ? liveInfoRef : historicalInfoRef
+      setTooltipPos(calcTooltipPos(ref))
       setActiveInfo(which)
     } else {
       setActiveInfo(null)
@@ -113,7 +124,7 @@ export default function IntensityModeSelector({ mode, onChange }: Props) {
       {/* Single portal — renders the active tooltip at body level */}
       {activeInfo && tooltipPos && createPortal(
         <div
-          style={{ position: 'fixed', top: tooltipPos.top, right: tooltipPos.right, zIndex: 99999 }}
+          style={{ position: 'fixed', top: tooltipPos.top, left: tooltipPos.left, zIndex: 99999 }}
           className="w-60 bg-gray-900/95 backdrop-blur-sm border border-gray-700/70
                      rounded-xl shadow-2xl px-4 py-3 pointer-events-none"
         >

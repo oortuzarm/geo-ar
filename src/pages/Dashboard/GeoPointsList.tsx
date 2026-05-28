@@ -9,6 +9,13 @@ function urlDomain(url: string): string {
   catch { return url.replace('https://', '').split('/')[0] }
 }
 
+function formatDate(iso?: string): string {
+  if (!iso) return '—'
+  return new Date(iso)
+    .toLocaleDateString('es', { day: 'numeric', month: 'short' })
+    .replace('.', '')
+}
+
 type SortKey = 'default' | 'name' | 'date' | 'entries' | 'clicks'
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
@@ -415,15 +422,22 @@ export default function GeoPointsList({
                       </p>
                     </div>
 
-                    {/* Metric badge — shown when sorted by analytics */}
+                    {/* Date label — only when sorted by date */}
+                    {sortKey === 'date' && !selectionMode && (
+                      <span className="flex-shrink-0 text-[11px] text-gray-500 whitespace-nowrap">
+                        {formatDate(point.createdAt)}
+                      </span>
+                    )}
+
+                    {/* Metric badge — only when sorted by analytics */}
                     {metric !== null && !selectionMode && (
                       <span className="flex-shrink-0 text-[11px] tabular-nums text-gray-400 font-medium min-w-[2rem] text-right">
                         {metric > 999 ? `${(metric / 1000).toFixed(1)}k` : metric}
                       </span>
                     )}
 
-                    {/* Individual active toggle — hidden in selection mode and when showing metric badge */}
-                    {!selectionMode && metric === null && (
+                    {/* Toggle — in Orden and Nombre modes only */}
+                    {!selectionMode && metric === null && sortKey !== 'date' && (
                       <button
                         onClick={(e) => { e.stopPropagation(); onToggleActive(point.id) }}
                         className={[

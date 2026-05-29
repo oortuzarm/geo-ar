@@ -268,6 +268,61 @@ const side = {
 
 // ── AppShell ──────────────────────────────────────────────────────────────────
 
+// ── No-plan banner ────────────────────────────────────────────────────────────
+
+function NoPlanBanner() {
+  const currentUser = useAuthStore((s) => s.currentUser)
+  const navigate    = useNavigate()
+
+  if (!currentUser || currentUser.role === 'admin') return null
+  if (currentUser.planId !== null && currentUser.planId !== undefined) return null
+
+  return (
+    <div className="flex items-center justify-between gap-3 px-4 py-2.5
+                    bg-amber-500/10 border-b border-amber-500/20 flex-shrink-0">
+      <p className="text-xs text-amber-300 leading-snug">
+        Selecciona un plan para activar tu prueba gratuita.
+      </p>
+      <button
+        onClick={() => navigate('/app/plans')}
+        className="flex-shrink-0 text-xs font-semibold text-amber-200
+                   bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30
+                   px-3 py-1 rounded-lg transition-colors"
+      >
+        Ver planes
+      </button>
+    </div>
+  )
+}
+
+// ── Trial countdown banner ────────────────────────────────────────────────────
+
+function TrialCountdownBanner() {
+  const { isTrialActive, trialDaysLeft } = useSubscription()
+  const navigate = useNavigate()
+
+  if (!isTrialActive || trialDaysLeft === null) return null
+
+  return (
+    <div className="flex items-center justify-between gap-3 px-4 py-2
+                    bg-brand-500/10 border-b border-brand-500/20 flex-shrink-0">
+      <p className="text-xs text-brand-300 leading-snug">
+        {trialDaysLeft === 0
+          ? 'Tu prueba gratuita vence hoy.'
+          : `Te quedan ${trialDaysLeft} día${trialDaysLeft === 1 ? '' : 's'} de prueba gratuita.`}
+      </p>
+      <button
+        onClick={() => navigate('/app/plans')}
+        className="flex-shrink-0 text-xs font-semibold text-brand-200
+                   bg-brand-500/20 hover:bg-brand-500/30 border border-brand-500/30
+                   px-3 py-1 rounded-lg transition-colors"
+      >
+        Ver planes
+      </button>
+    </div>
+  )
+}
+
 export default function AppShell() {
   const { logout, currentUser } = useAuthStore()
   const navigate = useNavigate()
@@ -557,6 +612,10 @@ export default function AppShell() {
             draggable={false}
           />
         </div>
+
+        {/* ── Global banners ─────────────────────────────────────────────────── */}
+        <NoPlanBanner />
+        <TrialCountdownBanner />
 
         {/* Page renders here — each page manages its own sticky header */}
         <main className="flex-1 min-h-0 overflow-y-auto">

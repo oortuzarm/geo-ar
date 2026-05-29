@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getPlans, type PublicPlan } from '../../services/plansApi'
+import { getPlans, startTrial, type PublicPlan } from '../../services/plansApi'
+import { useAuthStore } from '../../store/authStore'
 import { useSubscription } from '../../hooks/useSubscription'
 import Spinner from '../../components/ui/Spinner'
 
@@ -65,13 +66,15 @@ function ComingSoonModal({ onClose }: { onClose: () => void }) {
 // ── Plan card ─────────────────────────────────────────────────────────────────
 
 interface PlanCardProps {
-  plan:      PublicPlan
-  billing:   'monthly' | 'annual'
-  isCurrent: boolean
-  onUpgrade: () => void
+  plan:          PublicPlan
+  billing:       'monthly' | 'annual'
+  isCurrent:     boolean
+  onUpgrade:     () => void
+  onStartTrial?: (plan: PublicPlan) => void
+  trialLoading?: boolean
 }
 
-function PlanCard({ plan, billing, isCurrent, onUpgrade }: PlanCardProps) {
+function PlanCard({ plan, billing, isCurrent, onUpgrade, onStartTrial, trialLoading }: PlanCardProps) {
   const isCustom = plan.isCustom && Number(plan.monthlyPrice) === 0
 
   let displayPrice: string
@@ -203,6 +206,20 @@ function PlanCard({ plan, billing, isCurrent, onUpgrade }: PlanCardProps) {
         >
           Contactar ventas
         </a>
+      ) : plan.hasTrial && (plan.trialDays ?? 0) > 0 && onStartTrial ? (
+        <button
+          onClick={() => onStartTrial(plan)}
+          disabled={trialLoading}
+          className={[
+            'w-full py-2.5 rounded-xl text-sm font-semibold transition-colors',
+            trialLoading ? 'opacity-60 cursor-wait' : '',
+            plan.isRecommended
+              ? 'bg-brand-600 hover:bg-brand-700 text-white'
+              : 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700',
+          ].join(' ')}
+        >
+          {trialLoading ? 'Activando…' : `Prueba gratuita de ${plan.trialDays} días`}
+        </button>
       ) : (
         <button
           onClick={onUpgrade}
@@ -280,12 +297,35 @@ function BillingToggle({
 export default function PlansPage() {
   const navigate     = useNavigate()
   const subscription = useSubscription()
+  const reloadUser   = useAuthStore((s) => s.reloadUser)
+  const currentUser  = useAuthStore((s) => s.currentUser)
 
   const [plans,          setPlans]          = useState<PublicPlan[]>([])
   const [loading,        setLoading]        = useState(true)
   const [error,          setError]          = useState<string | null>(null)
   const [billing,        setBilling]        = useState<'monthly' | 'annual'>('monthly')
   const [comingSoonOpen, setComingSoonOpen] = useState(false)
+  const [trialLoading,   setTrialLoading]   = useState(false)
+  const [trialError,     setTrialError]     = useState<string | null>(null)
+
+  // Only show trial CTA when user has no plan yet
+  const userHasNoPlan = currentUser?.planId === null || currentUser?.planId === undefined
+
+  async function handleStartTrial(plan: PublicPlan) {
+    if (trialLoading) return
+    setTrialLoading(true)
+    setTrialError(null)
+    try {
+      await startTrial(plan.id)
+      await reloadUser()
+      navigate('/app', { replace: true })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'No se pudo activar la prueba. Intenta de nuevo.'
+      setTrialError(msg)
+    } finally {
+      setTrialLoading(false)
+    }
+  }
 
   function load() {
     setLoading(true)
@@ -369,6 +409,13 @@ export default function PlansPage() {
         )}
 
         {/* Plans grid */}
+        {trialError && (
+          <div className="max-w-md mx-auto bg-red-500/10 border border-red-500/30
+                          rounded-xl px-4 py-3 text-sm text-red-400 text-center">
+            {trialError}
+          </div>
+        )}
+
         {!loading && !error && plans.length > 0 && (
           <div className={`grid grid-cols-1 gap-5 ${gridCols}`}>
             {plans.map((plan) => (
@@ -378,6 +425,8 @@ export default function PlansPage() {
                 billing={billing}
                 isCurrent={subscription.planSlug === plan.slug}
                 onUpgrade={() => setComingSoonOpen(true)}
+                onStartTrial={userHasNoPlan ? handleStartTrial : undefined}
+                trialLoading={trialLoading}
               />
             ))}
           </div>

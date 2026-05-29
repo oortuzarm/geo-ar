@@ -5,9 +5,13 @@ export interface User {
   email:  string
   role:   'user' | 'admin'
   status: 'active' | 'suspended'
-  // Subscription fields — null when the migration hasn't run or plan isn't assigned yet.
+  // Subscription fields — null when plan isn't assigned yet.
+  planId:                 string | null
   subscriptionStatus:     'trial' | 'active' | 'expired' | 'canceled' | null
+  trialStartsAt:          string | null   // ISO-8601
   trialEndsAt:            string | null   // ISO-8601
+  trialActive:            boolean
+  daysRemaining:          number | null
   effectiveLocationLimit: number | null   // null = unlimited
   planName:               string | null
   planSlug:               string | null

@@ -173,6 +173,13 @@ export default function OnboardingFlow() {
         completed,
       })
       await reloadUser()
+      // Redirect to plan selection if the user hasn't chosen a plan yet.
+      // OnboardingFlow renders outside RouterProvider so we use location.href.
+      const freshUser = useAuthStore.getState().currentUser
+      if (completed && freshUser && !freshUser.planId) {
+        window.location.href = '/app/plans'
+        return
+      }
       setDismissed(true)
     } catch {
       // Surface a brief retry hint but don't block — let the user dismiss.

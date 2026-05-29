@@ -59,3 +59,9 @@ export async function getPlans(): Promise<PublicPlan[]> {
   })
   return raw.map(normalizePlan)
 }
+
+export async function startTrial(planId: string): Promise<void> {
+  await apiFetch<{ success: boolean }>(`${BASE}/api/plans/${planId}/start_trial`, {
+    method: 'POST',
+  })
+}

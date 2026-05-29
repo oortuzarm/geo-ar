@@ -26,7 +26,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import DashboardMap from '../map/DashboardMap'
 import IntensityModeSelector from '../map/IntensityModeSelector'
 import type { IntensityMode } from '../map/IntensityModeSelector'
@@ -44,7 +44,6 @@ import PointSummarySheet from '../../pages/Dashboard/PointSummarySheet'
 import ProjectPanel from '../../pages/Dashboard/ProjectPanel'
 import PreviewQRModal from '../../pages/Dashboard/PreviewQRModal'
 import UpgradeModal from '../subscription/UpgradeModal'
-import DemoLimitModal, { DEMO_LIMIT } from '../../pages/Try/DemoLimitModal'
 import { useGeoStore } from '../../store/geoStore'
 import EditorModeContext from '../../contexts/EditorModeContext'
 import type { GeoPoint, MapBounds, PoiSearchResult } from '../../types'
@@ -66,8 +65,6 @@ export interface ProjectEditorProps {
   onAfterPointChange?: () => void
   // Top-level project save (real: complex sync; demo: no-op, autosaved on every change)
   onSaveProject: () => Promise<void>
-  // Called when "Previsualizar" is tapped in demo mode; returns the temp preview URL + token
-  onPreviewOpen?: () => Promise<{ url: string; token: string } | null>
   // Real-mode extras
   onToggleStatus?: () => Promise<void>
   onMediaOrphaned?: (url: string) => void
@@ -102,7 +99,6 @@ export default function ProjectEditor({
   hasUnsavedChanges = false,
   onMarkUnsaved,
   canAddLocation,
-  onPreviewOpen,
 }: ProjectEditorProps) {
   const navigate = useNavigate()
   const {
@@ -129,9 +125,6 @@ export default function ProjectEditor({
   const [leftTab, setLeftTab]                   = useState<'points' | 'project'>('points')
   const [isPublishing, setIsPublishing]         = useState(false)
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
-  const [previewUrl, setPreviewUrl]             = useState<string | null>(null)
-  const [previewToken, setPreviewToken]         = useState<string | null>(null)
-  const [previewLoading, setPreviewLoading]     = useState(false)
   const [mapBounds, setMapBounds]               = useState<MapBounds | null>(null)
   const [poiResults, setPoiResults]             = useState<PoiSearchResult[]>([])
   const [limitOpen, setLimitOpen]               = useState(false)
@@ -479,37 +472,8 @@ export default function ProjectEditor({
     }
   }
 
-  async function openPreview() {
-    if (mode === 'demo' && onPreviewOpen) {
-      setPreviewLoading(true)
-      try {
-        const result = await onPreviewOpen()
-        console.info('[ProjectEditor] openPreview result:', result
-          ? { url: result.url, token: result.token?.slice(0, 8) + '…' }
-          : null)
-        if (result && isMobile) {
-          // Mobile: redirect directly — showing a QR to scan on the same device makes no sense
-          window.location.href = result.url
-        } else if (result) {
-          setPreviewUrl(result.url)
-          setPreviewToken(result.token)
-          setPreviewModalOpen(true)
-        } else {
-          // onPreviewOpen returned null — clear any stale URL so the modal
-          // never shows a previous preview, then open in fallback mode.
-          console.warn('[ProjectEditor] onPreviewOpen returned null — opening modal without token')
-          setPreviewUrl(null)
-          setPreviewToken(null)
-          setPreviewModalOpen(true)
-        }
-      } catch {
-        addToast('No se pudo generar la previsualización', 'error')
-      } finally {
-        setPreviewLoading(false)
-      }
-    } else {
-      setPreviewModalOpen(true)
-    }
+  function openPreview() {
+    setPreviewModalOpen(true)
   }
 
   // ── GPS location ─────────────────────────────────────────────────────────────
@@ -675,7 +639,7 @@ export default function ProjectEditor({
           {/* Mobile topbar */}
           <div className="lg:hidden grid grid-cols-[40px_1fr_auto] items-center h-14 px-3 gap-2">
             <button
-              onClick={() => mode === 'real' ? navigate('/app') : navigate('/')}
+              onClick={() => navigate('/app')}
               className="flex items-center justify-center text-gray-400 hover:text-gray-100 transition-colors"
               aria-label="Volver"
             >
@@ -686,47 +650,27 @@ export default function ProjectEditor({
             <span className="text-sm font-semibold text-gray-100 text-center truncate px-1">
               {project?.title ?? 'Proyecto geolocalizado'}
             </span>
-            {mode === 'real' ? (
-              <Button
-                variant="primary"
-                size="sm"
-                loading={isSaving}
-                onClick={handleSaveProject}
-                className={hasUnsavedChanges ? 'ring-2 ring-yellow-500/50' : ''}
-              >
-                {hasUnsavedChanges ? '● Guardar' : 'Guardar'}
-              </Button>
-            ) : (
-              <div className="flex items-center gap-1.5">
-                <Link
-                  to="/register"
-                  className="text-xs font-medium text-gray-400 hover:text-gray-100
-                             transition-colors whitespace-nowrap"
-                >
-                  Crear cuenta
-                </Link>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  loading={previewLoading}
-                  onClick={() => { void openPreview() }}
-                >
-                  Previsualizar
-                </Button>
-              </div>
-            )}
+            <Button
+              variant="primary"
+              size="sm"
+              loading={isSaving}
+              onClick={handleSaveProject}
+              className={hasUnsavedChanges ? 'ring-2 ring-yellow-500/50' : ''}
+            >
+              {hasUnsavedChanges ? '● Guardar' : 'Guardar'}
+            </Button>
           </div>
 
           {/* Desktop topbar */}
           <div className="hidden lg:flex items-center h-14 px-4 gap-3">
             <button
-              onClick={() => mode === 'real' ? navigate('/app') : navigate('/')}
+              onClick={() => navigate('/app')}
               className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-100 transition-colors flex-shrink-0"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              {mode === 'real' ? 'Volver' : 'Inicio'}
+              Volver
             </button>
 
             <div className="w-px h-5 bg-gray-700" />
@@ -736,8 +680,7 @@ export default function ProjectEditor({
             </span>
 
             <div className="flex items-center gap-2 flex-shrink-0">
-              {mode === 'real' ? (
-                <>
+              <>
                   {intensityOn ? (
                     <div className="flex items-center gap-2 flex-shrink-0 bg-emerald-900/20
                                     border border-emerald-800/50 rounded-full pl-3 pr-1 h-8">
@@ -832,23 +775,6 @@ export default function ProjectEditor({
                     Guardar proyecto
                   </Button>
                 </>
-              ) : (
-                <>
-                  <Button variant="ghost" size="sm" loading={previewLoading} onClick={() => { void openPreview() }}>
-                    Previsualizar
-                  </Button>
-                  <span className="text-xs text-gray-500 hidden sm:block">
-                    {DEMO_LIMIT - points.length} de {DEMO_LIMIT} disponibles
-                  </span>
-                  <Link
-                    to="/register"
-                    className="flex items-center px-4 h-8 rounded-full text-xs font-semibold
-                               bg-brand-600 hover:bg-brand-500 text-white transition-colors"
-                  >
-                    Crear cuenta gratuita
-                  </Link>
-                </>
-              )}
             </div>
           </div>
         </header>
@@ -1448,17 +1374,12 @@ export default function ProjectEditor({
             projectTitle={project.title}
             isOpen={previewModalOpen}
             onClose={() => setPreviewModalOpen(false)}
-            temporaryNote={mode === 'demo'}
-            publicUrl={previewUrl ?? undefined}
-            token={previewToken ?? undefined}
           />
         )}
 
         {/* Limit reached modal */}
         {limitOpen && (
-          mode === 'real'
-            ? <UpgradeModal onClose={() => setLimitOpen(false)} reason="limit" />
-            : <DemoLimitModal onClose={() => setLimitOpen(false)} />
+          <UpgradeModal onClose={() => setLimitOpen(false)} reason="limit" />
         )}
 
         <Modal

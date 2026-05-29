@@ -22,12 +22,9 @@ import AdminPage                from './pages/Admin/AdminPage'
 import AdminPlansPage          from './pages/Admin/AdminPlansPage'
 import AdminOnboardingPage     from './pages/Admin/AdminOnboardingPage'
 import PlansPage               from './pages/Plans/PlansPage'
-import SelectPlanPage          from './pages/Plans/SelectPlanPage'
 import AccountPage              from './pages/Account/AccountPage'
 import PrivacyPolicyPage        from './pages/Legal/PrivacyPolicyPage'
 import TermsAndConditionsPage   from './pages/Legal/TermsAndConditionsPage'
-import TryPage                  from './pages/Try/TryPage'
-import TemporaryPreviewPage     from './pages/TemporaryPreview/TemporaryPreviewPage'
 import PricingPage              from './pages/Landing/PricingPage'
 import CommunityPage            from './pages/Community/CommunityPage'
 import ProtectedRoute           from './components/auth/ProtectedRoute'
@@ -56,8 +53,6 @@ const publicRoutes = [
   { path: '/public/:id',                 element: <PublicPage /> },
   { path: '/embed/:id',                  element: <EmbedPage /> },
   { path: '/accept-invitation/:token',   element: <AcceptInvitationPage /> },
-  { path: '/try',                        element: <TryPage /> },
-  { path: '/temporary/:token',           element: <TemporaryPreviewPage /> },
   { path: '/community',                  element: <CommunityPage /> },
 ]
 
@@ -79,7 +74,6 @@ const protectedChildren = [
       { path: 'projects',   element: <HomePage /> },
     ],
   },
-  { path: '/app/select-plan',      element: <SelectPlanPage /> },
   { path: '/project/new',         element: <DashboardPage /> },
   { path: '/project/:id',         element: <DashboardPage /> },
   { path: '/project/:id/preview', element: <PreviewPage /> },

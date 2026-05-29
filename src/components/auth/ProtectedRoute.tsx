@@ -1,13 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import Spinner from '../ui/Spinner'
-import { usePendingClaim } from '../../hooks/usePendingClaim'
-
-/**
- * Wraps routes that require an authenticated session.
- * Must be rendered after App.tsx has called refreshSession().
- * Shows a spinner while the session check is still in flight.
- */
 export default function ProtectedRoute() {
   const { isAuthenticated, isLoading, isInitialized } = useAuthStore()
 
@@ -16,8 +9,6 @@ export default function ProtectedRoute() {
     '| isLoading:', isLoading,
     '| isInitialized:', isInitialized,
   )
-
-  usePendingClaim()
 
   if (!isInitialized || isLoading) {
     return (

@@ -1,21 +1,12 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import QRCode from 'qrcode'
 import Spinner from '../../components/ui/Spinner'
-import { useAuthStore } from '../../store/authStore'
-import { PENDING_CLAIM_KEY } from '../../hooks/usePendingClaim'
 
 interface PreviewQRModalProps {
   projectId: string
   projectTitle?: string
   isOpen: boolean
   onClose: () => void
-  /** When true, shows the 30-minute expiration note and the "Guardar experiencia" CTA */
-  temporaryNote?: boolean
-  /** Override the default /public/:id URL (used for temporary preview links) */
-  publicUrl?: string
-  /** Temporary preview token — enables the authenticated claim flow */
-  token?: string
 }
 
 function toFileStem(title: string | undefined): string {
@@ -34,27 +25,12 @@ export default function PreviewQRModal({
   projectTitle,
   isOpen,
   onClose,
-  temporaryNote = false,
-  publicUrl: publicUrlProp,
-  token,
 }: PreviewQRModalProps) {
-  const navigate = useNavigate()
-  const { isAuthenticated } = useAuthStore()
-
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [qrError,   setQrError]   = useState(false)
   const [loading,   setLoading]   = useState(false)
-  const [claimError, setClaimError] = useState<string | null>(null)
 
-  const resolvedUrl = publicUrlProp ?? `${window.location.origin}/public/${projectId}`
-
-  // Log token state whenever the modal opens — helps trace the demo claim flow
-  useEffect(() => {
-    if (!isOpen) return
-    console.info('[PreviewQRModal] opened — token:', token ? token.slice(0, 8) + '…' : null,
-      '| publicUrl:', publicUrlProp ?? null,
-      '| temporaryNote:', temporaryNote)
-  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
+  const resolvedUrl = `${window.location.origin}/public/${projectId}`
 
   // Generate QR each time the modal opens
   useEffect(() => {
@@ -62,7 +38,6 @@ export default function PreviewQRModal({
     setLoading(true)
     setQrError(false)
     setQrDataUrl(null)
-    setClaimError(null)
     QRCode.toDataURL(resolvedUrl, {
       width: 280,
       margin: 2,
@@ -106,40 +81,6 @@ export default function PreviewQRModal({
       a.click()
       URL.revokeObjectURL(objectUrl)
     } catch { /* non-critical */ }
-  }
-
-  function handleSaveExperience() {
-    setClaimError(null)
-
-    if (!isAuthenticated) {
-      if (!token) {
-        console.error('[PreviewQRModal] "Guardar experiencia" pressed but token is null/undefined.',
-          'Props received — publicUrl:', publicUrlProp, '| token:', token,
-          '| Probably onPreviewOpen() returned null or token was not propagated.')
-        setClaimError('No se pudo preparar la experiencia. Cerrá este modal y presioná "Previsualizar" nuevamente.')
-        return
-      }
-      // Persist token so usePendingClaim can redirect to plan selection after auth
-      localStorage.setItem(PENDING_CLAIM_KEY, token)
-      console.info('[PreviewQRModal] Stored pending claim token', token.slice(0, 8) + '…',
-        '— navigating to /register')
-      navigate(`/register?claim_preview_token=${encodeURIComponent(token)}`)
-      onClose()
-      return
-    }
-
-    // Already authenticated → go to plan selection (claim happens there)
-    if (!token) {
-      console.warn('[PreviewQRModal] Authenticated but token is null — going to /app')
-      navigate('/app')
-      onClose()
-      return
-    }
-
-    localStorage.setItem(PENDING_CLAIM_KEY, token)
-    console.info('[PreviewQRModal] Authenticated — redirecting to plan selection for token', token.slice(0, 8) + '…')
-    navigate(`/app/select-plan?claim_preview_token=${encodeURIComponent(token)}`)
-    onClose()
   }
 
   if (!isOpen) return null
@@ -236,32 +177,6 @@ export default function PreviewQRModal({
             </div>
           )}
 
-          {/* Demo-only: expiration note + save CTA */}
-          {temporaryNote && (
-            <>
-              <p className="text-[11px] text-gray-500 text-center leading-relaxed">
-                Link temporal · válido por 30 minutos
-              </p>
-              <button
-                onClick={handleSaveExperience}
-                className="block w-full py-2.5 px-4 rounded-xl
-                           bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700
-                           text-white text-sm font-semibold text-center
-                           transition-colors"
-              >
-                Guardar experiencia
-              </button>
-              {claimError ? (
-                <p className="text-[11px] text-red-400 text-center -mt-2 leading-relaxed">
-                  {claimError}
-                </p>
-              ) : (
-                <p className="text-[11px] text-gray-600 text-center -mt-2">
-                  {isAuthenticated ? 'Se creará un proyecto en tu cuenta' : 'Gratis · sin tarjeta de crédito'}
-                </p>
-              )}
-            </>
-          )}
         </div>
       </div>
     </div>

@@ -198,7 +198,7 @@ export default function LiveVisitsPage() {
     <div className="text-gray-100 overflow-x-hidden">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10 hidden md:block">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center gap-3">
           <LiveDot />
           <h1 className="font-bold text-gray-100">Visitas en Vivo</h1>
@@ -210,6 +210,15 @@ export default function LiveVisitsPage() {
 
       {/* ── Main ───────────────────────────────────────────────────────────── */}
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+
+        {/* ── Mobile page header ─────────────────────────────────────────────── */}
+        <div className="md:hidden flex items-center gap-2.5 pb-2">
+          <LiveDot />
+          <div>
+            <h1 className="text-lg font-bold text-gray-100">Visitas en Vivo</h1>
+            <p className="text-xs text-gray-500 mt-0.5">Actividad en tiempo real</p>
+          </div>
+        </div>
 
         {/* ── 1. General ─────────────────────────────────────────────────────── */}
         <section className="space-y-3">

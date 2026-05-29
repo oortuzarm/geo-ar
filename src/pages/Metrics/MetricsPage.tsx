@@ -1056,35 +1056,20 @@ export default function MetricsPage() {
     <div className="text-gray-100 min-h-full overflow-x-hidden">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <header className="border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm sticky top-0 z-20">
+      <header className="border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm sticky top-0 z-20 hidden md:block">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center gap-3">
-
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2.5 md:hidden shrink-0">
-            <div className="w-7 h-7 bg-brand-600 rounded-lg flex items-center justify-center">
-              <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              </svg>
-            </div>
-          </div>
-
-          {/* Desktop title */}
-          <h1 className="hidden md:block text-xl font-bold text-gray-100 shrink-0">Métricas</h1>
-
-          {/* Period badge */}
-          <div className="ml-auto flex items-center gap-2 shrink-0 bg-gray-800 border border-gray-700/60 rounded-xl px-3 py-1.5">
-            <svg className="w-3.5 h-3.5 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span className="text-xs text-gray-400 whitespace-nowrap">Todo el período</span>
-          </div>
+          <h1 className="text-xl font-bold text-gray-100 shrink-0">Analytics</h1>
         </div>
       </header>
 
       {/* ── Body ─────────────────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+
+        {/* Mobile page header */}
+        <div className="md:hidden mb-4">
+          <h1 className="text-lg font-bold text-gray-100">Analytics</h1>
+          <p className="text-xs text-gray-500 mt-0.5">Métricas y comportamiento</p>
+        </div>
 
         {/* Loading */}
         {(workspaceLoading || dataLoading) && <PageSkeleton />}

@@ -360,19 +360,9 @@ export default function WorkspacePage() {
     <div className="text-gray-100">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10 hidden md:block">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-
-          {/* Mobile: logo (desktop sidebar already shows it) */}
-          <div className="flex items-center md:hidden">
-            <img
-              src="/logo-blanco.png"
-              alt="Ubyca"
-              className="h-8 w-auto object-contain select-none"
-              draggable={false}
-            />
-          </div>
-          <h1 className="hidden md:block font-bold text-gray-100">Ubicaciones</h1>
+          <h1 className="font-bold text-gray-100">Ubicaciones</h1>
 
           <div className="flex items-center gap-2 relative">
             <Button
@@ -382,7 +372,6 @@ export default function WorkspacePage() {
             >
               Previsualizar
             </Button>
-
             <button
               onClick={() => setShareOpen(true)}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium
@@ -392,29 +381,11 @@ export default function WorkspacePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
               </svg>
-              <span className="hidden sm:inline">Compartir</span>
+              Compartir
             </button>
-
-
-            {/* Mobile: circular FAB — matches the editor's add-point button */}
-            <button
-              onClick={() => { if (atLimit) { setUpgradeOpen(true); return }; navigate(editorUrl) }}
-              title={atLimit ? 'Límite de ubicaciones alcanzado' : 'Nueva ubicación'}
-              className="md:hidden w-9 h-9 flex items-center justify-center rounded-full
-                         bg-brand-600 hover:bg-brand-500 active:bg-brand-700
-                         text-white transition-colors
-                         shadow-[0_4px_16px_rgba(2,132,199,0.35)]"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
-
-            {/* Desktop: text button */}
             <Button
               onClick={() => { if (atLimit) { setUpgradeOpen(true); return }; navigate(editorUrl) }}
               title={atLimit ? 'Límite de ubicaciones alcanzado' : undefined}
-              className="hidden md:inline-flex"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -427,6 +398,48 @@ export default function WorkspacePage() {
 
       {/* ── Main ───────────────────────────────────────────────────────────── */}
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+
+          {/* Mobile page header */}
+          <div className="md:hidden flex items-start justify-between gap-3">
+            <div>
+              <h1 className="text-lg font-bold text-gray-100">Ubicaciones</h1>
+              <p className="text-xs text-gray-500 mt-0.5">Gestiona tus puntos GPS</p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => setPreviewOpen(true)}
+                className="p-2 rounded-lg text-gray-400 hover:text-gray-100 hover:bg-gray-800 transition-colors"
+                title="Previsualizar"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setShareOpen(true)}
+                className="p-2 rounded-lg text-gray-400 hover:text-gray-100 hover:bg-gray-800 transition-colors"
+                title="Compartir"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => { if (atLimit) { setUpgradeOpen(true); return }; navigate(editorUrl) }}
+                title={atLimit ? 'Límite de ubicaciones alcanzado' : 'Nueva ubicación'}
+                className="w-8 h-8 flex items-center justify-center rounded-full
+                           bg-brand-600 hover:bg-brand-500 text-white transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
+          </div>
 
           {/* ── Trial banner ──────────────────────────────────────────── */}
           {subscription.isTrialActive && (

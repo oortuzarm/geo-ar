@@ -263,21 +263,19 @@ export default function IntegrationsPage() {
     <div className="text-gray-100 min-h-full">
 
       {/* ── Sticky header ──────────────────────────────────────────────────── */}
-      <header className="border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm sticky top-0 z-20">
+      <header className="border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm sticky top-0 z-20 hidden md:block">
         <div className="max-w-3xl mx-auto px-6 h-16 flex items-center gap-3">
-          <img src="/logo-mark.png" alt="" className="h-7 w-auto md:hidden" draggable={false} />
-          <h1 className="hidden md:block text-sm font-semibold text-gray-100">Integraciones</h1>
+          <h1 className="text-sm font-semibold text-gray-100">Integraciones</h1>
         </div>
       </header>
 
       {/* ── Body ───────────────────────────────────────────────────────────── */}
       <div className="max-w-3xl mx-auto px-6 py-6 space-y-6">
 
-        <div>
-          <h2 className="text-lg font-semibold text-gray-100">Integraciones</h2>
-          <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-            Conecta Ubyca a sitios web, aplicaciones móviles, códigos QR y sistemas propios mediante API.
-          </p>
+        {/* Mobile page header */}
+        <div className="md:hidden">
+          <h1 className="text-lg font-bold text-gray-100">Integraciones</h1>
+          <p className="text-xs text-gray-500 mt-0.5">API, sitios web y aplicaciones</p>
         </div>
 
         <WebsiteCard />

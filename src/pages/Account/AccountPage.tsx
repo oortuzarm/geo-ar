@@ -570,23 +570,20 @@ export default function AccountPage() {
     <div className="text-gray-100 min-h-full">
 
       {/* ── Header ── */}
-      <header className="border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm sticky top-0 z-20">
+      <header className="border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm sticky top-0 z-20 hidden md:block">
         <div className="max-w-3xl mx-auto px-6 h-16 flex items-center gap-3">
-          {/* Mobile logo mark */}
-          <div className="flex items-center gap-2.5 md:hidden shrink-0">
-            <div className="w-7 h-7 bg-brand-600 rounded-lg flex items-center justify-center">
-              <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
-          </div>
-          <h1 className="hidden md:block text-xl font-bold text-gray-100">Mi cuenta</h1>
+          <h1 className="text-xl font-bold text-gray-100">Mi cuenta</h1>
         </div>
       </header>
 
       {/* ── Body ── */}
       <div className="max-w-3xl mx-auto px-6 py-6 space-y-6">
+
+        {/* Mobile page header */}
+        <div className="md:hidden">
+          <h1 className="text-lg font-bold text-gray-100">Mi cuenta</h1>
+          <p className="text-xs text-gray-500 mt-0.5">Perfil y configuración</p>
+        </div>
 
         {/* Tab bar */}
         <div className="flex border-b border-gray-800">

@@ -306,20 +306,9 @@ export default function MembersPage() {
       <ToastContainer />
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10 hidden md:block">
         <div className="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
-
-          {/* Mobile logo */}
-          <div className="flex items-center md:hidden">
-            <img
-              src="/logo-blanco.png"
-              alt="Ubyca"
-              className="h-8 w-auto object-contain select-none"
-              draggable={false}
-            />
-          </div>
-          <h1 className="hidden md:block font-bold text-gray-100">Miembros</h1>
-
+          <h1 className="font-bold text-gray-100">Miembros</h1>
           {isOwner && (
             <Button onClick={() => setShowInvite(true)} size="sm">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -334,6 +323,23 @@ export default function MembersPage() {
 
       {/* ── Main ────────────────────────────────────────────────────────────── */}
       <main className="max-w-3xl mx-auto px-6 py-8">
+
+        {/* Mobile page header */}
+        <div className="md:hidden flex items-start justify-between gap-3 mb-6">
+          <div>
+            <h1 className="text-lg font-bold text-gray-100">Miembros</h1>
+            <p className="text-xs text-gray-500 mt-0.5">Gestiona tu organización</p>
+          </div>
+          {isOwner && (
+            <Button onClick={() => setShowInvite(true)} size="sm">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+              Invitar
+            </Button>
+          )}
+        </div>
 
         {/* Loading */}
         {loading && (

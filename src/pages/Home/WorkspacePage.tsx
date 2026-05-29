@@ -271,12 +271,12 @@ export default function WorkspacePage() {
     }
   }
 
-  // Analytics map for entries/clicks sort — fetched lazily
+  // Analytics map for entries/clicks columns — fetched on mount for any sort order
   const [analyticsMap, setAnalyticsMap] = useState<Record<string, PointAnalytics> | null>(null)
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
 
   useEffect(() => {
-    if ((sortKey !== 'entries' && sortKey !== 'clicks') || !project?.id) return
+    if (!project?.id) return
     if (analyticsMap !== null) return
     let cancelled = false
     setAnalyticsLoading(true)
@@ -290,7 +290,7 @@ export default function WorkspacePage() {
       .catch(() => { /* fallback to 0 */ })
       .finally(() => { if (!cancelled) setAnalyticsLoading(false) })
     return () => { cancelled = true }
-  }, [sortKey, project?.id, analyticsMap])
+  }, [project?.id, analyticsMap])
 
   // Filtered + sorted list — base for pagination
   const processedPoints = useMemo(() => {

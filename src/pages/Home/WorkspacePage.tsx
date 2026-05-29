@@ -789,7 +789,7 @@ export default function WorkspacePage() {
             {mapVisible && (
               <div
                 className="rounded-2xl overflow-hidden border border-gray-800"
-                style={{ height: '320px' }}
+                style={{ height: '420px' }}
               >
                 <WorkspaceMap
                   points={points}

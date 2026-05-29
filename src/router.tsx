@@ -22,6 +22,7 @@ import AdminPage                from './pages/Admin/AdminPage'
 import AdminPlansPage          from './pages/Admin/AdminPlansPage'
 import AdminOnboardingPage     from './pages/Admin/AdminOnboardingPage'
 import PlansPage               from './pages/Plans/PlansPage'
+import IntegrationsPage        from './pages/Integrations/IntegrationsPage'
 import AccountPage              from './pages/Account/AccountPage'
 import PrivacyPolicyPage        from './pages/Legal/PrivacyPolicyPage'
 import TermsAndConditionsPage   from './pages/Legal/TermsAndConditionsPage'
@@ -69,7 +70,8 @@ const protectedChildren = [
       { path: 'members',    element: <MembersPage /> },
       { path: 'account',    element: <AccountPage /> },
       { path: 'settings',   element: <SettingsPage /> },
-      { path: 'plans',      element: <PlansPage /> },
+      { path: 'plans',         element: <PlansPage /> },
+      { path: 'integrations',  element: <IntegrationsPage /> },
       // Legacy multi-project view — kept accessible but not linked from the sidebar
       { path: 'projects',   element: <HomePage /> },
     ],

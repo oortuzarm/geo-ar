@@ -76,6 +76,15 @@ function AccountIcon() {
   )
 }
 
+function IntegrationsIcon() {
+  return (
+    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+    </svg>
+  )
+}
+
 // ── Plan sidebar widget ────────────────────────────────────────────────────────
 
 function PlanSidebarWidget() {
@@ -360,6 +369,13 @@ export default function AppShell() {
             <AccountIcon />
             Mi cuenta
           </NavLink>
+          <NavLink
+            to="/app/integrations"
+            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
+          >
+            <IntegrationsIcon />
+            Integraciones
+          </NavLink>
         </nav>
 
         {/* Plan widget — visible on all /app/* routes */}
@@ -441,6 +457,13 @@ export default function AppShell() {
           >
             <AccountIcon />
             Mi cuenta
+          </NavLink>
+          <NavLink
+            to="/app/integrations"
+            className={({ isActive }) => `${bottom.link} ${isActive ? bottom.active : bottom.idle}`}
+          >
+            <IntegrationsIcon />
+            API
           </NavLink>
           {currentUser?.role === 'admin' && (
             <NavLink

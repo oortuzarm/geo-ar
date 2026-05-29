@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import GpsIntensityMap from '../../components/map/GpsIntensityMap'
 import type { IntensityLevel } from '../../components/map/GpsIntensityMap'
@@ -76,7 +77,9 @@ const INTENSITY_DOT: Record<IntensityLevel, string> = {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function LiveVisitsPage() {
+  const navigate = useNavigate()
   const { project, points, loading } = useWorkspace()
+  const editorUrl = project ? `/project/${project.id}` : null
 
   const [liveData,    setLiveData]    = useState<LiveVisitsResponse | null>(null)
   const [intensityMode, setIntensityMode] = useState<IntensityMode>('live')
@@ -317,6 +320,19 @@ export default function LiveVisitsPage() {
                 {mapVisible ? 'Ocultar mapa' : 'Mostrar mapa'}
               </button>
               <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
+              {editorUrl && (
+                <button
+                  onClick={() => navigate(editorUrl)}
+                  className="text-xs text-brand-400 hover:text-brand-300 transition-colors
+                             flex items-center gap-1"
+                >
+                  Ir al editor
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                      d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
 

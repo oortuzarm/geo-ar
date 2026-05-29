@@ -97,6 +97,20 @@ export default function LiveVisitsPage() {
     })
   }
 
+  const LIVE_GPS_POINTS_KEY = 'live_visits_show_gps_points'
+  const [showGpsPoints, setShowGpsPoints] = useState<boolean>(() => {
+    const stored = localStorage.getItem(LIVE_GPS_POINTS_KEY)
+    if (stored !== null) return stored === 'true'
+    return true  // show points by default
+  })
+  function handleGpsPointsToggle() {
+    setShowGpsPoints(v => {
+      const next = !v
+      localStorage.setItem(LIVE_GPS_POINTS_KEY, String(next))
+      return next
+    })
+  }
+
   // Polling: fetch live data every 15 s while the page is open.
   useEffect(() => {
     if (!project?.id) return
@@ -291,6 +305,12 @@ export default function LiveVisitsPage() {
             <SectionLabel>Mapa de Intensidad GPS</SectionLabel>
             <div className="flex items-center gap-3">
               <button
+                onClick={handleGpsPointsToggle}
+                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                {showGpsPoints ? 'Ocultar puntos' : 'Mostrar puntos'}
+              </button>
+              <button
                 onClick={handleMapToggle}
                 className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
               >
@@ -305,7 +325,7 @@ export default function LiveVisitsPage() {
               {mapVisible && (
                 <>
                   <div className="relative rounded-2xl overflow-hidden border border-gray-800" style={{ height: '420px' }}>
-                    <GpsIntensityMap points={points} activeNow={mapActiveNow} />
+                    <GpsIntensityMap points={points} activeNow={mapActiveNow} showPoints={showGpsPoints} />
                     {intensityMode === 'historical' && historicalLoading && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-950/70 backdrop-blur-sm">
                         <Spinner size="lg" />

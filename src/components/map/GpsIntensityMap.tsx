@@ -44,11 +44,12 @@ function FitBounds({ points }: { points: GeoPoint[] }) {
 // ── Public component ──────────────────────────────────────────────────────────
 
 export interface GpsIntensityMapProps {
-  points:     GeoPoint[]
-  activeNow?: Record<string, number>  // pointId → active visitor count; omit to use mock
+  points:      GeoPoint[]
+  activeNow?:  Record<string, number>  // pointId → active visitor count; omit to use mock
+  showPoints?: boolean                 // render pin markers; default true
 }
 
-export default function GpsIntensityMap({ points, activeNow }: GpsIntensityMapProps) {
+export default function GpsIntensityMap({ points, activeNow, showPoints = true }: GpsIntensityMapProps) {
   const resolvedActiveNow: Record<string, number> = {}
   points.forEach((p) => {
     resolvedActiveNow[p.id] = activeNow !== undefined
@@ -72,7 +73,7 @@ export default function GpsIntensityMap({ points, activeNow }: GpsIntensityMapPr
       />
       <FitBounds points={points} />
       <IntensityLayer points={points} activeNow={resolvedActiveNow} />
-      {points.map((point) => (
+      {showPoints && points.map((point) => (
         <Marker
           key={point.id}
           position={[point.latitude, point.longitude]}

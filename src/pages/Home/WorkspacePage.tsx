@@ -228,7 +228,7 @@ export default function WorkspacePage() {
   const [mapVisible, setMapVisible] = useState<boolean>(() => {
     const stored = localStorage.getItem(MAP_VISIBLE_KEY)
     if (stored !== null) return stored === 'true'
-    return window.innerWidth >= 768  // desktop: visible; mobile: hidden
+    return false  // hidden by default on all devices
   })
   function handleMapToggle() {
     setMapVisible(v => {

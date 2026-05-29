@@ -127,12 +127,11 @@ function PlanSidebarWidget() {
 
 function CommunitySidebarWidget() {
   const { project, updateProject } = useWorkspaceStore()
-  const communityMapEnabled         = useSettingsStore((s) => s.communityMapEnabled)
-  const communityMapDisabledTitle   = useSettingsStore((s) => s.communityMapDisabledTitle)
-  const communityMapDisabledDescription = useSettingsStore((s) => s.communityMapDisabledDescription)
+  const communityMapEnabled = useSettingsStore((s) => s.communityMapEnabled)
   const subscription = useSubscription()
   const [toggling, setToggling] = useState(false)
 
+  if (!communityMapEnabled) return null
   if (!project || project.status !== 'active') return null
 
   const subscriptionActive = subscription.isTrialActive || subscription.status === 'active'
@@ -150,20 +149,16 @@ function CommunitySidebarWidget() {
   }
 
   return (
-    <div className="relative mx-3 pt-3 pb-3 border-t border-gray-800/60 flex flex-col gap-2.5">
+    <div className="mx-3 pt-3 pb-3 border-t border-gray-800/60 flex flex-col gap-2.5">
 
       {/* Title */}
       <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider leading-none">
-        {!communityMapEnabled && communityMapDisabledTitle
-          ? communityMapDisabledTitle
-          : 'Mapa comunitario Ubyca'}
+        Mapa comunitario Ubyca
       </p>
 
       {/* Subtitle */}
       <p className="text-[11px] text-gray-600 leading-snug">
-        {!communityMapEnabled && communityMapDisabledDescription
-          ? communityMapDisabledDescription
-          : 'Amplia el alcance de tu proyecto permitiendo que más personas puedan descubrirlo'}
+        Amplia el alcance de tu proyecto permitiendo que más personas puedan descubrirlo
       </p>
 
       {/* Status badge */}
@@ -236,22 +231,6 @@ function CommunitySidebarWidget() {
         </button>
       </div>
 
-      {/* Global disabled overlay */}
-      {!communityMapEnabled && (
-        <div className="absolute inset-0 rounded-lg bg-gray-950/85 backdrop-blur-[2px]
-                        flex flex-col items-center justify-center gap-1.5 px-3 text-center z-10">
-          {communityMapDisabledTitle && (
-            <p className="text-[11px] font-semibold text-gray-200 leading-snug">
-              {communityMapDisabledTitle}
-            </p>
-          )}
-          {communityMapDisabledDescription && (
-            <p className="text-[11px] text-gray-500 leading-relaxed">
-              {communityMapDisabledDescription}
-            </p>
-          )}
-        </div>
-      )}
     </div>
   )
 }

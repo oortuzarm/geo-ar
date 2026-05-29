@@ -224,6 +224,20 @@ export default function WorkspacePage() {
   const communityMapDisabledDescription = useSettingsStore((s) => s.communityMapDisabledDescription)
   const { setWorkspace, updateProject: syncProject } = useWorkspaceStore()
 
+  const MAP_VISIBLE_KEY = 'workspace_map_visible'
+  const [mapVisible, setMapVisible] = useState<boolean>(() => {
+    const stored = localStorage.getItem(MAP_VISIBLE_KEY)
+    if (stored !== null) return stored === 'true'
+    return window.innerWidth >= 768  // desktop: visible; mobile: hidden
+  })
+  function handleMapToggle() {
+    setMapVisible(v => {
+      const next = !v
+      localStorage.setItem(MAP_VISIBLE_KEY, String(next))
+      return next
+    })
+  }
+
   const [shareOpen,         setShareOpen]        = useState(false)
   const [previewOpen,       setPreviewOpen]      = useState(false)
   const [upgradeOpen,       setUpgradeOpen]      = useState(false)
@@ -752,28 +766,38 @@ export default function WorkspacePage() {
           <section>
             <div className="flex items-center justify-between mb-3">
               <SectionLabel>Mapa</SectionLabel>
-              <button
-                onClick={() => navigate(editorUrl)}
-                className="text-xs text-brand-400 hover:text-brand-300 transition-colors
-                           flex items-center gap-1"
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleMapToggle}
+                  className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                >
+                  {mapVisible ? 'Ocultar mapa' : 'Mostrar mapa'}
+                </button>
+                <button
+                  onClick={() => navigate(editorUrl)}
+                  className="text-xs text-brand-400 hover:text-brand-300 transition-colors
+                             flex items-center gap-1"
+                >
+                  Ir al editor
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                      d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            {mapVisible && (
+              <div
+                className="rounded-2xl overflow-hidden border border-gray-800"
+                style={{ height: '320px' }}
               >
-                Ir al editor
-                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
-                    d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-            <div
-              className="rounded-2xl overflow-hidden border border-gray-800"
-              style={{ height: '320px' }}
-            >
-              <WorkspaceMap
-                points={points}
-                onMarkerClick={() => navigate(editorUrl)}
-                hoveredPointId={hoveredPointId}
-              />
-            </div>
+                <WorkspaceMap
+                  points={points}
+                  onMarkerClick={() => navigate(editorUrl)}
+                  hoveredPointId={hoveredPointId}
+                />
+              </div>
+            )}
           </section>
 
           {/* ── Locations table ───────────────────────────────────────── */}

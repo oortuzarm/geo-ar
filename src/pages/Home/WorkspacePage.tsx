@@ -364,15 +364,36 @@ export default function WorkspacePage() {
   const [hoveredPointId, setHoveredPointId] = useState<string | null>(null)
 
   // ── Search & sort ───────────────────────────────────────────────────────────
-  type SortKey = 'name' | 'date' | 'entries' | 'clicks'
+  type SortKey       = 'name' | 'date' | 'entries' | 'clicks'
+  type SortDirection = 'asc' | 'desc'
+
   const SORT_OPTIONS: { key: SortKey; label: string }[] = [
     { key: 'name',    label: 'Nombre'   },
     { key: 'date',    label: 'Fecha'    },
     { key: 'entries', label: 'Entradas' },
     { key: 'clicks',  label: 'Clics'    },
   ]
-  const [search,  setSearch]  = useState('')
-  const [sortKey, setSortKey] = useState<SortKey>('name')
+
+  // Default direction per criterion
+  const DEFAULT_DIR: Record<SortKey, SortDirection> = {
+    name:    'asc',
+    date:    'desc',
+    entries: 'desc',
+    clicks:  'desc',
+  }
+
+  const [search,        setSearch]        = useState('')
+  const [sortKey,       setSortKey]       = useState<SortKey>('name')
+  const [sortDirection, setSortDirection] = useState<SortDirection>(DEFAULT_DIR['name'])
+
+  function handleSortClick(key: SortKey) {
+    if (key === sortKey) {
+      setSortDirection((d) => d === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortKey(key)
+      setSortDirection(DEFAULT_DIR[key])
+    }
+  }
 
   // Analytics map for entries/clicks sort — fetched lazily
   const [analyticsMap, setAnalyticsMap] = useState<Record<string, PointAnalytics> | null>(null)
@@ -397,33 +418,34 @@ export default function WorkspacePage() {
 
   // Filtered + sorted list — base for pagination
   const processedPoints = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    let list = q
+    const q    = search.trim().toLowerCase()
+    const flip = sortDirection === 'asc' ? 1 : -1
+    let list   = q
       ? points.filter((p) => p.name.toLowerCase().includes(q))
       : [...points]
 
     if (sortKey === 'name') {
-      list.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }))
+      list.sort((a, b) => flip * a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }))
     } else if (sortKey === 'date') {
       list.sort((a, b) => {
         const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0
         const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0
-        return tb - ta
+        return flip * (ta - tb)
       })
     } else if (sortKey === 'entries') {
-      list.sort((a, b) => (analyticsMap?.[b.id]?.radiusEntries ?? 0) - (analyticsMap?.[a.id]?.radiusEntries ?? 0))
+      list.sort((a, b) => flip * ((analyticsMap?.[a.id]?.radiusEntries ?? 0) - (analyticsMap?.[b.id]?.radiusEntries ?? 0)))
     } else {
-      list.sort((a, b) => (analyticsMap?.[b.id]?.clicks ?? 0) - (analyticsMap?.[a.id]?.clicks ?? 0))
+      list.sort((a, b) => flip * ((analyticsMap?.[a.id]?.clicks ?? 0) - (analyticsMap?.[b.id]?.clicks ?? 0)))
     }
     return list
-  }, [points, search, sortKey, analyticsMap])
+  }, [points, search, sortKey, sortDirection, analyticsMap])
 
   // ── Locations pagination ────────────────────────────────────────────────────
   const PAGE_SIZE = 10
   const [locPage, setLocPage] = useState(0)
 
-  // Reset to page 1 when search or sort changes
-  useEffect(() => { setLocPage(0) }, [search, sortKey])
+  // Reset to page 1 when search, sort key, or direction changes
+  useEffect(() => { setLocPage(0) }, [search, sortKey, sortDirection])
 
   const totalPages  = Math.max(1, Math.ceil(processedPoints.length / PAGE_SIZE))
   const safePage    = Math.min(locPage, totalPages - 1)
@@ -910,18 +932,23 @@ export default function WorkspacePage() {
                   return (
                     <button
                       key={opt.key}
-                      onClick={() => setSortKey(opt.key)}
+                      onClick={() => handleSortClick(opt.key)}
                       className={[
-                        'flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors',
+                        'flex items-center gap-0.5 px-2 py-1 rounded-md text-[11px] font-medium transition-colors',
                         active
                           ? 'bg-gray-700/80 text-gray-100'
                           : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/60',
                       ].join(' ')}
                     >
-                      {loading && (
-                        <span className="inline-block w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />
-                      )}
+                      {loading ? (
+                        <span className="inline-block w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin mr-0.5" />
+                      ) : null}
                       {opt.label}
+                      {active && (
+                        <span className="ml-0.5 leading-none">
+                          {sortDirection === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
                     </button>
                   )
                 })}

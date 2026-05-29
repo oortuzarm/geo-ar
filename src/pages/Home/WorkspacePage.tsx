@@ -554,33 +554,6 @@ export default function WorkspacePage() {
             </div>
           )}
 
-          {/* ── Subscription strip — mobile only (desktop: sidebar plan widget) ── */}
-          {(subscription.planName || subscription.limit !== null) && (
-            <div className="md:hidden flex items-center gap-4 flex-wrap">
-              {subscription.planName && (
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full border text-xs
-                                 font-medium bg-brand-500/10 text-brand-400 border-brand-500/20">
-                  {subscription.planName}
-                </span>
-              )}
-              {subscription.limit !== null && (
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <div className="flex-1 bg-gray-800 rounded-full h-1.5 overflow-hidden min-w-[80px]">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        atLimit ? 'bg-red-500' : 'bg-brand-500'
-                      }`}
-                      style={{ width: `${Math.min(100, (points.length / subscription.limit) * 100)}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-gray-500 tabular-nums whitespace-nowrap">
-                    {points.length} / {subscription.limit} ubicaciones
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* ── KPI strip ─────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
 

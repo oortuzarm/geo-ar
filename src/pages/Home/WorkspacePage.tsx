@@ -210,129 +210,6 @@ function WorkspaceMenu({
   )
 }
 
-// ── Embed modal ───────────────────────────────────────────────────────────────
-
-function EmbedModal({
-  projectId,
-  onClose,
-}: {
-  projectId: string
-  onClose: () => void
-}) {
-  const [copied, setCopied] = useState(false)
-
-  const iframeCode = [
-    `<iframe`,
-    `  src="${window.location.origin}/embed/${projectId}"`,
-    `  width="100%"`,
-    `  height="600"`,
-    `  style="border:0;border-radius:16px;overflow:hidden;"`,
-    `  allow="geolocation"`,
-    `  allowfullscreen`,
-    `></iframe>`,
-  ].join('\n')
-
-  async function handleCopy() {
-    try { await navigator.clipboard.writeText(iframeCode) }
-    catch {
-      const ta = document.createElement('textarea')
-      ta.value = iframeCode
-      ta.style.position = 'fixed'
-      ta.style.opacity = '0'
-      document.body.appendChild(ta)
-      ta.focus(); ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2500)
-  }
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [onClose])
-
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-lg">
-        <div className="p-6">
-          <div className="flex items-start justify-between mb-1">
-            <h3 className="text-base font-semibold text-gray-100">Integrar en sitio web</h3>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-300 transition-colors -mt-0.5 ml-4"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <p className="text-sm text-gray-400 mb-4">
-            Copia este código y pégalo en tu sitio web para mostrar este mapa interactivo.
-          </p>
-          <div className="relative">
-            <textarea
-              readOnly
-              value={iframeCode}
-              rows={8}
-              onClick={(e) => (e.target as HTMLTextAreaElement).select()}
-              className="w-full bg-gray-950 border border-gray-700 rounded-lg px-4 py-3
-                         text-xs font-mono text-gray-300 resize-none focus:outline-none
-                         focus:ring-1 focus:ring-brand-500 leading-relaxed"
-            />
-          </div>
-          <div className="flex gap-3 mt-4">
-            <button
-              onClick={handleCopy}
-              className={[
-                'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold',
-                'transition-all duration-150 focus:outline-none focus:ring-2',
-                'focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-gray-900',
-                copied
-                  ? 'bg-emerald-700 text-white'
-                  : 'bg-brand-600 hover:bg-brand-500 text-white',
-              ].join(' ')}
-            >
-              {copied ? (
-                <>
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Copiado
-                </>
-              ) : (
-                <>
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  Copiar código
-                </>
-              )}
-            </button>
-            <button
-              onClick={() => window.open(`${window.location.origin}/embed/${projectId}`, '_blank')}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium
-                         bg-gray-800 hover:bg-gray-700 text-gray-200 transition-colors
-                         focus:outline-none focus:ring-2 focus:ring-gray-600
-                         focus:ring-offset-2 focus:ring-offset-gray-900"
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              Abrir preview
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function WorkspacePage() {
@@ -348,7 +225,6 @@ export default function WorkspacePage() {
   const { setWorkspace, updateProject: syncProject } = useWorkspaceStore()
 
   const [shareOpen,         setShareOpen]        = useState(false)
-  const [embedOpen,         setEmbedOpen]        = useState(false)
   const [previewOpen,       setPreviewOpen]      = useState(false)
   const [upgradeOpen,       setUpgradeOpen]      = useState(false)
   const [deleteConfirm,     setDeleteConfirm]    = useState(false)
@@ -636,18 +512,6 @@ export default function WorkspacePage() {
                   d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
               </svg>
               <span className="hidden sm:inline">Compartir</span>
-            </button>
-
-            <button
-              onClick={() => setEmbedOpen(true)}
-              title="Integrar en sitio web"
-              className="p-2 rounded-lg text-gray-400 hover:text-gray-100 hover:bg-gray-800
-                         transition-colors cursor-pointer"
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
             </button>
 
             <WorkspaceMenu
@@ -1213,12 +1077,7 @@ export default function WorkspacePage() {
         onClose={() => setShareOpen(false)}
       />
 
-      {embedOpen && (
-        <EmbedModal
-          projectId={project.id}
-          onClose={() => setEmbedOpen(false)}
-        />
-      )}
+
 
       {upgradeOpen && (
         <UpgradeModal

@@ -1,8 +1,22 @@
 import { useState } from 'react'
 import { useGeoStore } from '../../store/geoStore'
+import { useWorkspaceStore } from '../../store/workspaceStore'
 
-const MOCK_API_KEY = 'ubk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+const MOCK_API_KEY  = 'ubk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 const BASE_ENDPOINT = 'https://api.ubyca.com/v1'
+
+function buildIframeCode(projectId: string) {
+  return [
+    `<iframe`,
+    `  src="${window.location.origin}/embed/${projectId}"`,
+    `  width="100%"`,
+    `  height="600"`,
+    `  style="border:0;border-radius:16px;overflow:hidden;"`,
+    `  allow="geolocation"`,
+    `  allowfullscreen`,
+    `></iframe>`,
+  ].join('\n')
+}
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
@@ -12,60 +26,133 @@ function Card({ children, className = '' }: { children: React.ReactNode; classNa
   )
 }
 
-function SectionHeader({ title, description }: { title: string; description?: string }) {
+// ── Card 1: Sitio web ─────────────────────────────────────────────────────────
+
+function WebsiteCard() {
+  const [copied, setCopied] = useState(false)
+  const project = useWorkspaceStore((s) => s.project)
+
+  const iframeCode = project ? buildIframeCode(project.id) : ''
+
+  async function handleCopy() {
+    if (!project) return
+    try { await navigator.clipboard.writeText(iframeCode) }
+    catch {
+      const ta = document.createElement('textarea')
+      ta.value = iframeCode
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.focus(); ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2500)
+  }
+
   return (
-    <div className="mb-4">
-      <h2 className="text-base font-semibold text-gray-100">{title}</h2>
-      {description && <p className="text-xs text-gray-500 mt-0.5">{description}</p>}
-    </div>
+    <Card>
+      <div className="mb-4">
+        <h2 className="text-base font-semibold text-gray-100">Sitio web</h2>
+        <p className="text-xs text-gray-500 mt-0.5">
+          Inserta tu mapa interactivo en cualquier sitio web mediante un iframe.
+        </p>
+      </div>
+
+      {!project ? (
+        <p className="text-sm text-gray-600 py-2">
+          Carga un workspace para ver el código de integración.
+        </p>
+      ) : (
+        <>
+          <textarea
+            readOnly
+            value={iframeCode}
+            rows={8}
+            onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+            className="w-full bg-gray-950 border border-gray-700 rounded-lg px-4 py-3
+                       text-xs font-mono text-gray-300 resize-none focus:outline-none
+                       focus:ring-1 focus:ring-brand-500 leading-relaxed mb-4"
+          />
+          <div className="flex gap-3">
+            <button
+              onClick={handleCopy}
+              className={[
+                'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold',
+                'transition-all duration-150 focus:outline-none focus:ring-2',
+                'focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-gray-900',
+                copied
+                  ? 'bg-emerald-700 text-white'
+                  : 'bg-brand-600 hover:bg-brand-500 text-white',
+              ].join(' ')}
+            >
+              {copied ? (
+                <>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Copiado
+                </>
+              ) : (
+                <>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copiar código
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => window.open(`${window.location.origin}/embed/${project.id}`, '_blank')}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium
+                         bg-gray-800 hover:bg-gray-700 text-gray-200 transition-colors
+                         focus:outline-none focus:ring-2 focus:ring-gray-600
+                         focus:ring-offset-2 focus:ring-offset-gray-900"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              Abrir preview
+            </button>
+          </div>
+        </>
+      )}
+    </Card>
   )
 }
 
-export default function IntegrationsPage() {
+// ── Card 2: API de Ubyca ──────────────────────────────────────────────────────
+
+function ApiCard() {
   const [keyVisible, setKeyVisible] = useState(false)
   const addToast = useGeoStore((s) => s.addToast)
 
   function copyToClipboard(text: string, label: string) {
-    navigator.clipboard.writeText(text).then(() => {
-      addToast(`${label} copiado`, 'success')
-    }).catch(() => {
-      addToast('No se pudo copiar', 'error')
-    })
+    navigator.clipboard.writeText(text)
+      .then(() => addToast(`${label} copiado`, 'success'))
+      .catch(() => addToast('No se pudo copiar', 'error'))
   }
 
   return (
-    <div className="text-gray-100 min-h-full">
+    <Card>
+      <div className="mb-5">
+        <h2 className="text-base font-semibold text-gray-100">API de Ubyca</h2>
+        <p className="text-xs text-gray-500 mt-0.5">
+          Conecta aplicaciones móviles, sitios web, códigos QR y sistemas propios mediante la API de Ubyca.
+        </p>
+      </div>
 
-      {/* ── Sticky header ──────────────────────────────────────────────────── */}
-      <header className="border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm sticky top-0 z-20">
-        <div className="max-w-3xl mx-auto px-6 h-16 flex items-center gap-3">
-          <img src="/logo-mark.png" alt="" className="h-7 w-auto md:hidden" draggable={false} />
-          <h1 className="hidden md:block text-sm font-semibold text-gray-100">Integraciones</h1>
-        </div>
-      </header>
+      <div className="space-y-5 divide-y divide-white/[0.05]">
 
-      {/* ── Body ───────────────────────────────────────────────────────────── */}
-      <div className="max-w-3xl mx-auto px-6 py-6 space-y-6">
-
-        {/* Page title */}
+        {/* A: API Key */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-100">Integraciones</h2>
-          <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-            Conecta Ubyca a sitios web, aplicaciones móviles, códigos QR y sistemas propios mediante API.
-          </p>
-        </div>
-
-        {/* ── API Key ──────────────────────────────────────────────────────── */}
-        <Card>
-          <SectionHeader
-            title="API Key"
-            description="Usa esta clave para autenticar tus peticiones a la API de Ubyca."
-          />
-
-          <div className="flex items-center gap-2 mb-4">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">API Key</p>
+          <div className="flex items-center gap-2 mb-3">
             <div className="flex-1 bg-gray-800 border border-gray-700/50 rounded-lg px-3 py-2.5
-                            font-mono text-sm text-gray-300 overflow-hidden text-ellipsis whitespace-nowrap
-                            select-all">
+                            font-mono text-sm text-gray-300 overflow-hidden text-ellipsis whitespace-nowrap">
               {keyVisible ? MOCK_API_KEY : '•'.repeat(36)}
             </div>
             <button
@@ -77,7 +164,6 @@ export default function IntegrationsPage() {
               {keyVisible ? 'Ocultar' : 'Ver'}
             </button>
           </div>
-
           <div className="flex items-center justify-between flex-wrap gap-3">
             <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -102,14 +188,11 @@ export default function IntegrationsPage() {
               </button>
             </div>
           </div>
-        </Card>
+        </div>
 
-        {/* ── Endpoint base ─────────────────────────────────────────────────── */}
-        <Card>
-          <SectionHeader
-            title="Endpoint base"
-            description="URL raíz para todas las peticiones a la API de Ubyca."
-          />
+        {/* B: Endpoint base */}
+        <div className="pt-5">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Endpoint base</p>
           <div className="flex items-center gap-2">
             <div className="flex-1 bg-gray-800 border border-gray-700/50 rounded-lg px-3 py-2.5
                             font-mono text-sm text-gray-300 select-all">
@@ -124,14 +207,11 @@ export default function IntegrationsPage() {
               Copiar
             </button>
           </div>
-        </Card>
+        </div>
 
-        {/* ── Estado del plan ───────────────────────────────────────────────── */}
-        <Card>
-          <SectionHeader
-            title="Estado del plan"
-            description="Uso de la API según tu plan actual."
-          />
+        {/* C: Estado del plan */}
+        <div className="pt-5">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Estado del plan</p>
           <dl className="space-y-3">
             <div className="flex items-center justify-between">
               <dt className="text-sm text-gray-500">API incluida</dt>
@@ -148,19 +228,20 @@ export default function IntegrationsPage() {
               <dd className="text-sm font-medium text-gray-200">0</dd>
             </div>
           </dl>
-        </Card>
+        </div>
 
-        {/* ── Documentación ─────────────────────────────────────────────────── */}
-        <Card>
-          <SectionHeader title="Documentación" />
-          <p className="text-sm text-gray-500 leading-relaxed mb-5">
+        {/* D: Documentación */}
+        <div className="pt-5">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Documentación</p>
+          <p className="text-sm text-gray-500 leading-relaxed mb-4">
             Usa la API de Ubyca para validar si un usuario está dentro de una ubicación, consultar
             reglas de acceso y desbloquear contenido desde sistemas externos.
           </p>
           <button
-            disabled
+            onClick={() => addToast('Documentación disponible próximamente', 'info')}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
-                       border border-gray-700/50 text-gray-500 opacity-50 cursor-not-allowed"
+                       border border-gray-700/50 text-gray-400 hover:text-gray-200 hover:bg-gray-800/60
+                       transition-all duration-150"
           >
             Ver documentación
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,7 +249,39 @@ export default function IntegrationsPage() {
                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
           </button>
-        </Card>
+        </div>
+
+      </div>
+    </Card>
+  )
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+export default function IntegrationsPage() {
+  return (
+    <div className="text-gray-100 min-h-full">
+
+      {/* ── Sticky header ──────────────────────────────────────────────────── */}
+      <header className="border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm sticky top-0 z-20">
+        <div className="max-w-3xl mx-auto px-6 h-16 flex items-center gap-3">
+          <img src="/logo-mark.png" alt="" className="h-7 w-auto md:hidden" draggable={false} />
+          <h1 className="hidden md:block text-sm font-semibold text-gray-100">Integraciones</h1>
+        </div>
+      </header>
+
+      {/* ── Body ───────────────────────────────────────────────────────────── */}
+      <div className="max-w-3xl mx-auto px-6 py-6 space-y-6">
+
+        <div>
+          <h2 className="text-lg font-semibold text-gray-100">Integraciones</h2>
+          <p className="text-sm text-gray-500 mt-1 leading-relaxed">
+            Conecta Ubyca a sitios web, aplicaciones móviles, códigos QR y sistemas propios mediante API.
+          </p>
+        </div>
+
+        <WebsiteCard />
+        <ApiCard />
 
       </div>
     </div>

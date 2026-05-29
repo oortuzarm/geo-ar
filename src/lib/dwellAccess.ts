@@ -12,7 +12,7 @@ export interface DwellAccessState {
 
 /**
  * Single source of truth for the dwell access gate.
- * Used by both /public and /temporary routes.
+ * Used by /public routes.
  *
  * blocksAccess = requiresDwell && !isCompleted
  *   — true when dwell is required and the timer hasn't finished

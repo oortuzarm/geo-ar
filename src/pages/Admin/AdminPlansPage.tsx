@@ -513,7 +513,7 @@ function PlanFormModal({ plan, saving, onSave, onClose }: PlanFormModalProps) {
                 <TextInput
                   value={form.ctaUrl}
                   onChange={v => set('ctaUrl', v)}
-                  placeholder="/try o /contact"
+                  placeholder="/register o /contact"
                 />
               </div>
             </div>

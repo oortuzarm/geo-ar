@@ -1,15 +1,14 @@
 // ─── Architecture contract ────────────────────────────────────────────────────
 //
-// ProjectEditor is the SINGLE canonical editor used by BOTH /project/:id and /try.
-// TryPage and DashboardPage are thin persistence wrappers — they differ only in HOW
-// they store data, NOT in what UI they render.
+// ProjectEditor is the SINGLE canonical editor, used by /project/:id.
+// DashboardPage is a thin persistence wrapper — it controls HOW data is stored,
+// NOT what UI is rendered.
 //
 // The `mode` prop ('real' | 'demo') may only affect:
 //   • Persistence layer   (API vs localStorage)
 //   • Upload restrictions (Vercel Blob vs base64 / blocked)
 //   • Point limits        (subscription vs DEMO_LIMIT)
 //   • Paywalls / CTAs     (UpgradeModal vs DemoLimitModal, "Crear cuenta" links)
-//   • Claim / auth flow   (PreviewQRModal temporaryNote, onPreviewOpen)
 //   • Status toggle       (publish/draft — real only, demo has no concept)
 //
 // The `mode` prop must NOT affect:

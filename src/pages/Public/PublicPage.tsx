@@ -1250,7 +1250,7 @@ export default function PublicPage({
       const isInside  = dist <= pt.activationRadius
       const wasInside = wasInsideRef.current[pt.id] ?? false
       if (!wasInside && isInside) {
-        // id may be undefined in /temporary preview — skip analytics, still vibrate
+        // id may be undefined in prefetched preview mode — skip analytics, still vibrate
         if (id) trackRadiusEnter(id, pt.id, userLocation)
         if ('vibrate' in navigator) navigator.vibrate(20)
       }
@@ -1262,7 +1262,7 @@ export default function PublicPage({
   // Entry threshold : dist ≤ activationRadius  (mirrors the access check)
   // Exit  threshold : dist > activationRadius + 20 m  (hysteresis gap)
   useEffect(() => {
-    // id may be undefined in /temporary preview (route param is "token", not "id").
+    // id may be undefined in prefetched preview mode (route param is "token", not "id").
     // The timer logic never needs id — only analytics calls do.
     if (!userLocation) return
     for (const pt of points) {
@@ -1341,7 +1341,7 @@ export default function PublicPage({
   // reglas de acceso no se consideran aquí.
   // Fire-and-forget: errors are swallowed so they never surface to the visitor.
   useEffect(() => {
-    if (!id) return // skip in /temporary preview (no project id)
+    if (!id) return // skip in prefetched preview mode (no project id)
     const sessionId = getLiveVisitSessionId()
     const timer = setInterval(() => {
       const loc   = userLocationRef.current
@@ -1624,7 +1624,7 @@ export default function PublicPage({
 
     const isOpen = point.accessMode === 'open'
 
-    // ── Temporary preview (prefetched) mode ───────────────────────────────────
+    // ── Prefetched preview mode ────────────────────────────────────────────────
     // The project and points exist only in the backend's temporary cache, not in
     // the real database. Skip geolocation and the /access API entirely; navigate
     // directly to the configured URL so the creator can validate the experience.
@@ -1642,7 +1642,7 @@ export default function PublicPage({
         setAccessError({ pointId: point.id, message: 'Este punto no tiene una URL configurada.' })
         return
       }
-      // Media content (video/audio/file) is not available in temporary previews.
+      // Media content (video/audio/file) is not available in prefetched previews.
       setAccessError({ pointId: point.id, message: 'El contenido multimedia solo está disponible en experiencias publicadas.' })
       return
     }
@@ -2022,7 +2022,7 @@ export default function PublicPage({
           )}
         </button>
 
-      {/* ── Temporary preview watermark — desktop only (md+)
+      {/* ── Preview watermark — desktop only (md+)
             On mobile the badge renders inside the MapStyleToggle wrapper above */}
       {isTemporaryPreview && (
         <div className="hidden md:block absolute bottom-6 left-6 z-[600] pointer-events-none">

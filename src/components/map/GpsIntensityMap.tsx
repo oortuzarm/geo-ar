@@ -3,6 +3,7 @@ import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
 import { createGeoIcon } from './createGeoIcon'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
 import IntensityLayer from './IntensityLayer'
+import { getMapTileUrl, MAP_ATTRIBUTION } from '../../config/mapStyles'
 import type { GeoPoint } from '../../types'
 
 // Re-export so callers (LiveVisitsPage) can keep their existing import paths.
@@ -67,8 +68,8 @@ export default function GpsIntensityMap({ points, activeNow, showPoints = true }
       zoomControl
     >
       <TileLayer
-        url={`https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=${import.meta.env.VITE_MAPTILER_KEY}`}
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.maptiler.com/">MapTiler</a>'
+        url={getMapTileUrl('toner')}
+        attribution={MAP_ATTRIBUTION}
         maxZoom={20}
       />
       <FitBounds points={points} />

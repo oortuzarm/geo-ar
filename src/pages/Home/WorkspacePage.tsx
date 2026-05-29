@@ -37,6 +37,13 @@ const CT_COLOR: Record<ContentType, string> = {
   file:  'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function formatDate(iso?: string): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('es', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -957,30 +964,28 @@ export default function WorkspacePage() {
             <div className="hidden md:block rounded-2xl border border-gray-800 overflow-hidden">
               <table className="w-full text-sm table-fixed">
                 <colgroup>
-                  <col className="w-10" />        {/* # */}
-                  <col />                          {/* Nombre — flexible */}
-                  <col className="w-28" />         {/* Tipo */}
-                  <col className="w-28" />         {/* Estado */}
-                  <col className="w-24" />         {/* Radio */}
-                  <col className="w-28" />         {/* Acciones */}
+                  <col className="w-10" />   {/* # */}
+                  <col />                     {/* Nombre — flexible */}
+                  <col className="w-24" />   {/* Fecha */}
+                  <col className="w-20" />   {/* Tipo */}
+                  <col className="w-24" />   {/* Estado */}
+                  <col className="w-20" />   {/* Radio */}
+                  <col className="w-20" />   {/* Entradas */}
+                  <col className="w-16" />   {/* Clics */}
+                  <col className="w-24" />   {/* Acciones */}
                 </colgroup>
                 <thead>
                   <tr className="border-b border-gray-800 bg-gray-900/60">
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
-                      #
-                    </th>
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
-                      Nombre
-                    </th>
-                    <th className="text-center px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
-                      Tipo
-                    </th>
-                    <th className="text-center px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
-                      Estado
-                    </th>
-                    <th className="text-center px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
-                      Radio
-                    </th>
+                    {(['#', 'Nombre'] as const).map((h) => (
+                      <th key={h} className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                        {h}
+                      </th>
+                    ))}
+                    {(['Fecha', 'Tipo', 'Estado', 'Radio', 'Entradas', 'Clics'] as const).map((h) => (
+                      <th key={h} className="text-center px-3 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                        {h}
+                      </th>
+                    ))}
                     <th className="text-right px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
                       Acciones
                     </th>
@@ -989,7 +994,7 @@ export default function WorkspacePage() {
                 <tbody>
                   {processedPoints.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-600">
+                      <td colSpan={9} className="px-4 py-12 text-center text-sm text-gray-600">
                         {points.length === 0
                           ? 'Aún no tenés ubicaciones creadas.'
                           : 'Ninguna ubicación coincide con la búsqueda.'}
@@ -1002,6 +1007,8 @@ export default function WorkspacePage() {
                         ? activeOverrides[point.id]
                         : point.active
                       const isToggling = togglingPointId === point.id
+                      const entries    = analyticsMap?.[point.id]?.radiusEntries ?? 0
+                      const clicks     = analyticsMap?.[point.id]?.clicks ?? 0
                       return (
                         <tr
                           key={point.id}
@@ -1029,10 +1036,13 @@ export default function WorkspacePage() {
                               </span>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-center">
+                          <td className="px-3 py-3 text-center text-gray-500 text-xs tabular-nums">
+                            {formatDate(point.createdAt)}
+                          </td>
+                          <td className="px-3 py-3 text-center">
                             <ContentTypeBadge ct={ct} />
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-3 py-3">
                             <div className="flex items-center justify-center">
                               <StatusToggle
                                 active={isActive}
@@ -1041,8 +1051,14 @@ export default function WorkspacePage() {
                               />
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-center text-gray-400 text-xs tabular-nums">
+                          <td className="px-3 py-3 text-center text-gray-400 text-xs tabular-nums">
                             {point.activationRadius} m
+                          </td>
+                          <td className="px-3 py-3 text-center text-gray-400 text-xs tabular-nums">
+                            {entries > 999 ? `${(entries / 1000).toFixed(1)}k` : entries}
+                          </td>
+                          <td className="px-3 py-3 text-center text-gray-400 text-xs tabular-nums">
+                            {clicks > 999 ? `${(clicks / 1000).toFixed(1)}k` : clicks}
                           </td>
                           <td className="px-4 py-3 text-right">
                             <button
@@ -1076,6 +1092,8 @@ export default function WorkspacePage() {
                     ? activeOverrides[point.id]
                     : point.active
                   const isToggling = togglingPointId === point.id
+                  const entries    = analyticsMap?.[point.id]?.radiusEntries ?? 0
+                  const clicks     = analyticsMap?.[point.id]?.clicks ?? 0
                   return (
                     <div
                       key={point.id}
@@ -1096,6 +1114,11 @@ export default function WorkspacePage() {
                             disabled={isToggling || !!togglingPointId}
                             onToggle={() => handleTogglePoint(point)}
                           />
+                        </div>
+                        <div className="flex items-center gap-3 mt-1.5 text-[11px] text-gray-600 tabular-nums">
+                          <span>{formatDate(point.createdAt)}</span>
+                          <span>{entries} ent.</span>
+                          <span>{clicks} clics</span>
                         </div>
                       </div>
                       <button

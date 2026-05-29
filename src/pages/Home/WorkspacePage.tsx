@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import { useGeoStore } from '../../store/geoStore'
 import { useAuthStore } from '../../store/authStore'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { deleteMediaFile, isVercelBlobUrl } from '../../lib/deleteMediaFile'
-import { fetchProjectAnalytics } from '../../lib/analytics'
+import { fetchProjectAnalytics, fetchProjectAnalyticsByPoint, type PointAnalytics } from '../../lib/analytics'
 import { ApiError } from '../../lib/apiFetch'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
@@ -356,16 +356,73 @@ export default function WorkspacePage() {
   // ── Table ↔ map hover interaction ──────────────────────────────────────────
   const [hoveredPointId, setHoveredPointId] = useState<string | null>(null)
 
+  // ── Search & sort ───────────────────────────────────────────────────────────
+  type SortKey = 'name' | 'date' | 'entries' | 'clicks'
+  const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+    { key: 'name',    label: 'Nombre'   },
+    { key: 'date',    label: 'Fecha'    },
+    { key: 'entries', label: 'Entradas' },
+    { key: 'clicks',  label: 'Clics'    },
+  ]
+  const [search,  setSearch]  = useState('')
+  const [sortKey, setSortKey] = useState<SortKey>('name')
+
+  // Analytics map for entries/clicks sort — fetched lazily
+  const [analyticsMap, setAnalyticsMap] = useState<Record<string, PointAnalytics> | null>(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+
+  useEffect(() => {
+    if ((sortKey !== 'entries' && sortKey !== 'clicks') || !project?.id) return
+    if (analyticsMap !== null) return
+    let cancelled = false
+    setAnalyticsLoading(true)
+    fetchProjectAnalyticsByPoint(project.id)
+      .then((data) => {
+        if (cancelled) return
+        const map: Record<string, PointAnalytics> = {}
+        data.forEach((row) => { map[row.pointId] = row })
+        setAnalyticsMap(map)
+      })
+      .catch(() => { /* fallback to 0 */ })
+      .finally(() => { if (!cancelled) setAnalyticsLoading(false) })
+    return () => { cancelled = true }
+  }, [sortKey, project?.id, analyticsMap])
+
+  // Filtered + sorted list — base for pagination
+  const processedPoints = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    let list = q
+      ? points.filter((p) => p.name.toLowerCase().includes(q))
+      : [...points]
+
+    if (sortKey === 'name') {
+      list.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }))
+    } else if (sortKey === 'date') {
+      list.sort((a, b) => {
+        const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0
+        const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0
+        return tb - ta
+      })
+    } else if (sortKey === 'entries') {
+      list.sort((a, b) => (analyticsMap?.[b.id]?.radiusEntries ?? 0) - (analyticsMap?.[a.id]?.radiusEntries ?? 0))
+    } else {
+      list.sort((a, b) => (analyticsMap?.[b.id]?.clicks ?? 0) - (analyticsMap?.[a.id]?.clicks ?? 0))
+    }
+    return list
+  }, [points, search, sortKey, analyticsMap])
+
   // ── Locations pagination ────────────────────────────────────────────────────
   const PAGE_SIZE = 10
   const [locPage, setLocPage] = useState(0)
 
-  // Clamp to last valid page when the points list shrinks
-  const totalPages    = Math.max(1, Math.ceil(points.length / PAGE_SIZE))
-  const safePage      = Math.min(locPage, totalPages - 1)
-  const pagedPoints   = points.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE)
-  const firstItem     = points.length === 0 ? 0 : safePage * PAGE_SIZE + 1
-  const lastItem      = Math.min((safePage + 1) * PAGE_SIZE, points.length)
+  // Reset to page 1 when search or sort changes
+  useEffect(() => { setLocPage(0) }, [search, sortKey])
+
+  const totalPages  = Math.max(1, Math.ceil(processedPoints.length / PAGE_SIZE))
+  const safePage    = Math.min(locPage, totalPages - 1)
+  const pagedPoints = processedPoints.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE)
+  const firstItem   = processedPoints.length === 0 ? 0 : safePage * PAGE_SIZE + 1
+  const lastItem    = Math.min((safePage + 1) * PAGE_SIZE, processedPoints.length)
 
   useEffect(() => {
     if (!project) return
@@ -828,11 +885,72 @@ export default function WorkspacePage() {
 
           {/* ── Locations table ───────────────────────────────────────── */}
           <section className="pb-6">
-            <div className="mb-4">
-              <SectionLabel>
-                Ubicaciones{' '}
-                <span className="text-gray-700 normal-case font-normal">({points.length})</span>
-              </SectionLabel>
+            {/* Header row: title + sort pills */}
+            <div className="flex items-center gap-3 mb-3 flex-wrap">
+              <div className="flex-shrink-0">
+                <SectionLabel>
+                  Ubicaciones{' '}
+                  <span className="text-gray-700 normal-case font-normal">
+                    ({processedPoints.length}{processedPoints.length !== points.length ? ` de ${points.length}` : ''})
+                  </span>
+                </SectionLabel>
+              </div>
+              {/* Sort pills */}
+              <div className="flex items-center gap-1 flex-wrap ml-auto">
+                {SORT_OPTIONS.map((opt) => {
+                  const active  = sortKey === opt.key
+                  const loading = analyticsLoading && active
+                  return (
+                    <button
+                      key={opt.key}
+                      onClick={() => setSortKey(opt.key)}
+                      className={[
+                        'flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors',
+                        active
+                          ? 'bg-gray-700/80 text-gray-100'
+                          : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/60',
+                      ].join(' ')}
+                    >
+                      {loading && (
+                        <span className="inline-block w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />
+                      )}
+                      {opt.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Search input */}
+            <div className="relative mb-3">
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500 pointer-events-none"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+              </svg>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar ubicación…"
+                className="w-full bg-gray-900/60 border border-gray-800 rounded-xl
+                           pl-8 pr-4 py-2 text-sm text-gray-200 placeholder-gray-600
+                           focus:outline-none focus:border-gray-600 transition-colors"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500
+                             hover:text-gray-300 transition-colors"
+                  aria-label="Limpiar búsqueda"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
             </div>
 
             {/* Desktop table */}
@@ -869,10 +987,12 @@ export default function WorkspacePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {points.length === 0 ? (
+                  {processedPoints.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-600">
-                        Aún no tenés ubicaciones creadas.
+                        {points.length === 0
+                          ? 'Aún no tenés ubicaciones creadas.'
+                          : 'Ninguna ubicación coincide con la búsqueda.'}
                       </td>
                     </tr>
                   ) : (
@@ -942,9 +1062,11 @@ export default function WorkspacePage() {
             </div>
 
             {/* Mobile: empty message or cards */}
-            {points.length === 0 ? (
+            {processedPoints.length === 0 ? (
               <p className="md:hidden text-sm text-gray-600 text-center py-10">
-                Aún no tenés ubicaciones creadas.
+                {points.length === 0
+                  ? 'Aún no tenés ubicaciones creadas.'
+                  : 'Ninguna ubicación coincide con la búsqueda.'}
               </p>
             ) : (
               <div className="md:hidden space-y-2">
@@ -989,10 +1111,10 @@ export default function WorkspacePage() {
               </div>
             )}
             {/* Pagination footer — shown only when there are enough items */}
-            {points.length > PAGE_SIZE && (
+            {processedPoints.length > PAGE_SIZE && (
               <div className="flex items-center justify-between mt-4 px-1">
                 <p className="text-xs text-gray-500 tabular-nums">
-                  Mostrando {firstItem}–{lastItem} de {points.length} ubicaciones
+                  Mostrando {firstItem}–{lastItem} de {processedPoints.length} ubicaciones
                 </p>
                 <div className="flex items-center gap-3">
                   <button

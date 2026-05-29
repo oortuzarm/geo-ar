@@ -72,7 +72,7 @@ export default function AcceptInvitationPage() {
       // Try to auto-login via session cookie the backend may have set
       try {
         await refreshSession()
-        setTimeout(() => navigate('/app', { replace: true }), 2000)
+        setTimeout(() => navigate('/app/live-visits', { replace: true }), 2000)
       } catch {
         setTimeout(() => navigate('/login', { replace: true }), 2000)
       }

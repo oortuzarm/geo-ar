@@ -13,9 +13,9 @@ export default function LoginPage() {
   const [error,    setError]    = useState<string | null>(null)
   const [loading,  setLoading]  = useState(false)
 
-  // If session already verified and user is logged in, go straight to /app
+  // If session already verified and user is logged in, go straight to /app/live-visits
   if (isInitialized && isAuthenticated) {
-    return <Navigate to="/app" replace />
+    return <Navigate to="/app/live-visits" replace />
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -24,7 +24,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await login({ email, password })
-      navigate('/app', { replace: true })
+      navigate('/app/live-visits', { replace: true })
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 401 || err.status === 422) {

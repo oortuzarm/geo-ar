@@ -29,7 +29,7 @@ export default function RegisterPage() {
   }, [])
 
   if (isInitialized && isAuthenticated) {
-    return <Navigate to="/app" replace />
+    return <Navigate to="/app/live-visits" replace />
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -48,7 +48,7 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       await register({ email, password, passwordConfirmation: confirm })
-      navigate('/app', { replace: true })
+      navigate('/app/live-visits', { replace: true })
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 422) {

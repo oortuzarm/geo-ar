@@ -6,13 +6,15 @@ export interface PublicSettings {
   communityMapEnabled:             boolean
   communityMapDisabledTitle:       string
   communityMapDisabledDescription: string
+  showCommunityMapSection:         boolean
 }
 
 function normalizeSettings(raw: Record<string, unknown>): PublicSettings {
   return {
-    communityMapEnabled:             (raw.communityMapEnabled        ?? raw.community_map_enabled        ?? true) as boolean,
-    communityMapDisabledTitle:       (raw.communityMapDisabledTitle  ?? raw.community_map_disabled_title  ?? '') as string,
+    communityMapEnabled:             (raw.communityMapEnabled        ?? raw.community_map_enabled        ?? true)  as boolean,
+    communityMapDisabledTitle:       (raw.communityMapDisabledTitle  ?? raw.community_map_disabled_title  ?? '')   as string,
     communityMapDisabledDescription: (raw.communityMapDisabledDescription ?? raw.community_map_disabled_description ?? '') as string,
+    showCommunityMapSection:         (raw.showCommunityMapSection    ?? raw.show_community_map_section    ?? true)  as boolean,
   }
 }
 

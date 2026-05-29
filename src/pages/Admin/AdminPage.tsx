@@ -174,12 +174,13 @@ function CommunityStatusBadge({ status }: { status: AdminProject['communityStatu
 // ── Community settings panel ──────────────────────────────────────────────────
 
 function CommunitySettingsPanel() {
-  const [enabled,     setEnabled]     = useState(true)
-  const [title,       setTitle]       = useState('')
-  const [description, setDescription] = useState('')
-  const [loading,     setLoading]     = useState(true)
-  const [saving,      setSaving]      = useState(false)
-  const [saveResult,  setSaveResult]  = useState<'success' | 'error' | null>(null)
+  const [enabled,         setEnabled]         = useState(true)
+  const [title,           setTitle]           = useState('')
+  const [description,     setDescription]     = useState('')
+  const [sectionVisible,  setSectionVisible]  = useState(true)
+  const [loading,         setLoading]         = useState(true)
+  const [saving,          setSaving]          = useState(false)
+  const [saveResult,      setSaveResult]      = useState<'success' | 'error' | null>(null)
 
   useEffect(() => {
     getAdminSettings()
@@ -187,6 +188,7 @@ function CommunitySettingsPanel() {
         setEnabled(s.communityMapEnabled)
         setTitle(s.communityMapDisabledTitle)
         setDescription(s.communityMapDisabledDescription)
+        setSectionVisible(s.showCommunityMapSection)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -207,10 +209,12 @@ function CommunitySettingsPanel() {
         communityMapEnabled:             enabled,
         communityMapDisabledTitle:       title,
         communityMapDisabledDescription: description,
+        showCommunityMapSection:         sectionVisible,
       })
       setEnabled(updated.communityMapEnabled)
       setTitle(updated.communityMapDisabledTitle)
       setDescription(updated.communityMapDisabledDescription)
+      setSectionVisible(updated.showCommunityMapSection)
       setSaveResult('success')
     } catch {
       setSaveResult('error')
@@ -258,6 +262,31 @@ function CommunitySettingsPanel() {
               <span className={[
                 'absolute top-0.5 left-0.5 h-4 w-4 bg-white rounded-full shadow transition-transform',
                 enabled ? 'translate-x-5' : '',
+              ].join(' ')} />
+            </button>
+          </div>
+
+          {/* New switch: show/hide section in app */}
+          <div className="flex items-center justify-between gap-4 pt-1 border-t border-gray-800">
+            <div>
+              <p className="text-sm text-gray-200 font-medium">Mostrar sección Mapa comunitario en la app</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Cuando está desactivado, la sección Mapa comunitario no se muestra en el sidebar desktop ni en el drawer mobile de los usuarios.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={sectionVisible}
+              onClick={() => setSectionVisible((v) => !v)}
+              className={[
+                'relative w-10 h-5 rounded-full flex-shrink-0 transition-colors cursor-pointer',
+                sectionVisible ? 'bg-brand-600' : 'bg-gray-700',
+              ].join(' ')}
+            >
+              <span className={[
+                'absolute top-0.5 left-0.5 h-4 w-4 bg-white rounded-full shadow transition-transform',
+                sectionVisible ? 'translate-x-5' : '',
               ].join(' ')} />
             </button>
           </div>

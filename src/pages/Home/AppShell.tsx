@@ -127,12 +127,14 @@ function PlanSidebarWidget() {
 
 function CommunitySidebarWidget() {
   const { project, updateProject } = useWorkspaceStore()
-  const communityMapEnabled         = useSettingsStore((s) => s.communityMapEnabled)
-  const communityMapDisabledTitle   = useSettingsStore((s) => s.communityMapDisabledTitle)
+  const communityMapEnabled             = useSettingsStore((s) => s.communityMapEnabled)
+  const communityMapDisabledTitle       = useSettingsStore((s) => s.communityMapDisabledTitle)
   const communityMapDisabledDescription = useSettingsStore((s) => s.communityMapDisabledDescription)
+  const showCommunityMapSection         = useSettingsStore((s) => s.showCommunityMapSection)
   const subscription = useSubscription()
   const [toggling, setToggling] = useState(false)
 
+  if (!showCommunityMapSection) return null
   if (!project || project.status !== 'active') return null
 
   const subscriptionActive = subscription.isTrialActive || subscription.status === 'active'

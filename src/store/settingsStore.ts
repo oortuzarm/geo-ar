@@ -11,6 +11,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   communityMapEnabled:             true,
   communityMapDisabledTitle:       '',
   communityMapDisabledDescription: '',
+  showCommunityMapSection:         true,
   isLoaded: false,
 
   async fetchPublicSettings() {

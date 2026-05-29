@@ -83,6 +83,20 @@ export default function LiveVisitsPage() {
   const [historicalMap, setHistoricalMap] = useState<Record<string, number> | null>(null)
   const [historicalLoading, setHistoricalLoading] = useState(false)
 
+  const LIVE_MAP_VISIBLE_KEY = 'live_visits_map_visible'
+  const [mapVisible, setMapVisible] = useState<boolean>(() => {
+    const stored = localStorage.getItem(LIVE_MAP_VISIBLE_KEY)
+    if (stored !== null) return stored === 'true'
+    return true  // visible by default
+  })
+  function handleMapToggle() {
+    setMapVisible(v => {
+      const next = !v
+      localStorage.setItem(LIVE_MAP_VISIBLE_KEY, String(next))
+      return next
+    })
+  }
+
   // Polling: fetch live data every 15 s while the page is open.
   useEffect(() => {
     if (!project?.id) return
@@ -275,35 +289,47 @@ export default function LiveVisitsPage() {
 
           <div className="flex items-center justify-between">
             <SectionLabel>Mapa de Intensidad GPS</SectionLabel>
-            <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleMapToggle}
+                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                {mapVisible ? 'Ocultar mapa' : 'Mostrar mapa'}
+              </button>
+              <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
+            </div>
           </div>
 
           {points.length > 0 ? (
             <>
-              <div className="relative rounded-2xl overflow-hidden border border-gray-800" style={{ height: '420px' }}>
-                <GpsIntensityMap points={points} activeNow={mapActiveNow} />
-                {intensityMode === 'historical' && historicalLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-950/70 backdrop-blur-sm">
-                    <Spinner size="lg" />
+              {mapVisible && (
+                <>
+                  <div className="relative rounded-2xl overflow-hidden border border-gray-800" style={{ height: '420px' }}>
+                    <GpsIntensityMap points={points} activeNow={mapActiveNow} />
+                    {intensityMode === 'historical' && historicalLoading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-950/70 backdrop-blur-sm">
+                        <Spinner size="lg" />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              {/* Legend */}
-              <div className="flex items-center gap-5 flex-wrap">
-                <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
-                  Intensidad:
-                </span>
-                {(['low', 'medium', 'high'] as IntensityLevel[]).map((level) => (
-                  <span key={level} className="flex items-center gap-1.5 text-xs text-gray-400">
-                    <span className={`w-3 h-3 rounded-full ${INTENSITY_DOT[level]} opacity-80 flex-shrink-0`} />
-                    {INTENSITY_LABEL[level]}
-                  </span>
-                ))}
-                <span className="text-[11px] text-gray-600 ml-auto">
-                  {intensityMode === 'historical' ? 'Acumulado histórico · relativa al máximo' : 'Radio máx. 1.000 m por zona'}
-                </span>
-              </div>
+                  {/* Legend */}
+                  <div className="flex items-center gap-5 flex-wrap">
+                    <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
+                      Intensidad:
+                    </span>
+                    {(['low', 'medium', 'high'] as IntensityLevel[]).map((level) => (
+                      <span key={level} className="flex items-center gap-1.5 text-xs text-gray-400">
+                        <span className={`w-3 h-3 rounded-full ${INTENSITY_DOT[level]} opacity-80 flex-shrink-0`} />
+                        {INTENSITY_LABEL[level]}
+                      </span>
+                    ))}
+                    <span className="text-[11px] text-gray-600 ml-auto">
+                      {intensityMode === 'historical' ? 'Acumulado histórico · relativa al máximo' : 'Radio máx. 1.000 m por zona'}
+                    </span>
+                  </div>
+                </>
+              )}
 
               {/* ── 4. Ranking de zonas ─────────────────────────────────────── */}
               <div className="space-y-2">

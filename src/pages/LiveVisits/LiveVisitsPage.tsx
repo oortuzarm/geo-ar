@@ -195,7 +195,7 @@ export default function LiveVisitsPage() {
   const peakHint  = liveData?.peakToday != null ? `${liveData.peakToday.count} registros` : undefined
 
   return (
-    <div className="text-gray-100">
+    <div className="text-gray-100 overflow-x-hidden">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10">
@@ -313,18 +313,18 @@ export default function LiveVisitsPage() {
         {/* ── 3. Mapa de Intensidad GPS ──────────────────────────────────────── */}
         <section className="space-y-4">
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-y-2 min-w-0">
             <SectionLabel>Mapa de Intensidad GPS</SectionLabel>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={handleGpsPointsToggle}
-                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                className="text-xs text-gray-500 hover:text-gray-300 transition-colors whitespace-nowrap"
               >
                 {showGpsPoints ? 'Ocultar puntos' : 'Mostrar puntos'}
               </button>
               <button
                 onClick={handleMapToggle}
-                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                className="text-xs text-gray-500 hover:text-gray-300 transition-colors whitespace-nowrap"
               >
                 {mapVisible ? 'Ocultar mapa' : 'Mostrar mapa'}
               </button>
@@ -333,7 +333,7 @@ export default function LiveVisitsPage() {
                 <button
                   onClick={() => navigate(editorUrl)}
                   className="text-xs text-brand-400 hover:text-brand-300 transition-colors
-                             flex items-center gap-1"
+                             flex items-center gap-1 whitespace-nowrap"
                 >
                   Ir al editor
                   <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

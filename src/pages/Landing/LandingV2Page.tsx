@@ -125,7 +125,7 @@ function HeroSection() {
             className="mt-8 flex items-center gap-3 flex-wrap"
           >
             <a
-              href="https://studio.ubyca.com/try"
+              href="https://studio.ubyca.com/register"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
@@ -792,7 +792,7 @@ function FinalCTASection() {
             Prueba Ubyca creando un proyecto real desde el editor.
           </p>
           <a
-            href="https://studio.ubyca.com/try"
+            href="https://studio.ubyca.com/register"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl

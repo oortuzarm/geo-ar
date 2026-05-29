@@ -863,6 +863,7 @@ export default function WorkspacePage() {
                   <col className="w-20" />   {/* Radio */}
                   <col className="w-20" />   {/* Entradas */}
                   <col className="w-16" />   {/* Clics */}
+                  <col className="w-24" />   {/* Conversión */}
                   <col className="w-24" />   {/* Acciones */}
                 </colgroup>
                 <thead>
@@ -872,7 +873,7 @@ export default function WorkspacePage() {
                         {h}
                       </th>
                     ))}
-                    {(['Fecha', 'Tipo', 'Estado', 'Radio', 'Entradas', 'Clics'] as const).map((h) => (
+                    {(['Fecha', 'Tipo', 'Estado', 'Radio', 'Entradas', 'Clics', 'Conversión'] as const).map((h) => (
                       <th key={h} className="text-center px-3 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
                         {h}
                       </th>
@@ -885,7 +886,7 @@ export default function WorkspacePage() {
                 <tbody>
                   {processedPoints.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="px-4 py-12 text-center text-sm text-gray-600">
+                      <td colSpan={10} className="px-4 py-12 text-center text-sm text-gray-600">
                         {points.length === 0
                           ? 'Aún no tenés ubicaciones creadas.'
                           : 'Ninguna ubicación coincide con la búsqueda.'}
@@ -898,8 +899,14 @@ export default function WorkspacePage() {
                         ? activeOverrides[point.id]
                         : point.active
                       const isToggling = togglingPointId === point.id
-                      const entries    = analyticsMap?.[point.id]?.radiusEntries ?? 0
-                      const clicks     = analyticsMap?.[point.id]?.clicks ?? 0
+                      const entries     = analyticsMap?.[point.id]?.radiusEntries ?? 0
+                      const clicks      = analyticsMap?.[point.id]?.clicks ?? 0
+                      const conversion  = analyticsMap?.[point.id]?.conversion ?? 0
+                      const convCls     = conversion >= 30
+                        ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                        : conversion >= 15
+                        ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                        : 'text-gray-500 bg-gray-800/60 border-gray-700/30'
                       return (
                         <tr
                           key={point.id}
@@ -950,6 +957,12 @@ export default function WorkspacePage() {
                           </td>
                           <td className="px-3 py-3 text-center text-gray-400 text-xs tabular-nums">
                             {clicks > 999 ? `${(clicks / 1000).toFixed(1)}k` : clicks}
+                          </td>
+                          <td className="px-3 py-3 text-center">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full border
+                                             text-[11px] font-semibold tabular-nums ${convCls}`}>
+                              {conversion}%
+                            </span>
                           </td>
                           <td className="px-4 py-3 text-right">
                             <button

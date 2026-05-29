@@ -992,95 +992,6 @@ function KPICard({ label, value, sub, accent, className = '' }: {
   )
 }
 
-// ── Points visual list ────────────────────────────────────────────────────────
-
-function PointsSection({ byPoint }: { byPoint: PointAnalytics[] }) {
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 100)
-    return () => clearTimeout(t)
-  }, [])
-
-  const max = Math.max(...byPoint.map(p => p.radiusEntries), 1)
-
-  if (byPoint.length === 0) {
-    return (
-      <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl px-5 py-10 text-center">
-        <p className="text-sm text-gray-600">Sin datos por punto todavía.</p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl overflow-hidden">
-      <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-200">Por punto</h3>
-        <span className="text-xs text-gray-600">
-          {byPoint.length} punto{byPoint.length !== 1 ? 's' : ''}
-        </span>
-      </div>
-
-      {byPoint.map((pt, i) => {
-        const entPct   = (pt.radiusEntries / max) * 100
-        const convCls  =
-          pt.conversion >= 30
-            ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-            : pt.conversion >= 15
-            ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
-            : 'text-gray-500 bg-gray-800/60 border-gray-700/30'
-
-        return (
-          <div
-            key={pt.pointId}
-            className="flex items-center gap-4 px-5 py-3.5 border-b border-white/[0.04] last:border-0
-                       hover:bg-white/[0.02] transition-colors cursor-default"
-            style={{
-              opacity:   mounted ? 1 : 0,
-              transform: mounted ? 'translateY(0)' : 'translateY(6px)',
-              transition: `opacity 0.35s ease-out ${i * 50}ms, transform 0.35s ease-out ${i * 50}ms`,
-            }}
-          >
-            <span className="w-4 text-xs text-gray-700 tabular-nums text-right shrink-0">
-              {i + 1}
-            </span>
-
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-200 truncate mb-1.5">
-                {pt.pointName || '—'}
-              </p>
-              <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-brand-700 to-brand-400"
-                  style={{
-                    width: mounted ? `${entPct}%` : '0%',
-                    transition: `width 0.7s cubic-bezier(0.4, 0, 0.2, 1) ${i * 50}ms`,
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="text-right shrink-0 w-14">
-              <p className="text-sm font-semibold tabular-nums text-gray-200">{pt.radiusEntries}</p>
-              <p className="text-[10px] text-gray-600">entradas</p>
-            </div>
-
-            <div className="text-right shrink-0 w-10 hidden sm:block">
-              <p className="text-sm font-semibold tabular-nums text-gray-300">{pt.clicks}</p>
-              <p className="text-[10px] text-gray-600">clics</p>
-            </div>
-
-            <span className={`shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full border
-                              text-[11px] font-semibold tabular-nums ${convCls}`}>
-              {pt.conversion}%
-            </span>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function MetricsPage() {
@@ -1269,9 +1180,6 @@ export default function MetricsPage() {
             {displayByPoint !== null && !pointFilter && (
               <InsightsSection summary={displaySummary!} byPoint={displayByPoint} />
             )}
-
-            {/* Points list */}
-            {displayByPoint !== null && <PointsSection byPoint={displayByPoint} />}
 
           </div>
         )}

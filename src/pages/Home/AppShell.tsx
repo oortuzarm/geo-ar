@@ -501,6 +501,9 @@ export default function AppShell() {
           </NavLink>
         </nav>
 
+        {/* Drawer community widget */}
+        <CommunitySidebarWidget />
+
         {/* Drawer plan widget */}
         <PlanSidebarWidget />
 

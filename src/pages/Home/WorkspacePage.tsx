@@ -13,7 +13,7 @@ import PreviewQRModal from '../Dashboard/PreviewQRModal'
 import WorkspaceMap from '../../components/map/WorkspaceMap'
 import UpgradeModal from '../../components/subscription/UpgradeModal'
 import { useSubscription } from '../../hooks/useSubscription'
-import { useSettingsStore } from '../../store/settingsStore'
+
 import { getPointCoverImage } from '../../lib/pointImageUtils'
 import { useWorkspaceStore } from '../../store/workspaceStore'
 import type { ContentType, GeoPoint } from '../../types'
@@ -136,10 +136,7 @@ export default function WorkspacePage() {
   const { project, points, loading, updateProject, refresh } = useWorkspace()
 
   const subscription          = useSubscription()
-  const communityMapEnabled             = useSettingsStore((s) => s.communityMapEnabled)
-  const communityMapDisabledTitle       = useSettingsStore((s) => s.communityMapDisabledTitle)
-  const communityMapDisabledDescription = useSettingsStore((s) => s.communityMapDisabledDescription)
-  const { setWorkspace, updateProject: syncProject } = useWorkspaceStore()
+  const { setWorkspace } = useWorkspaceStore()
 
   const MAP_VISIBLE_KEY = 'workspace_map_visible'
   const [mapVisible, setMapVisible] = useState<boolean>(() => {
@@ -161,7 +158,6 @@ export default function WorkspacePage() {
   const [togglingStatus,    setTogglingStatus]   = useState(false)
   const [totalClicks,       setTotalClicks]       = useState<number | null>(null)
   const [togglingPointId,   setTogglingPointId]  = useState<string | null>(null)
-  const [communityToggling, setCommunityToggling] = useState(false)
   // Optimistic active overrides: pointId → bool. Cleared after server round-trip.
   const [activeOverrides, setActiveOverrides] = useState<Record<string, boolean>>({})
 
@@ -340,22 +336,6 @@ export default function WorkspacePage() {
     }
   }
 
-  async function handleToggleCommunity() {
-    if (!project || communityToggling) return
-    setCommunityToggling(true)
-    try {
-      const updated = await geoProjectsApi.saveProject(project.id, {
-        communityEnabled: !project.communityEnabled,
-      })
-      updateProject(updated)
-      syncProject(updated)
-    } catch {
-      addToast('No se pudo actualizar el mapa comunitario', 'error')
-    } finally {
-      setCommunityToggling(false)
-    }
-  }
-
   return (
     <div className="text-gray-100">
 
@@ -461,96 +441,6 @@ export default function WorkspacePage() {
                   Ver planes
                 </button>
               </p>
-            </div>
-          )}
-
-          {/* ── Community map — mobile card (desktop: sidebar widget via portal) ── */}
-          {project.status === 'active' && (
-            <div className="md:hidden relative bg-gray-900/70 border border-white/[0.07] rounded-2xl p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <SectionLabel>Mapa comunitario de Ubyca</SectionLabel>
-                  <p className="text-xs text-gray-500 mt-1.5 mb-3 leading-relaxed">
-                    Amplia el alcance de tu proyecto permitiendo que más personas puedan descubrirlo.
-                  </p>
-
-                  {project.communityEnabled ? (
-                    <>
-                      {project.communityStatus === 'approved' && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-                          {subscription.isTrialActive || subscription.status === 'active'
-                            ? 'Visible en el mapa comunitario'
-                            : 'Aprobado — inactivo hasta que renueves tu suscripción'}
-                        </span>
-                      )}
-                      {project.communityStatus === 'pending' && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-amber-500/10 text-amber-400 border-amber-500/20">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-                          Esperando aprobación del equipo Ubyca
-                        </span>
-                      )}
-                      {project.communityStatus === 'rejected' && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-red-500/10 text-red-400 border-red-500/20">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
-                          No aprobado — revisá el contenido antes de volver a solicitar
-                        </span>
-                      )}
-                      {project.communityStatus === 'hidden' && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-gray-700/40 text-gray-400 border-gray-600/30">
-                          <span className="w-1.5 h-1.5 rounded-full bg-gray-500 flex-shrink-0" />
-                          Oculto por el equipo Ubyca
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <span className="text-xs text-gray-600">No aparece en el mapa comunitario</span>
-                  )}
-                </div>
-
-                <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => window.open('/community', '_blank')}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150
-                               cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2
-                               focus:ring-offset-gray-900 focus:ring-gray-600
-                               text-gray-400 border-gray-700/50 bg-transparent hover:bg-gray-800"
-                  >
-                    Previsualizar
-                  </button>
-                  <button
-                    onClick={handleToggleCommunity}
-                    disabled={communityToggling}
-                    className={[
-                      'px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150',
-                      'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900',
-                      communityToggling ? 'opacity-50 cursor-wait' : 'cursor-pointer',
-                      project.communityEnabled
-                        ? 'text-gray-400 border-gray-600/40 bg-gray-800 hover:bg-gray-700 focus:ring-gray-600'
-                        : 'text-brand-400 border-brand-500/40 bg-brand-500/10 hover:bg-brand-500/20 focus:ring-brand-500',
-                    ].join(' ')}
-                  >
-                    {communityToggling
-                      ? <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-current/30 border-t-current animate-spin" />Guardando…</span>
-                      : project.communityEnabled ? 'Desactivar' : 'Activar'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Disabled overlay — blocks interaction and shows admin-configured message */}
-              {!communityMapEnabled && (
-                <div className="absolute inset-0 rounded-2xl bg-gray-950/80 backdrop-blur-[2px]
-                                flex flex-col items-center justify-center gap-2 px-6 text-center z-10">
-                  <p className="text-sm font-semibold text-gray-200">
-                    {communityMapDisabledTitle || 'Mapa comunitario próximamente'}
-                  </p>
-                  {communityMapDisabledDescription && (
-                    <p className="text-xs text-gray-500 leading-relaxed max-w-xs">
-                      {communityMapDisabledDescription}
-                    </p>
-                  )}
-                </div>
-              )}
             </div>
           )}
 

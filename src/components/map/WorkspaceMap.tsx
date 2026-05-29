@@ -1,12 +1,11 @@
 import { useEffect } from 'react'
-import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
+import { Circle, MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
 import { createGeoIcon } from './createGeoIcon'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
 import type { GeoPoint } from '../../types'
 
 /**
  * Read-only map for the workspace overview.
- * Reuses the existing createGeoIcon factory for visual consistency.
  * Markers are NOT draggable — this is a display-only component.
  * Fits the viewport to all visible points on mount.
  */
@@ -28,11 +27,15 @@ function FitBounds({ points }: { points: GeoPoint[] }) {
 }
 
 export interface WorkspaceMapProps {
-  points: GeoPoint[]
-  onMarkerClick?: (id: string) => void
+  points:          GeoPoint[]
+  onMarkerClick?:  (id: string) => void
+  hoveredPointId?: string | null
 }
 
-export default function WorkspaceMap({ points, onMarkerClick }: WorkspaceMapProps) {
+export default function WorkspaceMap({ points, onMarkerClick, hoveredPointId = null }: WorkspaceMapProps) {
+  const hoveredPoint = hoveredPointId ? points.find((p) => p.id === hoveredPointId) ?? null : null
+  const anyHovered   = hoveredPointId !== null
+
   return (
     <MapContainer
       center={[-33.4489, -70.6693]}
@@ -48,11 +51,34 @@ export default function WorkspaceMap({ points, onMarkerClick }: WorkspaceMapProp
         maxZoom={20}
       />
       <FitBounds points={points} />
+
+      {/* Subtle glow circle on the hovered point */}
+      {hoveredPoint && (
+        <Circle
+          center={[hoveredPoint.latitude, hoveredPoint.longitude]}
+          radius={Math.min(hoveredPoint.activationRadius, 1000) * 1.5}
+          pathOptions={{
+            color:       '#38bdf8',   // sky-400
+            fillColor:   '#38bdf8',
+            fillOpacity: 0.10,
+            weight:      1.5,
+            opacity:     0.55,
+            interactive: false,
+          }}
+        />
+      )}
+
       {points.map((point) => (
         <Marker
           key={point.id}
           position={[point.latitude, point.longitude]}
-          icon={createGeoIcon(false, point.active, false, getPointCoverImage(point))}
+          icon={createGeoIcon(
+            point.id === hoveredPointId,
+            point.active,
+            false,
+            getPointCoverImage(point),
+          )}
+          opacity={anyHovered && point.id !== hoveredPointId ? 0.35 : 1}
           draggable={false}
           eventHandlers={
             onMarkerClick ? { click: () => onMarkerClick(point.id) } : undefined

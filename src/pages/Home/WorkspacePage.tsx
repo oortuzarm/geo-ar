@@ -353,6 +353,9 @@ export default function WorkspacePage() {
   // Optimistic active overrides: pointId → bool. Cleared after server round-trip.
   const [activeOverrides, setActiveOverrides] = useState<Record<string, boolean>>({})
 
+  // ── Table ↔ map hover interaction ──────────────────────────────────────────
+  const [hoveredPointId, setHoveredPointId] = useState<string | null>(null)
+
   // ── Locations pagination ────────────────────────────────────────────────────
   const PAGE_SIZE = 10
   const [locPage, setLocPage] = useState(0)
@@ -818,6 +821,7 @@ export default function WorkspacePage() {
               <WorkspaceMap
                 points={points}
                 onMarkerClick={() => navigate(editorUrl)}
+                hoveredPointId={hoveredPointId}
               />
             </div>
           </section>
@@ -881,7 +885,14 @@ export default function WorkspacePage() {
                       return (
                         <tr
                           key={point.id}
-                          className="border-b border-gray-800/50 last:border-0 hover:bg-gray-800/20 transition-colors"
+                          onMouseEnter={() => setHoveredPointId(point.id)}
+                          onMouseLeave={() => setHoveredPointId(null)}
+                          className={[
+                            'border-b border-gray-800/50 last:border-0 transition-colors cursor-default',
+                            hoveredPointId === point.id
+                              ? 'bg-sky-900/20'
+                              : 'hover:bg-gray-800/20',
+                          ].join(' ')}
                         >
                           <td className="px-4 py-3 text-gray-600 text-xs tabular-nums">
                             {safePage * PAGE_SIZE + idx + 1}

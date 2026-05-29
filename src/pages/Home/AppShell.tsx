@@ -264,12 +264,6 @@ const side = {
   idle:   'text-gray-500 hover:text-gray-200 hover:bg-gray-800/60',
 }
 
-const bottom = {
-  link:   'flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors leading-none',
-  active: 'text-brand-400',
-  idle:   'text-gray-500',
-}
-
 // ── AppShell ──────────────────────────────────────────────────────────────────
 
 export default function AppShell() {
@@ -277,6 +271,7 @@ export default function AppShell() {
   const navigate = useNavigate()
   const { isLoaded, setWorkspace } = useWorkspaceStore()
   const fetchStarted = useRef(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   // Fallback: load workspace data for sidebar when WorkspacePage hasn't done it yet.
   // Runs once per user session; WorkspacePage overwrites with fresher data when mounted.
@@ -306,10 +301,19 @@ export default function AppShell() {
     return () => { cancelled = true }
   }, [currentUser?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (!drawerOpen) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setDrawerOpen(false) }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [drawerOpen])
+
   async function handleLogout() {
     await logout()
     navigate('/login', { replace: true })
   }
+
+  function closeDrawer() { setDrawerOpen(false) }
 
   return (
     <div
@@ -339,7 +343,6 @@ export default function AppShell() {
           >
             <LiveVisitsIcon />
             Visitas en Vivo
-            {/* Future: live badge — e.g. <span className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> */}
           </NavLink>
           <NavLink
             to="/app" end
@@ -410,78 +413,151 @@ export default function AppShell() {
         </div>
       </aside>
 
-      {/* ── Main content column ──────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* ── Mobile drawer backdrop ───────────────────────────────────────────── */}
+      {drawerOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          onClick={closeDrawer}
+        />
+      )}
 
-        {/* Page renders here — each page manages its own sticky header */}
-        <main className="flex-1 min-h-0 overflow-y-auto scroll-area-mobile md:pb-0">
-          <Outlet />
-        </main>
+      {/* ── Mobile drawer panel ──────────────────────────────────────────────── */}
+      <div
+        className={[
+          'md:hidden fixed inset-y-0 left-0 z-50 w-[260px] flex flex-col',
+          'bg-gray-900 border-r border-gray-800',
+          'transition-transform duration-300 ease-in-out',
+          drawerOpen ? 'translate-x-0' : '-translate-x-full',
+        ].join(' ')}
+      >
+        {/* Drawer header */}
+        <div className="flex items-center justify-between px-5 h-16 border-b border-gray-800 flex-shrink-0">
+          <img
+            src="/logo-blanco.png"
+            alt="Ubyca"
+            className="h-9 w-auto object-contain select-none"
+            draggable={false}
+          />
+          <button
+            onClick={closeDrawer}
+            className="p-1.5 rounded-lg text-gray-500 hover:text-gray-200 hover:bg-gray-800 transition-colors"
+            aria-label="Cerrar menú"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
-        {/* ── Mobile bottom tab bar — fixed to viewport bottom ─────────────── */}
-        <nav
-          className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t border-gray-800 bg-gray-900"
-          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-        >
+        {/* Drawer navigation */}
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           <NavLink
             to="/app/live-visits"
-            className={({ isActive }) => `${bottom.link} ${isActive ? bottom.active : bottom.idle}`}
+            onClick={closeDrawer}
+            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
           >
             <LiveVisitsIcon />
-            En Vivo
+            Visitas en Vivo
           </NavLink>
           <NavLink
             to="/app" end
-            className={({ isActive }) => `${bottom.link} ${isActive ? bottom.active : bottom.idle}`}
+            onClick={closeDrawer}
+            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
           >
             <MapPinIcon />
             Ubicaciones
           </NavLink>
           <NavLink
             to="/app/metrics"
-            className={({ isActive }) => `${bottom.link} ${isActive ? bottom.active : bottom.idle}`}
+            onClick={closeDrawer}
+            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
           >
             <ChartBarIcon />
             Analytics
           </NavLink>
           <NavLink
             to="/app/members"
-            className={({ isActive }) => `${bottom.link} ${isActive ? bottom.active : bottom.idle}`}
+            onClick={closeDrawer}
+            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
           >
             <UsersIcon />
             Miembros
           </NavLink>
           <NavLink
+            to="/app/integrations"
+            onClick={closeDrawer}
+            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
+          >
+            <IntegrationsIcon />
+            Integraciones
+          </NavLink>
+          <NavLink
             to="/app/account"
-            className={({ isActive }) => `${bottom.link} ${isActive ? bottom.active : bottom.idle}`}
+            onClick={closeDrawer}
+            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
           >
             <AccountIcon />
             Mi cuenta
           </NavLink>
-          <NavLink
-            to="/app/integrations"
-            className={({ isActive }) => `${bottom.link} ${isActive ? bottom.active : bottom.idle}`}
-          >
-            <IntegrationsIcon />
-            API
-          </NavLink>
+        </nav>
+
+        {/* Drawer plan widget */}
+        <PlanSidebarWidget />
+
+        {/* Drawer footer */}
+        <div className="px-3 py-4 border-t border-gray-800 space-y-1">
+          {currentUser && (
+            <p className="px-3 text-[11px] text-gray-600 truncate" title={currentUser.email}>
+              {currentUser.email}
+            </p>
+          )}
           {currentUser?.role === 'admin' && (
             <NavLink
               to="/admin"
-              className={({ isActive }) => `${bottom.link} ${isActive ? bottom.active : bottom.idle}`}
+              onClick={closeDrawer}
+              className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
             >
               <ShieldIcon />
-              Admin
+              Administración
             </NavLink>
           )}
           <button
-            onClick={handleLogout}
-            className={`${bottom.link} ${bottom.idle}`}
+            onClick={() => { closeDrawer(); handleLogout() }}
+            className={`w-full ${side.link} ${side.idle}`}
           >
             <LogoutIcon />
-            Salir
+            Cerrar sesión
           </button>
-        </nav>
+        </div>
+      </div>
+
+      {/* ── Main content column ──────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+        {/* Mobile top bar with hamburger ─────────────────────────────────────── */}
+        <div className="md:hidden flex items-center h-14 px-4 border-b border-gray-800 bg-gray-900 flex-shrink-0">
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="p-2 rounded-lg text-gray-400 hover:text-gray-100 hover:bg-gray-800 transition-colors"
+            aria-label="Abrir menú"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <img
+            src="/logo-blanco.png"
+            alt="Ubyca"
+            className="h-8 w-auto object-contain select-none ml-3"
+            draggable={false}
+          />
+        </div>
+
+        {/* Page renders here — each page manages its own sticky header */}
+        <main className="flex-1 min-h-0 overflow-y-auto">
+          <Outlet />
+        </main>
+
       </div>
     </div>
   )

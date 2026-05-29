@@ -222,8 +222,17 @@ export default function LiveVisitsPage() {
             />
             <StatTile
               label="Vs última hora"
-              value="+38%"
-              valueClass="text-2xl text-brand-400"
+              value={
+                liveData?.lastHourDeltaPercent != null
+                  ? `${liveData.lastHourDeltaPercent > 0 ? '+' : ''}${liveData.lastHourDeltaPercent}%`
+                  : '—'
+              }
+              valueClass={`text-2xl ${
+                liveData?.lastHourDeltaPercent == null   ? 'text-gray-600'  :
+                liveData.lastHourDeltaPercent  >  0     ? 'text-brand-400' :
+                liveData.lastHourDeltaPercent  <  0     ? 'text-red-400'   :
+                                                          'text-gray-400'
+              }`}
             />
             <StatTile
               label="Hora más activa"

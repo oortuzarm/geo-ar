@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import { useGeoStore } from '../../store/geoStore'
@@ -124,69 +124,6 @@ function StatusToggle({
       } ${active ? 'bg-emerald-400' : 'bg-gray-600'}`} />
       {active ? 'Activa' : 'Inactiva'}
     </button>
-  )
-}
-
-// ── Workspace actions dropdown ────────────────────────────────────────────────
-
-interface WorkspaceMenuProps {
-  projectTitle: string
-  onPreview: () => void
-}
-
-function WorkspaceMenu({
-  projectTitle: _t,
-  onPreview,
-}: WorkspaceMenuProps) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    function handle(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    if (open) document.addEventListener('mousedown', handle)
-    return () => document.removeEventListener('mousedown', handle)
-  }, [open])
-
-  const item = 'flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 hover:text-gray-100 transition-colors text-left'
-
-  function act(fn: () => void) {
-    setOpen(false)
-    fn()
-  }
-
-  return (
-    <div ref={ref}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium
-                   text-gray-400 hover:text-gray-100 hover:bg-gray-800 transition-colors"
-        title="Acciones del workspace"
-      >
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
-        </svg>
-        <span className="hidden sm:inline">Workspace</span>
-      </button>
-
-      {open && (
-        <div className="absolute right-0 top-full mt-1 w-56 bg-gray-900 border border-gray-700 rounded-xl
-                        shadow-2xl py-1 z-50 origin-top-right">
-          {/* Previsualizar — only shown on mobile; desktop has the topbar button */}
-          <button className={`${item} md:hidden`} onClick={() => act(onPreview)}>
-            <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-            Previsualizar
-          </button>
-        </div>
-      )}
-    </div>
   )
 }
 
@@ -441,7 +378,6 @@ export default function WorkspacePage() {
             <Button
               variant="ghost"
               size="sm"
-              className="hidden md:inline-flex"
               onClick={() => setPreviewOpen(true)}
             >
               Previsualizar
@@ -459,10 +395,6 @@ export default function WorkspacePage() {
               <span className="hidden sm:inline">Compartir</span>
             </button>
 
-            <WorkspaceMenu
-              projectTitle={project.title}
-              onPreview={() => setPreviewOpen(true)}
-            />
 
             {/* Mobile: circular FAB — matches the editor's add-point button */}
             <button

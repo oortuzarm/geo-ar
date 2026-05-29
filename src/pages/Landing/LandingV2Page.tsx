@@ -416,7 +416,7 @@ function HowItWorksSection() {
         {/* CTA */}
         <Reveal delay={0.3} className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-3">
           <a
-            href="https://studio.ubyca.com/try"
+            href="https://studio.ubyca.com/register"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl

@@ -353,6 +353,17 @@ export default function WorkspacePage() {
   // Optimistic active overrides: pointId → bool. Cleared after server round-trip.
   const [activeOverrides, setActiveOverrides] = useState<Record<string, boolean>>({})
 
+  // ── Locations pagination ────────────────────────────────────────────────────
+  const PAGE_SIZE = 10
+  const [locPage, setLocPage] = useState(0)
+
+  // Clamp to last valid page when the points list shrinks
+  const totalPages    = Math.max(1, Math.ceil(points.length / PAGE_SIZE))
+  const safePage      = Math.min(locPage, totalPages - 1)
+  const pagedPoints   = points.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE)
+  const firstItem     = points.length === 0 ? 0 : safePage * PAGE_SIZE + 1
+  const lastItem      = Math.min((safePage + 1) * PAGE_SIZE, points.length)
+
   useEffect(() => {
     if (!project) return
     fetchProjectAnalytics(project.id)
@@ -853,7 +864,7 @@ export default function WorkspacePage() {
                       </td>
                     </tr>
                   ) : (
-                    points.map((point, idx) => {
+                    pagedPoints.map((point, idx) => {
                       const ct         = point.contentType ?? 'url'
                       const isActive   = activeOverrides[point.id] !== undefined
                         ? activeOverrides[point.id]
@@ -865,7 +876,7 @@ export default function WorkspacePage() {
                           className="border-b border-gray-800/50 last:border-0 hover:bg-gray-800/20 transition-colors"
                         >
                           <td className="px-4 py-3 text-gray-600 text-xs tabular-nums">
-                            {idx + 1}
+                            {safePage * PAGE_SIZE + idx + 1}
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
@@ -916,7 +927,7 @@ export default function WorkspacePage() {
               </p>
             ) : (
               <div className="md:hidden space-y-2">
-                {points.map((point) => {
+                {pagedPoints.map((point) => {
                   const ct         = point.contentType ?? 'url'
                   const isActive   = activeOverrides[point.id] !== undefined
                     ? activeOverrides[point.id]
@@ -954,6 +965,39 @@ export default function WorkspacePage() {
                     </div>
                   )
                 })}
+              </div>
+            )}
+            {/* Pagination footer — shown only when there are enough items */}
+            {points.length > PAGE_SIZE && (
+              <div className="flex items-center justify-between mt-4 px-1">
+                <p className="text-xs text-gray-500 tabular-nums">
+                  Mostrando {firstItem}–{lastItem} de {points.length} ubicaciones
+                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setLocPage((p) => Math.max(0, p - 1))}
+                    disabled={safePage === 0}
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors
+                               border-gray-700 text-gray-400
+                               hover:border-gray-500 hover:text-gray-200
+                               disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    Anterior
+                  </button>
+                  <span className="text-xs text-gray-500 tabular-nums whitespace-nowrap">
+                    Página {safePage + 1} de {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setLocPage((p) => Math.min(totalPages - 1, p + 1))}
+                    disabled={safePage >= totalPages - 1}
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors
+                               border-gray-700 text-gray-400
+                               hover:border-gray-500 hover:text-gray-200
+                               disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    Siguiente
+                  </button>
+                </div>
               </div>
             )}
           </section>

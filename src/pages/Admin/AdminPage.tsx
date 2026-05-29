@@ -240,9 +240,9 @@ function CommunitySettingsPanel() {
           {/* Toggle */}
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-gray-200 font-medium">Mostrar mapa comunitario en la app</p>
+              <p className="text-sm text-gray-200 font-medium">Habilitar mapa comunitario</p>
               <p className="text-xs text-gray-500 mt-0.5">
-                Cuando está desactivado, la sección Mapa comunitario no se muestra en el sidebar ni en el drawer de los usuarios.
+                Cuando está desactivado, los usuarios ven un mensaje de no disponible en /community.
               </p>
             </div>
             <button

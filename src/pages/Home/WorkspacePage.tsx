@@ -833,22 +833,30 @@ export default function WorkspacePage() {
 
             {/* Desktop table */}
             <div className="hidden md:block rounded-2xl border border-gray-800 overflow-hidden">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm table-fixed">
+                <colgroup>
+                  <col className="w-10" />        {/* # */}
+                  <col />                          {/* Nombre — flexible */}
+                  <col className="w-28" />         {/* Tipo */}
+                  <col className="w-28" />         {/* Estado */}
+                  <col className="w-24" />         {/* Radio */}
+                  <col className="w-28" />         {/* Acciones */}
+                </colgroup>
                 <thead>
                   <tr className="border-b border-gray-800 bg-gray-900/60">
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide w-8">
+                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
                       #
                     </th>
                     <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
                       Nombre
                     </th>
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                    <th className="text-center px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
                       Tipo
                     </th>
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                    <th className="text-center px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
                       Estado
                     </th>
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                    <th className="text-center px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
                       Radio
                     </th>
                     <th className="text-right px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
@@ -879,9 +887,9 @@ export default function WorkspacePage() {
                             {safePage * PAGE_SIZE + idx + 1}
                           </td>
                           <td className="px-4 py-3">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
                               <PointThumbnail point={point} />
-                              <span className={`font-medium truncate max-w-[200px] ${
+                              <span className={`font-medium truncate ${
                                 isActive ? 'text-gray-100' : 'text-gray-500'
                               }`}>
                                 {point.name || (
@@ -890,17 +898,19 @@ export default function WorkspacePage() {
                               </span>
                             </div>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3 text-center">
                             <ContentTypeBadge ct={ct} />
                           </td>
                           <td className="px-4 py-3">
-                            <StatusToggle
-                              active={isActive}
-                              disabled={isToggling || !!togglingPointId}
-                              onToggle={() => handleTogglePoint(point)}
-                            />
+                            <div className="flex items-center justify-center">
+                              <StatusToggle
+                                active={isActive}
+                                disabled={isToggling || !!togglingPointId}
+                                onToggle={() => handleTogglePoint(point)}
+                              />
+                            </div>
                           </td>
-                          <td className="px-4 py-3 text-gray-400 text-xs tabular-nums">
+                          <td className="px-4 py-3 text-center text-gray-400 text-xs tabular-nums">
                             {point.activationRadius} m
                           </td>
                           <td className="px-4 py-3 text-right">

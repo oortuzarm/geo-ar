@@ -3,8 +3,16 @@ import type { InputHTMLAttributes, FormEvent } from 'react'
 import { Input } from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
 import PasswordInput from '../../components/ui/PasswordInput'
+import Modal from '../../components/ui/Modal'
 import { getAccount, updateAccount, updatePassword } from '../../services/accountApi'
+import { geoProjectsApi, geoPointsApi } from '../../services'
+import { deleteMediaFile, isVercelBlobUrl } from '../../lib/deleteMediaFile'
+import { ApiError } from '../../lib/apiFetch'
+import { useWorkspace } from '../../hooks/useWorkspace'
+import { useAuthStore } from '../../store/authStore'
+import { useGeoStore } from '../../store/geoStore'
 import type { UserProfile } from '../../types/account.types'
+import type { MediaContentData } from '../../types'
 import SubscriptionTab from './SubscriptionTab'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -352,6 +360,96 @@ function SeguridadTab() {
 
 // ── Danger Zone ───────────────────────────────────────────────────────────────
 
+function DeleteWorkspaceSection() {
+  const { project, refresh } = useWorkspace()
+  const { currentUser } = useAuthStore()
+  const addToast = useGeoStore((s) => s.addToast)
+  const [confirm,   setConfirm]   = useState(false)
+  const [deleting,  setDeleting]  = useState(false)
+
+  async function handleDeleteConfirmed() {
+    const p = project!
+
+    // Block regardless of role — only the owner may delete their workspace.
+    if (currentUser && p.userId && p.userId !== currentUser.id) {
+      console.error('[WORKSPACE_STATUS_UPDATE_BLOCKED] delete blocked',
+        { currentUserId: currentUser.id, currentUserRole: currentUser.role,
+          projectUserId: p.userId, projectId: p.id })
+      addToast('Este workspace no pertenece al usuario autenticado.', 'error')
+      setConfirm(false)
+      return
+    }
+
+    const projectId = p.id
+    console.log('[WORKSPACE_DELETE_START] projectId=', projectId, 'userId=', p.userId)
+    setConfirm(false)
+    setDeleting(true)
+
+    // Collect Vercel Blob URLs to clean up after deletion (non-critical)
+    let orphanUrls: string[] = []
+    try {
+      const pts = await geoPointsApi.listPoints(projectId)
+      orphanUrls = pts.flatMap((pt) => {
+        if (pt.contentType === 'url') return []
+        const cd = pt.contentData as MediaContentData | undefined
+        return isVercelBlobUrl(cd?.file_url) ? [cd!.file_url] : []
+      })
+    } catch { /* non-critical — proceed with delete even if listing fails */ }
+
+    try {
+      await geoProjectsApi.removeProject(projectId)
+      if (orphanUrls.length > 0) orphanUrls.forEach((url) => void deleteMediaFile(url))
+      console.log('[WORKSPACE_DELETE_SUCCESS] projectId=', projectId)
+      addToast('Workspace eliminado correctamente', 'success')
+      refresh()
+    } catch (err) {
+      const detail = err instanceof ApiError
+        ? `(${err.status}) ${err.message}`
+        : String(err)
+      console.error('[WORKSPACE_DELETE_ERROR] projectId=', projectId, err)
+      addToast(`No se pudo eliminar el workspace: ${detail}`, 'error')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  if (!project) return null
+
+  return (
+    <>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-gray-200">Eliminar workspace</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Elimina todas las ubicaciones, métricas y configuraciones del workspace actual.
+          </p>
+        </div>
+        <button
+          onClick={() => setConfirm(true)}
+          disabled={deleting}
+          className="shrink-0 px-3 py-1.5 text-xs font-medium rounded-md
+                     border border-red-700/50 text-red-400
+                     hover:bg-red-900/20 hover:border-red-600/60 transition-colors
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {deleting ? 'Eliminando…' : 'Eliminar workspace'}
+        </button>
+      </div>
+
+      <Modal
+        open={confirm}
+        title="¿Eliminar workspace?"
+        description="Se eliminarán todas las ubicaciones asociadas. Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setConfirm(false)}
+        danger
+      />
+    </>
+  )
+}
+
 function DangerZone() {
   const [expanded,   setExpanded]   = useState(false)
   const [deleteText, setDeleteText] = useState('')
@@ -370,6 +468,10 @@ function DangerZone() {
       <p className="text-xs text-gray-500 mb-4">
         Acciones irreversibles que afectan permanentemente tu cuenta.
       </p>
+
+      <DeleteWorkspaceSection />
+
+      <div className="border-t border-red-900/30 my-5" />
 
       <div className="flex items-start justify-between gap-4">
         <div>

@@ -4,13 +4,10 @@ import { useWorkspace } from '../../hooks/useWorkspace'
 import { useGeoStore } from '../../store/geoStore'
 import { useAuthStore } from '../../store/authStore'
 import { geoProjectsApi, geoPointsApi } from '../../services'
-import { deleteMediaFile, isVercelBlobUrl } from '../../lib/deleteMediaFile'
 import { fetchProjectAnalytics, fetchProjectAnalyticsByPoint, type PointAnalytics } from '../../lib/analytics'
-import { ApiError } from '../../lib/apiFetch'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
 import ToastContainer from '../../components/ui/Toast'
-import Modal from '../../components/ui/Modal'
 import ShareModal from '../../components/ui/ShareModal'
 import PreviewQRModal from '../Dashboard/PreviewQRModal'
 import WorkspaceMap from '../../components/map/WorkspaceMap'
@@ -19,7 +16,7 @@ import { useSubscription } from '../../hooks/useSubscription'
 import { useSettingsStore } from '../../store/settingsStore'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
 import { useWorkspaceStore } from '../../store/workspaceStore'
-import type { ContentType, GeoPoint, MediaContentData } from '../../types'
+import type { ContentType, GeoPoint } from '../../types'
 
 // ── Content type display config ───────────────────────────────────────────────
 
@@ -133,15 +130,13 @@ function StatusToggle({
 // ── Workspace actions dropdown ────────────────────────────────────────────────
 
 interface WorkspaceMenuProps {
-  projectId: string
   projectTitle: string
   onPreview: () => void
-  onDelete: () => void
 }
 
 function WorkspaceMenu({
-  projectId, projectTitle: _t,
-  onPreview, onDelete,
+  projectTitle: _t,
+  onPreview,
 }: WorkspaceMenuProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -161,8 +156,6 @@ function WorkspaceMenu({
     fn()
   }
 
-  void projectId
-
   return (
     <div ref={ref}>
       <button
@@ -181,7 +174,6 @@ function WorkspaceMenu({
       {open && (
         <div className="absolute right-0 top-full mt-1 w-56 bg-gray-900 border border-gray-700 rounded-xl
                         shadow-2xl py-1 z-50 origin-top-right">
-
           {/* Previsualizar — only shown on mobile; desktop has the topbar button */}
           <button className={`${item} md:hidden`} onClick={() => act(onPreview)}>
             <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,18 +183,6 @@ function WorkspaceMenu({
                 d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
             </svg>
             Previsualizar
-          </button>
-          <div className="border-t border-gray-800 my-1 md:hidden" />
-
-          <button
-            className={`${item} text-red-400 hover:text-red-300 hover:bg-red-500/10`}
-            onClick={() => act(onDelete)}
-          >
-            <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            Eliminar workspace
           </button>
         </div>
       )}
@@ -241,9 +221,7 @@ export default function WorkspacePage() {
   const [shareOpen,         setShareOpen]        = useState(false)
   const [previewOpen,       setPreviewOpen]      = useState(false)
   const [upgradeOpen,       setUpgradeOpen]      = useState(false)
-  const [deleteConfirm,     setDeleteConfirm]    = useState(false)
   const [togglingStatus,    setTogglingStatus]   = useState(false)
-  const [deleting,          setDeleting]         = useState(false)
   const [totalClicks,       setTotalClicks]       = useState<number | null>(null)
   const [togglingPointId,   setTogglingPointId]  = useState<string | null>(null)
   const [communityToggling, setCommunityToggling] = useState(false)
@@ -355,7 +333,7 @@ export default function WorkspacePage() {
     if (project) setWorkspace(project, points.length)
   }, [project, points.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (loading || deleting) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center py-32">
         <Spinner size="lg" />
@@ -441,53 +419,6 @@ export default function WorkspacePage() {
     }
   }
 
-  async function handleDeleteConfirmed() {
-    const p = project!
-
-    // Block regardless of role — in /app, only the owner may delete their workspace.
-    if (currentUser && p.userId && p.userId !== currentUser.id) {
-      console.error('[WORKSPACE_STATUS_UPDATE_BLOCKED] delete blocked',
-        { currentUserId: currentUser.id, currentUserRole: currentUser.role,
-          projectUserId: p.userId, projectId: p.id })
-      addToast('Este workspace no pertenece al usuario autenticado.', 'error')
-      setDeleteConfirm(false)
-      return
-    }
-
-    const projectId = p.id
-    console.log('[WORKSPACE_DELETE_START] projectId=', projectId, 'userId=', p.userId)
-    setDeleteConfirm(false)
-    setDeleting(true)
-
-    // Collect Vercel Blob URLs to clean up after deletion (non-critical)
-    let orphanUrls: string[] = []
-    try {
-      const pts = await geoPointsApi.listPoints(projectId)
-      orphanUrls = pts.flatMap((pt) => {
-        if (pt.contentType === 'url') return []
-        const cd = pt.contentData as MediaContentData | undefined
-        return isVercelBlobUrl(cd?.file_url) ? [cd!.file_url] : []
-      })
-    } catch { /* non-critical — proceed with delete even if listing fails */ }
-
-    try {
-      await geoProjectsApi.removeProject(projectId)
-      if (orphanUrls.length > 0) orphanUrls.forEach((url) => void deleteMediaFile(url))
-      console.log('[WORKSPACE_DELETE_SUCCESS] projectId=', projectId)
-      addToast('Workspace eliminado correctamente', 'success')
-      refresh()
-    } catch (err) {
-      const detail = err instanceof ApiError
-        ? `(${err.status}) ${err.message}`
-        : String(err)
-      console.error('[WORKSPACE_DELETE_ERROR] projectId=', projectId, err)
-      addToast(`No se pudo eliminar el workspace: ${detail}`, 'error')
-    } finally {
-      // Always reset deleting — without this the component stays frozen on <Spinner /> after success
-      setDeleting(false)
-    }
-  }
-
   return (
     <div className="text-gray-100">
 
@@ -529,10 +460,8 @@ export default function WorkspacePage() {
             </button>
 
             <WorkspaceMenu
-              projectId={project.id}
               projectTitle={project.title}
               onPreview={() => setPreviewOpen(true)}
-              onDelete={() => setDeleteConfirm(true)}
             />
 
             {/* Mobile: circular FAB — matches the editor's add-point button */}
@@ -1122,17 +1051,6 @@ export default function WorkspacePage() {
           reason={atLimit ? 'limit' : subscription.status === 'expired' ? 'expired' : 'general'}
         />
       )}
-
-      <Modal
-        open={deleteConfirm}
-        title="¿Eliminar workspace?"
-        description="Se eliminarán todas las ubicaciones asociadas. Esta acción no se puede deshacer."
-        confirmLabel="Eliminar"
-        cancelLabel="Cancelar"
-        onConfirm={handleDeleteConfirmed}
-        onCancel={() => setDeleteConfirm(false)}
-        danger
-      />
 
       <ToastContainer />
     </div>

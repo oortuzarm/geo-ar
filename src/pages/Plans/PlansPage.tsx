@@ -69,12 +69,13 @@ interface PlanCardProps {
   plan:          PublicPlan
   billing:       'monthly' | 'annual'
   isCurrent:     boolean
+  isTrialActive: boolean
   onUpgrade:     () => void
   onStartTrial?: (plan: PublicPlan) => void
   trialLoading?: boolean
 }
 
-function PlanCard({ plan, billing, isCurrent, onUpgrade, onStartTrial, trialLoading }: PlanCardProps) {
+function PlanCard({ plan, billing, isCurrent, isTrialActive, onUpgrade, onStartTrial, trialLoading }: PlanCardProps) {
   const isCustom = plan.isCustom && Number(plan.monthlyPrice) === 0
 
   let displayPrice: string
@@ -175,7 +176,42 @@ function PlanCard({ plan, billing, isCurrent, onUpgrade, onStartTrial, trialLoad
       </ul>
 
       {/* CTA */}
-      {isCurrent ? (
+      {isTrialActive ? (
+        // User is in an active trial → purchase-oriented CTAs on all plans
+        ctaHref ? (
+          ctaHref.startsWith('http') ? (
+            <a href={ctaHref} target="_blank" rel="noopener noreferrer" className={ctaLinkClass}>
+              {ctaLabel ?? 'Más información'}
+            </a>
+          ) : (
+            <Link to={ctaHref} className={ctaLinkClass}>
+              {ctaLabel ?? 'Más información'}
+            </Link>
+          )
+        ) : isCustom ? (
+          <a
+            href="https://www.ubyca.com/contact/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-2.5 rounded-xl text-sm font-semibold text-center block
+                       bg-gray-800 hover:bg-gray-700 text-gray-200 transition-colors border border-gray-700"
+          >
+            Contactar ventas
+          </a>
+        ) : (
+          <button
+            onClick={onUpgrade}
+            className={[
+              'w-full py-2.5 rounded-xl text-sm font-semibold transition-colors',
+              plan.isRecommended
+                ? 'bg-brand-600 hover:bg-brand-700 text-white'
+                : 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700',
+            ].join(' ')}
+          >
+            Comprar ahora
+          </button>
+        )
+      ) : isCurrent ? (
         <button
           disabled
           className="w-full py-2.5 rounded-xl text-sm font-semibold border border-gray-700
@@ -456,6 +492,7 @@ export default function PlansPage() {
                 plan={plan}
                 billing={billing}
                 isCurrent={subscription.planSlug === plan.slug}
+                isTrialActive={subscription.isTrialActive}
                 onUpgrade={() => setComingSoonOpen(true)}
                 onStartTrial={userHasNoPlan ? handleStartTrial : undefined}
                 trialLoading={trialLoading}

@@ -472,18 +472,18 @@ export default function AppShell() {
             Miembros
           </NavLink>
           <NavLink
-            to="/app/account"
-            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
-          >
-            <AccountIcon />
-            Mi cuenta
-          </NavLink>
-          <NavLink
             to="/app/integrations"
             className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
           >
             <IntegrationsIcon />
             Integraciones
+          </NavLink>
+          <NavLink
+            to="/app/account"
+            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
+          >
+            <AccountIcon />
+            Mi cuenta
           </NavLink>
         </nav>
 

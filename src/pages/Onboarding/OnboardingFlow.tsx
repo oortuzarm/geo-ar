@@ -170,14 +170,12 @@ export default function OnboardingFlow() {
         completed:      true,
       })
       await reloadUser()
-      // Redirect to plan selection if the user hasn't chosen a plan yet.
+      // Always redirect to /app/plans after onboarding. The backend auto-assigns
+      // the onboarding plan during submission, so planId is already set by the time
+      // reloadUser resolves. /app/plans handles both "trial just activated" and
+      // "no plan yet" states correctly.
       // OnboardingFlow renders outside RouterProvider so we use location.href.
-      const freshUser = useAuthStore.getState().currentUser
-      if (freshUser && !freshUser.planId) {
-        window.location.href = '/app/plans'
-      }
-      // If the user already has a plan, App.tsx will unmount this overlay
-      // automatically once reloadUser sets onboardingCompleted = true.
+      window.location.href = '/app/plans'
     } catch {
       setSaveError(true)
       setSaving(false)

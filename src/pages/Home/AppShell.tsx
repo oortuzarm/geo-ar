@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useWorkspaceStore } from '../../store/workspaceStore'
 import { useSettingsStore } from '../../store/settingsStore'
@@ -299,8 +299,11 @@ function NoPlanBanner() {
 
 function TrialCountdownBanner() {
   const { isTrialActive, trialDaysLeft, planName } = useSubscription()
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
+  const { pathname } = useLocation()
 
+  // /app/plans has its own trial-active hero — suppress the global banner there.
+  if (pathname === '/app/plans') return null
   if (!isTrialActive || trialDaysLeft === null) return null
 
   return (

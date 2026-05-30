@@ -13,22 +13,12 @@ export interface SubscriptionState {
 export function useSubscription(): SubscriptionState {
   const user = useAuthStore((s) => s.currentUser)
 
-  const planName  = user?.planName  ?? null
-  const planSlug  = user?.planSlug  ?? null
-  const status    = user?.subscriptionStatus ?? null
-  const trialEndsAt = user?.trialEndsAt ?? null
-  const limit     = user?.effectiveLocationLimit ?? null
-
-  const isTrialActive =
-    status === 'trial' &&
-    trialEndsAt !== null &&
-    new Date(trialEndsAt) > new Date()
-
-  const trialDaysLeft = isTrialActive && trialEndsAt
-    ? Math.max(0, Math.ceil(
-        (new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-      ))
-    : null
+  const planName      = user?.planName             ?? null
+  const planSlug      = user?.planSlug             ?? null
+  const status        = user?.subscriptionStatus   ?? null
+  const limit         = user?.effectiveLocationLimit ?? null
+  const isTrialActive = user?.trialActive          ?? false
+  const trialDaysLeft = user?.daysRemaining        ?? null
 
   function canAddLocation(count: number): boolean {
     // No subscription data yet (null) → allow (legacy / admin bypass)

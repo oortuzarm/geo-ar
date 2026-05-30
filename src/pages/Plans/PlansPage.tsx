@@ -336,7 +336,7 @@ export default function PlansPage() {
     <div className="text-gray-100 min-h-full">
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="hidden md:block border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}

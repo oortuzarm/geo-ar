@@ -298,26 +298,29 @@ function NoPlanBanner() {
 // ── Trial countdown banner ────────────────────────────────────────────────────
 
 function TrialCountdownBanner() {
-  const { isTrialActive, trialDaysLeft } = useSubscription()
+  const { isTrialActive, trialDaysLeft, planName } = useSubscription()
   const navigate = useNavigate()
 
   if (!isTrialActive || trialDaysLeft === null) return null
 
+  const daysLine = trialDaysLeft === 0
+    ? 'Vence hoy.'
+    : `Te quedan ${trialDaysLeft} día${trialDaysLeft === 1 ? '' : 's'}.`
+
   return (
     <div className="flex items-center justify-between gap-3 px-4 py-2
                     bg-brand-500/10 border-b border-brand-500/20 flex-shrink-0">
-      <p className="text-xs text-brand-300 leading-snug">
-        {trialDaysLeft === 0
-          ? 'Tu prueba gratuita vence hoy.'
-          : `Te quedan ${trialDaysLeft} día${trialDaysLeft === 1 ? '' : 's'} de prueba gratuita.`}
-      </p>
+      <div className="text-xs text-brand-300 leading-snug">
+        <p>Estás probando {planName ?? 'tu plan'}.</p>
+        <p>{daysLine}</p>
+      </div>
       <button
         onClick={() => navigate('/app/plans')}
         className="flex-shrink-0 text-xs font-semibold text-brand-200
                    bg-brand-500/20 hover:bg-brand-500/30 border border-brand-500/30
                    px-3 py-1 rounded-lg transition-colors"
       >
-        Ver planes
+        Elegir plan
       </button>
     </div>
   )

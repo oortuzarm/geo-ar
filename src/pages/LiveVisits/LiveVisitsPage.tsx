@@ -453,6 +453,19 @@ export default function LiveVisitsPage() {
               <p className="text-xs text-gray-700">
                 Agrega zonas GPS para ver la intensidad de visitas.
               </p>
+              {editorUrl && (
+                <button
+                  onClick={() => navigate(editorUrl)}
+                  className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold
+                             bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
+                             transition-all duration-150 shadow-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Nueva ubicación
+                </button>
+              )}
             </div>
           )}
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useWorkspaceStore } from '../../store/workspaceStore'
 import { useSettingsStore } from '../../store/settingsStore'
@@ -89,14 +89,55 @@ function IntegrationsIcon() {
 
 function PlanSidebarWidget() {
   const { pointsCount } = useWorkspaceStore()
-  const subscription = useSubscription()
+  const subscription    = useSubscription()
+  const navigate        = useNavigate()
 
-  if (!subscription.planName && subscription.limit === null) return null
+  if (!subscription.isTrialActive && !subscription.planName && subscription.limit === null) return null
 
   const atLimit = !subscription.canAddLocation(pointsCount)
   const pct = subscription.limit !== null
     ? Math.min(100, (pointsCount / subscription.limit) * 100)
     : 0
+
+  const UsageBar = subscription.limit !== null ? (
+    <>
+      <div className="bg-gray-800 rounded-full h-1 overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all ${atLimit ? 'bg-red-500' : 'bg-brand-500'}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="text-[11px] text-gray-600 tabular-nums">
+        {pointsCount} / {subscription.limit} ubicaciones
+      </p>
+    </>
+  ) : null
+
+  if (subscription.isTrialActive) {
+    const daysLeft = subscription.trialDaysLeft
+    return (
+      <div className="mx-3 pt-3 pb-2.5 border-t border-gray-800/60 flex flex-col gap-2">
+        <div>
+          <p className="text-[11px] font-semibold text-brand-400 leading-snug">
+            Prueba del plan {subscription.planName}
+          </p>
+          <p className="text-[11px] text-gray-500 mt-0.5">
+            {daysLeft === 0
+              ? 'Vence hoy'
+              : `Vence en ${daysLeft} día${daysLeft === 1 ? '' : 's'}`}
+          </p>
+        </div>
+        {UsageBar}
+        <button
+          onClick={() => navigate('/app/plans')}
+          className="self-start text-[11px] font-semibold text-brand-400 hover:text-brand-300
+                     transition-colors"
+        >
+          Elegir plan →
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-3 pt-3 pb-2.5 border-t border-gray-800/60 flex flex-col gap-2">
@@ -106,19 +147,7 @@ function PlanSidebarWidget() {
           {subscription.planName}
         </span>
       )}
-      {subscription.limit !== null && (
-        <>
-          <div className="bg-gray-800 rounded-full h-1 overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all ${atLimit ? 'bg-red-500' : 'bg-brand-500'}`}
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-          <p className="text-[11px] text-gray-600 tabular-nums">
-            {pointsCount} / {subscription.limit} ubicaciones
-          </p>
-        </>
-      )}
+      {UsageBar}
     </div>
   )
 }
@@ -290,37 +319,6 @@ function NoPlanBanner() {
                    px-3 py-1 rounded-lg transition-colors"
       >
         Ver planes
-      </button>
-    </div>
-  )
-}
-
-// ── Trial countdown banner ────────────────────────────────────────────────────
-
-function TrialCountdownBanner() {
-  const { isTrialActive, trialDaysLeft, planName } = useSubscription()
-  const navigate  = useNavigate()
-  const { pathname } = useLocation()
-
-  // /app/plans has its own trial-active hero — suppress the global banner there.
-  if (pathname === '/app/plans') return null
-  if (!isTrialActive || trialDaysLeft === null) return null
-
-  return (
-    <div className="flex items-center justify-between gap-3 px-4 py-2
-                    bg-brand-500/10 border-b border-brand-500/20 flex-shrink-0">
-      <p className="text-xs text-brand-300 leading-snug">
-        {trialDaysLeft === 0
-          ? `Tu período de prueba del plan ${planName ?? 'actual'} vence hoy.`
-          : `Tu período de prueba del plan ${planName ?? 'actual'} vence en ${trialDaysLeft} día${trialDaysLeft === 1 ? '' : 's'}.`}
-      </p>
-      <button
-        onClick={() => navigate('/app/plans')}
-        className="flex-shrink-0 text-xs font-semibold text-brand-200
-                   bg-brand-500/20 hover:bg-brand-500/30 border border-brand-500/30
-                   px-3 py-1 rounded-lg transition-colors"
-      >
-        Elegir plan
       </button>
     </div>
   )
@@ -616,9 +614,7 @@ export default function AppShell() {
           />
         </div>
 
-        {/* ── Global banners ─────────────────────────────────────────────────── */}
         <NoPlanBanner />
-        <TrialCountdownBanner />
 
         {/* Page renders here — each page manages its own sticky header */}
         <main className="flex-1 min-h-0 overflow-y-auto">

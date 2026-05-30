@@ -87,7 +87,7 @@ function IntegrationsIcon() {
 
 // ── Plan sidebar widget ────────────────────────────────────────────────────────
 
-function PlanSidebarWidget() {
+function PlanSidebarWidget({ showTrialDetails = true }: { showTrialDetails?: boolean }) {
   const { pointsCount } = useWorkspaceStore()
   const subscription    = useSubscription()
   const navigate        = useNavigate()
@@ -115,6 +115,22 @@ function PlanSidebarWidget() {
 
   if (subscription.isTrialActive) {
     const daysLeft = subscription.trialDaysLeft
+
+    // Drawer mobile: only show plan badge + usage (trial details live in MobileTrialBanner)
+    if (!showTrialDetails) {
+      return (
+        <div className="mx-3 pt-3 pb-2.5 border-t border-gray-800/60 flex flex-col gap-2">
+          {subscription.planName && (
+            <span className="self-start inline-flex items-center px-2 py-0.5 rounded-full border
+                             text-[11px] font-medium bg-brand-500/10 text-brand-400 border-brand-500/20">
+              {subscription.planName}
+            </span>
+          )}
+          {UsageBar}
+        </div>
+      )
+    }
+
     return (
       <div className="mx-3 pt-3 pb-2.5 border-t border-gray-800/60 flex flex-col gap-3">
         <div className="flex flex-col gap-0.5">
@@ -594,8 +610,8 @@ export default function AppShell() {
         {/* Drawer community widget */}
         <CommunitySidebarWidget />
 
-        {/* Drawer plan widget */}
-        <PlanSidebarWidget />
+        {/* Drawer plan widget — trial details shown in MobileTrialBanner instead */}
+        <PlanSidebarWidget showTrialDetails={false} />
 
         {/* Drawer footer */}
         <div className="px-3 py-4 border-t border-gray-800 space-y-1">

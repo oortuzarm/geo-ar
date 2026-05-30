@@ -297,6 +297,38 @@ const side = {
 
 // ── AppShell ──────────────────────────────────────────────────────────────────
 
+// ── Mobile trial banner (md:hidden — sidebar handles desktop) ─────────────────
+
+function MobileTrialBanner() {
+  const { isTrialActive, trialDaysLeft, planName } = useSubscription()
+  const navigate = useNavigate()
+
+  if (!isTrialActive || trialDaysLeft === null) return null
+
+  return (
+    <div className="md:hidden mx-4 mt-3 mb-1 flex items-center justify-between gap-3
+                    bg-brand-500/10 border border-brand-500/20 rounded-xl px-4 py-3">
+      <div className="min-w-0">
+        <p className="text-xs font-semibold text-brand-300 leading-snug">
+          Prueba del plan {planName}
+        </p>
+        <p className="text-[11px] text-gray-400 mt-0.5">
+          {trialDaysLeft === 0
+            ? 'Vence hoy'
+            : `Vence en ${trialDaysLeft} día${trialDaysLeft === 1 ? '' : 's'}`}
+        </p>
+      </div>
+      <button
+        onClick={() => navigate('/app/plans')}
+        className="flex-shrink-0 text-[11px] font-medium text-brand-300
+                   hover:text-brand-200 transition-colors whitespace-nowrap"
+      >
+        Elegir plan →
+      </button>
+    </div>
+  )
+}
+
 // ── No-plan banner ────────────────────────────────────────────────────────────
 
 function NoPlanBanner() {
@@ -618,6 +650,7 @@ export default function AppShell() {
 
         {/* Page renders here — each page manages its own sticky header */}
         <main className="flex-1 min-h-0 overflow-y-auto">
+          <MobileTrialBanner />
           <Outlet />
         </main>
 

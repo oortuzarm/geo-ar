@@ -199,9 +199,14 @@ export default function OnboardingFlow() {
 
   function skip() {
     if (step === 1) {
-      // "Completar después": dismiss locally only; onboardingCompleted stays false in DB
-      // so the flow reappears on next session until actually completed.
-      setDismissed(true)
+      // "Completar después": dismiss locally without submitting. Still redirect to plan
+      // selection if the user hasn't chosen a plan yet.
+      const user = useAuthStore.getState().currentUser
+      if (user && !user.planId) {
+        window.location.href = '/app/plans'
+      } else {
+        setDismissed(true)
+      }
     } else {
       setDir(1)
       if (step === 3) {

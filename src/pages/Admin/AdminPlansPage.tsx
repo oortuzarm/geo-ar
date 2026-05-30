@@ -390,7 +390,7 @@ function PlanFormModal({ plan, saving, onSave, onClose }: PlanFormModalProps) {
             <div className="flex flex-col gap-1">
               <Toggle checked={form.isOnboardingPlan} onChange={v => set('isOnboardingPlan', v)} label="Utilizar para onboarding de nuevos usuarios" />
               <p className="text-[11px] text-gray-600 ml-[46px]">
-                Este plan será utilizado por la pantalla inicial de activación de prueba gratuita. Solo uno puede estar activo.
+                Este plan será asignado automáticamente a los nuevos usuarios al registrarse y se utilizará para iniciar su prueba gratuita. Solo uno puede estar activo.
               </p>
             </div>
           </div>

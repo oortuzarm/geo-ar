@@ -357,24 +357,13 @@ export default function PlansPage() {
 
         {/* Hero */}
         {subscription.isTrialActive ? (
-          <div className="text-center space-y-6">
-            <div className="space-y-3">
-              <h2 className="text-3xl font-bold text-gray-100">
-                Tu prueba gratuita de {subscription.planName} ya está activa
-              </h2>
-              <p className="text-gray-400 text-base max-w-lg mx-auto">
-                Accede a todas las funcionalidades de {subscription.planName} durante tu período de prueba.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/app')}
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold
-                         bg-brand-600 hover:bg-brand-500 text-white text-base
-                         shadow-lg shadow-brand-900/50 ring-1 ring-brand-400/30
-                         transition-all active:scale-[0.98]"
-            >
-              Continuar
-            </button>
+          <div className="text-center space-y-3">
+            <h2 className="text-3xl font-bold text-gray-100">
+              Tu período de prueba está activo
+            </h2>
+            <p className="text-gray-400 text-base max-w-lg mx-auto">
+              Utiliza todas las funcionalidades incluidas en tu plan {subscription.planName} antes de que finalice.
+            </p>
           </div>
         ) : (
           <div className="text-center">

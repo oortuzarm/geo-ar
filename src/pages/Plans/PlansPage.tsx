@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getPlans, startTrial, type PublicPlan } from '../../services/plansApi'
-import { useAuthStore } from '../../store/authStore'
+import { getPlans, type PublicPlan } from '../../services/plansApi'
 import { useSubscription } from '../../hooks/useSubscription'
 import Spinner from '../../components/ui/Spinner'
 
@@ -68,14 +67,13 @@ function ComingSoonModal({ onClose }: { onClose: () => void }) {
 interface PlanCardProps {
   plan:          PublicPlan
   billing:       'monthly' | 'annual'
-  isCurrent:     boolean
+  isCurrent:     boolean   // paid (non-trial) subscription matches this plan
+  isTrialPlan:   boolean   // active trial is on this plan
   isTrialActive: boolean
   onUpgrade:     () => void
-  onStartTrial?: (plan: PublicPlan) => void
-  trialLoading?: boolean
 }
 
-function PlanCard({ plan, billing, isCurrent, isTrialActive, onUpgrade, onStartTrial, trialLoading }: PlanCardProps) {
+function PlanCard({ plan, billing, isCurrent, isTrialPlan, isTrialActive, onUpgrade }: PlanCardProps) {
   const isCustom = plan.isCustom && Number(plan.monthlyPrice) === 0
 
   let displayPrice: string
@@ -102,6 +100,66 @@ function PlanCard({ plan, billing, isCurrent, isTrialActive, onUpgrade, onStartT
       : 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700',
   ].join(' ')
 
+  const upgradeBtnClass = [
+    'w-full py-2.5 rounded-xl text-sm font-semibold transition-colors',
+    plan.isRecommended
+      ? 'bg-brand-600 hover:bg-brand-700 text-white'
+      : 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700',
+  ].join(' ')
+
+  // CTA: when trial is active every plan shows purchase-oriented actions.
+  // Trial ≠ purchased, so no plan is "locked" or disabled.
+  function renderCta() {
+    if (isCustom) {
+      return (
+        <a
+          href="https://www.ubyca.com/contact/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full py-2.5 rounded-xl text-sm font-semibold text-center block
+                     bg-gray-800 hover:bg-gray-700 text-gray-200 transition-colors border border-gray-700"
+        >
+          Contactar ventas
+        </a>
+      )
+    }
+
+    if (ctaHref) {
+      return ctaHref.startsWith('http') ? (
+        <a href={ctaHref} target="_blank" rel="noopener noreferrer" className={ctaLinkClass}>
+          {ctaLabel ?? 'Más información'}
+        </a>
+      ) : (
+        <Link to={ctaHref} className={ctaLinkClass}>
+          {ctaLabel ?? 'Más información'}
+        </Link>
+      )
+    }
+
+    // Non-trial users with a paid current plan: show disabled "Plan actual"
+    if (!isTrialActive && isCurrent) {
+      return (
+        <button
+          disabled
+          className="w-full py-2.5 rounded-xl text-sm font-semibold border border-gray-700
+                     text-gray-500 cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          </svg>
+          Plan actual
+        </button>
+      )
+    }
+
+    // All other cases (trial active on any plan, or no plan yet): purchase CTA
+    return (
+      <button onClick={onUpgrade} className={upgradeBtnClass}>
+        Comprar ahora
+      </button>
+    )
+  }
+
   return (
     <div className={[
       'relative flex flex-col rounded-2xl p-6 transition-all duration-200',
@@ -122,7 +180,14 @@ function PlanCard({ plan, billing, isCurrent, isTrialActive, onUpgrade, onStartT
             Recomendado
           </span>
         )}
-        {isCurrent && (
+        {isTrialActive && isTrialPlan && (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+                           bg-brand-500/15 border border-brand-500/25
+                           text-[10px] font-bold text-brand-400 uppercase tracking-wider">
+            Prueba activa
+          </span>
+        )}
+        {!isTrialActive && isCurrent && (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
                            bg-emerald-500/15 border border-emerald-500/25
                            text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
@@ -176,99 +241,7 @@ function PlanCard({ plan, billing, isCurrent, isTrialActive, onUpgrade, onStartT
       </ul>
 
       {/* CTA */}
-      {isTrialActive ? (
-        // User is in an active trial → purchase-oriented CTAs on all plans
-        ctaHref ? (
-          ctaHref.startsWith('http') ? (
-            <a href={ctaHref} target="_blank" rel="noopener noreferrer" className={ctaLinkClass}>
-              {ctaLabel ?? 'Más información'}
-            </a>
-          ) : (
-            <Link to={ctaHref} className={ctaLinkClass}>
-              {ctaLabel ?? 'Más información'}
-            </Link>
-          )
-        ) : isCustom ? (
-          <a
-            href="https://www.ubyca.com/contact/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full py-2.5 rounded-xl text-sm font-semibold text-center block
-                       bg-gray-800 hover:bg-gray-700 text-gray-200 transition-colors border border-gray-700"
-          >
-            Contactar ventas
-          </a>
-        ) : (
-          <button
-            onClick={onUpgrade}
-            className={[
-              'w-full py-2.5 rounded-xl text-sm font-semibold transition-colors',
-              plan.isRecommended
-                ? 'bg-brand-600 hover:bg-brand-700 text-white'
-                : 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700',
-            ].join(' ')}
-          >
-            Comprar ahora
-          </button>
-        )
-      ) : isCurrent ? (
-        <button
-          disabled
-          className="w-full py-2.5 rounded-xl text-sm font-semibold border border-gray-700
-                     text-gray-500 cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-          </svg>
-          Plan actual
-        </button>
-      ) : ctaHref ? (
-        ctaHref.startsWith('http') ? (
-          <a href={ctaHref} target="_blank" rel="noopener noreferrer" className={ctaLinkClass}>
-            {ctaLabel ?? 'Más información'}
-          </a>
-        ) : (
-          <Link to={ctaHref} className={ctaLinkClass}>
-            {ctaLabel ?? 'Más información'}
-          </Link>
-        )
-      ) : isCustom ? (
-        <a
-          href="https://www.ubyca.com/contact/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full py-2.5 rounded-xl text-sm font-semibold text-center block
-                     bg-gray-800 hover:bg-gray-700 text-gray-200 transition-colors border border-gray-700"
-        >
-          Contactar ventas
-        </a>
-      ) : plan.hasTrial && (plan.trialDays ?? 0) > 0 && onStartTrial ? (
-        <button
-          onClick={() => onStartTrial(plan)}
-          disabled={trialLoading}
-          className={[
-            'w-full py-2.5 rounded-xl text-sm font-semibold transition-colors',
-            trialLoading ? 'opacity-60 cursor-wait' : '',
-            plan.isRecommended
-              ? 'bg-brand-600 hover:bg-brand-700 text-white'
-              : 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700',
-          ].join(' ')}
-        >
-          {trialLoading ? 'Activando…' : `Prueba gratuita de ${plan.trialDays} días`}
-        </button>
-      ) : (
-        <button
-          onClick={onUpgrade}
-          className={[
-            'w-full py-2.5 rounded-xl text-sm font-semibold transition-colors',
-            plan.isRecommended
-              ? 'bg-brand-600 hover:bg-brand-700 text-white'
-              : 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700',
-          ].join(' ')}
-        >
-          Actualizar plan
-        </button>
-      )}
+      {renderCta()}
     </div>
   )
 }
@@ -333,35 +306,12 @@ function BillingToggle({
 export default function PlansPage() {
   const navigate     = useNavigate()
   const subscription = useSubscription()
-  const reloadUser   = useAuthStore((s) => s.reloadUser)
-  const currentUser  = useAuthStore((s) => s.currentUser)
 
   const [plans,          setPlans]          = useState<PublicPlan[]>([])
   const [loading,        setLoading]        = useState(true)
   const [error,          setError]          = useState<string | null>(null)
   const [billing,        setBilling]        = useState<'monthly' | 'annual'>('monthly')
   const [comingSoonOpen, setComingSoonOpen] = useState(false)
-  const [trialLoading,   setTrialLoading]   = useState(false)
-  const [trialError,     setTrialError]     = useState<string | null>(null)
-
-  // Only show trial CTA when user has no plan yet
-  const userHasNoPlan = currentUser?.planId === null || currentUser?.planId === undefined
-
-  async function handleStartTrial(plan: PublicPlan) {
-    if (trialLoading) return
-    setTrialLoading(true)
-    setTrialError(null)
-    try {
-      await startTrial(plan.id)
-      await reloadUser()
-      navigate('/app', { replace: true })
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'No se pudo activar la prueba. Intenta de nuevo.'
-      setTrialError(msg)
-    } finally {
-      setTrialLoading(false)
-    }
-  }
 
   function load() {
     setLoading(true)
@@ -374,9 +324,7 @@ export default function PlansPage() {
 
   useEffect(() => { load() }, [])
 
-  const annualDiscount   = plans.find((p) => p.annualDiscountPercent > 0)?.annualDiscountPercent ?? 0
-  const onboardingPlan   = plans.find((p) => p.isOnboardingPlan) ?? null
-  const showOnboardingHero = userHasNoPlan && onboardingPlan !== null && !loading && !error
+  const annualDiscount = plans.find((p) => p.annualDiscountPercent > 0)?.annualDiscountPercent ?? 0
 
   const gridCols =
     plans.length === 1 ? 'max-w-xs mx-auto' :
@@ -407,33 +355,25 @@ export default function PlansPage() {
       {/* ── Main ────────────────────────────────────────────────────────────── */}
       <main className="max-w-6xl mx-auto px-6 py-12 space-y-12">
 
-        {/* Hero — onboarding-specific when user has no plan yet */}
-        {showOnboardingHero ? (
+        {/* Hero */}
+        {subscription.isTrialActive ? (
           <div className="text-center space-y-6">
             <div className="space-y-3">
               <h2 className="text-3xl font-bold text-gray-100">
-                Activa tu prueba gratuita de {onboardingPlan!.name}
+                Tu prueba gratuita de {subscription.planName} ya está activa
               </h2>
               <p className="text-gray-400 text-base max-w-lg mx-auto">
-                Accede a las funcionalidades de {onboardingPlan!.name} durante{' '}
-                {onboardingPlan!.trialDays} días.
+                Accede a todas las funcionalidades de {subscription.planName} durante tu período de prueba.
               </p>
             </div>
             <button
-              onClick={() => void handleStartTrial(onboardingPlan!)}
-              disabled={trialLoading}
-              className={[
-                'inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold',
-                'bg-brand-600 hover:bg-brand-500 text-white text-base',
-                'shadow-lg shadow-brand-900/50 ring-1 ring-brand-400/30',
-                'transition-all active:scale-[0.98]',
-                trialLoading ? 'opacity-60 cursor-wait' : '',
-              ].join(' ')}
+              onClick={() => navigate('/app')}
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold
+                         bg-brand-600 hover:bg-brand-500 text-white text-base
+                         shadow-lg shadow-brand-900/50 ring-1 ring-brand-400/30
+                         transition-all active:scale-[0.98]"
             >
-              {trialLoading && (
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              )}
-              {trialLoading ? 'Activando…' : 'Activar prueba gratuita'}
+              Continuar
             </button>
           </div>
         ) : (
@@ -477,13 +417,6 @@ export default function PlansPage() {
         )}
 
         {/* Plans grid */}
-        {trialError && (
-          <div className="max-w-md mx-auto bg-red-500/10 border border-red-500/30
-                          rounded-xl px-4 py-3 text-sm text-red-400 text-center">
-            {trialError}
-          </div>
-        )}
-
         {!loading && !error && plans.length > 0 && (
           <div className={`grid grid-cols-1 gap-5 ${gridCols}`}>
             {plans.map((plan) => (
@@ -491,11 +424,10 @@ export default function PlansPage() {
                 key={plan.id}
                 plan={plan}
                 billing={billing}
-                isCurrent={subscription.planSlug === plan.slug}
+                isCurrent={!subscription.isTrialActive && subscription.planSlug === plan.slug}
+                isTrialPlan={subscription.isTrialActive && subscription.planSlug === plan.slug}
                 isTrialActive={subscription.isTrialActive}
                 onUpgrade={() => setComingSoonOpen(true)}
-                onStartTrial={userHasNoPlan ? handleStartTrial : undefined}
-                trialLoading={trialLoading}
               />
             ))}
           </div>

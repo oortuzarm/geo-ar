@@ -136,6 +136,7 @@ const EMPTY_FORM = {
   trialDays:            '7',
   isVisible:            true,
   isRecommended:        false,
+  isOnboardingPlan:     false,
   isCustom:             false,
   sortOrder:            '0',
   publicDescription:    '',
@@ -159,6 +160,7 @@ function planToForm(p: AdminPlan): PlanForm {
     trialDays:            String(p.trialDays ?? 7),
     isVisible:            p.isVisible,
     isRecommended:        p.isRecommended,
+    isOnboardingPlan:     p.isOnboardingPlan ?? false,
     isCustom:             p.isCustom,
     sortOrder:            String(p.sortOrder),
     publicDescription:    p.publicDescription ?? '',
@@ -180,6 +182,7 @@ function formToPayload(f: PlanForm): CreatePlanPayload {
     trialDays:            f.hasTrial ? (parseInt(f.trialDays) || 7) : null,
     isVisible:            f.isVisible,
     isRecommended:        f.isRecommended,
+    isOnboardingPlan:     f.isOnboardingPlan,
     isCustom:             f.customPricing || f.isCustom,
     sortOrder:            parseInt(f.sortOrder) || 0,
     publicDescription:    f.publicDescription.trim() || null,
@@ -381,9 +384,15 @@ function PlanFormModal({ plan, saving, onSave, onClose }: PlanFormModalProps) {
           {/* Flags */}
           <div className="flex flex-col gap-3">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Opciones</p>
-            <Toggle checked={form.isVisible}     onChange={v => set('isVisible', v)}     label="Visible en pricing público" />
-            <Toggle checked={form.isRecommended} onChange={v => set('isRecommended', v)} label="Marcar como recomendado" />
-            <Toggle checked={form.isCustom}      onChange={v => set('isCustom', v)}      label="Plan personalizado" />
+            <Toggle checked={form.isVisible}         onChange={v => set('isVisible', v)}         label="Visible en pricing público" />
+            <Toggle checked={form.isRecommended}     onChange={v => set('isRecommended', v)}     label="Marcar como recomendado" />
+            <Toggle checked={form.isCustom}          onChange={v => set('isCustom', v)}          label="Plan personalizado" />
+            <div className="flex flex-col gap-1">
+              <Toggle checked={form.isOnboardingPlan} onChange={v => set('isOnboardingPlan', v)} label="Utilizar para onboarding de nuevos usuarios" />
+              <p className="text-[11px] text-gray-600 ml-[46px]">
+                Este plan será utilizado por la pantalla inicial de activación de prueba gratuita. Solo uno puede estar activo.
+              </p>
+            </div>
           </div>
 
           {/* Sort order */}
@@ -947,6 +956,9 @@ export default function AdminPlansPage() {
                     <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Rec.
                     </th>
+                    <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Onboarding
+                    </th>
                     <th className="text-right px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Acciones
                     </th>
@@ -1037,6 +1049,14 @@ export default function AdminPlansPage() {
                               : <span className="text-gray-600 text-xs">—</span>
                             }
                           </button>
+                        </td>
+
+                        {/* Onboarding badge */}
+                        <td className="px-4 py-3 text-center">
+                          {plan.isOnboardingPlan
+                            ? <Badge color="amber">Onboarding</Badge>
+                            : <span className="text-gray-600 text-xs">—</span>
+                          }
                         </td>
 
                         {/* Actions */}

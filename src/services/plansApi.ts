@@ -15,6 +15,7 @@ export interface PublicPlan {
   hasTrial:              boolean
   trialDays:             number | null
   isRecommended:         boolean
+  isOnboardingPlan:      boolean
   isCustom:              boolean
   sortOrder:             number
   publicDescription:     string | null
@@ -39,8 +40,9 @@ function normalizePlan(raw: Record<string, unknown>): PublicPlan {
     locationLimit:         locationRaw !== null ? Number(locationRaw) : null,
     hasTrial:              Boolean(raw.hasTrial    ?? raw.has_trial    ?? false),
     trialDays:             trialDaysRaw !== null ? Number(trialDaysRaw) : null,
-    isRecommended:         Boolean(raw.isRecommended ?? raw.is_recommended ?? false),
-    isCustom:              Boolean(raw.isCustom      ?? raw.is_custom      ?? false),
+    isRecommended:         Boolean(raw.isRecommended    ?? raw.is_recommended    ?? false),
+    isOnboardingPlan:      Boolean(raw.isOnboardingPlan ?? raw.is_onboarding_plan ?? false),
+    isCustom:              Boolean(raw.isCustom          ?? raw.is_custom          ?? false),
     sortOrder:             Number(raw.sortOrder       ?? raw.sort_order     ?? 0),
     publicDescription:     ((raw.publicDescription  ?? raw.public_description  ?? null) as string | null),
     features:              Array.isArray(featuresRaw) ? (featuresRaw as string[]) : [],

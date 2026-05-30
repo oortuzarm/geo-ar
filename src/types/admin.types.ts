@@ -74,6 +74,7 @@ export interface AdminPlan {
   trialDays:            number | null  // DB: trial_days
   isVisible:            boolean
   isRecommended:        boolean
+  isOnboardingPlan:     boolean
   applyToExistingUsers: boolean
   isCustom:             boolean
   sortOrder:            number
@@ -98,6 +99,7 @@ export interface CreatePlanPayload {
   trialDays:            number | null
   isVisible:            boolean
   isRecommended:        boolean
+  isOnboardingPlan?:    boolean
   isCustom:             boolean
   sortOrder:            number
   publicDescription:    string | null

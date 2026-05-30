@@ -338,7 +338,9 @@ export default function PlansPage() {
 
   useEffect(() => { load() }, [])
 
-  const annualDiscount = plans.find((p) => p.annualDiscountPercent > 0)?.annualDiscountPercent ?? 0
+  const annualDiscount   = plans.find((p) => p.annualDiscountPercent > 0)?.annualDiscountPercent ?? 0
+  const onboardingPlan   = plans.find((p) => p.isOnboardingPlan) ?? null
+  const showOnboardingHero = userHasNoPlan && onboardingPlan !== null && !loading && !error
 
   const gridCols =
     plans.length === 1 ? 'max-w-xs mx-auto' :
@@ -369,15 +371,45 @@ export default function PlansPage() {
       {/* ── Main ────────────────────────────────────────────────────────────── */}
       <main className="max-w-6xl mx-auto px-6 py-12 space-y-12">
 
-        {/* Hero */}
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-100 mb-3">
-            Elige el plan ideal para tu proyecto
-          </h2>
-          <p className="text-gray-500 text-base max-w-md mx-auto">
-            Todo lo que necesitas para crear experiencias geolocalizadas.
-          </p>
-        </div>
+        {/* Hero — onboarding-specific when user has no plan yet */}
+        {showOnboardingHero ? (
+          <div className="text-center space-y-6">
+            <div className="space-y-3">
+              <h2 className="text-3xl font-bold text-gray-100">
+                Activa tu prueba gratuita de {onboardingPlan!.name}
+              </h2>
+              <p className="text-gray-400 text-base max-w-lg mx-auto">
+                Accede a las funcionalidades de {onboardingPlan!.name} durante{' '}
+                {onboardingPlan!.trialDays} días.
+              </p>
+            </div>
+            <button
+              onClick={() => void handleStartTrial(onboardingPlan!)}
+              disabled={trialLoading}
+              className={[
+                'inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold',
+                'bg-brand-600 hover:bg-brand-500 text-white text-base',
+                'shadow-lg shadow-brand-900/50 ring-1 ring-brand-400/30',
+                'transition-all active:scale-[0.98]',
+                trialLoading ? 'opacity-60 cursor-wait' : '',
+              ].join(' ')}
+            >
+              {trialLoading && (
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              )}
+              {trialLoading ? 'Activando…' : 'Activar prueba gratuita'}
+            </button>
+          </div>
+        ) : (
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-gray-100 mb-3">
+              Elige el plan ideal para tu proyecto
+            </h2>
+            <p className="text-gray-500 text-base max-w-md mx-auto">
+              Todo lo que necesitas para crear experiencias geolocalizadas.
+            </p>
+          </div>
+        )}
 
         {/* Billing toggle — only shown when plans are loaded and discount exists */}
         {!loading && !error && annualDiscount > 0 && (

@@ -143,7 +143,6 @@ export default function OnboardingFlow() {
   const [configError, setConfigError] = useState(false)
   const [saving,      setSaving]      = useState(false)
   const [saveError,   setSaveError]   = useState(false)
-  const [dismissed,   setDismissed]   = useState(false)
 
   function loadConfig() {
     setConfigError(false)
@@ -154,9 +153,7 @@ export default function OnboardingFlow() {
 
   useEffect(() => { loadConfig() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (dismissed) return null
-
-  async function finish(completed: boolean) {
+  async function finish() {
     if (saving) return
     setSaving(true)
     setSaveError(false)
@@ -170,19 +167,18 @@ export default function OnboardingFlow() {
         orgSizeId:      form.orgSizeId      ?? undefined,
         objectiveId:    form.objectiveId    ?? undefined,
         country:        form.country        || undefined,
-        completed,
+        completed:      true,
       })
       await reloadUser()
       // Redirect to plan selection if the user hasn't chosen a plan yet.
       // OnboardingFlow renders outside RouterProvider so we use location.href.
       const freshUser = useAuthStore.getState().currentUser
-      if (completed && freshUser && !freshUser.planId) {
+      if (freshUser && !freshUser.planId) {
         window.location.href = '/app/plans'
-        return
       }
-      setDismissed(true)
+      // If the user already has a plan, App.tsx will unmount this overlay
+      // automatically once reloadUser sets onboardingCompleted = true.
     } catch {
-      // Surface a brief retry hint but don't block — let the user dismiss.
       setSaveError(true)
       setSaving(false)
     }
@@ -191,29 +187,9 @@ export default function OnboardingFlow() {
   function advance() {
     setDir(1)
     if (step === 3) {
-      finish(true)
+      finish()
     } else {
       setStep((s) => (s + 1) as 1 | 2 | 3)
-    }
-  }
-
-  function skip() {
-    if (step === 1) {
-      // "Completar después": dismiss locally without submitting. Still redirect to plan
-      // selection if the user hasn't chosen a plan yet.
-      const user = useAuthStore.getState().currentUser
-      if (user && !user.planId) {
-        window.location.href = '/app/plans'
-      } else {
-        setDismissed(true)
-      }
-    } else {
-      setDir(1)
-      if (step === 3) {
-        finish(true)
-      } else {
-        setStep((s) => (s + 1) as 1 | 2 | 3)
-      }
     }
   }
 
@@ -449,19 +425,10 @@ export default function OnboardingFlow() {
               No se pudo guardar. Intenta de nuevo.
             </p>
           )}
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-end gap-3">
             <button
               type="button"
-              onClick={skip}
-              disabled={saving}
-              className="text-sm text-gray-500 hover:text-gray-300 transition-colors disabled:opacity-40"
-            >
-              {step === 1 ? 'Completar después' : 'Saltar'}
-            </button>
-
-            <button
-              type="button"
-              onClick={saveError ? () => finish(step === 3) : advance}
+              onClick={saveError ? finish : advance}
               disabled={saving}
               className="
                 px-5 py-2.5 bg-brand-600 hover:bg-brand-500 active:bg-brand-700

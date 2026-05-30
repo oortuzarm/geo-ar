@@ -303,17 +303,14 @@ function TrialCountdownBanner() {
 
   if (!isTrialActive || trialDaysLeft === null) return null
 
-  const daysLine = trialDaysLeft === 0
-    ? 'Vence hoy.'
-    : `Te quedan ${trialDaysLeft} día${trialDaysLeft === 1 ? '' : 's'}.`
-
   return (
     <div className="flex items-center justify-between gap-3 px-4 py-2
                     bg-brand-500/10 border-b border-brand-500/20 flex-shrink-0">
-      <div className="text-xs text-brand-300 leading-snug">
-        <p>Estás probando {planName ?? 'tu plan'}.</p>
-        <p>{daysLine}</p>
-      </div>
+      <p className="text-xs text-brand-300 leading-snug">
+        {trialDaysLeft === 0
+          ? `Tu período de prueba del plan ${planName ?? 'actual'} vence hoy.`
+          : `Tu período de prueba del plan ${planName ?? 'actual'} vence en ${trialDaysLeft} día${trialDaysLeft === 1 ? '' : 's'}.`}
+      </p>
       <button
         onClick={() => navigate('/app/plans')}
         className="flex-shrink-0 text-xs font-semibold text-brand-200

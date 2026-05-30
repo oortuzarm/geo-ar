@@ -421,29 +421,6 @@ export default function WorkspacePage() {
             </div>
           </div>
 
-          {/* ── Trial banner ──────────────────────────────────────────── */}
-          {subscription.isTrialActive && (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-amber-500/20 bg-amber-500/5">
-              <svg className="h-4 w-4 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-sm text-amber-300 flex-1">
-                Te quedan{' '}
-                <span className="font-semibold">
-                  {subscription.trialDaysLeft} {subscription.trialDaysLeft === 1 ? 'día' : 'días'}
-                </span>{' '}
-                de prueba.{' '}
-                <button
-                  onClick={() => navigate('/app/plans')}
-                  className="underline hover:text-amber-200 transition-colors"
-                >
-                  Ver planes
-                </button>
-              </p>
-            </div>
-          )}
-
           {/* ── KPI strip ─────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
 

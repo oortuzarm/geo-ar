@@ -721,11 +721,28 @@ export default function WorkspacePage() {
 
             {/* Mobile: empty message or cards */}
             {processedPoints.length === 0 ? (
-              <p className="md:hidden text-sm text-gray-600 text-center py-10">
-                {points.length === 0
-                  ? 'Aún no tenés ubicaciones creadas.'
-                  : 'Ninguna ubicación coincide con la búsqueda.'}
-              </p>
+              points.length === 0 ? (
+                <div className="md:hidden flex flex-col items-center gap-4 py-10">
+                  <p className="text-sm text-gray-600 text-center">
+                    Aún no tenés ubicaciones creadas.
+                  </p>
+                  <button
+                    onClick={() => { if (atLimit) { setUpgradeOpen(true); return }; navigate(editorUrl) }}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold
+                               bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
+                               transition-all duration-150 shadow-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Nueva ubicación
+                  </button>
+                </div>
+              ) : (
+                <p className="md:hidden text-sm text-gray-600 text-center py-10">
+                  Ninguna ubicación coincide con la búsqueda.
+                </p>
+              )
             ) : (
               <div className="md:hidden space-y-2">
                 {pagedPoints.map((point) => {

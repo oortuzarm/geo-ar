@@ -116,12 +116,12 @@ function PlanSidebarWidget() {
   if (subscription.isTrialActive) {
     const daysLeft = subscription.trialDaysLeft
     return (
-      <div className="mx-3 pt-3 pb-2.5 border-t border-gray-800/60 flex flex-col gap-2">
-        <div>
-          <p className="text-[11px] font-semibold text-brand-400 leading-snug">
+      <div className="mx-3 pt-3 pb-2.5 border-t border-gray-800/60 flex flex-col gap-3">
+        <div className="flex flex-col gap-0.5">
+          <p className="text-xs font-semibold text-brand-300 leading-snug">
             Prueba del plan {subscription.planName}
           </p>
-          <p className="text-[11px] text-gray-500 mt-0.5">
+          <p className="text-[11px] text-gray-400">
             {daysLeft === 0
               ? 'Vence hoy'
               : `Vence en ${daysLeft} día${daysLeft === 1 ? '' : 's'}`}
@@ -130,7 +130,7 @@ function PlanSidebarWidget() {
         {UsageBar}
         <button
           onClick={() => navigate('/app/plans')}
-          className="self-start text-[11px] font-semibold text-brand-400 hover:text-brand-300
+          className="self-start text-xs font-medium text-brand-400 hover:text-brand-300
                      transition-colors"
         >
           Elegir plan →

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet'
+import { MapContainer, CircleMarker, Tooltip } from 'react-leaflet'
 import { getCommunityProjects, type CommunityProject } from '../../services/communityApi'
-import { getMapTileUrl, MAP_ATTRIBUTION } from '../../config/mapStyles'
+import BaseMapLayer from '../../components/map/BaseMapLayer'
 import Spinner from '../../components/ui/Spinner'
 import { useSettingsStore } from '../../store/settingsStore'
 
@@ -223,7 +223,7 @@ export default function CommunityPage() {
               className="absolute inset-0 w-full h-full"
               zoomControl
             >
-              <TileLayer url={getMapTileUrl('streets')} attribution={MAP_ATTRIBUTION} />
+              <BaseMapLayer styleId="streets" />
 
               {projects.flatMap((project) =>
                 project.points.map((pt) => (

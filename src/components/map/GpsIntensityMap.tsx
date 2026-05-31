@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
-import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
+import { MapContainer, Marker, useMap } from 'react-leaflet'
 import { createGeoIcon } from './createGeoIcon'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
 import IntensityLayer from './IntensityLayer'
-import { getMapTileUrl, MAP_ATTRIBUTION } from '../../config/mapStyles'
+import BaseMapLayer from './BaseMapLayer'
 import type { GeoPoint } from '../../types'
 
 // Re-export so callers (LiveVisitsPage) can keep their existing import paths.
@@ -67,11 +67,7 @@ export default function GpsIntensityMap({ points, activeNow, showPoints = true }
       style={{ width: '100%', height: '100%', background: '#111827', zIndex: 0 }}
       zoomControl
     >
-      <TileLayer
-        url={getMapTileUrl('toner')}
-        attribution={MAP_ATTRIBUTION}
-        maxZoom={20}
-      />
+      <BaseMapLayer styleId="toner" />
       <FitBounds points={points} />
       <IntensityLayer points={points} activeNow={resolvedActiveNow} />
       {showPoints && points.map((point) => (

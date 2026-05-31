@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import Supercluster from 'supercluster'
 import PublicPointMarker from '../../components/map/PublicPointMarker'
@@ -20,7 +20,7 @@ import { useGeolocation } from '../../hooks/useGeolocation'
 import { useMapStyle } from '../../hooks/useMapStyle'
 import { useGeoStore } from '../../store/geoStore'
 import MapStyleToggle from '../../components/map/MapStyleToggle'
-import { getMapTileUrl, MAP_STYLES } from '../../config/mapStyles'
+import BaseMapLayer from '../../components/map/BaseMapLayer'
 import RoutePolyline from '../../components/map/RoutePolyline'
 import ManualLocationSheet from '../../components/map/ManualLocationSheet'
 import MapController from '../../components/map/MapController'
@@ -1872,12 +1872,7 @@ export default function PublicPage({
             userLocation={userLocation}
             resetTrigger={resetViewTrigger}
           />
-          <TileLayer
-            key={mapStyleId}
-            url={getMapTileUrl(mapStyleId)}
-            attribution={MAP_STYLES[mapStyleId].attribution}
-            maxZoom={20}
-          />
+          <BaseMapLayer key={mapStyleId} styleId={mapStyleId} />
           {userLocation && (
             <UserLocationMarker lat={userLocation.latitude} lng={userLocation.longitude} />
           )}

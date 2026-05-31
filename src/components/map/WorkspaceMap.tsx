@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
-import { Circle, MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
+import { Circle, MapContainer, Marker, useMap } from 'react-leaflet'
 import { createGeoIcon } from './createGeoIcon'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
-import { getMapTileUrl, MAP_ATTRIBUTION } from '../../config/mapStyles'
+import BaseMapLayer from './BaseMapLayer'
 import type { GeoPoint } from '../../types'
 
 /**
@@ -46,11 +46,7 @@ export default function WorkspaceMap({ points, onMarkerClick, hoveredPointId = n
       style={{ width: '100%', height: '100%', background: '#111827', zIndex: 0 }}
       zoomControl
     >
-      <TileLayer
-        url={getMapTileUrl('streets')}
-        attribution={MAP_ATTRIBUTION}
-        maxZoom={20}
-      />
+      <BaseMapLayer styleId="streets" />
       <FitBounds points={points} />
 
       {/* Subtle glow circle on the hovered point */}

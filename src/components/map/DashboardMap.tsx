@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Popup, useMapEvents, useMap } from 'react-leaflet'
+import { MapContainer, CircleMarker, Popup, useMapEvents, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { useGeoStore } from '../../store/geoStore'
 import type { Map as LeafletMap } from 'leaflet'
@@ -7,7 +7,8 @@ import { haversineDistance } from '../../features/geolocation/haversine'
 import GeoPointMarker from './GeoPointMarker'
 import IntensityLayer from './IntensityLayer'
 import type { GeoPoint, PoiSearchResult, MapBounds } from '../../types'
-import { getMapTileUrl, MAP_STYLES, type MapStyleId } from '../../config/mapStyles'
+import { type MapStyleId } from '../../config/mapStyles'
+import BaseMapLayer from './BaseMapLayer'
 
 function MapController() {
   const { mapCenter, mapZoom } = useGeoStore()
@@ -174,12 +175,7 @@ export default function DashboardMap({
       className="w-full h-full"
       style={{ width: '100%', height: '100%', background: '#111827', zIndex: 0 }}
     >
-      <TileLayer
-        key={mapStyleId}
-        url={getMapTileUrl(mapStyleId)}
-        attribution={MAP_STYLES[mapStyleId].attribution}
-        maxZoom={20}
-      />
+      <BaseMapLayer key={mapStyleId} styleId={mapStyleId} />
       <MapController />
       <MapViewTracker />
       <ClickHandler onMapClick={onMapClick} />

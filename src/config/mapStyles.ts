@@ -3,7 +3,7 @@ export const MAP_STYLES = {
     id:          'streets' as const,
     label:       'Mapa',
     type:        'vector' as const,
-    styleUrl:    'https://vector.openstreetmap.org/styles/shortbread/colorful.json',
+    styleUrl:    'https://tiles.openfreemap.org/styles/liberty',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   },
   satellite: {
@@ -17,7 +17,7 @@ export const MAP_STYLES = {
     id:          'toner' as const,
     label:       'Toner',
     type:        'vector' as const,
-    styleUrl:    'https://vector.openstreetmap.org/styles/shortbread/graybeard.json',
+    styleUrl:    'https://tiles.openfreemap.org/styles/positron',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   },
 }

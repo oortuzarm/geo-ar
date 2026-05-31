@@ -6,7 +6,9 @@ import type { Map as LeafletMap } from 'leaflet'
 import { haversineDistance } from '../../features/geolocation/haversine'
 import GeoPointMarker from './GeoPointMarker'
 import IntensityLayer from './IntensityLayer'
-import type { GeoPoint, PoiSearchResult, MapBounds } from '../../types'
+import PolygonDrawLayer from './PolygonDrawLayer'
+import type { PolygonDrawMode } from './PolygonDrawLayer'
+import type { GeoPoint, PoiSearchResult, MapBounds, ActivationPolygon } from '../../types'
 import { type MapStyleId } from '../../config/mapStyles'
 import BaseMapLayer from './BaseMapLayer'
 
@@ -47,9 +49,10 @@ interface ClickHandlerProps {
   onMapClick: (lat: number, lng: number) => void
 }
 
-function ClickHandler({ onMapClick }: ClickHandlerProps) {
+function ClickHandler({ onMapClick, disabled }: ClickHandlerProps & { disabled?: boolean }) {
   useMapEvents({
     click(e) {
+      if (disabled) return
       onMapClick(e.latlng.lat, e.latlng.lng)
     },
   })
@@ -60,9 +63,10 @@ interface DblClickHandlerProps {
   onMapDblClick: (lat: number, lng: number) => void
 }
 
-function DblClickHandler({ onMapDblClick }: DblClickHandlerProps) {
+function DblClickHandler({ onMapDblClick, disabled }: DblClickHandlerProps & { disabled?: boolean }) {
   useMapEvents({
     dblclick(e) {
+      if (disabled) return
       onMapDblClick(e.latlng.lat, e.latlng.lng)
     },
   })
@@ -146,6 +150,11 @@ interface DashboardMapProps {
   intensityActiveNow?: Record<string, number>
   intensityMode?: 'live' | 'historical'
   hidePoints?: boolean
+  // ── Polygon drawing ──────────────────────────────────────────────────────
+  polygonDrawMode?: PolygonDrawMode
+  polygonForPoint?: ActivationPolygon | undefined
+  onPolygonCommit?: (polygon: ActivationPolygon) => void
+  onPolygonDrawEnd?: () => void
 }
 
 export default function DashboardMap({
@@ -163,7 +172,12 @@ export default function DashboardMap({
   intensityActiveNow,
   intensityMode = 'live',
   hidePoints = false,
+  polygonDrawMode = 'idle',
+  polygonForPoint,
+  onPolygonCommit,
+  onPolygonDrawEnd,
 }: DashboardMapProps) {
+  const drawingActive = polygonDrawMode !== 'idle'
   const { mapCenter, mapZoom } = useGeoStore()
 
   return (
@@ -178,8 +192,16 @@ export default function DashboardMap({
       <BaseMapLayer key={mapStyleId} styleId={mapStyleId} />
       <MapController />
       <MapViewTracker />
-      <ClickHandler onMapClick={onMapClick} />
-      <DblClickHandler onMapDblClick={onMapDblClick} />
+      <ClickHandler onMapClick={onMapClick} disabled={drawingActive} />
+      <DblClickHandler onMapDblClick={onMapDblClick} disabled={drawingActive} />
+      {onPolygonCommit && onPolygonDrawEnd && (
+        <PolygonDrawLayer
+          drawMode={polygonDrawMode}
+          existingPolygon={polygonForPoint}
+          onPolygonCommit={onPolygonCommit}
+          onDrawEnd={onPolygonDrawEnd}
+        />
+      )}
       {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} />}
       <UserLocationLayer userPos={userPos} />
 

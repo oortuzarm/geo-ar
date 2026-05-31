@@ -45,7 +45,8 @@ import PreviewQRModal from '../../pages/Dashboard/PreviewQRModal'
 import UpgradeModal from '../subscription/UpgradeModal'
 import { useGeoStore } from '../../store/geoStore'
 import EditorModeContext from '../../contexts/EditorModeContext'
-import type { GeoPoint, MapBounds, PoiSearchResult } from '../../types'
+import type { GeoPoint, MapBounds, PoiSearchResult, ActivationPolygon } from '../../types'
+import type { PolygonDrawMode } from '../map/PolygonDrawLayer'
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -127,6 +128,9 @@ export default function ProjectEditor({
   const [mapBounds, setMapBounds]               = useState<MapBounds | null>(null)
   const [poiResults, setPoiResults]             = useState<PoiSearchResult[]>([])
   const [limitOpen, setLimitOpen]               = useState(false)
+
+  // ── Polygon drawing state ────────────────────────────────────────────────────
+  const [polygonDrawMode, setPolygonDrawMode]   = useState<PolygonDrawMode>('idle')
 
   // ── Intensity GPS overlay ───────────────────────────────────────────────────
   const [hidePoints, setHidePoints]                 = useState(false)
@@ -402,6 +406,37 @@ export default function ProjectEditor({
       }, 800)
     }
   }
+
+  // ── Polygon draw handlers ────────────────────────────────────────────────────
+
+  // Reset draw mode whenever the selected point changes.
+  useEffect(() => {
+    setPolygonDrawMode('idle')
+  }, [selectedPointId])
+
+  function handleRequestPolygonDraw() {
+    setPolygonDrawMode('drawing')
+    const pt = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
+    if (pt) { setMapCenter([pt.latitude, pt.longitude]); setMapZoom(17) }
+  }
+
+  function handleRequestPolygonEdit() {
+    setPolygonDrawMode('editing')
+  }
+
+  function handleStopPolygonEdit() {
+    setPolygonDrawMode('idle')
+  }
+
+  function handlePolygonCommit(polygon: ActivationPolygon) {
+    handlePointChange({ activationPolygon: polygon, activationMode: 'polygon' })
+  }
+
+  function handlePolygonDrawEnd() {
+    setPolygonDrawMode('idle')
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
 
   async function handleToggleActive(id: string) {
     await onToggleActive(id)
@@ -1115,6 +1150,10 @@ export default function ProjectEditor({
               intensityActiveNow={intensityOn && intensityActiveNow ? intensityActiveNow : undefined}
               intensityMode={intensityMode}
               hidePoints={hidePoints}
+              polygonDrawMode={polygonDrawMode}
+              polygonForPoint={selectedPoint?.activationPolygon}
+              onPolygonCommit={handlePolygonCommit}
+              onPolygonDrawEnd={handlePolygonDrawEnd}
             />
 
             {/* Map style toggle — desktop only; mobile version lives in the bottom bar */}
@@ -1230,6 +1269,10 @@ export default function ProjectEditor({
                   setPointFormOpen(false)
                 }}
                 onMediaOrphaned={onMediaOrphaned}
+                polygonDrawMode={polygonDrawMode}
+                onRequestPolygonDraw={handleRequestPolygonDraw}
+                onRequestPolygonEdit={handleRequestPolygonEdit}
+                onStopPolygonEdit={handleStopPolygonEdit}
               />
             </aside>
           )}
@@ -1363,6 +1406,10 @@ export default function ProjectEditor({
               }}
               onMediaOrphaned={onMediaOrphaned}
               hideHeader
+              polygonDrawMode={polygonDrawMode}
+              onRequestPolygonDraw={handleRequestPolygonDraw}
+              onRequestPolygonEdit={handleRequestPolygonEdit}
+              onStopPolygonEdit={handleStopPolygonEdit}
             />
           </div>
         )}

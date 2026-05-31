@@ -12,6 +12,8 @@ import { normalizeUrl, isValidUrl } from '../../lib/urlUtils'
 import type { PointImage } from '../../types'
 import UpgradeModal from '../../components/subscription/UpgradeModal'
 
+import type { PolygonDrawMode } from '../../components/map/PolygonDrawLayer'
+
 interface GeoPointFormProps {
   point: GeoPoint
   onChange: (updates: Partial<GeoPoint>) => void
@@ -20,6 +22,11 @@ interface GeoPointFormProps {
   onSave: () => void
   onMediaOrphaned?: (url: string) => void
   hideHeader?: boolean
+  // ── Polygon drawing ──────────────────────────────────────────────────────
+  polygonDrawMode?: PolygonDrawMode
+  onRequestPolygonDraw?: () => void
+  onRequestPolygonEdit?: () => void
+  onStopPolygonEdit?: () => void
 }
 
 const RADIUS_TOOLTIP =
@@ -306,7 +313,13 @@ function isMediaContentData(data: GeoPoint['contentData']): data is MediaContent
   return !!(data && 'file_url' in data && (data as MediaContentData).file_url)
 }
 
-export default function GeoPointForm({ point, onChange, onDelete, onClose, onSave, onMediaOrphaned, hideHeader = false }: GeoPointFormProps) {
+export default function GeoPointForm({
+  point, onChange, onDelete, onClose, onSave, onMediaOrphaned, hideHeader = false,
+  polygonDrawMode = 'idle',
+  onRequestPolygonDraw,
+  onRequestPolygonEdit,
+  onStopPolygonEdit,
+}: GeoPointFormProps) {
   const editorMode = useEditorMode()
   const { canUseContentType, canUseScheduleAvailability, canUseQuotaAvailability, canUseDwellTime, canUseLiveVisits } = usePlanFeatures()
   const mediaFileRef   = useRef<HTMLInputElement>(null)
@@ -715,37 +728,152 @@ export default function GeoPointForm({ point, onChange, onDelete, onClose, onSav
             Acceso
           </span>
 
-          {/* Dentro del área — radius slider, always active */}
-          <div className="bg-gray-800/50 border border-brand-500/30 rounded-lg p-3 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0" />
-                <span className="text-sm text-gray-300">Dentro del área</span>
-                <InfoTooltip text={RADIUS_TOOLTIP} />
+          {/* Zona de activación — Circular o Polígono personalizado */}
+          {(() => {
+            const mode = point.activationMode ?? 'radius'
+            const hasPolygon = Boolean(point.activationPolygon)
+            return (
+              <div className="bg-gray-800/50 border border-brand-500/30 rounded-lg p-3 space-y-3">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0" />
+                    <span className="text-sm text-gray-300">Zona de activación</span>
+                    <InfoTooltip text={RADIUS_TOOLTIP} />
+                  </div>
+                  <span className="text-xs text-brand-400 font-medium">Siempre activo</span>
+                </div>
+
+                {/* Mode selector */}
+                <div className="grid grid-cols-2 gap-1.5">
+                  {([
+                    { value: 'radius',  label: 'Circular' },
+                    { value: 'polygon', label: 'Polígono' },
+                  ] as { value: 'radius' | 'polygon'; label: string }[]).map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => {
+                        if (value === mode) return
+                        if (value === 'radius') {
+                          onChange({ activationMode: 'radius' })
+                        } else {
+                          onChange({ activationMode: 'polygon' })
+                        }
+                      }}
+                      className={[
+                        'py-1.5 rounded-md border text-xs font-medium transition-all',
+                        mode === value
+                          ? 'border-brand-500 bg-brand-500/15 text-brand-300'
+                          : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600 hover:text-gray-300',
+                      ].join(' ')}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Radius controls */}
+                {mode === 'radius' && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min={5} max={1000} step={5}
+                      value={point.activationRadius}
+                      onChange={(e) => onChange({ activationRadius: parseInt(e.target.value) })}
+                      className="flex-1 accent-brand-500"
+                    />
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min={1}
+                        value={point.activationRadius}
+                        onChange={(e) => onChange({ activationRadius: parseInt(e.target.value) || 10 })}
+                        className="w-16 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm
+                                   text-gray-100 text-center focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      />
+                      <span className="text-xs text-gray-500">m</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Polygon controls */}
+                {mode === 'polygon' && (
+                  <div className="space-y-2">
+                    {/* Status indicator */}
+                    <div className="flex items-center gap-1.5">
+                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${hasPolygon ? 'bg-emerald-500' : 'bg-gray-600'}`} />
+                      <span className={`text-xs ${hasPolygon ? 'text-emerald-400' : 'text-gray-500'}`}>
+                        {hasPolygon ? 'Polígono creado' : 'Sin polígono dibujado'}
+                      </span>
+                    </div>
+
+                    {/* Drawing in progress */}
+                    {polygonDrawMode === 'drawing' && (
+                      <p className="text-xs text-brand-300 animate-pulse leading-relaxed">
+                        Dibujando… hacé clic en el mapa para agregar vértices. Cerrá el polígono haciendo clic en el primer punto o presionando Enter.
+                      </p>
+                    )}
+
+                    {/* Editing in progress */}
+                    {polygonDrawMode === 'editing' && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-amber-300">
+                          Modo edición activo. Arrastrá los vértices para modificar el polígono.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={onStopPolygonEdit}
+                          className="w-full py-2 rounded-lg border border-emerald-600 bg-emerald-600/15
+                                     text-xs font-medium text-emerald-400 hover:bg-emerald-600/25
+                                     transition-colors"
+                        >
+                          Finalizar edición
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Action buttons (idle mode only) */}
+                    {polygonDrawMode === 'idle' && (
+                      <div className="space-y-1.5">
+                        <button
+                          type="button"
+                          onClick={onRequestPolygonDraw}
+                          className="w-full py-2 rounded-lg border border-brand-600 bg-brand-600/15
+                                     text-xs font-medium text-brand-400 hover:bg-brand-600/25
+                                     transition-colors"
+                        >
+                          {hasPolygon ? 'Redibujar polígono' : 'Dibujar polígono'}
+                        </button>
+                        {hasPolygon && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={onRequestPolygonEdit}
+                              className="w-full py-2 rounded-lg border border-gray-700 bg-gray-800
+                                         text-xs font-medium text-gray-300 hover:border-gray-600
+                                         transition-colors"
+                            >
+                              Editar polígono
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onChange({ activationPolygon: undefined })}
+                              className="w-full py-2 rounded-lg border border-red-900/60 bg-red-900/10
+                                         text-xs font-medium text-red-400 hover:bg-red-900/20
+                                         transition-colors"
+                            >
+                              Eliminar polígono
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-              <span className="text-xs text-brand-400 font-medium">Siempre activo</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="range"
-                min={5} max={1000} step={5}
-                value={point.activationRadius}
-                onChange={(e) => onChange({ activationRadius: parseInt(e.target.value) })}
-                className="flex-1 accent-brand-500"
-              />
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  min={1}
-                  value={point.activationRadius}
-                  onChange={(e) => onChange({ activationRadius: parseInt(e.target.value) || 10 })}
-                  className="w-16 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm
-                             text-gray-100 text-center focus:outline-none focus:ring-1 focus:ring-brand-500"
-                />
-                <span className="text-xs text-gray-500">m</span>
-              </div>
-            </div>
-          </div>
+            )
+          })()}
 
           {/* Permanencia — always visible; locked when plan excludes the feature */}
           <div

@@ -20,7 +20,7 @@ import { useGeolocation } from '../../hooks/useGeolocation'
 import { useMapStyle } from '../../hooks/useMapStyle'
 import { useGeoStore } from '../../store/geoStore'
 import MapStyleToggle from '../../components/map/MapStyleToggle'
-import { getMapTileUrl, MAP_ATTRIBUTION } from '../../config/mapStyles'
+import { getMapTileUrl, MAP_STYLES } from '../../config/mapStyles'
 import RoutePolyline from '../../components/map/RoutePolyline'
 import ManualLocationSheet from '../../components/map/ManualLocationSheet'
 import MapController from '../../components/map/MapController'
@@ -1875,7 +1875,7 @@ export default function PublicPage({
           <TileLayer
             key={mapStyleId}
             url={getMapTileUrl(mapStyleId)}
-            attribution={MAP_ATTRIBUTION}
+            attribution={MAP_STYLES[mapStyleId].attribution}
             maxZoom={20}
           />
           {userLocation && (

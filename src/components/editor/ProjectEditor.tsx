@@ -47,6 +47,7 @@ import { useGeoStore } from '../../store/geoStore'
 import EditorModeContext from '../../contexts/EditorModeContext'
 import type { GeoPoint, MapBounds, PoiSearchResult, ActivationPolygon } from '../../types'
 import type { PolygonDrawMode } from '../map/PolygonDrawLayer'
+import ZoneTypeModal from './ZoneTypeModal'
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -131,6 +132,13 @@ export default function ProjectEditor({
 
   // ── Polygon drawing state ────────────────────────────────────────────────────
   const [polygonDrawMode, setPolygonDrawMode]   = useState<PolygonDrawMode>('idle')
+
+  // ── Zone-type selector (shown before creating a new point) ──────────────────
+  const [zoneSelectorOpen, setZoneSelectorOpen] = useState(false)
+  // Coordinates saved while the zone-type modal is open.
+  const pendingCoordsRef = useRef<{ lat: number; lng: number } | null>(null)
+  // When true, the selectedPointId effect should start drawing instead of resetting.
+  const startPolygonOnSelectRef = useRef(false)
 
   // ── Intensity GPS overlay ───────────────────────────────────────────────────
   const [hidePoints, setHidePoints]                 = useState(false)
@@ -269,26 +277,6 @@ export default function ProjectEditor({
     if (pt) focusPoint(pt)
   }
 
-  async function openNewPoint(lat: number, lng: number, name?: string) {
-    if (!useGeoStore.getState().project) return
-    if (!canAddLocation(useGeoStore.getState().points.length)) {
-      setLimitOpen(true)
-      return
-    }
-    onMarkUnsaved?.()
-    try {
-      const newPoint = await onCreatePoint(lat, lng, name)
-      setSelectedPointId(newPoint.id)
-      setPointFormOpen(true)
-      setMobileEditOpen(true)
-      setIsNewMobilePoint(true)
-      setMobileProjectOpen(false)
-      addToast('Nuevo punto creado', 'success')
-    } catch {
-      addToast('Error al crear el punto', 'error')
-    }
-  }
-
   const handleMapClick = useCallback(
     async (lat: number, lng: number) => {
       if (locationPhase === 'manual-map') {
@@ -312,33 +300,36 @@ export default function ProjectEditor({
         return
       }
 
-      // Mobile FAB placement mode: tap creates a point at the tapped location
+      // Mobile FAB placement mode: tap opens zone selector at the tapped location
       if (isMobile && fabPlacementMode) {
         setFabPlacementMode(false)
-        await openNewPoint(lat, lng)
+        pendingCoordsRef.current = { lat, lng }
+        setZoneSelectorOpen(true)
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [project, selectedPointId, isMobile, fabPlacementMode, locationPhase],
   )
 
-  // Desktop only: double-click creates a new point at that location
+  // Desktop only: double-click opens the zone-type selector at that location
   const handleMapDblClick = useCallback(
-    async (lat: number, lng: number) => {
+    (lat: number, lng: number) => {
       if (isMobile || !project) return
-      await openNewPoint(lat, lng)
+      pendingCoordsRef.current = { lat, lng }
+      setZoneSelectorOpen(true)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [isMobile, project],
   )
 
-  async function handleAddPoint() {
+  function handleAddPoint() {
     if (!canAddLocation(useGeoStore.getState().points.length)) {
       setLimitOpen(true)
       return
     }
     const center = useGeoStore.getState().mapCenter
-    await openNewPoint(center[0], center[1])
+    pendingCoordsRef.current = { lat: center[0], lng: center[1] }
+    setZoneSelectorOpen(true)
   }
 
   async function createPointAt(lat: number, lng: number, name?: string): Promise<GeoPoint> {
@@ -410,7 +401,14 @@ export default function ProjectEditor({
   // ── Polygon draw handlers ────────────────────────────────────────────────────
 
   // Reset draw mode whenever the selected point changes.
+  // Exception: if startPolygonOnSelectRef is set, activate drawing instead
+  // (used when creating a new polygon-type point from the zone selector).
   useEffect(() => {
+    if (startPolygonOnSelectRef.current) {
+      startPolygonOnSelectRef.current = false
+      setPolygonDrawMode('drawing')
+      return
+    }
     setPolygonDrawMode('idle')
   }, [selectedPointId])
 
@@ -434,6 +432,52 @@ export default function ProjectEditor({
 
   function handlePolygonDrawEnd() {
     setPolygonDrawMode('idle')
+  }
+
+  // ── Zone-type selector handlers ───────────────────────────────────────────
+
+  function handleZoneSelectorCancel() {
+    setZoneSelectorOpen(false)
+    pendingCoordsRef.current = null
+  }
+
+  async function handleZoneTypeSelect(type: 'radius' | 'polygon') {
+    setZoneSelectorOpen(false)
+    const coords = pendingCoordsRef.current
+    pendingCoordsRef.current = null
+    if (!coords) return
+
+    if (!useGeoStore.getState().project) return
+    if (!canAddLocation(useGeoStore.getState().points.length)) {
+      setLimitOpen(true)
+      return
+    }
+
+    onMarkUnsaved?.()
+    try {
+      const newPoint = await onCreatePoint(coords.lat, coords.lng)
+
+      if (type === 'polygon') {
+        // Set activationMode on the newly created point before rendering the form.
+        upsertPoint({ ...newPoint, activationMode: 'polygon' })
+        // Signal the selectedPointId effect to start drawing instead of resetting.
+        startPolygonOnSelectRef.current = true
+      }
+
+      setSelectedPointId(newPoint.id)
+      setPointFormOpen(true)
+      setMobileEditOpen(true)
+      setIsNewMobilePoint(true)
+      setMobileProjectOpen(false)
+      addToast('Nuevo punto creado', 'success')
+
+      if (type === 'polygon') {
+        setMapCenter([coords.lat, coords.lng])
+        setMapZoom(17)
+      }
+    } catch {
+      addToast('Error al crear el punto', 'error')
+    }
   }
 
   // ────────────────────────────────────────────────────────────────────────────
@@ -1436,6 +1480,12 @@ export default function ProjectEditor({
           onConfirm={confirmDeletePoint}
           onCancel={() => setDeletePointTarget(null)}
           danger
+        />
+
+        <ZoneTypeModal
+          open={zoneSelectorOpen}
+          onSelect={(type) => { void handleZoneTypeSelect(type) }}
+          onCancel={handleZoneSelectorCancel}
         />
 
         <ToastContainer />

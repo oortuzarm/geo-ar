@@ -8,6 +8,8 @@ import { getPointGalleryImages } from '../../lib/pointImageUtils'
 interface PublicPointDetailSheetProps {
   point:                  GeoPoint
   distance:               number | null
+  /** Raw user coordinates — required for polygon-mode area checks. */
+  userLocation?:          { latitude: number; longitude: number } | null
   onClose:                () => void
   onActivate:             () => void
   isActivating:           boolean
@@ -23,7 +25,7 @@ interface PublicPointDetailSheetProps {
 }
 
 export default function PublicPointDetailSheet({
-  point, distance, onClose, onActivate,
+  point, distance, userLocation, onClose, onActivate,
   isActivating, accessMessage, accessFallbackUrl,
   routeStatus, walkingDistanceMeters, walkingDurationSeconds, address,
   isEmbed = false, pointCreatedAt, dwellProgress,
@@ -91,6 +93,7 @@ export default function PublicPointDetailSheet({
             <PublicPointCard
               point={point}
               distance={distance}
+              userLocation={userLocation}
               isSelected
               isDetail
               hideImage={hasGallery}

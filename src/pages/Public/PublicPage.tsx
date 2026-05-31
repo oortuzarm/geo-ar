@@ -9,6 +9,7 @@ import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
 
 import { haversineDistance } from '../../features/geolocation/haversine'
+import { isInsideActivationArea } from '../../features/geolocation/availability'
 import { reverseGeocode } from '../../features/geolocation/geocoding'
 import { trackRadiusEnter, trackPointClick, trackDwellStarted, trackDwellCompleted, trackDwellCancelled } from '../../lib/analytics'
 import { getLiveVisitSessionId } from '../../utils/liveVisits'
@@ -1243,11 +1244,7 @@ export default function PublicPage({
   useEffect(() => {
     if (!userLocation) return
     for (const pt of points) {
-      const dist = haversineDistance(
-        userLocation.latitude, userLocation.longitude,
-        pt.latitude, pt.longitude,
-      )
-      const isInside  = dist <= pt.activationRadius
+      const isInside  = isInsideActivationArea(pt, userLocation.latitude, userLocation.longitude)
       const wasInside = wasInsideRef.current[pt.id] ?? false
       if (!wasInside && isInside) {
         // id may be undefined in prefetched preview mode — skip analytics, still vibrate
@@ -1276,8 +1273,12 @@ export default function PublicPage({
         pt.latitude, pt.longitude,
       )
       const entry    = dwellMapRef.current[pt.id]
-      const isInside = dist <= pt.activationRadius
-      const isExited = dist > pt.activationRadius + 20
+      const isInside = isInsideActivationArea(pt, userLocation.latitude, userLocation.longitude)
+      // For radius mode: add 20 m hysteresis to prevent rapid in/out near the edge.
+      // For polygon mode: use the polygon boundary directly (no extra buffer).
+      const isExited = pt.activationMode === 'polygon' && pt.activationPolygon
+        ? !isInside
+        : dist > pt.activationRadius + 20
       console.log('[DwellDebug][hysteresis] route:', isTemporaryPreview ? 'temporary' : 'public',
         '| pt:', pt.id,
         '| dist:', dist.toFixed(0) + 'm', '| radius:', pt.activationRadius + 'm',
@@ -1828,6 +1829,7 @@ export default function PublicPage({
         <PublicPointCard
           point={pt}
           distance={distances[pt.id] ?? null}
+          userLocation={userLocation}
           isSelected={pt.id === selectedPointId}
           onSelect={() => handlePointClick(pt)}
           onActivate={() => { void handleActivate(pt) }}
@@ -2246,6 +2248,7 @@ export default function PublicPage({
           <PublicPointPreviewCard
             point={selectedPoint}
             distance={distances[selectedPoint.id] ?? null}
+            userLocation={userLocation}
             onViewDetail={handleViewDetail}
             onClose={handleExitSelectedPoint}
           />
@@ -2258,6 +2261,7 @@ export default function PublicPage({
         <PublicPointDetailSheet
           point={selectedPoint}
           distance={distances[selectedPoint.id] ?? null}
+          userLocation={userLocation}
           onClose={handleCloseDetail}
           onActivate={() => { void handleActivate(selectedPoint) }}
           isActivating={selectedPoint.id === activatingPointId}

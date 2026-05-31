@@ -151,6 +151,8 @@ function formatDwellTime(secs: number): string {
 interface PublicPointCardProps {
   point: GeoPoint
   distance: number | null
+  /** Raw user coordinates — required for polygon-mode area checks. */
+  userLocation?: { latitude: number; longitude: number } | null
   isSelected: boolean
   onSelect: () => void
   onActivate: () => void
@@ -177,7 +179,7 @@ interface PublicPointCardProps {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function PublicPointCard({
-  point, distance, isSelected, onSelect, onActivate, onExit,
+  point, distance, userLocation, isSelected, onSelect, onActivate, onExit,
   routeStatus, walkingDistanceMeters, walkingDurationSeconds,
   isActivating, accessMessage, accessFallbackUrl, address,
   hideImage = false, pointCreatedAt, isDetail = false,
@@ -189,7 +191,7 @@ export default function PublicPointCard({
 
   // Single availability computation — all chips, button state, and messages
   // derive exclusively from this object. Never re-check schedules below.
-  const avail = computePointAvailability(point, distance)
+  const avail = computePointAvailability(point, distance, userLocation)
 
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${point.latitude},${point.longitude}&travelmode=walking`
 
@@ -260,7 +262,7 @@ export default function PublicPointCard({
   console.log('[DwellDebug][card] point:', point.id,
     '| requiresDwellTime:', point.requiresDwellTime,
     '| dwellTimeSeconds:', point.dwellTimeSeconds,
-    '| insideRadius:', avail.insideRadius,
+    '| insideArea:', avail.insideArea,
     '| dwellState:', dwellState,
     '| blocksAccess:', dwellBlocking,
     '| avail.canAccess:', avail.canAccess,
@@ -274,7 +276,7 @@ export default function PublicPointCard({
   if (distance === null) {
     locationLabel   = 'Activá tu ubicación'
     locationVariant = 'neutral'
-  } else if (avail.insideRadius) {
+  } else if (avail.insideArea) {
     locationLabel   = 'Dentro del área'
     locationVariant = 'ok'
   } else {
@@ -302,7 +304,7 @@ export default function PublicPointCard({
     <div
       className={isDetail ? '' : [
         'rounded-xl border overflow-hidden transition-all duration-200 cursor-pointer',
-        isSelected && avail.insideRadius
+        isSelected && avail.insideArea
           ? 'border-brand-500/40 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.10),0_1px_4px_rgba(0,0,0,0.06)] ring-1 ring-brand-500/15'
           : isSelected
           ? 'border-brand-500/30 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.10),0_1px_4px_rgba(0,0,0,0.06)]'
@@ -564,7 +566,7 @@ export default function PublicPointCard({
             )}
 
             {/* Dwell chip — shows context when permanence is required */}
-            {dwellRequired && avail.insideRadius && dwellState === 'idle' && (
+            {dwellRequired && avail.insideArea && dwellState === 'idle' && (
               <div className="rounded-xl border px-3 py-2.5 bg-amber-50 border-amber-200">
                 <div className="flex items-center gap-2">
                   <span className="text-amber-700 text-sm">⏳</span>
@@ -591,7 +593,7 @@ export default function PublicPointCard({
 
             {/* CTA button — enabled iff avail.canAccess and dwell not blocking */}
             <div className={`space-y-2 ${isDetail ? 'pt-2' : 'pt-0.5'}`}>
-              {!avail.insideRadius && (
+              {!avail.insideArea && (
                 <button
                   onClick={handleNavigate}
                   className={[

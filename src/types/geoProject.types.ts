@@ -1,3 +1,10 @@
+import type { Feature, Polygon, MultiPolygon } from 'geojson'
+
+export type ActivationMode = 'radius' | 'polygon'
+
+/** GeoJSON Feature wrapping a Polygon or MultiPolygon used as an activation zone. */
+export type ActivationPolygon = Feature<Polygon | MultiPolygon>
+
 export type PublicInitialViewMode = 'fit_points' | 'user_location' | 'custom'
 
 export interface GeoProject {
@@ -88,6 +95,10 @@ export interface GeoPoint {
   requiresDwellTime?: boolean
   dwellTimeSeconds?: number
   createdAt?: string
+  /** Determines whether activation is based on a circular radius or a drawn polygon. Defaults to 'radius'. */
+  activationMode?: ActivationMode
+  /** GeoJSON Feature defining the activation zone. Only relevant when activationMode === 'polygon'. */
+  activationPolygon?: ActivationPolygon
 }
 
 export type NominatimResult = {

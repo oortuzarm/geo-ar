@@ -91,12 +91,14 @@ export class RemoteGeoRepository implements IGeoRepository {
     const hasImage =
       (typeof project.coverImage === 'string' && project.coverImage.startsWith('data:')) ||
       points.some((p) => typeof p.image === 'string' && p.image.startsWith('data:'))
-    // Send snake_case dwell fields alongside camelCase so Rails accepts them
+    // Send snake_case fields alongside camelCase so Rails accepts them
     // regardless of whether the backend has camelCase param conversion configured.
     const serializedPoints = points.map((p) => ({
       ...p,
       requires_dwell_time: p.requiresDwellTime,
       dwell_time_seconds:  p.dwellTimeSeconds,
+      activation_mode:     p.activationMode,
+      activation_polygon:  p.activationPolygon,
     }))
     const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_projects/${id}/sync`), {
       method: 'PATCH',
@@ -133,6 +135,8 @@ export class RemoteGeoRepository implements IGeoRepository {
       ...data,
       ...('requiresDwellTime' in data ? { requires_dwell_time: data.requiresDwellTime } : {}),
       ...('dwellTimeSeconds'  in data ? { dwell_time_seconds:  data.dwellTimeSeconds  } : {}),
+      ...('activationMode'    in data ? { activation_mode:     data.activationMode    } : {}),
+      ...('activationPolygon' in data ? { activation_polygon:  data.activationPolygon } : {}),
     }
     const raw = await apiFetch<Record<string, unknown>>(
       this.url(`/api/geo_projects/${data.geoProjectId}/geo_points`),
@@ -148,6 +152,8 @@ export class RemoteGeoRepository implements IGeoRepository {
       ...updates,
       ...('requiresDwellTime' in updates ? { requires_dwell_time: updates.requiresDwellTime } : {}),
       ...('dwellTimeSeconds'  in updates ? { dwell_time_seconds:  updates.dwellTimeSeconds  } : {}),
+      ...('activationMode'    in updates ? { activation_mode:     updates.activationMode    } : {}),
+      ...('activationPolygon' in updates ? { activation_polygon:  updates.activationPolygon } : {}),
     }
     const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_points/${id}`), {
       method: 'PUT',

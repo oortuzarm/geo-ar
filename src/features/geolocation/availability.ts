@@ -9,6 +9,8 @@
  * + getDay() / getHours() / getMinutes().  Nothing UTC-implicit.
  */
 
+import booleanPointInPolygon from '@turf/boolean-point-in-polygon'
+import { haversineDistance } from './haversine'
 import type { GeoPoint } from '../../types'
 
 // ── Day label helpers ─────────────────────────────────────────────────────────
@@ -41,9 +43,10 @@ export interface PointAvailability {
   canAccess:      boolean
   blockedReason:  BlockedReason
 
-  // ── Radius ───────────────────────────────────────────────────────────────
-  insideRadius:   boolean
-  /** Metres beyond the activation edge; null when no location fix. */
+  // ── Area (radius or polygon) ──────────────────────────────────────────────
+  /** True when the user is inside the activation area (circle or polygon). */
+  insideArea:     boolean
+  /** Metres beyond the activation edge; null for polygon mode or when no location fix. */
   distanceToEdge: number | null
 
   // ── Schedule ─────────────────────────────────────────────────────────────
@@ -67,14 +70,40 @@ export interface PointAvailability {
   quotaTotal:     number | undefined
 }
 
+// ── Area check ────────────────────────────────────────────────────────────────
+
+/**
+ * Returns true when the user is inside the point's activation area.
+ *
+ * For 'polygon' mode: uses Turf.js point-in-polygon (ray casting).
+ * For 'radius' mode (default): uses Haversine distance.
+ *
+ * Exported for use in PublicPage effects (radius-enter tracking, dwell timer)
+ * that need the same check without a full PointAvailability object.
+ */
+export function isInsideActivationArea(
+  point: GeoPoint,
+  userLat: number,
+  userLng: number,
+): boolean {
+  if (point.activationMode === 'polygon' && point.activationPolygon) {
+    return booleanPointInPolygon([userLng, userLat], point.activationPolygon)
+  }
+  const dist = haversineDistance(userLat, userLng, point.latitude, point.longitude)
+  return dist <= point.activationRadius
+}
+
 // ── Core computation ──────────────────────────────────────────────────────────
 
 /**
  * Derives the complete access-eligibility state for one geo-point.
  *
- * @param point    - the GeoPoint record (availability sub-object included)
- * @param distance - straight-line Haversine distance in metres, or null if
- *                   the user's location is not yet known
+ * @param point        - the GeoPoint record (availability sub-object included)
+ * @param distance     - straight-line Haversine distance in metres, or null if
+ *                       the user's location is not yet known
+ * @param userLocation - raw user coordinates; required for polygon-mode checks.
+ *                       If omitted and activationMode === 'polygon', the area
+ *                       check falls back to the no-location state.
  *
  * Call once per render and pass the result down to all child elements.
  * Do NOT call new Date() or check schedules anywhere else in the render tree.
@@ -82,13 +111,27 @@ export interface PointAvailability {
 export function computePointAvailability(
   point: GeoPoint,
   distance: number | null,
+  userLocation?: { latitude: number; longitude: number } | null,
 ): PointAvailability {
 
-  // ── Radius ────────────────────────────────────────────────────────────────
-  const insideRadius   = distance !== null && distance <= point.activationRadius
-  const distanceToEdge = distance !== null
-    ? Math.max(0, distance - point.activationRadius)
-    : null
+  // ── Area check (radius or polygon) ────────────────────────────────────────
+  const isPolygonMode = point.activationMode === 'polygon' && Boolean(point.activationPolygon)
+
+  let insideArea: boolean
+  let distanceToEdge: number | null
+
+  if (isPolygonMode) {
+    insideArea = userLocation != null
+      ? isInsideActivationArea(point, userLocation.latitude, userLocation.longitude)
+      : false
+    // distanceToEdge is not computed for polygon mode (would require turf/nearestPointOnLine).
+    distanceToEdge = null
+  } else {
+    insideArea     = distance !== null && distance <= point.activationRadius
+    distanceToEdge = distance !== null
+      ? Math.max(0, distance - point.activationRadius)
+      : null
+  }
 
   // ── Schedule (local browser time — never UTC) ─────────────────────────────
   const av = point.availability
@@ -171,21 +214,26 @@ export function computePointAvailability(
   // ── Composite gate ────────────────────────────────────────────────────────
   // All three conditions must hold. Checked in priority order so blockedReason
   // reflects the outermost blocker (the one the user needs to fix first).
+  //
+  // For polygon mode: no location → no-location. Outside polygon → 'radius'
+  // (reuses the same reason since both mean "user is not inside the area").
+  const hasLocation = isPolygonMode ? userLocation != null : distance !== null
+
   const canAccess =
-    distance !== null &&
-    insideRadius &&
+    hasLocation &&
+    insideArea &&
     scheduleAvailable &&
     quotaAvailable
 
   let blockedReason: BlockedReason = null
-  if (distance === null)         blockedReason = 'no-location'
-  else if (!insideRadius)        blockedReason = 'radius'
-  else if (!scheduleAvailable)   blockedReason = 'schedule'
-  else if (!quotaAvailable)      blockedReason = 'quota'
+  if (!hasLocation)          blockedReason = 'no-location'
+  else if (!insideArea)      blockedReason = 'radius'
+  else if (!scheduleAvailable) blockedReason = 'schedule'
+  else if (!quotaAvailable)    blockedReason = 'quota'
 
   return {
     canAccess, blockedReason,
-    insideRadius, distanceToEdge,
+    insideArea, distanceToEdge,
     scheduleActive, scheduleAvailable, scheduleLabel,
     scheduleDays, scheduleStartTime, scheduleEndTime,
     quotaActive, quotaAvailable, quotaLabel, quotaRemaining, quotaTotal,

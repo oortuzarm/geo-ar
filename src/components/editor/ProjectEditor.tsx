@@ -129,6 +129,7 @@ export default function ProjectEditor({
   const [mapBounds, setMapBounds]               = useState<MapBounds | null>(null)
   const [poiResults, setPoiResults]             = useState<PoiSearchResult[]>([])
   const [limitOpen, setLimitOpen]               = useState(false)
+  const [polygonIncompleteOpen, setPolygonIncompleteOpen] = useState(false)
 
   // ── Polygon drawing state ────────────────────────────────────────────────────
   const [polygonDrawMode, setPolygonDrawMode]   = useState<PolygonDrawMode>('idle')
@@ -710,12 +711,21 @@ export default function ProjectEditor({
     }
   }
 
+  /** Returns true if any active point is in polygon mode but has no drawn polygon. */
+  function hasIncompletePolygon(): boolean {
+    return useGeoStore.getState().points.some(
+      (p) => p.active && (p.activationMode ?? 'radius') === 'polygon' && !p.activationPolygon,
+    )
+  }
+
   async function handleSaveProject() {
+    if (hasIncompletePolygon()) { setPolygonIncompleteOpen(true); return }
     await onSaveProject()
   }
 
   async function handleToggleStatus() {
     if (!onToggleStatus || isPublishing) return
+    if (hasIncompletePolygon()) { setPolygonIncompleteOpen(true); return }
     setIsPublishing(true)
     try {
       await onToggleStatus()
@@ -1671,6 +1681,32 @@ export default function ProjectEditor({
           onSelect={(type) => { void handleZoneTypeSelect(type) }}
           onCancel={handleZoneSelectorCancel}
         />
+
+        {/* Incomplete polygon warning — shown when saving/publishing with polygon mode but no geometry */}
+        {polygonIncompleteOpen && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setPolygonIncompleteOpen(false)}
+            />
+            <div className="relative bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md">
+              <div className="p-6">
+                <h3 className="text-base font-semibold text-gray-100">
+                  No puedes guardar este proyecto
+                </h3>
+                <p className="mt-2 text-sm text-gray-400 leading-relaxed">
+                  Hay una ubicación configurada como polígono, pero todavía no tiene una zona dibujada.
+                  Dibuja el polígono o cambia la zona de activación a Circular antes de guardar.
+                </p>
+              </div>
+              <div className="flex justify-end px-6 pb-6">
+                <Button variant="primary" onClick={() => setPolygonIncompleteOpen(false)}>
+                  Entendido
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <ToastContainer />
       </div>

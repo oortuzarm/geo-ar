@@ -756,9 +756,7 @@ export default function GeoPointForm({
                       onClick={() => {
                         if (value === mode) return
                         if (value === 'radius') {
-                          // Clear activationPolygon so the polygon layer disappears
-                          // immediately from the map and the store stays consistent.
-                          onChange({ activationMode: 'radius', activationPolygon: undefined })
+                          onChange({ activationMode: 'radius' })
                         } else {
                           onChange({ activationMode: 'polygon' })
                         }

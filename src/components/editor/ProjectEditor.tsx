@@ -1288,7 +1288,11 @@ export default function ProjectEditor({
               intensityMode={intensityMode}
               hidePoints={hidePoints}
               polygonDrawMode={polygonDrawMode}
-              polygonForPoint={selectedPoint?.activationPolygon}
+              polygonForPoint={
+                selectedPoint?.activationMode === 'polygon'
+                  ? selectedPoint.activationPolygon
+                  : undefined
+              }
               onPolygonCommit={handlePolygonCommit}
               onPolygonDrawEnd={handlePolygonDrawEnd}
               onPolygonDrawCancel={handlePolygonDrawCancel}

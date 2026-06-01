@@ -155,6 +155,7 @@ interface DashboardMapProps {
   polygonForPoint?: ActivationPolygon | undefined
   onPolygonCommit?: (polygon: ActivationPolygon) => void
   onPolygonDrawEnd?: () => void
+  onPolygonDrawCancel?: () => void
 }
 
 export default function DashboardMap({
@@ -176,6 +177,7 @@ export default function DashboardMap({
   polygonForPoint,
   onPolygonCommit,
   onPolygonDrawEnd,
+  onPolygonDrawCancel,
 }: DashboardMapProps) {
   const drawingActive = polygonDrawMode !== 'idle'
   const { mapCenter, mapZoom } = useGeoStore()
@@ -200,6 +202,7 @@ export default function DashboardMap({
           existingPolygon={polygonForPoint}
           onPolygonCommit={onPolygonCommit}
           onDrawEnd={onPolygonDrawEnd}
+          onDrawCancel={onPolygonDrawCancel}
         />
       )}
       {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} />}

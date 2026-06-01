@@ -7,6 +7,13 @@
  *  - Activates Geoman vertex-edit mode when drawMode === 'editing'.
  *  - Never shows Geoman's built-in toolbar (controlled entirely via props).
  *  - Cleans up all layers and listeners on unmount and on prop changes.
+ *
+ * Cancellation detection:
+ *  Geoman fires pm:drawend whenever drawing stops (completion OR cancellation such as
+ *  pressing Escape). We track whether pm:create fired in the same session: if pm:drawend
+ *  fires without a preceding pm:create, drawing was cancelled and onDrawCancel is called.
+ *  Programmatic disableDraw() (via cleanup) also fires pm:drawend, but since we remove the
+ *  listener before calling disableDraw(), onDrawCancel is not triggered in that case.
  */
 
 import { useEffect, useRef } from 'react'
@@ -24,8 +31,14 @@ interface PolygonDrawLayerProps {
   existingPolygon: ActivationPolygon | undefined
   /** Called when drawing completes or a vertex is moved. */
   onPolygonCommit: (polygon: ActivationPolygon) => void
-  /** Called when a draw session ends (so the parent can reset drawMode → 'idle'). */
+  /** Called when a draw session ends normally (so the parent can reset drawMode → 'idle'). */
   onDrawEnd: () => void
+  /**
+   * Called when drawing is cancelled without producing a polygon
+   * (e.g. the user pressed Escape). Not called when drawMode is
+   * programmatically reset to 'idle' from outside.
+   */
+  onDrawCancel?: () => void
 }
 
 // ── Style constants ─────────────────────────────────────────────────────────
@@ -56,6 +69,7 @@ export default function PolygonDrawLayer({
   existingPolygon,
   onPolygonCommit,
   onDrawEnd,
+  onDrawCancel,
 }: PolygonDrawLayerProps) {
   const map = useMap()
 
@@ -65,8 +79,10 @@ export default function PolygonDrawLayer({
   // Stable refs so effects don't need the callbacks as deps.
   const onPolygonCommitRef = useRef(onPolygonCommit)
   const onDrawEndRef       = useRef(onDrawEnd)
+  const onDrawCancelRef    = useRef(onDrawCancel)
   onPolygonCommitRef.current = onPolygonCommit
   onDrawEndRef.current       = onDrawEnd
+  onDrawCancelRef.current    = onDrawCancel
 
   // ── Step 1: keep polygon layer in sync with existingPolygon ───────────────
 
@@ -111,8 +127,12 @@ export default function PolygonDrawLayer({
         continueDrawing: false,
       } as Parameters<typeof map.pm.enableDraw>[1])
 
+      // Track whether pm:create fired so we can detect cancellation via pm:drawend.
+      let didCreate = false
+
       function handleCreate(e: { layer: L.Layer; shape: string }) {
         if (e.shape !== 'Polygon') return
+        didCreate = true
         const drawnLayer = e.layer as L.Polygon
 
         // Build a styled permanent layer from the drawn shape.
@@ -130,10 +150,22 @@ export default function PolygonDrawLayer({
         onDrawEndRef.current()
       }
 
+      // pm:drawend fires for both completion and cancellation.
+      // If pm:create didn't fire first, the user cancelled.
+      // Important: listeners are removed BEFORE disableDraw() in cleanup so that
+      // the programmatic disableDraw() call does not trigger onDrawCancel.
+      function handleDrawEnd() {
+        if (!didCreate) {
+          onDrawCancelRef.current?.()
+        }
+      }
+
       map.on('pm:create', handleCreate)
+      map.on('pm:drawend', handleDrawEnd)
 
       return () => {
         map.off('pm:create', handleCreate)
+        map.off('pm:drawend', handleDrawEnd)
         map.pm.disableDraw()
       }
     }

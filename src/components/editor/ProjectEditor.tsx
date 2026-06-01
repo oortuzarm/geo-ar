@@ -137,8 +137,9 @@ export default function ProjectEditor({
   const [zoneSelectorOpen, setZoneSelectorOpen] = useState(false)
   // Coordinates saved while the zone-type modal is open.
   const pendingCoordsRef = useRef<{ lat: number; lng: number } | null>(null)
-  // When true, the selectedPointId effect should start drawing instead of resetting.
-  const startPolygonOnSelectRef = useRef(false)
+  // True when the user chose "Polygon" in the zone selector but hasn't drawn yet.
+  // onCreatePoint is deferred until the polygon is completed.
+  const polygonCreationPendingRef = useRef(false)
 
   // ── Intensity GPS overlay ───────────────────────────────────────────────────
   const [hidePoints, setHidePoints]                 = useState(false)
@@ -398,17 +399,24 @@ export default function ProjectEditor({
     }
   }
 
+  // ── Polygon centroid helper ───────────────────────────────────────────────────
+
+  function polygonCentroid(polygon: ActivationPolygon): { lat: number; lng: number } {
+    const ring = polygon.geometry.type === 'Polygon'
+      ? polygon.geometry.coordinates[0]
+      : polygon.geometry.coordinates[0][0]
+    const pts = ring.slice(0, -1) // remove closing duplicate
+    const n   = pts.length
+    return {
+      lng: pts.reduce((s, [x]) => s + x, 0) / n,
+      lat: pts.reduce((s, [, y]) => s + y, 0) / n,
+    }
+  }
+
   // ── Polygon draw handlers ────────────────────────────────────────────────────
 
   // Reset draw mode whenever the selected point changes.
-  // Exception: if startPolygonOnSelectRef is set, activate drawing instead
-  // (used when creating a new polygon-type point from the zone selector).
   useEffect(() => {
-    if (startPolygonOnSelectRef.current) {
-      startPolygonOnSelectRef.current = false
-      setPolygonDrawMode('drawing')
-      return
-    }
     setPolygonDrawMode('idle')
   }, [selectedPointId])
 
@@ -427,10 +435,39 @@ export default function ProjectEditor({
   }
 
   function handlePolygonCommit(polygon: ActivationPolygon) {
-    handlePointChange({ activationPolygon: polygon, activationMode: 'polygon' })
+    if (polygonCreationPendingRef.current) {
+      // Pre-creation flow: the user just drew the first polygon for a new point.
+      // Create the point at the centroid and attach the polygon to it.
+      polygonCreationPendingRef.current = false
+      const centroid = polygonCentroid(polygon)
+      onMarkUnsaved?.()
+      onCreatePoint(centroid.lat, centroid.lng)
+        .then((newPoint) => {
+          // Attach polygon to the new point in the local store.
+          upsertPoint({ ...newPoint, activationMode: 'polygon', activationPolygon: polygon })
+          setSelectedPointId(newPoint.id)
+          setPointFormOpen(true)
+          setMobileEditOpen(true)
+          setIsNewMobilePoint(true)
+          setMobileProjectOpen(false)
+          addToast('Nuevo punto creado', 'success')
+        })
+        .catch(() => {
+          addToast('Error al crear el punto', 'error')
+        })
+    } else {
+      // Editing flow: update the already-selected existing point.
+      handlePointChange({ activationPolygon: polygon, activationMode: 'polygon' })
+    }
   }
 
   function handlePolygonDrawEnd() {
+    setPolygonDrawMode('idle')
+  }
+
+  function handlePolygonDrawCancel() {
+    // Drawing was cancelled (e.g. user pressed Escape) without producing a polygon.
+    polygonCreationPendingRef.current = false
     setPolygonDrawMode('idle')
   }
 
@@ -453,30 +490,27 @@ export default function ProjectEditor({
       return
     }
 
-    onMarkUnsaved?.()
-    try {
-      const newPoint = await onCreatePoint(coords.lat, coords.lng)
-
-      if (type === 'polygon') {
-        // Set activationMode on the newly created point before rendering the form.
-        upsertPoint({ ...newPoint, activationMode: 'polygon' })
-        // Signal the selectedPointId effect to start drawing instead of resetting.
-        startPolygonOnSelectRef.current = true
+    if (type === 'radius') {
+      // Radius: create point immediately and open the form (existing behaviour).
+      onMarkUnsaved?.()
+      try {
+        const newPoint = await onCreatePoint(coords.lat, coords.lng)
+        setSelectedPointId(newPoint.id)
+        setPointFormOpen(true)
+        setMobileEditOpen(true)
+        setIsNewMobilePoint(true)
+        setMobileProjectOpen(false)
+        addToast('Nuevo punto creado', 'success')
+      } catch {
+        addToast('Error al crear el punto', 'error')
       }
-
-      setSelectedPointId(newPoint.id)
-      setPointFormOpen(true)
-      setMobileEditOpen(true)
-      setIsNewMobilePoint(true)
-      setMobileProjectOpen(false)
-      addToast('Nuevo punto creado', 'success')
-
-      if (type === 'polygon') {
-        setMapCenter([coords.lat, coords.lng])
-        setMapZoom(17)
-      }
-    } catch {
-      addToast('Error al crear el punto', 'error')
+    } else {
+      // Polygon: start drawing first — the point is created in handlePolygonCommit
+      // after the user completes the polygon.  No pin appears until then.
+      polygonCreationPendingRef.current = true
+      setMapCenter([coords.lat, coords.lng])
+      setMapZoom(17)
+      setPolygonDrawMode('drawing')
     }
   }
 
@@ -1198,6 +1232,7 @@ export default function ProjectEditor({
               polygonForPoint={selectedPoint?.activationPolygon}
               onPolygonCommit={handlePolygonCommit}
               onPolygonDrawEnd={handlePolygonDrawEnd}
+              onPolygonDrawCancel={handlePolygonDrawCancel}
             />
 
             {/* Map style toggle — desktop only; mobile version lives in the bottom bar */}

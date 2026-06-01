@@ -811,7 +811,7 @@ export default function GeoPointForm({
                     {/* Drawing in progress */}
                     {polygonDrawMode === 'drawing' && (
                       <p className="text-xs text-brand-300 animate-pulse leading-relaxed">
-                        Dibujando… hacé clic en el mapa para agregar vértices. Cerrá el polígono haciendo clic en el primer punto o presionando Enter.
+                        Dibujando… haz clic en el mapa para agregar vértices. Cierra el polígono haciendo clic en el primer punto o presionando Enter.
                       </p>
                     )}
 
@@ -819,7 +819,7 @@ export default function GeoPointForm({
                     {polygonDrawMode === 'editing' && (
                       <div className="space-y-2">
                         <p className="text-xs text-amber-300">
-                          Modo edición activo. Arrastrá los vértices para modificar el polígono.
+                          Modo edición activo. Arrastra los vértices para modificar el polígono.
                         </p>
                         <button
                           type="button"
@@ -858,7 +858,7 @@ export default function GeoPointForm({
                             </button>
                             <button
                               type="button"
-                              onClick={onDelete}
+                              onClick={() => onChange({ activationPolygon: undefined })}
                               className="w-full py-2 rounded-lg border border-red-900/60 bg-red-900/10
                                          text-xs font-medium text-red-400 hover:bg-red-900/20
                                          transition-colors"

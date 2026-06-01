@@ -55,7 +55,7 @@ export default function ZoneTypeModal({ open, onSelect, onCancel }: ZoneTypeModa
             ¿Qué tipo de zona querés crear?
           </h3>
           <p className="text-xs text-gray-500 mt-1">
-            Podés cambiarlo después desde el formulario del punto.
+            Puedes cambiarlo después desde el formulario del punto.
           </p>
         </div>
 
@@ -91,7 +91,7 @@ export default function ZoneTypeModal({ open, onSelect, onCancel }: ZoneTypeModa
               Polígono
             </span>
             <span className="text-[11px] text-gray-500 leading-snug">
-              Dibujá una zona personalizada.
+              Dibuja una zona personalizada.
             </span>
           </button>
         </div>

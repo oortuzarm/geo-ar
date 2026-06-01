@@ -643,137 +643,59 @@ function DifferentialsSection() {
   )
 }
 
-// ─── Metrics section ──────────────────────────────────────────────────────────
+// ─── Analytics (compact bridge) ───────────────────────────────────────────────
 
 function WorldAsInterfaceSection() {
   return (
-    <section id="v2-concept" className="py-12 sm:py-16 lg:py-20 px-5 relative overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #050810 0%, #060c18 55%, #050810 100%)' }}>
+    <section id="v2-concept" className="py-14 sm:py-20 px-5 bg-[#050810] relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 55% 60% at 25% 55%, rgba(14,165,233,0.07) 0%, transparent 65%)',
+        background: 'radial-gradient(ellipse 50% 55% at 50% 50%, rgba(14,165,233,0.05) 0%, transparent 65%)',
       }} />
+      <div className="relative z-10 max-w-3xl mx-auto text-center">
 
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+        <Reveal>
+          <SectionLabel>Analytics</SectionLabel>
+          <h2 className="text-3xl sm:text-4xl font-black text-white">
+            Mide la actividad de tus ubicaciones
+          </h2>
+          <p className="mt-4 text-slate-400 max-w-xl mx-auto leading-relaxed">
+            Obtén información sobre entradas, conversiones y actividad en tiempo real
+            para comprender cómo interactúan las personas con tus experiencias geolocalizadas.
+          </p>
+        </Reveal>
 
-          {/* ── Screenshot — desktop only ── */}
-          <Reveal className="hidden lg:block flex-1 w-full relative">
-            <div className="absolute -inset-12 pointer-events-none" style={{
-              background: 'radial-gradient(ellipse 75% 60% at 50% 50%, rgba(14,165,233,0.08) 0%, transparent 70%)',
-            }} />
-
-            {/* Browser chrome */}
-            <div className="relative rounded-2xl overflow-hidden border border-white/[0.09]
-                            shadow-[0_32px_96px_rgba(0,0,0,0.7)]">
-              <div className="h-10 bg-[#0d1117] border-b border-white/[0.06] flex items-center gap-3 px-4">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/60" />
-                </div>
-                <div className="flex-1 flex justify-center">
-                  <div className="bg-white/[0.05] rounded-md px-4 py-0.5 text-[11px] text-slate-500">
-                    studio.ubyca.com/project/descuentos/metrics
-                  </div>
-                </div>
+        <Reveal delay={0.1}>
+          <div className="mt-10 grid grid-cols-3 gap-4 max-w-sm mx-auto sm:max-w-md">
+            {[
+              { v: '147', l: 'Entradas',         c: 'text-white' },
+              { v: '68',  l: 'Conversiones',     c: 'text-emerald-400' },
+              { v: '24',  l: 'Actividad en vivo', c: 'text-brand-400' },
+            ].map((s) => (
+              <div key={s.l} className="py-4 px-3 rounded-xl border border-white/[0.07] bg-white/[0.02] text-center">
+                <p className={`text-2xl font-black leading-none ${s.c}`}>{s.v}</p>
+                <p className="text-[11px] text-slate-500 mt-2 leading-snug">{s.l}</p>
               </div>
-              <div className="relative overflow-hidden" style={{ height: 420 }}>
-                <div className="absolute inset-0 bg-[#0d1117]" />
-                <img
-                  src="/screenshot-metrics.png"
-                  alt="Dashboard de métricas Ubyca"
-                  className="absolute inset-0 w-full h-full object-cover select-none"
-                  style={{ objectPosition: 'center top' }}
-                  draggable={false}
-                  loading="lazy"
-                />
-                <div className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
-                  style={{ background: 'linear-gradient(to bottom, transparent, rgba(9,11,17,0.92))' }} />
-              </div>
-            </div>
-
-            {/* Floating conversion card */}
-            <motion.div
-              animate={{ y: [0, -7, 0] }}
-              transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute -right-5 top-14 hidden lg:block"
-            >
-              <div className="bg-gray-950/95 backdrop-blur-xl border border-white/[0.12]
-                              rounded-2xl px-4 py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
-                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-2">Conversión</p>
-                <p className="text-3xl font-black text-emerald-400 leading-none">46%</p>
-                <p className="text-[10px] text-slate-600 mt-1">Excelente · entrada → clic</p>
-              </div>
-            </motion.div>
-
-            {/* Floating insight card */}
-            <motion.div
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
-              className="absolute -left-5 bottom-14 hidden lg:block"
-            >
-              <div className="bg-gray-950/95 backdrop-blur-xl border border-white/[0.12]
-                              rounded-2xl px-4 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.6)] max-w-[195px]">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div className="w-5 h-5 rounded-full bg-brand-500/20 border border-brand-500/30
-                                  flex items-center justify-center flex-shrink-0 text-[10px]">⚡</div>
-                  <p className="text-[10px] font-bold text-white">Insight automático</p>
-                </div>
-                <p className="text-[10px] text-emerald-400 leading-snug">
-                  "Nuevo punto" — 60% conversión, mejor del proyecto
-                </p>
-              </div>
-            </motion.div>
-          </Reveal>
-
-          {/* ── Text ── */}
-          <div className="flex-shrink-0 w-full lg:w-[380px] flex flex-col items-start">
-            <Reveal>
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-widest uppercase
-                               text-brand-400 border border-brand-500/30 bg-brand-500/[0.08] px-3.5 py-1.5 rounded-full">
-                Analytics
-              </span>
-              <h2 className="mt-5 text-3xl md:text-4xl font-black text-white leading-tight">
-                Métricas reales.<br />Comportamiento real.
-              </h2>
-              <p className="mt-4 text-slate-400 text-base leading-relaxed">
-                Cada entrada al área, cada clic, cada conversión — en tiempo real. Sin estimaciones, sin supuestos.
-              </p>
-            </Reveal>
-
-            <Reveal delay={0.1}>
-              <div className="mt-8 grid grid-cols-3 gap-3 w-full">
-                {[
-                  { v: '13',  l: 'Entradas al radio', c: 'text-white' },
-                  { v: '6',   l: 'Clics en exp.',     c: 'text-brand-400' },
-                  { v: '46%', l: 'Conversión',         c: 'text-emerald-400' },
-                ].map((s) => (
-                  <div key={s.l} className="p-3.5 rounded-xl border border-white/[0.07] bg-white/[0.02] text-center">
-                    <p className={`text-xl font-black leading-none ${s.c}`}>{s.v}</p>
-                    <p className="text-[10px] text-slate-600 mt-1.5 leading-snug">{s.l}</p>
-                  </div>
-                ))}
-              </div>
-            </Reveal>
-
-            <Reveal delay={0.15}>
-              <div className="mt-7 space-y-2.5">
-                {[
-                  'Entradas al área de activación por punto',
-                  'Activaciones y clics por contenido',
-                  'Análisis por horarios, días y conversiones',
-                  'Insights automáticos generados en tiempo real',
-                ].map((item) => (
-                  <div key={item} className="flex items-center gap-2.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0" />
-                    <span className="text-sm text-slate-400">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </Reveal>
+            ))}
           </div>
+        </Reveal>
 
-        </div>
+        <Reveal delay={0.18}>
+          <a
+            href="/studio"
+            className="mt-8 inline-flex items-center gap-1.5 text-sm font-semibold
+                       text-brand-400 hover:text-brand-300 transition-colors duration-150 group"
+          >
+            Explorar Studio
+            <svg
+              className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-150"
+              viewBox="0 0 20 20" fill="currentColor"
+            >
+              <path fillRule="evenodd" clipRule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+            </svg>
+          </a>
+        </Reveal>
+
       </div>
     </section>
   )

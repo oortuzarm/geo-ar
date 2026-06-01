@@ -1498,6 +1498,7 @@ export default function ProjectEditor({
                 onDelete={() => setDeletePointTarget(selectedPoint.id)}
                 onClose={() => { setSelectedPointId(null); setPointFormOpen(false) }}
                 onSave={() => {
+                  if (hasIncompletePolygon()) { setPolygonIncompleteOpen(true); return }
                   addToast('Punto guardado', 'success')
                   setSelectedPointId(null)
                   setPointFormOpen(false)
@@ -1634,6 +1635,7 @@ export default function ProjectEditor({
                 : () => setMobileEditOpen(false)
               }
               onSave={() => {
+                if (hasIncompletePolygon()) { setPolygonIncompleteOpen(true); return }
                 addToast('Punto guardado', 'success')
                 setSelectedPointId(null)
                 setPointFormOpen(false)

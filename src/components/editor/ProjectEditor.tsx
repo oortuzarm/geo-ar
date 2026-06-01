@@ -370,21 +370,26 @@ export default function ProjectEditor({
         longitude:         lng,
         activationPolygon: translatePolygon(point.activationPolygon, deltaLat, deltaLng),
       })
+      onMarkUnsaved?.()
+      // Polygon points: skip onSavePointCoords (PUT /api/geo_points/:id) because
+      // the individual-point endpoint may not handle activation_polygon correctly.
+      // The translated polygon is already in the store; the next full "Guardar"
+      // (syncProject) will persist everything correctly.
     } else {
       updatePointCoords(id, lat, lng)
+      onMarkUnsaved?.()
+      try {
+        await onSavePointCoords(id, lat, lng)
+      } catch {
+        addToast('No se pudo guardar la nueva posición', 'error')
+      }
     }
 
-    onMarkUnsaved?.()
     if (selectedPointId !== id) {
       setSelectedPointId(id)
       setPointFormOpen(true)
       setMobileEditOpen(false)
       setIsNewMobilePoint(false)
-    }
-    try {
-      await onSavePointCoords(id, lat, lng)
-    } catch {
-      addToast('No se pudo guardar la nueva posición', 'error')
     }
   }
 

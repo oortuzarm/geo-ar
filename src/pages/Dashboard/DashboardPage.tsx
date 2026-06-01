@@ -244,15 +244,29 @@ export default function DashboardPage() {
       ? deletedCd!.file_url
       : undefined
 
+    // Step 1 (critical): delete the point from the API. If this fails, propagate so
+    // the UI shows an error and the local state is not modified.
     await geoPointsApi.removePoint(id)
+
+    // Step 2: remove from local store and update project's geoPointIds.
     removePoint(id)
     const project = useGeoStore.getState().project!
     const updatedIds = project.geoPointIds.filter((pid) => pid !== id)
     useGeoStore.getState().updateProjectField('geoPointIds', updatedIds)
-    await geoProjectsApi.saveProject(project.id, {
-      ...useGeoStore.getState().project!,
-      geoPointIds: updatedIds,
-    })
+
+    // Step 3 (non-fatal): persist updated geoPointIds to backend.
+    // The point is already deleted; if this call fails the project will
+    // re-sync correctly on the next full "Guardar". Don't surface this
+    // failure as "Error al eliminar el punto" since the deletion succeeded.
+    try {
+      await geoProjectsApi.saveProject(project.id, {
+        ...useGeoStore.getState().project!,
+        geoPointIds: updatedIds,
+      })
+    } catch (err) {
+      console.warn('[DeletePoint] Project geoPointIds sync failed (non-fatal):', err)
+    }
+
     if (orphanUrl) {
       console.log('[DeletePoint] Cleaning orphan media:', orphanUrl)
       void deleteMediaFile(orphanUrl)

@@ -119,8 +119,8 @@ function HeroSection() {
             transition={{ duration: 0.7, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
             className="mt-5 text-base md:text-lg text-slate-400 leading-relaxed"
           >
-            Crea puntos geolocalizados, define radios de activación y permite desbloquear contenido,
-            promociones o rutas al llegar a un lugar específico.
+            Obtén un análisis detallado de entradas, conversiones y actividad en tiempo real
+            para comprender cómo interactúan las personas con tus ubicaciones.
           </motion.p>
 
           <motion.div

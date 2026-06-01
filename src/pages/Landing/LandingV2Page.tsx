@@ -41,9 +41,13 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 const HERO_WORDS = [
   'eventos y festivales.',
-  'tiendas y retail.',
   'activaciones.',
   'ferias y stands.',
+  'tiendas y retail.',
+  'municipios.',
+  'turismo.',
+  'campus.',
+  'espacios públicos.',
 ]
 
 function RotatingWord() {

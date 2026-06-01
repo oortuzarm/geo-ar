@@ -47,19 +47,20 @@ export default function GeoPointMarker({
     }
   }, [point.latitude, point.longitude])
 
-  // For polygon-mode points: enable drag only when selected (otherwise the pin could
-  // move independently of its polygon, since onPolygonDrag is only wired for the
-  // selected point). react-leaflet does not reliably re-apply the draggable prop on
-  // update, so we also set it imperatively here.
+  // All points: drag is only allowed when the point is selected.
+  // This prevents a radius pin from moving without the user explicitly choosing it,
+  // and prevents a polygon pin from separating from its polygon layer.
+  // react-leaflet does not reliably re-apply the draggable prop on update,
+  // so we also set it imperatively here.
   useEffect(() => {
     const m = markerRef.current
-    if (!m || (point.activationMode ?? 'radius') === 'radius') return
+    if (!m) return
     if (selected) {
       m.dragging?.enable()
     } else {
       m.dragging?.disable()
     }
-  }, [selected, point.activationMode])
+  }, [selected])
 
   // Attach drag events directly to the Leaflet marker instance.
   // Using native Leaflet .on() avoids the react-leaflet eventHandlers batching/re-attachment
@@ -127,7 +128,7 @@ export default function GeoPointMarker({
         ref={markerRef}
         position={[point.latitude, point.longitude]}
         icon={icon}
-        draggable={(point.activationMode ?? 'radius') === 'radius' || selected}
+        draggable={selected}
         zIndexOffset={selected ? 1000 : 0}
         eventHandlers={{ click: () => onClick(point.id) }}
       />

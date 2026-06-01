@@ -141,6 +141,18 @@ export default function ProjectEditor({
   // onCreatePoint is deferred until the polygon is completed.
   const polygonCreationPendingRef = useRef(false)
 
+  // Snapshot of the polygon state saved when entering draw or edit mode.
+  // Used to restore on cancel.
+  const polygonBackupRef = useRef<{
+    activationPolygon: ActivationPolygon | undefined
+    latitude: number
+    longitude: number
+  } | null>(null)
+
+  // When true, the next handlePolygonCommit call (triggered by the editing
+  // effect's cleanup) is a no-op — the user cancelled instead of finishing.
+  const skipNextPolygonCommit = useRef(false)
+
   // ── Intensity GPS overlay ───────────────────────────────────────────────────
   const [hidePoints, setHidePoints]                 = useState(false)
   const [intensityOn, setIntensityOn]               = useState(false)
@@ -460,35 +472,97 @@ export default function ProjectEditor({
 
   // ── Polygon draw handlers ────────────────────────────────────────────────────
 
-  // Reset draw mode whenever the selected point changes.
+  // Reset draw mode and clear temp refs whenever the selected point changes.
   useEffect(() => {
+    polygonBackupRef.current = null
+    skipNextPolygonCommit.current = false
     setPolygonDrawMode('idle')
   }, [selectedPointId])
 
+  // ── Shared helpers ────────────────────────────────────────────────────────────
+
+  /** Restores the polygon + coords backup to the selected point's store entry. */
+  function restorePolygonBackup() {
+    if (!polygonBackupRef.current || !selectedPointId) return
+    const current = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
+    if (!current) return
+    upsertPoint({
+      ...current,
+      activationPolygon: polygonBackupRef.current.activationPolygon,
+      latitude:          polygonBackupRef.current.latitude,
+      longitude:         polygonBackupRef.current.longitude,
+    })
+  }
+
+  // ── Polygon draw handlers ─────────────────────────────────────────────────────
+
   function handleRequestPolygonDraw() {
-    setPolygonDrawMode('drawing')
+    // Save a backup so the user can cancel and restore the previous polygon.
     const pt = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
-    if (pt) { setMapCenter([pt.latitude, pt.longitude]); setMapZoom(17) }
+    if (pt) {
+      polygonBackupRef.current = {
+        activationPolygon: pt.activationPolygon,
+        latitude:          pt.latitude,
+        longitude:         pt.longitude,
+      }
+      setMapCenter([pt.latitude, pt.longitude])
+      setMapZoom(17)
+    }
+    setPolygonDrawMode('drawing')
   }
 
   function handleRequestPolygonEdit() {
+    // Save a backup so the user can cancel and restore the original shape.
+    const pt = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
+    if (pt) {
+      polygonBackupRef.current = {
+        activationPolygon: pt.activationPolygon,
+        latitude:          pt.latitude,
+        longitude:         pt.longitude,
+      }
+    }
     setPolygonDrawMode('editing')
   }
 
   function handleStopPolygonEdit() {
+    // Normal finish — editing effect cleanup will commit latestFeature.
+    setPolygonDrawMode('idle')
+  }
+
+  function handleCancelPolygonDraw() {
+    // User cancelled a redraw (button or Escape). Restore backup if it exists.
+    polygonCreationPendingRef.current = false
+    restorePolygonBackup()
+    polygonBackupRef.current = null
+    setPolygonDrawMode('idle')
+  }
+
+  function handleCancelPolygonEdit() {
+    // User cancelled editing. Restore backup and tell handlePolygonCommit to skip
+    // the commit that the editing effect's cleanup will attempt to fire.
+    restorePolygonBackup()
+    polygonBackupRef.current = null
+    skipNextPolygonCommit.current = true
     setPolygonDrawMode('idle')
   }
 
   function handlePolygonCommit(polygon: ActivationPolygon) {
+    // Skip path: user cancelled an edit — the cleanup fires this but we discard it.
+    if (skipNextPolygonCommit.current) {
+      skipNextPolygonCommit.current = false
+      return
+    }
+
+    // Clear backup on every successful commit.
+    polygonBackupRef.current = null
+
     if (polygonCreationPendingRef.current) {
       // Pre-creation flow: the user just drew the first polygon for a new point.
-      // Create the point at the centroid and attach the polygon to it.
       polygonCreationPendingRef.current = false
       const centroid = polygonCentroid(polygon)
       onMarkUnsaved?.()
       onCreatePoint(centroid.lat, centroid.lng)
         .then((newPoint) => {
-          // Attach polygon to the new point in the local store.
           upsertPoint({ ...newPoint, activationMode: 'polygon', activationPolygon: polygon })
           setSelectedPointId(newPoint.id)
           setPointFormOpen(true)
@@ -502,8 +576,6 @@ export default function ProjectEditor({
         })
     } else {
       // Editing flow: update the already-selected existing point.
-      // Recalculate centroid so the pin stays at the geometric centre of the polygon.
-      // Bypass handlePointChange to avoid triggering setMapCenter on every vertex drag.
       if (!selectedPointId) return
       const current = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
       if (!current) return
@@ -521,13 +593,13 @@ export default function ProjectEditor({
   }
 
   function handlePolygonDrawEnd() {
+    polygonBackupRef.current = null
     setPolygonDrawMode('idle')
   }
 
+  // Escape key or programmatic cancel from PolygonDrawLayer.
   function handlePolygonDrawCancel() {
-    // Drawing was cancelled (e.g. user pressed Escape) without producing a polygon.
-    polygonCreationPendingRef.current = false
-    setPolygonDrawMode('idle')
+    handleCancelPolygonDraw()
   }
 
   // ── Zone-type selector handlers ───────────────────────────────────────────
@@ -1415,6 +1487,8 @@ export default function ProjectEditor({
                 onRequestPolygonDraw={handleRequestPolygonDraw}
                 onRequestPolygonEdit={handleRequestPolygonEdit}
                 onStopPolygonEdit={handleStopPolygonEdit}
+                onCancelPolygonDraw={handleCancelPolygonDraw}
+                onCancelPolygonEdit={handleCancelPolygonEdit}
               />
             </aside>
           )}
@@ -1552,6 +1626,8 @@ export default function ProjectEditor({
               onRequestPolygonDraw={handleRequestPolygonDraw}
               onRequestPolygonEdit={handleRequestPolygonEdit}
               onStopPolygonEdit={handleStopPolygonEdit}
+              onCancelPolygonDraw={handleCancelPolygonDraw}
+              onCancelPolygonEdit={handleCancelPolygonEdit}
             />
           </div>
         )}

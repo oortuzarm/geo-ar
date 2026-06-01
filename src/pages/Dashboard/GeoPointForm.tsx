@@ -27,6 +27,10 @@ interface GeoPointFormProps {
   onRequestPolygonDraw?: () => void
   onRequestPolygonEdit?: () => void
   onStopPolygonEdit?: () => void
+  /** Cancel a redraw session — restores the previous polygon without changes. */
+  onCancelPolygonDraw?: () => void
+  /** Cancel an edit session — restores the original polygon without changes. */
+  onCancelPolygonEdit?: () => void
 }
 
 const RADIUS_TOOLTIP =
@@ -319,6 +323,8 @@ export default function GeoPointForm({
   onRequestPolygonDraw,
   onRequestPolygonEdit,
   onStopPolygonEdit,
+  onCancelPolygonDraw,
+  onCancelPolygonEdit,
 }: GeoPointFormProps) {
   const editorMode = useEditorMode()
   const { canUseContentType, canUseScheduleAvailability, canUseQuotaAvailability, canUseDwellTime, canUseLiveVisits } = usePlanFeatures()
@@ -810,14 +816,25 @@ export default function GeoPointForm({
 
                     {/* Drawing in progress */}
                     {polygonDrawMode === 'drawing' && (
-                      <p className="text-xs text-brand-300 animate-pulse leading-relaxed">
-                        Dibujando… haz clic en el mapa para agregar vértices. Cierra el polígono haciendo clic en el primer punto o presionando Enter.
-                      </p>
+                      <div className="space-y-2">
+                        <p className="text-xs text-brand-300 animate-pulse leading-relaxed">
+                          Dibujando… haz clic en el mapa para agregar vértices. Cierra el polígono haciendo clic en el primer punto o presionando Enter.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={onCancelPolygonDraw}
+                          className="w-full py-2 rounded-lg border border-gray-700 bg-gray-800
+                                     text-xs font-medium text-gray-400 hover:border-gray-600
+                                     hover:text-gray-200 transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
                     )}
 
                     {/* Editing in progress */}
                     {polygonDrawMode === 'editing' && (
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         <p className="text-xs text-amber-300">
                           Modo edición activo. Arrastra los vértices para modificar el polígono.
                         </p>
@@ -829,6 +846,15 @@ export default function GeoPointForm({
                                      transition-colors"
                         >
                           Finalizar edición
+                        </button>
+                        <button
+                          type="button"
+                          onClick={onCancelPolygonEdit}
+                          className="w-full py-2 rounded-lg border border-gray-700 bg-gray-800
+                                     text-xs font-medium text-gray-400 hover:border-gray-600
+                                     hover:text-gray-200 transition-colors"
+                        >
+                          Cancelar
                         </button>
                       </div>
                     )}

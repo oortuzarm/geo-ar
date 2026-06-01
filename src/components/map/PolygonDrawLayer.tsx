@@ -169,7 +169,6 @@ export default function PolygonDrawLayer({
         polygonLayerRef.current = null
       }
 
-      map.pm.addControls({ position: 'topleft', drawPolygon: false } as Parameters<typeof map.pm.addControls>[0])
       map.pm.enableDraw('Polygon', {
         snappable: true,
         snapDistance: 20,

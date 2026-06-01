@@ -103,3 +103,9 @@
 .leaflet-control-attribution a {
   color: #9ca3af !important;
 }
+
+/* Hide all Leaflet-Geoman toolbar controls.
+   All polygon draw/edit actions are controlled via GeoPointForm buttons. */
+.leaflet-pm-toolbar {
+  display: none !important;
+}

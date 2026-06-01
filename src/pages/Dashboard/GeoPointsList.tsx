@@ -9,6 +9,42 @@ function urlDomain(url: string): string {
   catch { return url.replace('https://', '').split('/')[0] }
 }
 
+/**
+ * Approximate area of a GeoJSON polygon ring in square meters.
+ * Uses the Shoelace formula projected to a local Cartesian frame at the
+ * ring's first latitude.  Error < 0.3 % for polygons smaller than ~50 km.
+ */
+function polygonRingAreaM2(ring: number[][]): number {
+  const pts = ring.slice(0, -1) // strip closing duplicate
+  if (pts.length < 3) return 0
+  const lat0  = pts[0][1] * (Math.PI / 180)
+  const mLat  = 111_320
+  const mLng  = 111_320 * Math.cos(lat0)
+  let area = 0
+  for (let i = 0; i < pts.length; i++) {
+    const [x1, y1] = pts[i]
+    const [x2, y2] = pts[(i + 1) % pts.length]
+    area += (x1 * mLng) * (y2 * mLat) - (x2 * mLng) * (y1 * mLat)
+  }
+  return Math.abs(area / 2)
+}
+
+/** Returns the activation-zone label shown in the point list. */
+function zoneLabel(point: GeoPoint): string {
+  if ((point.activationMode ?? 'radius') !== 'polygon') {
+    return `${point.activationRadius} m`
+  }
+  const polygon = point.activationPolygon
+  if (!polygon) return 'Polígono · sin zona'
+  const ring = polygon.geometry.type === 'Polygon'
+    ? polygon.geometry.coordinates[0]
+    : polygon.geometry.coordinates[0][0]
+  const m2 = polygonRingAreaM2(ring)
+  return m2 >= 10_000
+    ? `Polígono · ${(m2 / 10_000).toFixed(1).replace('.', ',')} ha`
+    : `Polígono · ${Math.round(m2).toLocaleString('es')} m²`
+}
+
 function formatDate(iso?: string): string {
   if (!iso) return '—'
   return new Date(iso)
@@ -416,7 +452,7 @@ export default function GeoPointsList({
                         {point.name || <span className="italic text-gray-600 font-normal">Sin nombre</span>}
                       </p>
                       <p className="text-xs text-gray-600 truncate mt-0.5">
-                        {point.activationRadius} m
+                        {zoneLabel(point)}
                         {point.lookiarUrl ? ' · ' + urlDomain(point.lookiarUrl) : ''}
                       </p>
                     </div>

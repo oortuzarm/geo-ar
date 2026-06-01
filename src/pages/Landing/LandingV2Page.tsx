@@ -643,63 +643,7 @@ function DifferentialsSection() {
   )
 }
 
-// ─── Analytics (compact bridge) ───────────────────────────────────────────────
 
-function WorldAsInterfaceSection() {
-  return (
-    <section id="v2-concept" className="py-14 sm:py-20 px-5 bg-[#050810] relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 50% 55% at 50% 50%, rgba(14,165,233,0.05) 0%, transparent 65%)',
-      }} />
-      <div className="relative z-10 max-w-3xl mx-auto text-center">
-
-        <Reveal>
-          <SectionLabel>Analytics</SectionLabel>
-          <h2 className="text-3xl sm:text-4xl font-black text-white">
-            Mide la actividad de tus ubicaciones
-          </h2>
-          <p className="mt-4 text-slate-400 max-w-xl mx-auto leading-relaxed">
-            Obtén información sobre entradas, conversiones y actividad en tiempo real
-            para comprender cómo interactúan las personas con tus experiencias geolocalizadas.
-          </p>
-        </Reveal>
-
-        <Reveal delay={0.1}>
-          <div className="mt-10 grid grid-cols-3 gap-4 max-w-sm mx-auto sm:max-w-md">
-            {[
-              { v: '147', l: 'Entradas',         c: 'text-white' },
-              { v: '68',  l: 'Conversiones',     c: 'text-emerald-400' },
-              { v: '24',  l: 'Actividad en vivo', c: 'text-brand-400' },
-            ].map((s) => (
-              <div key={s.l} className="py-4 px-3 rounded-xl border border-white/[0.07] bg-white/[0.02] text-center">
-                <p className={`text-2xl font-black leading-none ${s.c}`}>{s.v}</p>
-                <p className="text-[11px] text-slate-500 mt-2 leading-snug">{s.l}</p>
-              </div>
-            ))}
-          </div>
-        </Reveal>
-
-        <Reveal delay={0.18}>
-          <a
-            href="/studio"
-            className="mt-8 inline-flex items-center gap-1.5 text-sm font-semibold
-                       text-brand-400 hover:text-brand-300 transition-colors duration-150 group"
-          >
-            Explorar Studio
-            <svg
-              className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-150"
-              viewBox="0 0 20 20" fill="currentColor"
-            >
-              <path fillRule="evenodd" clipRule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
-            </svg>
-          </a>
-        </Reveal>
-
-      </div>
-    </section>
-  )
-}
 
 // ─── Final CTA ────────────────────────────────────────────────────────────────
 
@@ -756,7 +700,6 @@ export default function LandingV2Page() {
       <HowItWorksSection />
       <UseCasesSection />
       <DifferentialsSection />
-      <WorldAsInterfaceSection />
       <FinalCTASection />
       <SiteFooter />
     </div>

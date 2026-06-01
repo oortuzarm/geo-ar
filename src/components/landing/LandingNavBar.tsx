@@ -4,7 +4,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 const NAV_LINKS: [string, string][] = [
   ['Cómo funciona', 'v2-how'],
   ['Casos de uso',  'v2-cases'],
-  ['Analytics',     'v2-concept'],
 ]
 
 export default function LandingNavBar() {

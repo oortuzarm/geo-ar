@@ -38,6 +38,12 @@ interface PolygonDrawLayerProps {
   onDrawEnd:        () => void
   onDrawCancel?:    () => void
   /**
+   * Increment to force Effect 1 to rebuild the polygon layer even when
+   * existingPolygon hasn't changed by reference (e.g. after cancelling a
+   * redraw or an edit where Geoman modified the layer in-place).
+   */
+  renderKey?: number
+  /**
    * Called on mount/unmount with a stable function (or null) that imperatively
    * translates the polygon layer during a pin drag — zero React renders, 60 fps.
    * Same pattern as circleRef in GeoPointMarker for radius mode.
@@ -100,6 +106,7 @@ export default function PolygonDrawLayer({
   onDrawEnd,
   onDrawCancel,
   onMoveRefReady,
+  renderKey = 0,
 }: PolygonDrawLayerProps) {
   const map = useMap()
 
@@ -148,7 +155,7 @@ export default function PolygonDrawLayer({
       layer.remove()
       if (polygonLayerRef.current === layer) polygonLayerRef.current = null
     }
-  }, [existingPolygon, isSelected, map]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [existingPolygon, isSelected, map, renderKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Effect 2: react to drawMode + isSelected ─────────────────────────────
 

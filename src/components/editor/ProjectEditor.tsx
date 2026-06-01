@@ -132,6 +132,8 @@ export default function ProjectEditor({
 
   // ── Polygon drawing state ────────────────────────────────────────────────────
   const [polygonDrawMode, setPolygonDrawMode]   = useState<PolygonDrawMode>('idle')
+  // Incremented on cancel operations to force PolygonDrawLayer to rebuild the layer.
+  const [polygonRenderKey, setPolygonRenderKey] = useState(0)
 
   // ── Zone-type selector (shown before creating a new point) ──────────────────
   const [zoneSelectorOpen, setZoneSelectorOpen] = useState(false)
@@ -530,19 +532,26 @@ export default function ProjectEditor({
   }
 
   function handleCancelPolygonDraw() {
-    // User cancelled a redraw (button or Escape). Restore backup if it exists.
+    // User cancelled a redraw (button or Escape). Restore backup if it exists,
+    // then force Effect 1 in PolygonDrawLayer to rebuild the layer — necessary
+    // because existingPolygon may still be the same object reference (the layer
+    // was removed when entering draw mode, so without renderKey++ no layer appears).
     polygonCreationPendingRef.current = false
     restorePolygonBackup()
     polygonBackupRef.current = null
+    setPolygonRenderKey((k) => k + 1)
     setPolygonDrawMode('idle')
   }
 
   function handleCancelPolygonEdit() {
-    // User cancelled editing. Restore backup and tell handlePolygonCommit to skip
-    // the commit that the editing effect's cleanup will attempt to fire.
+    // User cancelled editing. Restore backup, skip the editing cleanup's commit,
+    // and force Effect 1 to rebuild the layer — Geoman modified the layer's
+    // vertices in-place, so the visual polygon still shows the edited shape even
+    // though existingPolygon in the store was never updated.
     restorePolygonBackup()
     polygonBackupRef.current = null
     skipNextPolygonCommit.current = true
+    setPolygonRenderKey((k) => k + 1)
     setPolygonDrawMode('idle')
   }
 
@@ -1365,6 +1374,7 @@ export default function ProjectEditor({
                   ? selectedPoint.activationPolygon
                   : undefined
               }
+              polygonRenderKey={polygonRenderKey}
               onPolygonCommit={handlePolygonCommit}
               onPolygonDrawEnd={handlePolygonDrawEnd}
               onPolygonDrawCancel={handlePolygonDrawCancel}

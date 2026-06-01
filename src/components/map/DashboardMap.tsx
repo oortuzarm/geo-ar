@@ -157,6 +157,8 @@ interface DashboardMapProps {
   onPolygonCommit?: (polygon: ActivationPolygon) => void
   onPolygonDrawEnd?: () => void
   onPolygonDrawCancel?: () => void
+  /** Increment to force PolygonDrawLayer to rebuild the polygon layer (used on cancel). */
+  polygonRenderKey?: number
 }
 
 export default function DashboardMap({
@@ -179,6 +181,7 @@ export default function DashboardMap({
   onPolygonCommit,
   onPolygonDrawEnd,
   onPolygonDrawCancel,
+  polygonRenderKey = 0,
 }: DashboardMapProps) {
   const drawingActive = polygonDrawMode !== 'idle'
   const { mapCenter, mapZoom } = useGeoStore()
@@ -222,6 +225,7 @@ export default function DashboardMap({
           drawMode={polygonDrawMode}
           existingPolygon={polygonForPoint}
           isSelected
+          renderKey={polygonRenderKey}
           onPolygonCommit={onPolygonCommit}
           onDrawEnd={onPolygonDrawEnd}
           onDrawCancel={onPolygonDrawCancel}

@@ -86,7 +86,7 @@ export default function GeoPointMarker({
         ref={markerRef}
         position={[point.latitude, point.longitude]}
         icon={icon}
-        draggable
+        draggable={(point.activationMode ?? 'radius') === 'radius'}
         zIndexOffset={selected ? 1000 : 0}
         eventHandlers={{ click: () => onClick(point.id) }}
       />

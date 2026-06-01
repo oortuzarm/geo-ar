@@ -457,7 +457,21 @@ export default function ProjectEditor({
         })
     } else {
       // Editing flow: update the already-selected existing point.
-      handlePointChange({ activationPolygon: polygon, activationMode: 'polygon' })
+      // Recalculate centroid so the pin stays at the geometric centre of the polygon.
+      // Bypass handlePointChange to avoid triggering setMapCenter on every vertex drag.
+      if (!selectedPointId) return
+      const current = useGeoStore.getState().points.find((p) => p.id === selectedPointId)
+      if (!current) return
+      const centroid = polygonCentroid(polygon)
+      onMarkUnsaved?.()
+      upsertPoint({
+        ...current,
+        activationMode:    'polygon',
+        activationPolygon: polygon,
+        latitude:          centroid.lat,
+        longitude:         centroid.lng,
+      })
+      onAfterPointChange?.()
     }
   }
 

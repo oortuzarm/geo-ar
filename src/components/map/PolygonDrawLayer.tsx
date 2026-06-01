@@ -1,19 +1,21 @@
 /**
  * PolygonDrawLayer — integrates Leaflet-Geoman inside a react-leaflet MapContainer.
  *
+ * Used for the SELECTED point (or during pre-creation drawing).
+ *
  * Responsibilities:
- *  - Renders the activationPolygon of the selected point as a styled L.GeoJSON layer.
+ *  - Renders the activationPolygon with selected (cyan) or unselected (red) style.
  *  - Activates Geoman draw mode when drawMode === 'drawing'.
  *  - Activates Geoman vertex-edit mode when drawMode === 'editing'.
+ *  - Enables drag-to-move when drawMode === 'idle' and isSelected === true.
  *  - Never shows Geoman's built-in toolbar (controlled entirely via props).
  *  - Cleans up all layers and listeners on unmount and on prop changes.
  *
  * Cancellation detection:
- *  Geoman fires pm:drawend whenever drawing stops (completion OR cancellation such as
- *  pressing Escape). We track whether pm:create fired in the same session: if pm:drawend
- *  fires without a preceding pm:create, drawing was cancelled and onDrawCancel is called.
- *  Programmatic disableDraw() (via cleanup) also fires pm:drawend, but since we remove the
- *  listener before calling disableDraw(), onDrawCancel is not triggered in that case.
+ *  pm:drawend fires for both completion and cancellation (Escape).
+ *  We track didCreate to distinguish them. Programmatic disableDraw() in
+ *  cleanup also fires pm:drawend, but listeners are removed first so
+ *  onDrawCancel is NOT triggered.
  */
 
 import { useEffect, useRef } from 'react'
@@ -25,41 +27,41 @@ import type { ActivationPolygon } from '../../types'
 export type PolygonDrawMode = 'idle' | 'drawing' | 'editing'
 
 interface PolygonDrawLayerProps {
-  /** Current draw/edit mode driven from outside (ProjectEditor). */
-  drawMode: PolygonDrawMode
-  /** The existing polygon to display (and edit). */
-  existingPolygon: ActivationPolygon | undefined
-  /** Called when drawing completes or a vertex is moved. */
-  onPolygonCommit: (polygon: ActivationPolygon) => void
-  /** Called when a draw session ends normally (so the parent can reset drawMode → 'idle'). */
-  onDrawEnd: () => void
-  /**
-   * Called when drawing is cancelled without producing a polygon
-   * (e.g. the user pressed Escape). Not called when drawMode is
-   * programmatically reset to 'idle' from outside.
-   */
-  onDrawCancel?: () => void
+  drawMode:         PolygonDrawMode
+  existingPolygon:  ActivationPolygon | undefined
+  /** True when the associated point is the currently selected point. */
+  isSelected:       boolean
+  onPolygonCommit:  (polygon: ActivationPolygon) => void
+  onDrawEnd:        () => void
+  onDrawCancel?:    () => void
 }
 
-// ── Style constants ─────────────────────────────────────────────────────────
+// ── Styles (match GeoPointMarker's circle styles exactly) ──────────────────
 
-const POLYGON_STYLE: L.PathOptions = {
-  color: '#818cf8',
-  fillColor: '#818cf8',
-  fillOpacity: 0.18,
-  weight: 2.5,
-  dashArray: undefined,
+const STYLE_SELECTED: L.PathOptions = {
+  color:       '#0ea5e9',
+  fillColor:   '#0ea5e9',
+  fillOpacity: 0.10,
+  weight:      2,
+  dashArray:   '6 4',
 }
 
-const POLYGON_STYLE_EDITING: L.PathOptions = {
-  ...POLYGON_STYLE,
-  dashArray: '6 4',
-  weight: 2,
+const STYLE_DEFAULT: L.PathOptions = {
+  color:       '#ef4444',
+  fillColor:   '#ef4444',
+  fillOpacity: 0.04,
+  weight:      1,
+  dashArray:   '4 4',
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+const STYLE_EDITING: L.PathOptions = {
+  color:       '#0ea5e9',
+  fillColor:   '#0ea5e9',
+  fillOpacity: 0.15,
+  weight:      2,
+  dashArray:   '6 4',
+}
 
-/** Converts a Leaflet polygon layer to a GeoJSON Feature<Polygon>. */
 function layerToFeature(layer: L.Polygon): ActivationPolygon {
   return layer.toGeoJSON() as ActivationPolygon
 }
@@ -67,27 +69,24 @@ function layerToFeature(layer: L.Polygon): ActivationPolygon {
 export default function PolygonDrawLayer({
   drawMode,
   existingPolygon,
+  isSelected,
   onPolygonCommit,
   onDrawEnd,
   onDrawCancel,
 }: PolygonDrawLayerProps) {
   const map = useMap()
 
-  // The single rendered polygon layer (L.GeoJSON wrapping an L.Polygon).
-  const polygonLayerRef = useRef<L.GeoJSON | null>(null)
+  const polygonLayerRef     = useRef<L.GeoJSON | null>(null)
+  const onPolygonCommitRef  = useRef(onPolygonCommit)
+  const onDrawEndRef        = useRef(onDrawEnd)
+  const onDrawCancelRef     = useRef(onDrawCancel)
+  onPolygonCommitRef.current  = onPolygonCommit
+  onDrawEndRef.current        = onDrawEnd
+  onDrawCancelRef.current     = onDrawCancel
 
-  // Stable refs so effects don't need the callbacks as deps.
-  const onPolygonCommitRef = useRef(onPolygonCommit)
-  const onDrawEndRef       = useRef(onDrawEnd)
-  const onDrawCancelRef    = useRef(onDrawCancel)
-  onPolygonCommitRef.current = onPolygonCommit
-  onDrawEndRef.current       = onDrawEnd
-  onDrawCancelRef.current    = onDrawCancel
-
-  // ── Step 1: keep polygon layer in sync with existingPolygon ───────────────
+  // ── Effect 1: sync polygon layer with existingPolygon + isSelected style ──
 
   useEffect(() => {
-    // Remove old layer whenever existingPolygon changes.
     if (polygonLayerRef.current) {
       polygonLayerRef.current.remove()
       polygonLayerRef.current = null
@@ -95,7 +94,8 @@ export default function PolygonDrawLayer({
 
     if (!existingPolygon) return
 
-    const layer = L.geoJSON(existingPolygon, { style: POLYGON_STYLE })
+    const style = isSelected ? STYLE_SELECTED : STYLE_DEFAULT
+    const layer = L.geoJSON(existingPolygon, { style })
     layer.addTo(map)
     polygonLayerRef.current = layer
 
@@ -103,23 +103,21 @@ export default function PolygonDrawLayer({
       layer.remove()
       if (polygonLayerRef.current === layer) polygonLayerRef.current = null
     }
-  }, [existingPolygon, map]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [existingPolygon, isSelected, map]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Step 2: react to drawMode changes ────────────────────────────────────
+  // ── Effect 2: react to drawMode + isSelected ─────────────────────────────
 
   useEffect(() => {
     if (!map.pm) return
 
+    // ── Drawing ─────────────────────────────────────────────────────────────
     if (drawMode === 'drawing') {
-      // Remove existing polygon so drawing starts fresh.
       if (polygonLayerRef.current) {
         polygonLayerRef.current.remove()
         polygonLayerRef.current = null
       }
 
-      // Hide Geoman's own toolbar — we control everything via buttons in the form.
       map.pm.addControls({ position: 'topleft', drawPolygon: false } as Parameters<typeof map.pm.addControls>[0])
-
       map.pm.enableDraw('Polygon', {
         snappable: true,
         snapDistance: 20,
@@ -127,37 +125,24 @@ export default function PolygonDrawLayer({
         continueDrawing: false,
       } as Parameters<typeof map.pm.enableDraw>[1])
 
-      // Track whether pm:create fired so we can detect cancellation via pm:drawend.
       let didCreate = false
 
       function handleCreate(e: { layer: L.Layer; shape: string }) {
         if (e.shape !== 'Polygon') return
         didCreate = true
         const drawnLayer = e.layer as L.Polygon
-
-        // Build a styled permanent layer from the drawn shape.
         const feature = layerToFeature(drawnLayer)
-
-        // Remove the Geoman-drawn layer (unstyled by default).
         drawnLayer.remove()
         map.pm.disableDraw()
-
-        const styledLayer = L.geoJSON(feature, { style: POLYGON_STYLE })
+        const styledLayer = L.geoJSON(feature, { style: STYLE_SELECTED })
         styledLayer.addTo(map)
         polygonLayerRef.current = styledLayer
-
         onPolygonCommitRef.current(feature)
         onDrawEndRef.current()
       }
 
-      // pm:drawend fires for both completion and cancellation.
-      // If pm:create didn't fire first, the user cancelled.
-      // Important: listeners are removed BEFORE disableDraw() in cleanup so that
-      // the programmatic disableDraw() call does not trigger onDrawCancel.
       function handleDrawEnd() {
-        if (!didCreate) {
-          onDrawCancelRef.current?.()
-        }
+        if (!didCreate) onDrawCancelRef.current?.()
       }
 
       map.on('pm:create', handleCreate)
@@ -170,13 +155,12 @@ export default function PolygonDrawLayer({
       }
     }
 
+    // ── Editing vertices ─────────────────────────────────────────────────────
     if (drawMode === 'editing') {
       if (!polygonLayerRef.current) return
+      polygonLayerRef.current.setStyle(STYLE_EDITING)
 
-      // Update stroke to signal edit state visually.
-      polygonLayerRef.current.setStyle(POLYGON_STYLE_EDITING)
-
-      const editListeners: Array<{ layer: L.Layer; handler: () => void }> = []
+      const editListeners: Array<{ poly: L.Polygon; handler: () => void }> = []
 
       polygonLayerRef.current.eachLayer((inner) => {
         const poly = inner as L.Polygon
@@ -187,26 +171,49 @@ export default function PolygonDrawLayer({
         }
 
         poly.on('pm:edit', handleEdit)
-        editListeners.push({ layer: poly, handler: handleEdit })
+        editListeners.push({ poly, handler: handleEdit })
       })
 
       return () => {
-        editListeners.forEach(({ layer, handler }) => {
-          const poly = layer as L.Polygon
+        editListeners.forEach(({ poly, handler }) => {
           poly.off('pm:edit', handler)
           poly.pm.disable()
         })
-        polygonLayerRef.current?.setStyle(POLYGON_STYLE)
+        polygonLayerRef.current?.setStyle(STYLE_SELECTED)
       }
     }
 
-    // idle: disable everything
+    // ── Idle ─────────────────────────────────────────────────────────────────
     map.pm.disableDraw()
     map.pm.disableGlobalEditMode()
 
-  }, [drawMode, map]) // eslint-disable-line react-hooks/exhaustive-deps
+    // Enable drag-to-move for the selected point's polygon.
+    if (!isSelected || !polygonLayerRef.current) return
 
-  // ── Step 3: full cleanup on unmount ──────────────────────────────────────
+    const dragListeners: Array<{ poly: L.Polygon; handler: () => void }> = []
+
+    polygonLayerRef.current.eachLayer((inner) => {
+      const poly = inner as L.Polygon
+      try { poly.pm.enableLayerDrag() } catch { return }
+
+      function handleDragEnd() {
+        onPolygonCommitRef.current(layerToFeature(poly))
+      }
+
+      poly.on('pm:dragend', handleDragEnd)
+      dragListeners.push({ poly, handler: handleDragEnd })
+    })
+
+    return () => {
+      dragListeners.forEach(({ poly, handler }) => {
+        poly.off('pm:dragend', handler)
+        try { poly.pm.disableLayerDrag() } catch { /* layer may already be gone */ }
+      })
+    }
+
+  }, [drawMode, isSelected, map]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Effect 3: full cleanup on unmount ─────────────────────────────────────
 
   useEffect(() => {
     return () => {

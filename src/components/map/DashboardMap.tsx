@@ -7,6 +7,7 @@ import { haversineDistance } from '../../features/geolocation/haversine'
 import GeoPointMarker from './GeoPointMarker'
 import IntensityLayer from './IntensityLayer'
 import PolygonDrawLayer from './PolygonDrawLayer'
+import PolygonAreaLayer from './PolygonAreaLayer'
 import type { PolygonDrawMode } from './PolygonDrawLayer'
 import type { GeoPoint, PoiSearchResult, MapBounds, ActivationPolygon } from '../../types'
 import { type MapStyleId } from '../../config/mapStyles'
@@ -196,10 +197,27 @@ export default function DashboardMap({
       <MapViewTracker />
       <ClickHandler onMapClick={onMapClick} disabled={drawingActive} />
       <DblClickHandler onMapDblClick={onMapDblClick} disabled={drawingActive} />
+      {/* Unselected polygon-mode points — red, click-to-select only */}
+      {points
+        .filter((p) =>
+          (p.activationMode ?? 'radius') === 'polygon' &&
+          p.activationPolygon != null &&
+          p.id !== selectedPointId,
+        )
+        .map((p) => (
+          <PolygonAreaLayer
+            key={p.id}
+            polygon={p.activationPolygon!}
+            onClick={() => onMarkerClick(p.id)}
+          />
+        ))}
+
+      {/* Selected point's polygon — cyan, draw/edit/drag controls */}
       {onPolygonCommit && onPolygonDrawEnd && (
         <PolygonDrawLayer
           drawMode={polygonDrawMode}
           existingPolygon={polygonForPoint}
+          isSelected
           onPolygonCommit={onPolygonCommit}
           onDrawEnd={onPolygonDrawEnd}
           onDrawCancel={onPolygonDrawCancel}

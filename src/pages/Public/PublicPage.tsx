@@ -1367,18 +1367,19 @@ export default function PublicPage({
       }
 
       for (const pt of active) {
-        const dist    = haversineDistance(loc.latitude, loc.longitude, pt.latitude, pt.longitude)
-        const inside  = dist <= pt.activationRadius
+        const inside = isInsideActivationArea(pt, loc.latitude, loc.longitude)
 
         if (import.meta.env.DEV) {
+          const mode = pt.activationMode ?? 'radius'
+          const dist = haversineDistance(loc.latitude, loc.longitude, pt.latitude, pt.longitude)
           console.log(
             `  punto "${pt.name || pt.id}"`,
             '| id:', pt.id,
-            '| active:', pt.active,
-            '| pt.lat:', pt.latitude, 'pt.lng:', pt.longitude,
-            '| radio:', pt.activationRadius, 'm',
-            '| distancia:', Math.round(dist), 'm',
-            '| dentro del radio:', inside,
+            '| modo:', mode,
+            ...(mode === 'radius'
+              ? ['| radio:', pt.activationRadius, 'm', '| distancia:', Math.round(dist), 'm']
+              : ['| polígono:', pt.activationPolygon ? 'sí' : 'no']),
+            '| dentro del área:', inside,
           )
         }
 
@@ -1390,7 +1391,7 @@ export default function PublicPage({
           sendHeartbeat(pt.id, payload).catch(() => {})
         } else {
           if (import.meta.env.DEV) {
-            console.log('  → heartbeat omitido | razón: fuera del radio (distancia', Math.round(dist), 'm > radio', pt.activationRadius, 'm)')
+            console.log('  → heartbeat omitido | fuera del área de activación')
           }
         }
       }

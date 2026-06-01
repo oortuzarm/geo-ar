@@ -1,7 +1,10 @@
 /**
  * PolygonAreaLayer — renders a single polygon-mode point's activation area.
  *
- * Used for UNSELECTED polygon-mode points in the editor map.
+ * Used for:
+ *  - Unselected polygon-mode points in the editor map (red style).
+ *  - Any polygon-mode point in the public map (style driven by selected/dimmed).
+ *
  * No draw or edit controls — purely visual + click-to-select.
  */
 
@@ -11,12 +14,18 @@ import L from 'leaflet'
 import type { ActivationPolygon } from '../../types'
 
 interface PolygonAreaLayerProps {
-  polygon: ActivationPolygon
+  polygon:       ActivationPolygon
   /** Called when the user clicks this polygon area. */
-  onClick: () => void
+  onClick:       () => void
+  /**
+   * Optional Leaflet PathOptions that override the default red style.
+   * When it changes (e.g. selection state), the layer style is updated
+   * imperatively — no layer recreation needed.
+   */
+  pathOptions?:  L.PathOptions
 }
 
-const STYLE: L.PathOptions = {
+const STYLE_DEFAULT: L.PathOptions = {
   color:       '#ef4444',
   fillColor:   '#ef4444',
   fillOpacity: 0.04,
@@ -24,14 +33,17 @@ const STYLE: L.PathOptions = {
   dashArray:   '4 4',
 }
 
-export default function PolygonAreaLayer({ polygon, onClick }: PolygonAreaLayerProps) {
-  const map      = useMap()
-  const layerRef = useRef<L.GeoJSON | null>(null)
+export default function PolygonAreaLayer({ polygon, onClick, pathOptions }: PolygonAreaLayerProps) {
+  const map        = useMap()
+  const layerRef   = useRef<L.GeoJSON | null>(null)
   const onClickRef = useRef(onClick)
   onClickRef.current = onClick
 
+  // ── Create / recreate when the polygon geometry changes ──────────────────
+
   useEffect(() => {
-    const layer = L.geoJSON(polygon, { style: STYLE, interactive: true })
+    const style = pathOptions ?? STYLE_DEFAULT
+    const layer = L.geoJSON(polygon, { style, interactive: true })
 
     layer.on('click', (e: L.LeafletMouseEvent) => {
       // Stop propagation so the map click handler doesn't deselect the point.
@@ -48,6 +60,14 @@ export default function PolygonAreaLayer({ polygon, onClick }: PolygonAreaLayerP
       layerRef.current = null
     }
   }, [polygon, map]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Update style imperatively when selection / dim state changes ──────────
+  // Avoids destroying and recreating the layer on every click.
+
+  useEffect(() => {
+    if (!layerRef.current) return
+    layerRef.current.setStyle(pathOptions ?? STYLE_DEFAULT)
+  }, [pathOptions])
 
   return null
 }

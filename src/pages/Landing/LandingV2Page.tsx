@@ -328,8 +328,8 @@ function MetricsBandSection() {
 
 const HOW_STEPS = [
   {
-    title: 'Crea ubicaciones',
-    desc: 'Agrega puntos geolocalizados desde el mapa y personaliza su contenido.',
+    title: 'Conecta espacios físicos',
+    desc: 'Agrega ubicaciones desde el mapa y configura el contenido, promociones o información que se activará en cada lugar.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
@@ -339,8 +339,8 @@ const HOW_STEPS = [
     ),
   },
   {
-    title: 'Define el área de activación',
-    desc: 'Configura el radio de acceso y las reglas para desbloquear contenido según ubicación.',
+    title: 'Activa contenido y experiencias',
+    desc: 'Define radios o áreas de activación para controlar cuándo y dónde ocurre cada interacción.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="9" strokeWidth={1.75} />
@@ -350,8 +350,8 @@ const HOW_STEPS = [
     ),
   },
   {
-    title: 'Desbloquea contenido',
-    desc: 'Tus usuarios podrán acceder a promociones, rutas o contenido al llegar al lugar indicado.',
+    title: 'Mide y comprende lo que ocurre',
+    desc: 'Analiza entradas, conversiones y actividad en tiempo real para comprender qué ocurre en cada ubicación.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
@@ -373,7 +373,7 @@ function HowItWorksSection() {
             Activa contenido en lugares reales.
           </h2>
           <p className="mt-4 text-slate-400 max-w-lg mx-auto">
-            Aumenta la interacción en espacios físicos utilizando contenido desbloqueable por ubicación.
+            Crea ubicaciones inteligentes, comprende la actividad de tus visitantes y toma decisiones basadas en datos en tiempo real.
           </p>
         </Reveal>
 

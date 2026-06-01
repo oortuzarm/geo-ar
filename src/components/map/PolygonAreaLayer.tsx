@@ -4,8 +4,9 @@
  * Used for:
  *  - Unselected polygon-mode points in the editor map (red style).
  *  - Any polygon-mode point in the public map (style driven by selected/dimmed).
+ *  - Intensity-GPS overlay (non-interactive, style driven by activity level).
  *
- * No draw or edit controls — purely visual + click-to-select.
+ * No draw or edit controls — purely visual + optional click-to-select.
  */
 
 import { useEffect, useRef } from 'react'
@@ -15,14 +16,20 @@ import type { ActivationPolygon } from '../../types'
 
 interface PolygonAreaLayerProps {
   polygon:       ActivationPolygon
-  /** Called when the user clicks this polygon area. */
-  onClick:       () => void
+  /** Called when the user clicks this polygon area. Omit for non-interactive overlays. */
+  onClick?:      () => void
   /**
    * Optional Leaflet PathOptions that override the default red style.
    * When it changes (e.g. selection state), the layer style is updated
    * imperatively — no layer recreation needed.
    */
   pathOptions?:  L.PathOptions
+  /**
+   * Whether the layer captures pointer events. Default: true.
+   * Pass false for background visualisation layers (e.g. intensity overlay)
+   * so clicks pass through to the underlying map and markers.
+   */
+  interactive?:  boolean
 }
 
 const STYLE_DEFAULT: L.PathOptions = {
@@ -33,23 +40,30 @@ const STYLE_DEFAULT: L.PathOptions = {
   dashArray:   '4 4',
 }
 
-export default function PolygonAreaLayer({ polygon, onClick, pathOptions }: PolygonAreaLayerProps) {
+export default function PolygonAreaLayer({
+  polygon,
+  onClick,
+  pathOptions,
+  interactive = true,
+}: PolygonAreaLayerProps) {
   const map        = useMap()
   const layerRef   = useRef<L.GeoJSON | null>(null)
   const onClickRef = useRef(onClick)
   onClickRef.current = onClick
 
-  // ── Create / recreate when the polygon geometry changes ──────────────────
+  // ── Create / recreate when the polygon geometry or interactive mode changes ─
 
   useEffect(() => {
     const style = pathOptions ?? STYLE_DEFAULT
-    const layer = L.geoJSON(polygon, { style, interactive: true })
+    const layer = L.geoJSON(polygon, { style, interactive })
 
-    layer.on('click', (e: L.LeafletMouseEvent) => {
-      // Stop propagation so the map click handler doesn't deselect the point.
-      L.DomEvent.stopPropagation(e)
-      onClickRef.current()
-    })
+    if (interactive && onClick !== undefined) {
+      layer.on('click', (e: L.LeafletMouseEvent) => {
+        // Stop propagation so the map click handler doesn't deselect the point.
+        L.DomEvent.stopPropagation(e)
+        onClickRef.current?.()
+      })
+    }
 
     layer.addTo(map)
     layerRef.current = layer
@@ -59,7 +73,7 @@ export default function PolygonAreaLayer({ polygon, onClick, pathOptions }: Poly
       layer.remove()
       layerRef.current = null
     }
-  }, [polygon, map]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [polygon, interactive, map]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Update style imperatively when selection / dim state changes ──────────
   // Avoids destroying and recreating the layer on every click.

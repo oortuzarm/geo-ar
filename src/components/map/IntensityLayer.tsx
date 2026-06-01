@@ -1,5 +1,7 @@
 import { Fragment } from 'react'
 import { Circle } from 'react-leaflet'
+import L from 'leaflet'
+import PolygonAreaLayer from './PolygonAreaLayer'
 import type { GeoPoint } from '../../types'
 
 export type IntensityLevel = 'low' | 'medium' | 'high'
@@ -81,8 +83,8 @@ function computeHistoricalLevels(
 interface HaloRing { radiusFactor: number; fillColor: string; fillOpacity: number }
 
 interface Palette {
-  inactive: object
-  core:     Record<IntensityLevel, object>
+  inactive: L.PathOptions
+  core:     Record<IntensityLevel, L.PathOptions>
   halo:     Record<IntensityLevel, HaloRing[]>
 }
 
@@ -196,6 +198,7 @@ export default function IntensityLayer({ points, activeNow, mode = 'live' }: Pro
     const summary = points.map((p) => ({
       id:    p.id,
       name:  p.name,
+      mode:  p.activationMode ?? 'radius',
       count: activeNow[p.id] ?? 'MISSING',
       level: mode === 'historical'
         ? (historicalLevelMap?.get(p.id) ?? ((activeNow[p.id] ?? 0) === 0 ? 'inactive' : 'MISSING'))
@@ -208,7 +211,40 @@ export default function IntensityLayer({ points, activeNow, mode = 'live' }: Pro
   return (
     <>
       {points.map((point) => {
-        const count  = activeNow[point.id] ?? 0
+        const count     = activeNow[point.id] ?? 0
+        const isPolygon = (point.activationMode ?? 'radius') === 'polygon' && point.activationPolygon != null
+
+        // Resolve intensity level once — used by both branches.
+        // null means inactive (count === 0).
+        const level: IntensityLevel | null = count === 0 ? null : (
+          mode === 'historical'
+            ? (historicalLevelMap!.get(point.id) ?? 'low')
+            : relativeIntensity(count, liveMax)
+        )
+
+        // ── Polygon branch ────────────────────────────────────────────────────
+        // Renders the actual GeoJSON shape filled with the core intensity style.
+        // No concentric halo rings — the polygon IS the area, halos would extend
+        // beyond its real boundary. The core palette gives the same colour
+        // progression as the circle core (low → soft green, high → bright green).
+        if (isPolygon) {
+          const polyStyle = level === null ? palette.inactive : palette.core[level]
+
+          if (import.meta.env.DEV) {
+            console.log(`[IntensityLayer] polygon "${point.name}" count=${count} level=${level ?? 'inactive'}`)
+          }
+
+          return (
+            <PolygonAreaLayer
+              key={point.id}
+              polygon={point.activationPolygon!}
+              pathOptions={polyStyle}
+              interactive={false}
+            />
+          )
+        }
+
+        // ── Radius branch (unchanged) ─────────────────────────────────────────
         const radius = Math.min(point.activationRadius, 1000)
 
         if (count === 0) {
@@ -222,16 +258,12 @@ export default function IntensityLayer({ points, activeNow, mode = 'live' }: Pro
           )
         }
 
-        const level = mode === 'historical'
-          ? (historicalLevelMap!.get(point.id) ?? 'low')
-          : relativeIntensity(count, liveMax)
-
         if (import.meta.env.DEV) {
-          const coreStyle = palette.core[level] as Record<string, unknown>
-          console.log(`[IntensityLayer] point="${point.name}" count=${count} level=${level} fillOpacity=${coreStyle.fillOpacity}`)
+          const coreStyle = palette.core[level!] as Record<string, unknown>
+          console.log(`[IntensityLayer] radius "${point.name}" count=${count} level=${level} fillOpacity=${coreStyle.fillOpacity}`)
         }
 
-        const halos = palette.halo[level]
+        const halos = palette.halo[level!]
 
         return (
           <Fragment key={point.id}>
@@ -250,7 +282,7 @@ export default function IntensityLayer({ points, activeNow, mode = 'live' }: Pro
             <Circle
               center={[point.latitude, point.longitude]}
               radius={radius}
-              pathOptions={{ ...palette.core[level], interactive: false }}
+              pathOptions={{ ...palette.core[level!], interactive: false }}
             />
           </Fragment>
         )

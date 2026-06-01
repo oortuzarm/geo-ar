@@ -48,6 +48,13 @@ export default function LandingNavBar() {
               </button>
             ))}
             <Link
+              to="/studio"
+              className="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-400
+                         hover:text-white hover:bg-white/5 transition-all duration-150"
+            >
+              Studio
+            </Link>
+            <Link
               to="/precios"
               className="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-400
                          hover:text-white hover:bg-white/5 transition-all duration-150"
@@ -117,6 +124,14 @@ export default function LandingNavBar() {
               {label}
             </button>
           ))}
+          <Link
+            to="/studio"
+            onClick={() => setOpen(false)}
+            className="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium
+                       text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+          >
+            Studio
+          </Link>
           <Link
             to="/precios"
             onClick={() => setOpen(false)}

@@ -372,7 +372,7 @@ export default function ProjectEditor({
     setMapZoom(17)
   }
 
-  async function handleMarkerDragEnd(id: string, lat: number, lng: number) {
+  function handleMarkerDragEnd(id: string, lat: number, lng: number) {
     const point = useGeoStore.getState().points.find((p) => p.id === id)
 
     if (point && (point.activationMode ?? 'radius') === 'polygon' && point.activationPolygon) {
@@ -393,11 +393,10 @@ export default function ProjectEditor({
     } else {
       updatePointCoords(id, lat, lng)
       onMarkUnsaved?.()
-      try {
-        await onSavePointCoords(id, lat, lng)
-      } catch {
-        addToast('No se pudo guardar la nueva posición', 'error')
-      }
+      // Radius points: skip onSavePointCoords (PUT /api/geo_points/:id).
+      // The new coordinates are already in the store; syncProject (Guardar proyecto)
+      // persists everything correctly. A quick-save here would show a false error
+      // if the individual-point endpoint fails while the full sync would succeed.
     }
 
     if (selectedPointId !== id) {

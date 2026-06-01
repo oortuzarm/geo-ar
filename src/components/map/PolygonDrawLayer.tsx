@@ -160,6 +160,12 @@ export default function PolygonDrawLayer({
       if (!polygonLayerRef.current) return
       polygonLayerRef.current.setStyle(STYLE_EDITING)
 
+      // Accumulate the latest edited geometry here. We do NOT call onPolygonCommit
+      // on every pm:edit because that would cause Effect 1 to remove and recreate
+      // the layer mid-session, breaking Geoman's edit handles. The single commit
+      // happens in the cleanup function when the editing session ends.
+      let latestFeature: ActivationPolygon | null = null
+
       const editListeners: Array<{ poly: L.Polygon; handler: () => void }> = []
 
       polygonLayerRef.current.eachLayer((inner) => {
@@ -167,7 +173,7 @@ export default function PolygonDrawLayer({
         poly.pm.enable({ allowSelfIntersection: false })
 
         function handleEdit() {
-          onPolygonCommitRef.current(layerToFeature(poly))
+          latestFeature = layerToFeature(poly)
         }
 
         poly.on('pm:edit', handleEdit)
@@ -179,39 +185,20 @@ export default function PolygonDrawLayer({
           poly.off('pm:edit', handler)
           poly.pm.disable()
         })
+        // Commit the final geometry once, only if the user actually moved a vertex.
+        if (latestFeature) onPolygonCommitRef.current(latestFeature)
         polygonLayerRef.current?.setStyle(STYLE_SELECTED)
       }
     }
 
     // ── Idle ─────────────────────────────────────────────────────────────────
+    // Moving the polygon as a unit is done by dragging the pin in GeoPointMarker
+    // (pin drag → translate polygon coordinates via ProjectEditor.handleMarkerDragEnd).
+    // No Geoman drag mode is needed here.
     map.pm.disableDraw()
     map.pm.disableGlobalEditMode()
 
-    // Enable drag-to-move for the selected point's polygon.
-    if (!isSelected || !polygonLayerRef.current) return
-
-    const dragListeners: Array<{ poly: L.Polygon; handler: () => void }> = []
-
-    polygonLayerRef.current.eachLayer((inner) => {
-      const poly = inner as L.Polygon
-      try { poly.pm.enableLayerDrag() } catch { return }
-
-      function handleDragEnd() {
-        onPolygonCommitRef.current(layerToFeature(poly))
-      }
-
-      poly.on('pm:dragend', handleDragEnd)
-      dragListeners.push({ poly, handler: handleDragEnd })
-    })
-
-    return () => {
-      dragListeners.forEach(({ poly, handler }) => {
-        poly.off('pm:dragend', handler)
-        try { poly.pm.disableLayerDrag() } catch { /* layer may already be gone */ }
-      })
-    }
-
-  }, [drawMode, isSelected, map]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [drawMode, map]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Effect 3: full cleanup on unmount ─────────────────────────────────────
 

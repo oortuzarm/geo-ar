@@ -358,7 +358,22 @@ export default function ProjectEditor({
   }
 
   async function handleMarkerDragEnd(id: string, lat: number, lng: number) {
-    updatePointCoords(id, lat, lng)
+    const point = useGeoStore.getState().points.find((p) => p.id === id)
+
+    if (point && (point.activationMode ?? 'radius') === 'polygon' && point.activationPolygon) {
+      // Translate the entire polygon by the delta between old and new pin position.
+      const deltaLat = lat - point.latitude
+      const deltaLng = lng - point.longitude
+      upsertPoint({
+        ...point,
+        latitude:          lat,
+        longitude:         lng,
+        activationPolygon: translatePolygon(point.activationPolygon, deltaLat, deltaLng),
+      })
+    } else {
+      updatePointCoords(id, lat, lng)
+    }
+
     onMarkUnsaved?.()
     if (selectedPointId !== id) {
       setSelectedPointId(id)
@@ -399,7 +414,32 @@ export default function ProjectEditor({
     }
   }
 
-  // ── Polygon centroid helper ───────────────────────────────────────────────────
+  // ── Polygon geometry helpers ──────────────────────────────────────────────────
+
+  /** Translates every coordinate in a GeoJSON polygon by the given lat/lng delta. */
+  function translatePolygon(
+    polygon: ActivationPolygon,
+    deltaLat: number,
+    deltaLng: number,
+  ): ActivationPolygon {
+    // GeoJSON coordinates are [longitude, latitude] — note the reversed order.
+    const translateRing = (ring: number[][]): number[][] =>
+      ring.map(([lng, lat]) => [lng + deltaLng, lat + deltaLat])
+
+    if (polygon.geometry.type === 'Polygon') {
+      return {
+        ...polygon,
+        geometry: { ...polygon.geometry, coordinates: polygon.geometry.coordinates.map(translateRing) },
+      }
+    }
+    return {
+      ...polygon,
+      geometry: {
+        ...polygon.geometry,
+        coordinates: polygon.geometry.coordinates.map((poly) => poly.map(translateRing)),
+      },
+    }
+  }
 
   function polygonCentroid(polygon: ActivationPolygon): { lat: number; lng: number } {
     const ring = polygon.geometry.type === 'Polygon'

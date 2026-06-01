@@ -858,7 +858,7 @@ export default function GeoPointForm({
                             </button>
                             <button
                               type="button"
-                              onClick={() => onChange({ activationPolygon: undefined })}
+                              onClick={onDelete}
                               className="w-full py-2 rounded-lg border border-red-900/60 bg-red-900/10
                                          text-xs font-medium text-red-400 hover:bg-red-900/20
                                          transition-colors"

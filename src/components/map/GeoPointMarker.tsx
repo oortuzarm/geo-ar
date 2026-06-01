@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Circle, Marker } from 'react-leaflet'
+import L from 'leaflet'
 import { createGeoIcon } from './createGeoIcon'
 import { mapTheme } from './mapTheme'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
@@ -12,21 +13,31 @@ interface GeoPointMarkerProps {
   onDragEnd: (id: string, lat: number, lng: number) => void
   /** Hide marker icon completely — does NOT affect the activation radius circle */
   hidden?: boolean
+  /**
+   * Called on every drag frame with the per-frame lat/lng delta.
+   * Provided only for polygon-mode selected points so PolygonDrawLayer can
+   * move the polygon layer imperatively at 60 fps alongside the pin.
+   */
+  onPolygonDrag?: (delta: { lat: number; lng: number }) => void
 }
 
 export default function GeoPointMarker({
   point, selected, onClick, onDragEnd,
   hidden = false,
+  onPolygonDrag,
 }: GeoPointMarkerProps) {
-  const markerRef  = useRef<L.Marker | null>(null)
-  const circleRef  = useRef<L.Circle | null>(null)
-  const isDragging = useRef(false)
+  const markerRef        = useRef<L.Marker | null>(null)
+  const circleRef        = useRef<L.Circle | null>(null)
+  const isDragging       = useRef(false)
+  const prevDragLatLng   = useRef<L.LatLng | null>(null)
 
-  // Keep fresh references inside stable Leaflet event handlers
-  const onDragEndRef = useRef(onDragEnd)
-  onDragEndRef.current = onDragEnd
-  const pointIdRef = useRef(point.id)
-  pointIdRef.current = point.id
+  // Stable refs so Leaflet event handlers never capture stale closures.
+  const onDragEndRef     = useRef(onDragEnd)
+  const onPolygonDragRef = useRef(onPolygonDrag)
+  const pointIdRef       = useRef(point.id)
+  onDragEndRef.current     = onDragEnd
+  onPolygonDragRef.current = onPolygonDrag
+  pointIdRef.current       = point.id
 
   // Sync circle when the point moves externally (form inputs, map click, address search)
   // but never interfere with an active drag — Leaflet already owns the DOM during drag
@@ -43,15 +54,31 @@ export default function GeoPointMarker({
     const m = markerRef.current
     if (!m) return
 
-    const onDragStart = () => { isDragging.current = true }
+    const onDragStart = () => {
+      isDragging.current = true
+      prevDragLatLng.current = m.getLatLng()
+    }
 
     const onDrag = () => {
-      // Move the circle imperatively — zero React renders, 60 fps
-      circleRef.current?.setLatLng(m.getLatLng())
+      const newLatLng = m.getLatLng()
+
+      // Radius mode: move the circle imperatively — zero React renders, 60 fps.
+      circleRef.current?.setLatLng(newLatLng)
+
+      // Polygon mode: move the polygon layer by the per-frame delta.
+      if (onPolygonDragRef.current && prevDragLatLng.current) {
+        onPolygonDragRef.current({
+          lat: newLatLng.lat - prevDragLatLng.current.lat,
+          lng: newLatLng.lng - prevDragLatLng.current.lng,
+        })
+      }
+
+      prevDragLatLng.current = newLatLng
     }
 
     const onDragEnd = () => {
       isDragging.current = false
+      prevDragLatLng.current = null
       const { lat, lng } = m.getLatLng()
       // Finalise: persist new coords and sync circle to authoritative position
       circleRef.current?.setLatLng([lat, lng])

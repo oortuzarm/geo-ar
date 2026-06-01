@@ -8,7 +8,7 @@ import GeoPointMarker from './GeoPointMarker'
 import IntensityLayer from './IntensityLayer'
 import PolygonDrawLayer from './PolygonDrawLayer'
 import PolygonAreaLayer from './PolygonAreaLayer'
-import type { PolygonDrawMode } from './PolygonDrawLayer'
+import type { PolygonDrawMode, PolygonMoveFn } from './PolygonDrawLayer'
 import type { GeoPoint, PoiSearchResult, MapBounds, ActivationPolygon } from '../../types'
 import { type MapStyleId } from '../../config/mapStyles'
 import BaseMapLayer from './BaseMapLayer'
@@ -183,6 +183,10 @@ export default function DashboardMap({
   const drawingActive = polygonDrawMode !== 'idle'
   const { mapCenter, mapZoom } = useGeoStore()
 
+  // Shared ref populated by PolygonDrawLayer on mount; consumed by GeoPointMarker
+  // during pin drag so both pin and polygon move simultaneously at 60 fps.
+  const polygonMoveRef = useRef<PolygonMoveFn | null>(null)
+
   return (
     <MapContainer
       center={mapCenter}
@@ -221,6 +225,7 @@ export default function DashboardMap({
           onPolygonCommit={onPolygonCommit}
           onDrawEnd={onPolygonDrawEnd}
           onDrawCancel={onPolygonDrawCancel}
+          onMoveRefReady={(fn) => { polygonMoveRef.current = fn }}
         />
       )}
       {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} />}
@@ -238,6 +243,11 @@ export default function DashboardMap({
           onClick={onMarkerClick}
           onDragEnd={onMarkerDragEnd}
           hidden={hidePoints}
+          onPolygonDrag={
+            (point.activationMode ?? 'radius') === 'polygon' && point.id === selectedPointId
+              ? (delta) => polygonMoveRef.current?.(delta)
+              : undefined
+          }
         />
       ))}
 

@@ -7,7 +7,8 @@
  *  - Renders the activationPolygon with selected (cyan) or unselected (red) style.
  *  - Activates Geoman draw mode when drawMode === 'drawing'.
  *  - Activates Geoman vertex-edit mode when drawMode === 'editing'.
- *  - Enables drag-to-move when drawMode === 'idle' and isSelected === true.
+ *  - Exposes onMoveRefReady so GeoPointMarker can move the polygon imperatively
+ *    at 60 fps during a pin drag (same pattern as circleRef for radius mode).
  *  - Never shows Geoman's built-in toolbar (controlled entirely via props).
  *  - Cleans up all layers and listeners on unmount and on prop changes.
  *
@@ -26,6 +27,8 @@ import type { ActivationPolygon } from '../../types'
 
 export type PolygonDrawMode = 'idle' | 'drawing' | 'editing'
 
+export type PolygonMoveFn = (delta: { lat: number; lng: number }) => void
+
 interface PolygonDrawLayerProps {
   drawMode:         PolygonDrawMode
   existingPolygon:  ActivationPolygon | undefined
@@ -34,6 +37,12 @@ interface PolygonDrawLayerProps {
   onPolygonCommit:  (polygon: ActivationPolygon) => void
   onDrawEnd:        () => void
   onDrawCancel?:    () => void
+  /**
+   * Called on mount/unmount with a stable function (or null) that imperatively
+   * translates the polygon layer during a pin drag — zero React renders, 60 fps.
+   * Same pattern as circleRef in GeoPointMarker for radius mode.
+   */
+  onMoveRefReady?:  (moveFn: PolygonMoveFn | null) => void
 }
 
 // ── Styles (match GeoPointMarker's circle styles exactly) ──────────────────
@@ -66,6 +75,23 @@ function layerToFeature(layer: L.Polygon): ActivationPolygon {
   return layer.toGeoJSON() as ActivationPolygon
 }
 
+/**
+ * Recursively translates Leaflet LatLng arrays at any nesting depth.
+ * Handles L.LatLng, L.LatLng[], L.LatLng[][] (Polygon rings), L.LatLng[][][] (MultiPolygon).
+ */
+function translateRings(
+  rings: L.LatLng | L.LatLng[] | L.LatLng[][] | L.LatLng[][][],
+  delta: { lat: number; lng: number },
+): L.LatLng | L.LatLng[] | L.LatLng[][] | L.LatLng[][][] {
+  if (!Array.isArray(rings)) {
+    const pt = rings as L.LatLng
+    return L.latLng(pt.lat + delta.lat, pt.lng + delta.lng)
+  }
+  return (rings as unknown[]).map(
+    (item) => translateRings(item as L.LatLng, delta),
+  ) as L.LatLng[] | L.LatLng[][] | L.LatLng[][][]
+}
+
 export default function PolygonDrawLayer({
   drawMode,
   existingPolygon,
@@ -73,6 +99,7 @@ export default function PolygonDrawLayer({
   onPolygonCommit,
   onDrawEnd,
   onDrawCancel,
+  onMoveRefReady,
 }: PolygonDrawLayerProps) {
   const map = useMap()
 
@@ -80,9 +107,27 @@ export default function PolygonDrawLayer({
   const onPolygonCommitRef  = useRef(onPolygonCommit)
   const onDrawEndRef        = useRef(onDrawEnd)
   const onDrawCancelRef     = useRef(onDrawCancel)
+  const onMoveRefReadyRef   = useRef(onMoveRefReady)
   onPolygonCommitRef.current  = onPolygonCommit
   onDrawEndRef.current        = onDrawEnd
   onDrawCancelRef.current     = onDrawCancel
+  onMoveRefReadyRef.current   = onMoveRefReady
+
+  // ── Expose imperative move function for simultaneous pin+polygon drag ────
+  // The move function always reads polygonLayerRef.current so it stays current
+  // even when the layer is recreated due to polygon edits or selection changes.
+  useEffect(() => {
+    const moveFn: PolygonMoveFn = (delta) => {
+      polygonLayerRef.current?.eachLayer((inner) => {
+        const poly = inner as L.Polygon
+        poly.setLatLngs(
+          translateRings(poly.getLatLngs(), delta) as L.LatLng[][],
+        )
+      })
+    }
+    onMoveRefReadyRef.current?.(moveFn)
+    return () => { onMoveRefReadyRef.current?.(null) }
+  }, []) // stable — only reads refs at call time, no reactive deps
 
   // ── Effect 1: sync polygon layer with existingPolygon + isSelected style ──
 

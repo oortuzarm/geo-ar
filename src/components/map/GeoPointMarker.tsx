@@ -91,8 +91,8 @@ export default function GeoPointMarker({
         eventHandlers={{ click: () => onClick(point.id) }}
       />
 
-      {/* Circle is always mounted for active points so circleRef is populated during drag */}
-      {point.active && (
+      {/* Circle only for radius-mode points. Polygon-mode points use PolygonDrawLayer instead. */}
+      {point.active && (point.activationMode ?? 'radius') === 'radius' && (
         <Circle
           ref={circleRef}
           center={[point.latitude, point.longitude]}

@@ -45,6 +45,19 @@ export interface GeoPointAvailability {
 
 export type ContentType = 'url' | 'video' | 'audio' | 'file'
 
+// ── Destination categories (only relevant when contentType === 'url') ─────────
+
+export type DestinationCategory =
+  | 'website'
+  | 'whatsapp'
+  | 'form'
+  | 'reservation'
+  | 'ecommerce'
+  | 'social'
+  | 'map'
+  | 'coupon'
+  | 'custom'
+
 export interface UrlContentData {
   url: string
 }
@@ -77,9 +90,10 @@ export interface GeoPoint {
   id: string
   geoProjectId: string
   name: string
-  lookiarUrl?: string      // legacy field — kept for backward compat
+  lookiarUrl?: string           // legacy field — kept for backward compat
   contentType?: ContentType
-  contentData?: ContentData // excluded from public API; only returned after /access
+  contentData?: ContentData     // excluded from public API; only returned after /access
+  destinationCategory?: DestinationCategory  // only set when contentType === 'url'
   latitude: number
   longitude: number
   activationRadius: number

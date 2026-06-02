@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Input, Textarea } from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
-import type { ContentType, GeoPoint, GeoPointAvailability, MediaContentData } from '../../types'
+import type { ContentType, DestinationCategory, GeoPoint, GeoPointAvailability, MediaContentData } from '../../types'
 import { reverseGeocode } from '../../features/geolocation/geocoding'
 import { uploadFile, formatFileSize } from '../../lib/uploadFile'
 import { uploadImage } from '../../lib/uploadImage'
@@ -47,6 +47,20 @@ const CONTENT_TYPES: { type: ContentType; label: string; icon: string }[] = [
   { type: 'video', label: 'Video',              icon: '🎬' },
   { type: 'audio', label: 'Audio',              icon: '🎵' },
   { type: 'file',  label: 'Archivo descargable', icon: '📄' },
+]
+
+// ─── Destination category config (only shown when content type is URL) ────────
+
+const DESTINATION_CATEGORIES: { value: DestinationCategory; label: string }[] = [
+  { value: 'website',     label: 'Sitio web'     },
+  { value: 'whatsapp',    label: 'WhatsApp'      },
+  { value: 'form',        label: 'Formulario'    },
+  { value: 'reservation', label: 'Reserva'       },
+  { value: 'ecommerce',   label: 'E-commerce'    },
+  { value: 'social',      label: 'Red social'    },
+  { value: 'map',         label: 'Mapa'          },
+  { value: 'coupon',      label: 'Cupón'         },
+  { value: 'custom',      label: 'Personalizado' },
 ]
 
 const FILE_CONFIG: Record<Exclude<ContentType, 'url'>, { accept: string; hint: string; maxLabel: string }> = {
@@ -356,8 +370,9 @@ export default function GeoPointForm({
   const [description, setDescription] = useState(point.description ?? '')
   const [buttonText,  setButtonText]  = useState(point.buttonText ?? '')
 
-  // ── Content type state ────────────────────────────────────────────────────
-  const [contentType,   setContentType]   = useState<ContentType>(point.contentType ?? 'url')
+  // ── Content type + destination category state ────────────────────────────
+  const [contentType,         setContentType]         = useState<ContentType>(point.contentType ?? 'url')
+  const [destinationCategory, setDestinationCategory] = useState<DestinationCategory | undefined>(point.destinationCategory)
   // Uploaded file info (for video/audio/file types)
   const initialMedia = isMediaContentData(point.contentData)
     ? { url: point.contentData.file_url, fileName: point.contentData.file_name, mimeType: point.contentData.mime_type, size: 0 }
@@ -403,7 +418,8 @@ export default function GeoPointForm({
     }
   }, [point.latitude, point.longitude])
 
-  // When content type changes, reset media state
+  // When content type changes, reset media state and clear destination category
+  // (destination category is only relevant for URL content).
   function handleContentTypeChange(ct: ContentType) {
     if (ct !== contentType) {
       if (mediaFile && isVercelBlobUrl(mediaFile.url)) {
@@ -413,6 +429,9 @@ export default function GeoPointForm({
       setMediaFile(null)
       setUploadState('idle')
       setUploadError(null)
+      if (ct !== 'url') {
+        setDestinationCategory(undefined)
+      }
     }
     setContentType(ct)
   }
@@ -503,10 +522,11 @@ export default function GeoPointForm({
       name,
       contentType,
       contentData,
-      lookiarUrl:   contentType === 'url' ? normalizedUrl : undefined,
-      description:  description    || undefined,
-      instructions: addressCustom  || undefined,
-      buttonText:   buttonText     || undefined,
+      lookiarUrl:          contentType === 'url' ? normalizedUrl : undefined,
+      destinationCategory: contentType === 'url' ? destinationCategory : undefined,
+      description:         description    || undefined,
+      instructions:        addressCustom  || undefined,
+      buttonText:          buttonText     || undefined,
     })
     return true
   }
@@ -631,22 +651,51 @@ export default function GeoPointForm({
 
         {/* ── Contenido: URL ──────────────────────────────────────────────── */}
         {contentType === 'url' && (
-          <div className="flex flex-col gap-1">
-            <Input
-              label="URL del contenido*"
-              placeholder="Ej: https://tusitio.com"
-              value={lookiarUrl}
-              onChange={(e) => { setLookiarUrl(e.target.value); setUrlError(null) }}
-              onBlur={() => {
-                const normalized = validateUrl()
-                if (normalized !== null) {
-                  onChange({ lookiarUrl: normalized, contentData: { url: normalized } })
-                }
-              }}
-              hint={urlError ? undefined : 'Agrega cualquier enlace: experiencias, promociones o contenido digital.'}
-            />
-            {urlError && <p className="text-xs text-red-400">{urlError}</p>}
-          </div>
+          <>
+            <div className="flex flex-col gap-1">
+              <Input
+                label="URL del contenido*"
+                placeholder="Ej: https://tusitio.com"
+                value={lookiarUrl}
+                onChange={(e) => { setLookiarUrl(e.target.value); setUrlError(null) }}
+                onBlur={() => {
+                  const normalized = validateUrl()
+                  if (normalized !== null) {
+                    onChange({ lookiarUrl: normalized, contentData: { url: normalized } })
+                  }
+                }}
+                hint={urlError ? undefined : 'Agrega cualquier enlace: experiencias, promociones o contenido digital.'}
+              />
+              {urlError && <p className="text-xs text-red-400">{urlError}</p>}
+            </div>
+
+            {/* ── Categoría del destino ──────────────────────────────────── */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                Categoría del destino
+              </label>
+              <select
+                value={destinationCategory ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value as DestinationCategory | ''
+                  const next = val === '' ? undefined : val
+                  setDestinationCategory(next)
+                  onChange({ destinationCategory: next })
+                }}
+                className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2
+                           text-sm text-gray-200 focus:border-brand-500 focus:outline-none
+                           focus:ring-1 focus:ring-brand-500 transition-colors"
+              >
+                <option value="">Sin categoría</option>
+                {DESTINATION_CATEGORIES.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500">
+                Opcional. Clasifica el destino para analytics.
+              </p>
+            </div>
+          </>
         )}
 
         {/* ── Contenido: Video / Audio / Archivo ─────────────────────────── */}

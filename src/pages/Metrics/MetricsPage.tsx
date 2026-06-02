@@ -6,6 +6,8 @@ import {
   fetchProjectAnalyticsByPoint,
   fetchProjectAnalyticsByHour,
   fetchProjectAnalyticsByDay,
+  fetchProjectDwellAnalytics,
+  fetchProjectDwellByPoint,
 } from '../../lib/analytics'
 import type {
   ProjectAnalytics,
@@ -13,6 +15,8 @@ import type {
   HourBucket,
   DayBucket,
   PeriodParams,
+  DwellAnalytics,
+  DwellPointAnalytics,
 } from '../../lib/analytics'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import { usePlanFeatures } from '../../hooks/usePlanFeatures'
@@ -38,6 +42,13 @@ function subtractDays(n: number): string {
   const d = new Date()
   d.setDate(d.getDate() - n)
   return d.toISOString().slice(0, 10)
+}
+
+function fmtSeconds(s: number): string {
+  if (s < 60) return `${s}s`
+  const m = Math.floor(s / 60)
+  const r = s % 60
+  return r === 0 ? `${m}m` : `${m}m ${r}s`
 }
 
 function computePeriodParams(
@@ -151,6 +162,68 @@ function deriveInsights(summary: ProjectAnalytics, byPoint: PointAnalytics[]): I
   return pool.slice(0, 4)
 }
 
+// ── Dwell insights derivation ─────────────────────────────────────────────────
+
+function deriveDwellInsights(
+  dwell: DwellAnalytics | null,
+  byPoint: DwellPointAnalytics[],
+): Insight[] {
+  if (!dwell) {
+    return [{
+      id: 'pending-backend', tag: 'neutral',
+      text: 'Los eventos de permanencia ya se registran en la base de datos. Las métricas detalladas estarán disponibles al implementar los endpoints de analytics en el backend.',
+    }]
+  }
+
+  const pool: Insight[] = []
+
+  if (dwell.dwellStarted === 0) {
+    pool.push({
+      id: 'no-dwell', tag: 'neutral',
+      text: 'Aún no hay sesiones de permanencia. Activá la función en al menos una ubicación para empezar a acumular datos.',
+    })
+    return pool
+  }
+
+  if (dwell.completionRate >= 70) {
+    pool.push({
+      id: 'high-completion', tag: 'positive',
+      text: `Alta tasa de completitud — el ${dwell.completionRate}% de las sesiones completaron el tiempo de espera requerido.`,
+    })
+  } else if (dwell.completionRate < 40 && dwell.dwellStarted > 5) {
+    pool.push({
+      id: 'low-completion', tag: 'warning',
+      text: `Solo el ${dwell.completionRate}% de las sesiones completan la espera — considerá reducir el tiempo requerido en tus ubicaciones.`,
+    })
+  }
+
+  const sorted = [...byPoint].sort((a, b) => b.dwellCompleted - a.dwellCompleted)
+  if (sorted[0] && sorted[0].dwellCompleted > 0) {
+    pool.push({
+      id: 'top-dwell-point', tag: 'info',
+      text: `"${sorted[0].pointName}" lidera en permanencias completadas con ${sorted[0].dwellCompleted} sesiones exitosas.`,
+    })
+  }
+
+  if (dwell.avgSeconds !== undefined && dwell.avgSeconds > 0) {
+    pool.push({
+      id: 'avg-dwell', tag: 'info',
+      text: `Permanencia promedio de ${fmtSeconds(dwell.avgSeconds)} — los usuarios muestran interés sostenido en las experiencias.`,
+    })
+  }
+
+  if (dwell.pct5min !== undefined && dwell.pct5min >= 30) {
+    pool.push({
+      id: 'long-sessions', tag: 'positive',
+      text: `El ${dwell.pct5min}% de las sesiones superan los 5 minutos — señal de alto engagement con el contenido AR.`,
+    })
+  }
+
+  const order: InsightTag[] = ['positive', 'info', 'warning', 'neutral']
+  pool.sort((a, b) => order.indexOf(a.tag) - order.indexOf(b.tag))
+  return pool.slice(0, 4)
+}
+
 // ── Insights section ──────────────────────────────────────────────────────────
 
 function InsightsSection({ summary, byPoint }: {
@@ -226,6 +299,75 @@ function InsightsSection({ summary, byPoint }: {
               className={`w-1.5 h-1.5 rounded-full shrink-0 mt-[5px] ${DOT[ins.tag]}`}
             />
             {/* Text */}
+            <p className={`text-[12.5px] leading-snug transition-colors duration-150
+                           group-hover:text-gray-200 ${TEXT[ins.tag]}`}>
+              {ins.text}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Dwell insights section ────────────────────────────────────────────────────
+
+function DwellInsightsSection({ insights }: { insights: Insight[] }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 80)
+    return () => clearTimeout(t)
+  }, [])
+
+  const DOT: Record<InsightTag, string> = {
+    positive: 'bg-emerald-400',
+    warning:  'bg-amber-400',
+    info:     'bg-brand-400',
+    neutral:  'bg-gray-600',
+  }
+  const TEXT: Record<InsightTag, string> = {
+    positive: 'text-emerald-300/90',
+    warning:  'text-amber-300/90',
+    info:     'text-brand-300/90',
+    neutral:  'text-gray-400',
+  }
+
+  return (
+    <div
+      className="rounded-2xl border border-brand-500/[0.18] px-6 py-5"
+      style={{ background: 'linear-gradient(135deg, #0a1c2e 0%, #0d1f2d 50%, #0c1a28 100%)' }}
+    >
+      <div className="flex items-start justify-between mb-5">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-5 h-5 rounded-md bg-brand-500/15 border border-brand-500/25 flex items-center justify-center">
+              <svg className="w-3 h-3 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-sm font-semibold text-gray-100">Insights de permanencia</h3>
+          </div>
+          <p className="text-[11px] text-gray-600">Análisis automático del comportamiento de permanencia.</p>
+        </div>
+        <span className="text-[10px] font-medium text-brand-500/70 bg-brand-500/8
+                         border border-brand-500/15 rounded-full px-2 py-0.5 shrink-0">
+          {insights.length} activos
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+        {insights.map((ins, i) => (
+          <div
+            key={ins.id}
+            className="flex items-start gap-2.5 group cursor-default"
+            style={{
+              opacity:    mounted ? 1 : 0,
+              transform:  mounted ? 'translateY(0)' : 'translateY(5px)',
+              transition: `opacity 0.32s ease-out ${i * 75}ms, transform 0.32s ease-out ${i * 75}ms`,
+            }}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-[5px] ${DOT[ins.tag]}`} />
             <p className={`text-[12.5px] leading-snug transition-colors duration-150
                            group-hover:text-gray-200 ${TEXT[ins.tag]}`}>
               {ins.text}
@@ -1229,6 +1371,227 @@ function HorariosSection({ projectId, pointId, pointFilter, params }: {
   )
 }
 
+// ── Permanencia section ───────────────────────────────────────────────────────
+
+const DWELL_BUCKETS = [
+  { label: '< 30s',  key: 'lt30s' },
+  { label: '30s–1m', key: '30to1m' },
+  { label: '1–3m',   key: '1to3m'  },
+  { label: '3–5m',   key: '3to5m'  },
+  { label: '5–10m',  key: '5to10m' },
+  { label: '> 10m',  key: 'gt10m'  },
+]
+
+function PermanenciaSection({
+  projectId,
+  pointId,
+  pointFilter,
+  params,
+}: {
+  projectId: string
+  pointId?: string
+  pointFilter: PointAnalytics | null
+  params?: PeriodParams
+}) {
+  const [dwell,        setDwell]        = useState<DwellAnalytics | null | undefined>(undefined)
+  const [dwellByPoint, setDwellByPoint] = useState<DwellPointAnalytics[]>([])
+  const [loading,      setLoading]      = useState(true)
+  const [barsMounted,  setBarsMounted]  = useState(false)
+
+  useEffect(() => {
+    setLoading(true); setBarsMounted(false)
+    Promise.all([
+      fetchProjectDwellAnalytics(projectId, pointId, params),
+      fetchProjectDwellByPoint(projectId, params),
+    ])
+      .then(([d, dbp]) => { setDwell(d); setDwellByPoint(dbp) })
+      .finally(() => setLoading(false))
+  }, [projectId, pointId, params?.from, params?.to])
+
+  useEffect(() => {
+    if (!loading) {
+      const t = setTimeout(() => setBarsMounted(true), 120)
+      return () => clearTimeout(t)
+    }
+  }, [loading])
+
+  const backendReady   = dwell !== null && dwell !== undefined
+  const hasActivity    = backendReady && dwell!.dwellStarted > 0
+  const dwellInsights  = deriveDwellInsights(dwell ?? null, dwellByPoint)
+  const sortedByDwell  = [...dwellByPoint].sort((a, b) => (b.avgSeconds ?? 0) - (a.avgSeconds ?? 0))
+
+  return (
+    <div className="space-y-5 animate-fade-in">
+      {pointFilter && (
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0" />
+          Mostrando datos para: <span className="text-brand-300 font-medium">{pointFilter.pointName}</span>
+        </div>
+      )}
+
+      {loading ? (
+        <PageSkeleton />
+      ) : (
+        <>
+          {/* ── KPI cards ──────────────────────────────────────────── */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <KPICard
+              label="Permanencia promedio"
+              value={backendReady && dwell!.avgSeconds !== undefined ? fmtSeconds(dwell!.avgSeconds) : '—'}
+              sub={backendReady ? 'tiempo promedio en el área' : 'requiere integración backend'}
+            />
+            <KPICard
+              label="Permanencia mediana"
+              value={backendReady && dwell!.medianSeconds !== undefined ? fmtSeconds(dwell!.medianSeconds) : '—'}
+              sub={backendReady ? 'valor central del período' : 'requiere integración backend'}
+            />
+            <KPICard
+              label="Permanencia máxima"
+              value={backendReady && dwell!.maxSeconds !== undefined ? fmtSeconds(dwell!.maxSeconds) : '—'}
+              sub={backendReady ? 'sesión más larga registrada' : 'requiere integración backend'}
+            />
+            <KPICard
+              label="Tasa de completitud"
+              value={backendReady ? `${dwell!.completionRate}%` : '—'}
+              sub={
+                backendReady && dwell!.dwellStarted > 0
+                  ? `${dwell!.dwellCompleted} de ${dwell!.dwellStarted} completadas`
+                  : backendReady ? 'sin sesiones aún' : 'requiere integración backend'
+              }
+              accent
+            />
+          </div>
+
+          {/* ── Distribución de permanencia ─────────────────────────── */}
+          <div className="rounded-2xl border border-white/[0.07] bg-gray-900/70 px-5 sm:px-6 py-5">
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-gray-200">Distribución de permanencia</h3>
+              <p className="text-xs text-gray-500 mt-0.5">Cantidad de sesiones por rango de duración</p>
+            </div>
+            {hasActivity ? (
+              <div className="space-y-3">
+                {DWELL_BUCKETS.map((b, i) => (
+                  <DistBarRow
+                    key={b.key}
+                    label={b.label}
+                    barPct={0}
+                    displayLabel="0"
+                    mounted={barsMounted}
+                    delay={i * 55}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
+                <svg className="w-10 h-10 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm text-gray-600">Sin datos de distribución aún</p>
+                <p className="text-xs text-gray-700 max-w-xs leading-snug">
+                  {backendReady
+                    ? 'Activá permanencia en tus ubicaciones para ver cómo se distribuyen las sesiones por duración.'
+                    : 'La distribución por buckets estará disponible al implementar los endpoints de dwell analytics.'}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* ── Ranking de permanencia ──────────────────────────────── */}
+          {dwellByPoint.length > 0 && (
+            <div className="rounded-2xl border border-white/[0.07] bg-gray-900/70 overflow-hidden">
+              <div className="px-5 sm:px-6 py-4 border-b border-white/[0.06] flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-200">Ranking de permanencia</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Ordenado por permanencia descendente</p>
+                </div>
+                <span className="text-xs text-gray-600 flex-shrink-0">{sortedByDwell.length} ubicaciones</span>
+              </div>
+
+              <div className="hidden sm:grid gap-4 px-5 sm:px-6 py-2.5 border-b border-white/[0.04]
+                              text-[10px] text-gray-600 font-medium uppercase tracking-wider"
+                style={{ gridTemplateColumns: '1fr 90px 110px 80px' }}>
+                <span>Ubicación</span>
+                <span className="text-right">Promedio</span>
+                <span className="text-right">Completadas</span>
+                <span className="text-right">Tasa</span>
+              </div>
+
+              <div className="divide-y divide-white/[0.04]">
+                {sortedByDwell.map((pt, i) => {
+                  const rateColor = pt.completionRate >= 70 ? 'text-emerald-400'
+                                  : pt.completionRate >= 40 ? 'text-amber-400'
+                                  : 'text-gray-500'
+                  return (
+                    <div
+                      key={pt.pointId}
+                      className="flex sm:grid gap-4 items-center px-5 sm:px-6 py-4
+                                 hover:bg-white/[0.02] transition-colors"
+                      style={{ gridTemplateColumns: '1fr 90px 110px 80px' }}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-xs text-gray-700 w-4 text-right flex-shrink-0 tabular-nums">{i + 1}</span>
+                        <p className="text-sm text-gray-200 truncate font-medium">{pt.pointName}</p>
+                      </div>
+                      <span className="hidden sm:block text-sm tabular-nums text-gray-400 text-right">
+                        {pt.avgSeconds !== undefined ? fmtSeconds(pt.avgSeconds) : '—'}
+                      </span>
+                      <span className="hidden sm:block text-sm tabular-nums text-gray-400 text-right">
+                        {pt.dwellCompleted}
+                      </span>
+                      <span className={`hidden sm:block text-sm tabular-nums font-semibold text-right ${rateColor}`}>
+                        {pt.completionRate}%
+                      </span>
+                      <div className="sm:hidden flex items-center gap-2 text-xs flex-shrink-0 ml-auto">
+                        <span className="text-gray-500">{pt.dwellCompleted} comp.</span>
+                        <span className={`font-semibold ${rateColor}`}>{pt.completionRate}%</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── Permanencia por horario ─────────────────────────────── */}
+          <div className="rounded-2xl border border-white/[0.07] bg-gray-900/70 px-5 sm:px-6 py-5">
+            <h3 className="text-sm font-semibold text-gray-200 mb-4">Permanencia por horario</h3>
+            <div className="flex flex-col" style={{ minHeight: '200px' }}>
+              <HorariosTab projectId={projectId} pointId={pointId} params={params} />
+            </div>
+            <p className="text-[11px] text-gray-600 mt-3 leading-snug">
+              Actividad general del proyecto por horario. La distribución específica de permanencia por hora estará disponible con la próxima integración backend.
+            </p>
+          </div>
+
+          {/* ── Insights de permanencia ─────────────────────────────── */}
+          {dwellInsights.length > 0 && (
+            <DwellInsightsSection insights={dwellInsights} />
+          )}
+
+          {/* ── Nota de integración pendiente ──────────────────────── */}
+          {!backendReady && (
+            <div className="rounded-xl border border-gray-800 bg-gray-900/40 px-5 py-4 flex items-start gap-3">
+              <div className="w-5 h-5 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-400">Integración backend pendiente</p>
+                <p className="text-[11px] text-gray-600 mt-0.5 leading-snug">
+                  Los eventos de permanencia ya se registran (dwell_started, dwell_completed, dwell_cancelled). Las métricas agregadas estarán disponibles al implementar los endpoints <code className="text-gray-500">analytics_dwell</code> y <code className="text-gray-500">analytics_dwell_by_point</code>.
+                </p>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
 // ── API info section ──────────────────────────────────────────────────────────
 
 function ApiInfoSection() {
@@ -1398,13 +1761,6 @@ export default function MetricsPage() {
 
         {/* ── Secciones que no requieren datos ──────────────────────────── */}
 
-        {section === 'permanencia' && (
-          <ComingSoonSection
-            description="Distribución de permanencia, permanencia promedio por ubicación y permanencia por horario."
-            bullets={['Menos de 30 segundos', '30 s – 3 minutos', '3 – 10 minutos', 'Más de 10 minutos']}
-          />
-        )}
-
         {section === 'destinos' && (
           <ComingSoonSection
             description="Destinos más utilizados, conversión por destino y destino por ubicación."
@@ -1416,7 +1772,7 @@ export default function MetricsPage() {
 
         {/* ── Secciones que requieren datos ─────────────────────────────── */}
 
-        {['resumen', 'ubicaciones', 'conversion', 'horarios'].includes(section) && (
+        {['resumen', 'ubicaciones', 'conversion', 'permanencia', 'horarios'].includes(section) && (
           <>
             {/* Loading */}
             {(workspaceLoading || dataLoading) && <PageSkeleton />}
@@ -1535,6 +1891,16 @@ export default function MetricsPage() {
                     summary={displaySummary!}
                     convQuality={convQuality}
                     pointFilter={pointFilter}
+                  />
+                )}
+
+                {/* ── Permanencia ─────────────────────────────── */}
+                {section === 'permanencia' && (
+                  <PermanenciaSection
+                    projectId={selectedId}
+                    pointId={pointId || undefined}
+                    pointFilter={pointFilter}
+                    params={periodParams}
                   />
                 )}
 

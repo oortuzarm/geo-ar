@@ -230,3 +230,63 @@ export async function fetchProjectAnalyticsByDay(
   return []
 }
 
+// ── Dwell analytics ────────────────────────────────────────────────────────────
+//
+// Rails endpoints to implement:
+//   GET /api/geo_projects/:id/analytics_dwell[?point_id=&from=&to=]
+//     → { dwellStarted, dwellCompleted, dwellCancelled, completionRate,
+//         avgSeconds?, medianSeconds?, maxSeconds?, pct5min? }
+//   GET /api/geo_projects/:id/analytics_dwell_by_point[?from=&to=]
+//     → [{ pointId, pointName, dwellStarted, dwellCompleted, completionRate, avgSeconds? }]
+//
+// Source events already stored: dwell_started, dwell_completed, dwell_cancelled
+
+export interface DwellAnalytics {
+  dwellStarted:    number
+  dwellCompleted:  number
+  dwellCancelled:  number
+  completionRate:  number   // 0–100, dwellCompleted/dwellStarted×100
+  avgSeconds?:     number   // requires per-session duration tracking
+  medianSeconds?:  number
+  maxSeconds?:     number
+  pct5min?:        number   // % of sessions > 300 s
+}
+
+export interface DwellPointAnalytics {
+  pointId:        string
+  pointName:      string
+  dwellStarted:   number
+  dwellCompleted: number
+  completionRate: number
+  avgSeconds?:    number
+}
+
+export async function fetchProjectDwellAnalytics(
+  projectId: string,
+  pointId?: string,
+  params?: PeriodParams,
+): Promise<DwellAnalytics | null> {
+  try {
+    const qs   = buildQS({ point_id: pointId, from: params?.from, to: params?.to })
+    const data = await apiFetch<unknown>(`${API_BASE}/api/geo_projects/${projectId}/analytics_dwell${qs}`)
+    if (data && typeof data === 'object') return data as DwellAnalytics
+  } catch { /* endpoint not yet available */ }
+  return null
+}
+
+export async function fetchProjectDwellByPoint(
+  projectId: string,
+  params?: PeriodParams,
+): Promise<DwellPointAnalytics[]> {
+  try {
+    const qs   = buildQS({ from: params?.from, to: params?.to })
+    const data = await apiFetch<unknown>(`${API_BASE}/api/geo_projects/${projectId}/analytics_dwell_by_point${qs}`)
+    if (Array.isArray(data)) return data as DwellPointAnalytics[]
+    if (data && typeof data === 'object') {
+      const d = (data as Record<string, unknown>).data
+      if (Array.isArray(d)) return d as DwellPointAnalytics[]
+    }
+  } catch { /* endpoint not yet available */ }
+  return []
+}
+

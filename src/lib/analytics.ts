@@ -164,41 +164,69 @@ export interface PointAnalytics {
 export interface HourBucket { hour: number; count: number }
 export interface DayBucket  { day:  number; count: number }
 
-export function fetchProjectAnalytics(projectId: string): Promise<ProjectAnalytics> {
-  return apiFetch<ProjectAnalytics>(`${API_BASE}/api/geo_projects/${projectId}/analytics`)
+export interface PeriodParams {
+  from?: string  // YYYY-MM-DD
+  to?:   string  // YYYY-MM-DD
 }
 
-export async function fetchProjectAnalyticsByPoint(projectId: string): Promise<PointAnalytics[]> {
-  const data = await apiFetch<unknown>(`${API_BASE}/api/geo_projects/${projectId}/analytics_by_point`)
+function buildQS(pairs: Record<string, string | undefined>): string {
+  const parts = Object.entries(pairs)
+    .filter(([, v]) => v !== undefined && v !== '')
+    .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
+  return parts.length > 0 ? `?${parts.join('&')}` : ''
+}
+
+export function fetchProjectAnalytics(
+  projectId: string,
+  params?: PeriodParams,
+): Promise<ProjectAnalytics> {
+  const qs = buildQS({ from: params?.from, to: params?.to })
+  return apiFetch<ProjectAnalytics>(`${API_BASE}/api/geo_projects/${projectId}/analytics${qs}`)
+}
+
+export async function fetchProjectAnalyticsByPoint(
+  projectId: string,
+  params?: PeriodParams,
+): Promise<PointAnalytics[]> {
+  const qs   = buildQS({ from: params?.from, to: params?.to })
+  const data = await apiFetch<unknown>(`${API_BASE}/api/geo_projects/${projectId}/analytics_by_point${qs}`)
   if (Array.isArray(data)) return data as PointAnalytics[]
   if (data && typeof data === 'object' && Array.isArray((data as Record<string, unknown>).points))
     return (data as { points: PointAnalytics[] }).points
   return []
 }
 
-export async function fetchProjectAnalyticsByHour(projectId: string, pointId?: string): Promise<HourBucket[]> {
+export async function fetchProjectAnalyticsByHour(
+  projectId: string,
+  pointId?: string,
+  params?: PeriodParams,
+): Promise<HourBucket[]> {
   try {
-    const qs   = pointId ? `?point_id=${encodeURIComponent(pointId)}` : ''
+    const qs   = buildQS({ point_id: pointId, from: params?.from, to: params?.to })
     const data = await apiFetch<unknown>(`${API_BASE}/api/geo_projects/${projectId}/analytics_by_hour${qs}`)
     if (Array.isArray(data)) return data as HourBucket[]
     if (data && typeof data === 'object') {
       const d = (data as Record<string, unknown>).data
       if (Array.isArray(d)) return d as HourBucket[]
     }
-  } catch { /* endpoint not yet available */ }
+  } catch { /* silently handle unavailable endpoint */ }
   return []
 }
 
-export async function fetchProjectAnalyticsByDay(projectId: string, pointId?: string): Promise<DayBucket[]> {
+export async function fetchProjectAnalyticsByDay(
+  projectId: string,
+  pointId?: string,
+  params?: PeriodParams,
+): Promise<DayBucket[]> {
   try {
-    const qs   = pointId ? `?point_id=${encodeURIComponent(pointId)}` : ''
+    const qs   = buildQS({ point_id: pointId, from: params?.from, to: params?.to })
     const data = await apiFetch<unknown>(`${API_BASE}/api/geo_projects/${projectId}/analytics_by_day${qs}`)
     if (Array.isArray(data)) return data as DayBucket[]
     if (data && typeof data === 'object') {
       const d = (data as Record<string, unknown>).data
       if (Array.isArray(d)) return d as DayBucket[]
     }
-  } catch { /* endpoint not yet available */ }
+  } catch { /* silently handle unavailable endpoint */ }
   return []
 }
 

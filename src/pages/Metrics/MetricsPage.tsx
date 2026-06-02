@@ -12,6 +12,7 @@ import type {
   PointAnalytics,
   HourBucket,
   DayBucket,
+  PeriodParams,
 } from '../../lib/analytics'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import { usePlanFeatures } from '../../hooks/usePlanFeatures'
@@ -26,6 +27,39 @@ type Period     = '7d' | '30d' | '90d' | 'custom'
 type Section    = 'resumen' | 'ubicaciones' | 'conversion' | 'permanencia' | 'horarios' | 'destinos' | 'api'
 
 interface Insight { id: string; tag: InsightTag; text: string }
+
+// ── Period helpers ────────────────────────────────────────────────────────────
+
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function subtractDays(n: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() - n)
+  return d.toISOString().slice(0, 10)
+}
+
+function computePeriodParams(
+  period: Period,
+  customFrom: string,
+  customTo: string,
+): PeriodParams | undefined {
+  const to = todayISO()
+  if (period === '7d')  return { from: subtractDays(6),  to }
+  if (period === '30d') return { from: subtractDays(29), to }
+  if (period === '90d') return { from: subtractDays(89), to }
+  if (customFrom && customTo && customFrom <= customTo) return { from: customFrom, to: customTo }
+  return undefined
+}
+
+function periodLabel(period: Period, customFrom: string, customTo: string): string {
+  if (period === '7d')  return 'Últimos 7 días'
+  if (period === '30d') return 'Últimos 30 días'
+  if (period === '90d') return 'Últimos 90 días'
+  if (customFrom && customTo && customFrom <= customTo) return `${customFrom} → ${customTo}`
+  return 'Seleccioná un rango personalizado'
+}
 
 // ── Insights derivation ───────────────────────────────────────────────────────
 
@@ -387,7 +421,11 @@ const HORARIOS_SUBTABS: { id: HorariosSubTab; label: string }[] = [
   { id: 'dias',  label: 'Días'  },
 ]
 
-function HorariosTab({ projectId, pointId }: { projectId: string; pointId?: string }) {
+function HorariosTab({ projectId, pointId, params }: {
+  projectId: string
+  pointId?: string
+  params?: PeriodParams
+}) {
   const [sub, setSub]         = useState<HorariosSubTab>('horas')
   const [fade, setFade]       = useState(true)
   const [mounted, setMounted] = useState(false)
@@ -398,12 +436,12 @@ function HorariosTab({ projectId, pointId }: { projectId: string; pointId?: stri
   useEffect(() => {
     setLoading(true)
     Promise.all([
-      fetchProjectAnalyticsByHour(projectId, pointId),
-      fetchProjectAnalyticsByDay(projectId, pointId),
+      fetchProjectAnalyticsByHour(projectId, pointId, params),
+      fetchProjectAnalyticsByDay(projectId, pointId, params),
     ])
       .then(([h, d]) => { setHours(h); setDays(d) })
       .finally(() => setLoading(false))
-  }, [projectId, pointId])
+  }, [projectId, pointId, params?.from, params?.to])
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 150)
@@ -515,10 +553,11 @@ function HorariosTab({ projectId, pointId }: { projectId: string; pointId?: stri
 
 // ── Left widget ───────────────────────────────────────────────────────────────
 
-function LeftWidget({ byPoint, projectId, pointId }: {
+function LeftWidget({ byPoint, projectId, pointId, params }: {
   byPoint: PointAnalytics[] | null
   projectId: string
   pointId?: string
+  params?: PeriodParams
 }) {
   const [tab, setTab]       = useState<LeftTab>('actividad')
   const [subTab, setSubTab] = useState<SubTab>('entradas')
@@ -663,7 +702,7 @@ function LeftWidget({ byPoint, projectId, pointId }: {
         )}
 
         {/* ── Horarios ── */}
-        {tab === 'horarios' && <HorariosTab projectId={projectId} pointId={pointId} />}
+        {tab === 'horarios' && <HorariosTab projectId={projectId} pointId={pointId} params={params} />}
       </div>
     </div>
   )
@@ -892,9 +931,30 @@ const PERIOD_OPTIONS: { id: Period; label: string }[] = [
   { id: 'custom', label: 'Personalizado' },
 ]
 
-function PeriodSelector({ value, onChange }: { value: Period; onChange: (p: Period) => void }) {
+function PeriodSelector({
+  value,
+  onChange,
+  customFrom,
+  customTo,
+  onCustomFromChange,
+  onCustomToChange,
+}: {
+  value: Period
+  onChange: (p: Period) => void
+  customFrom: string
+  customTo: string
+  onCustomFromChange: (v: string) => void
+  onCustomToChange: (v: string) => void
+}) {
+  const today = todayISO()
+  const inputCls = [
+    'bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg px-2 py-1',
+    'text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-brand-500',
+    'focus:border-transparent transition-colors flex-shrink-0',
+  ].join(' ')
+
   return (
-    <div className="flex gap-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+    <div className="flex items-center gap-1.5 overflow-x-auto flex-wrap" style={{ scrollbarWidth: 'none' }}>
       {PERIOD_OPTIONS.map(p => (
         <button
           key={p.id}
@@ -909,6 +969,27 @@ function PeriodSelector({ value, onChange }: { value: Period; onChange: (p: Peri
           {p.label}
         </button>
       ))}
+
+      {value === 'custom' && (
+        <div className="flex items-center gap-1.5 flex-shrink-0 ml-1">
+          <input
+            type="date"
+            value={customFrom}
+            max={customTo || today}
+            onChange={e => onCustomFromChange(e.target.value)}
+            className={inputCls}
+          />
+          <span className="text-gray-600 text-xs">→</span>
+          <input
+            type="date"
+            value={customTo}
+            min={customFrom || undefined}
+            max={today}
+            onChange={e => onCustomToChange(e.target.value)}
+            className={inputCls}
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -1124,10 +1205,11 @@ function ConversionSection({
 
 // ── Horarios section ──────────────────────────────────────────────────────────
 
-function HorariosSection({ projectId, pointId, pointFilter }: {
+function HorariosSection({ projectId, pointId, pointFilter, params }: {
   projectId: string
   pointId?: string
   pointFilter: PointAnalytics | null
+  params?: PeriodParams
 }) {
   return (
     <div className="space-y-5 animate-fade-in">
@@ -1140,7 +1222,7 @@ function HorariosSection({ projectId, pointId, pointFilter }: {
       <div className="rounded-2xl border border-white/[0.07] bg-gray-900/70 px-5 sm:px-6 py-5">
         <h3 className="text-sm font-semibold text-gray-200 mb-4">Actividad por horario</h3>
         <div className="flex flex-col" style={{ minHeight: '200px' }}>
-          <HorariosTab projectId={projectId} pointId={pointId} />
+          <HorariosTab projectId={projectId} pointId={pointId} params={params} />
         </div>
       </div>
     </div>
@@ -1211,6 +1293,8 @@ export default function MetricsPage() {
   const [retryKey,    setRetryKey]    = useState(0)
   const [period,      setPeriod]      = useState<Period>('30d')
   const [section,     setSection]     = useState<Section>('resumen')
+  const [customFrom,  setCustomFrom]  = useState('')
+  const [customTo,    setCustomTo]    = useState('')
 
   // ── Point filter derived values ────────────────────────────────────────────
   const pointFilter: PointAnalytics | null =
@@ -1222,19 +1306,23 @@ export default function MetricsPage() {
 
   const displayByPoint = pointFilter ? [pointFilter] : byPoint
 
+  const periodParams = computePeriodParams(period, customFrom, customTo)
+
   useEffect(() => {
     if (!selectedId) return
+    // For custom period, wait until both dates are set and valid
+    if (period === 'custom' && !periodParams) return
     let cancelled = false
     setDataLoading(true); setError(false); setSummary(null); setByPoint(null)
     Promise.all([
-      fetchProjectAnalytics(selectedId),
-      fetchProjectAnalyticsByPoint(selectedId).catch(() => null),
+      fetchProjectAnalytics(selectedId, periodParams),
+      fetchProjectAnalyticsByPoint(selectedId, periodParams).catch(() => null),
     ])
       .then(([s, bp]) => { if (!cancelled) { setSummary(s); setByPoint(bp) } })
       .catch(() => { if (!cancelled) setError(true) })
       .finally(() => { if (!cancelled) setDataLoading(false) })
     return () => { cancelled = true }
-  }, [selectedId, retryKey])
+  }, [selectedId, retryKey, period, customFrom, customTo])
 
   function clearPointFilter() {
     setPointId('')
@@ -1265,7 +1353,14 @@ export default function MetricsPage() {
       <header className="border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm sticky top-0 z-20 hidden md:block">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
           <h1 className="text-xl font-bold text-gray-100 shrink-0">Analytics</h1>
-          <PeriodSelector value={period} onChange={setPeriod} />
+          <PeriodSelector
+            value={period}
+            onChange={setPeriod}
+            customFrom={customFrom}
+            customTo={customTo}
+            onCustomFromChange={setCustomFrom}
+            onCustomToChange={setCustomTo}
+          />
         </div>
       </header>
 
@@ -1275,7 +1370,14 @@ export default function MetricsPage() {
         {/* Mobile page header */}
         <div className="md:hidden mb-4 space-y-3">
           <h1 className="text-lg font-bold text-gray-100">Analytics</h1>
-          <PeriodSelector value={period} onChange={setPeriod} />
+          <PeriodSelector
+            value={period}
+            onChange={setPeriod}
+            customFrom={customFrom}
+            customTo={customTo}
+            onCustomFromChange={setCustomFrom}
+            onCustomToChange={setCustomTo}
+          />
         </div>
 
         {/* Analytics sub-nav */}
@@ -1283,15 +1385,14 @@ export default function MetricsPage() {
           <AnalyticsNav value={section} onChange={setSection} />
         </div>
 
-        {/* Period notice — informational only until backend supports filtering */}
-        {period !== '30d' && (
-          <div className="mb-5 flex items-center gap-2 text-xs text-gray-600 bg-gray-800/40
-                          border border-white/[0.05] rounded-xl px-4 py-3">
-            <svg className="w-3.5 h-3.5 text-brand-500/60 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {/* Period label */}
+        {!(period === 'custom' && !periodParams) && (
+          <div className="mb-5 flex items-center gap-2 text-xs text-gray-600">
+            <svg className="w-3 h-3 text-gray-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            Selector de período activo — filtrado disponible próximamente.
+            <span>{periodLabel(period, customFrom, customTo)}</span>
           </div>
         )}
 
@@ -1370,7 +1471,7 @@ export default function MetricsPage() {
             {/* Hero — left widget + right chart */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 h-auto lg:h-[280px]">
               <div className="lg:col-span-2 min-h-[260px] lg:min-h-0">
-                <LeftWidget byPoint={displayByPoint} projectId={selectedId} pointId={pointId || undefined} />
+                <LeftWidget byPoint={displayByPoint} projectId={selectedId} pointId={pointId || undefined} params={periodParams} />
               </div>
               <div className="lg:col-span-3 min-h-[260px] lg:min-h-0
                               bg-gray-900/70 border border-white/[0.07] rounded-2xl px-5 pt-5 pb-4">
@@ -1443,6 +1544,7 @@ export default function MetricsPage() {
                     projectId={selectedId}
                     pointId={pointId || undefined}
                     pointFilter={pointFilter}
+                    params={periodParams}
                   />
                 )}
 

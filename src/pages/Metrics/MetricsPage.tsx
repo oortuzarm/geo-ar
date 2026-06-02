@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { MetricTooltip } from '../../components/MetricTooltip'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   fetchProjectAnalytics,
   fetchProjectAnalyticsByPoint,
@@ -22,6 +22,8 @@ import PlanGate from '../../components/ui/PlanGate'
 type LeftTab    = 'actividad' | 'conversion' | 'horarios'
 type SubTab     = 'entradas'  | 'clics'
 type InsightTag = 'positive'  | 'warning'    | 'info'    | 'neutral'
+type Period     = '7d' | '30d' | '90d' | 'custom'
+type Section    = 'resumen' | 'ubicaciones' | 'conversion' | 'permanencia' | 'horarios' | 'destinos' | 'api'
 
 interface Insight { id: string; tag: InsightTag; text: string }
 
@@ -881,6 +883,319 @@ function KPICard({ label, value, sub, accent, className = '' }: {
   )
 }
 
+// ── Period selector ───────────────────────────────────────────────────────────
+
+const PERIOD_OPTIONS: { id: Period; label: string }[] = [
+  { id: '7d',     label: '7 días'       },
+  { id: '30d',    label: '30 días'      },
+  { id: '90d',    label: '90 días'      },
+  { id: 'custom', label: 'Personalizado' },
+]
+
+function PeriodSelector({ value, onChange }: { value: Period; onChange: (p: Period) => void }) {
+  return (
+    <div className="flex gap-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+      {PERIOD_OPTIONS.map(p => (
+        <button
+          key={p.id}
+          onClick={() => onChange(p.id)}
+          className={[
+            'px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-150 flex-shrink-0',
+            value === p.id
+              ? 'bg-gray-700 text-gray-100 border border-gray-600/80 shadow-sm'
+              : 'text-gray-500 hover:text-gray-300 border border-transparent hover:border-gray-700/50',
+          ].join(' ')}
+        >
+          {p.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ── Analytics nav ─────────────────────────────────────────────────────────────
+
+const ANALYTICS_SECTIONS: { id: Section; label: string }[] = [
+  { id: 'resumen',     label: 'Resumen'     },
+  { id: 'ubicaciones', label: 'Ubicaciones' },
+  { id: 'conversion',  label: 'Conversión'  },
+  { id: 'permanencia', label: 'Permanencia' },
+  { id: 'horarios',    label: 'Horarios'    },
+  { id: 'destinos',    label: 'Destinos'    },
+  { id: 'api',         label: 'API'         },
+]
+
+function AnalyticsNav({ value, onChange }: { value: Section; onChange: (s: Section) => void }) {
+  return (
+    <div className="flex overflow-x-auto border-b border-gray-800" style={{ scrollbarWidth: 'none' }}>
+      {ANALYTICS_SECTIONS.map(s => (
+        <button
+          key={s.id}
+          onClick={() => onChange(s.id)}
+          className={[
+            'relative px-4 py-3 text-xs font-medium whitespace-nowrap transition-all duration-150 flex-shrink-0',
+            value === s.id ? 'text-gray-100' : 'text-gray-500 hover:text-gray-300',
+          ].join(' ')}
+        >
+          {s.label}
+          {value === s.id && (
+            <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-brand-400 rounded-t-full" />
+          )}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ── Coming soon placeholder ────────────────────────────────────────────────────
+
+function ComingSoonSection({ description, bullets }: { description: string; bullets: string[] }) {
+  return (
+    <div className="rounded-2xl border border-white/[0.06] bg-gray-900/40 px-6 sm:px-10 py-14 text-center">
+      <div className="w-12 h-12 rounded-2xl bg-gray-800 border border-white/[0.06]
+                      flex items-center justify-center mx-auto mb-5 text-gray-600">
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <p className="text-sm font-semibold text-gray-300 mb-2">Próximamente</p>
+      <p className="text-xs text-gray-500 max-w-sm mx-auto leading-relaxed mb-6">{description}</p>
+      <div className="flex flex-col gap-2 items-center">
+        {bullets.map(b => (
+          <div key={b} className="flex items-center gap-2 text-xs text-gray-600">
+            <span className="w-1 h-1 rounded-full bg-brand-500/40 flex-shrink-0" />
+            {b}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Ubicaciones section ───────────────────────────────────────────────────────
+
+function UbicacionesSection({
+  byPoint,
+  summary,
+  pointFilter,
+}: {
+  byPoint: PointAnalytics[]
+  summary: ProjectAnalytics
+  pointFilter: PointAnalytics | null
+}) {
+  const sorted = [...byPoint].sort((a, b) => b.radiusEntries - a.radiusEntries)
+  const total  = summary.radiusEntries
+
+  if (byPoint.length === 0) {
+    return (
+      <div className="rounded-2xl border border-white/[0.07] bg-gray-900/40 py-14 text-center">
+        <p className="text-sm text-gray-600">Sin datos de ubicaciones aún.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-5 animate-fade-in">
+      {pointFilter && (
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0" />
+          Mostrando datos para: <span className="text-brand-300 font-medium">{pointFilter.pointName}</span>
+        </div>
+      )}
+      <div className="rounded-2xl border border-white/[0.07] bg-gray-900/70 overflow-hidden">
+        <div className="px-5 sm:px-6 py-4 border-b border-white/[0.06] flex items-center justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-200">Rendimiento por ubicación</h3>
+            <p className="text-xs text-gray-500 mt-0.5">Ordenadas por entradas al radio de activación</p>
+          </div>
+          <span className="text-xs text-gray-600 flex-shrink-0">{sorted.length} ubicaciones</span>
+        </div>
+
+        {/* Column headers — desktop only */}
+        <div className="hidden sm:grid gap-4 px-5 sm:px-6 py-2.5 border-b border-white/[0.04]
+                        text-[10px] text-gray-600 font-medium uppercase tracking-wider"
+          style={{ gridTemplateColumns: '1fr 80px 80px 80px 80px' }}>
+          <span>Ubicación</span>
+          <span className="text-right">Entradas</span>
+          <span className="text-right">Convs.</span>
+          <span className="text-right">Tasa cv.</span>
+          <span className="text-right">Participación</span>
+        </div>
+
+        <div className="divide-y divide-white/[0.04]">
+          {sorted.map((pt, i) => {
+            const pct       = total > 0 ? Math.round((pt.radiusEntries / total) * 100) : 0
+            const convColor = pt.conversion >= 30 ? 'text-emerald-400'
+                            : pt.conversion >= 15 ? 'text-amber-400'
+                            : 'text-gray-500'
+            return (
+              <div
+                key={pt.pointId}
+                className="flex sm:grid gap-4 items-center px-5 sm:px-6 py-4
+                           hover:bg-white/[0.02] transition-colors"
+                style={{ gridTemplateColumns: '1fr 80px 80px 80px 80px' }}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-xs text-gray-700 w-4 text-right flex-shrink-0 tabular-nums">{i + 1}</span>
+                  <p className="text-sm text-gray-200 truncate font-medium">{pt.pointName}</p>
+                </div>
+                <span className="hidden sm:block text-sm tabular-nums text-gray-400 text-right">{pt.radiusEntries}</span>
+                <span className="hidden sm:block text-sm tabular-nums text-gray-400 text-right">{pt.clicks}</span>
+                <span className={`hidden sm:block text-sm tabular-nums font-semibold text-right ${convColor}`}>{pt.conversion}%</span>
+                <span className="hidden sm:block text-sm tabular-nums text-gray-300 font-medium text-right">{pct}%</span>
+                {/* Mobile compact */}
+                <div className="sm:hidden flex items-center gap-2 text-xs flex-shrink-0 ml-auto">
+                  <span className="text-gray-500">{pt.radiusEntries} ent.</span>
+                  <span className={`font-semibold ${convColor}`}>{pt.conversion}%</span>
+                  <span className="text-gray-400">{pct}%</span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Conversion section ────────────────────────────────────────────────────────
+
+function ConversionSection({
+  byPoint,
+  summary,
+  convQuality,
+  pointFilter,
+}: {
+  byPoint: PointAnalytics[]
+  summary: ProjectAnalytics
+  convQuality: string
+  pointFilter: PointAnalytics | null
+}) {
+  const [barsMounted, setBarsMounted] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setBarsMounted(true), 120)
+    return () => clearTimeout(t)
+  }, [])
+
+  const sorted  = [...byPoint].sort((a, b) => b.conversion - a.conversion)
+  const maxConv = Math.max(...sorted.map(p => p.conversion), 1)
+
+  return (
+    <div className="space-y-5 animate-fade-in">
+      {pointFilter && (
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0" />
+          Mostrando datos para: <span className="text-brand-300 font-medium">{pointFilter.pointName}</span>
+        </div>
+      )}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <KPICard
+          label="Tasa de conversión"
+          value={`${summary.conversion}%`}
+          sub={`${convQuality} · entrada → clic`}
+          accent
+        />
+        <KPICard label="Entradas al radio" value={summary.radiusEntries} />
+        <KPICard label="Conversiones totales" value={summary.clicks} />
+      </div>
+
+      {sorted.length > 0 && (
+        <div className="rounded-2xl border border-white/[0.07] bg-gray-900/70 px-5 sm:px-6 py-5">
+          <h3 className="text-sm font-semibold text-gray-200 mb-4">Conversión por ubicación</h3>
+          <div className="space-y-3">
+            {sorted.map((pt, i) => (
+              <BarRow
+                key={pt.pointId}
+                label={pt.pointName}
+                value={pt.conversion}
+                maxValue={maxConv}
+                displayValue={`${pt.conversion}%`}
+                mounted={barsMounted}
+                delay={i * 55}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Horarios section ──────────────────────────────────────────────────────────
+
+function HorariosSection({ projectId, pointId, pointFilter }: {
+  projectId: string
+  pointId?: string
+  pointFilter: PointAnalytics | null
+}) {
+  return (
+    <div className="space-y-5 animate-fade-in">
+      {pointFilter && (
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0" />
+          Mostrando datos para: <span className="text-brand-300 font-medium">{pointFilter.pointName}</span>
+        </div>
+      )}
+      <div className="rounded-2xl border border-white/[0.07] bg-gray-900/70 px-5 sm:px-6 py-5">
+        <h3 className="text-sm font-semibold text-gray-200 mb-4">Actividad por horario</h3>
+        <div className="flex flex-col" style={{ minHeight: '200px' }}>
+          <HorariosTab projectId={projectId} pointId={pointId} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── API info section ──────────────────────────────────────────────────────────
+
+function ApiInfoSection() {
+  return (
+    <div className="animate-fade-in">
+      <div className="rounded-2xl border border-brand-500/20 bg-brand-500/[0.04] px-6 py-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-md bg-brand-500/15 border border-brand-500/25
+                              flex items-center justify-center flex-shrink-0">
+                <svg className="w-3.5 h-3.5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-sm font-semibold text-gray-100">Analytics API</h3>
+            </div>
+            <p className="text-xs text-gray-400 leading-relaxed max-w-md mb-4">
+              Accede a tus métricas de forma programática. Integra Ubyca con tus dashboards,
+              sistemas de BI o herramientas propias mediante la API pública.
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {['entradas', 'conversiones', 'por punto', 'horarios', 'ranking'].map(cap => (
+                <span key={cap}
+                  className="text-[10px] font-mono px-2 py-0.5 rounded border
+                             border-brand-500/20 text-brand-400 bg-brand-500/[0.06]">
+                  {cap}
+                </span>
+              ))}
+            </div>
+          </div>
+          <Link
+            to="/app/integrations"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
+                       bg-brand-600 hover:bg-brand-500 text-white transition-colors flex-shrink-0"
+          >
+            Configurar API
+            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" clipRule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+            </svg>
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function MetricsPage() {
@@ -894,6 +1209,8 @@ export default function MetricsPage() {
   const [dataLoading, setDataLoading] = useState(false)
   const [error,       setError]       = useState(false)
   const [retryKey,    setRetryKey]    = useState(0)
+  const [period,      setPeriod]      = useState<Period>('30d')
+  const [section,     setSection]     = useState<Section>('resumen')
 
   // ── Point filter derived values ────────────────────────────────────────────
   const pointFilter: PointAnalytics | null =
@@ -946,8 +1263,9 @@ export default function MetricsPage() {
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm sticky top-0 z-20 hidden md:block">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center gap-3">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
           <h1 className="text-xl font-bold text-gray-100 shrink-0">Analytics</h1>
+          <PeriodSelector value={period} onChange={setPeriod} />
         </div>
       </header>
 
@@ -955,57 +1273,99 @@ export default function MetricsPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
 
         {/* Mobile page header */}
-        <div className="md:hidden mb-4">
+        <div className="md:hidden mb-4 space-y-3">
           <h1 className="text-lg font-bold text-gray-100">Analytics</h1>
-          <p className="text-xs text-gray-500 mt-0.5">Métricas y comportamiento</p>
+          <PeriodSelector value={period} onChange={setPeriod} />
         </div>
 
-        {/* Loading */}
-        {(workspaceLoading || dataLoading) && <PageSkeleton />}
+        {/* Analytics sub-nav */}
+        <div className="mb-6 -mx-4 sm:-mx-6 px-4 sm:px-6">
+          <AnalyticsNav value={section} onChange={setSection} />
+        </div>
 
-        {/* Error */}
-        {!workspaceLoading && selectedId && error && !dataLoading && (
-          <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
-            <p className="text-sm text-gray-500">No se pudieron cargar las métricas.</p>
-            <button
-              onClick={() => setRetryKey(k => k + 1)}
-              className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
-            >
-              Reintentar
-            </button>
+        {/* Period notice — informational only until backend supports filtering */}
+        {period !== '30d' && (
+          <div className="mb-5 flex items-center gap-2 text-xs text-gray-600 bg-gray-800/40
+                          border border-white/[0.05] rounded-xl px-4 py-3">
+            <svg className="w-3.5 h-3.5 text-brand-500/60 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Selector de período activo — filtrado disponible próximamente.
           </div>
         )}
 
-        {/* ── Dashboard ───────────────────────────────────────────────────── */}
-        {summary && displaySummary && !dataLoading && !workspaceLoading && (
-          <div className="space-y-5 animate-fade-in">
+        {/* ── Secciones que no requieren datos ──────────────────────────── */}
 
-            {/* Project heading */}
-            {project && (
-              <div>
-                <h2 className="text-2xl font-bold text-gray-100 leading-snug">{project.title}</h2>
-                {pointFilter ? (
-                  <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs
-                                     font-medium bg-brand-500/10 border border-brand-500/20 text-brand-300">
-                      <svg className="h-3 w-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      </svg>
-                      Ubicación: {pointFilter.pointName}
-                    </span>
-                    <button
-                      onClick={clearPointFilter}
-                      className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-                    >
-                      Ver proyecto completo →
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 mt-0.5">Todo el período · datos acumulados</p>
-                )}
+        {section === 'permanencia' && (
+          <ComingSoonSection
+            description="Distribución de permanencia, permanencia promedio por ubicación y permanencia por horario."
+            bullets={['Menos de 30 segundos', '30 s – 3 minutos', '3 – 10 minutos', 'Más de 10 minutos']}
+          />
+        )}
+
+        {section === 'destinos' && (
+          <ComingSoonSection
+            description="Destinos más utilizados, conversión por destino y destino por ubicación."
+            bullets={['WhatsApp', 'Landing page', 'Reserva / formulario', 'PDF', 'E-commerce']}
+          />
+        )}
+
+        {section === 'api' && <ApiInfoSection />}
+
+        {/* ── Secciones que requieren datos ─────────────────────────────── */}
+
+        {['resumen', 'ubicaciones', 'conversion', 'horarios'].includes(section) && (
+          <>
+            {/* Loading */}
+            {(workspaceLoading || dataLoading) && <PageSkeleton />}
+
+            {/* Error */}
+            {!workspaceLoading && selectedId && error && !dataLoading && (
+              <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
+                <p className="text-sm text-gray-500">No se pudieron cargar las métricas.</p>
+                <button
+                  onClick={() => setRetryKey(k => k + 1)}
+                  className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+                >
+                  Reintentar
+                </button>
               </div>
             )}
+
+            {summary && displaySummary && !dataLoading && !workspaceLoading && (
+              <>
+
+                {/* ── Resumen ─────────────────────────────────────────── */}
+                {section === 'resumen' && (
+                  <div className="space-y-5 animate-fade-in">
+
+                    {/* Project heading */}
+                    {project && (
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-100 leading-snug">{project.title}</h2>
+                        {pointFilter ? (
+                          <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs
+                                             font-medium bg-brand-500/10 border border-brand-500/20 text-brand-300">
+                              <svg className="h-3 w-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                  d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              </svg>
+                              Ubicación: {pointFilter.pointName}
+                            </span>
+                            <button
+                              onClick={clearPointFilter}
+                              className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                            >
+                              Ver proyecto completo →
+                            </button>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500 mt-0.5">Todo el período · datos acumulados</p>
+                        )}
+                      </div>
+                    )}
 
             {/* Hero — left widget + right chart */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 h-auto lg:h-[280px]">
@@ -1055,7 +1415,40 @@ export default function MetricsPage() {
               <InsightsSection summary={displaySummary!} byPoint={displayByPoint} />
             )}
 
-          </div>
+                  </div>
+                )}
+
+                {/* ── Ubicaciones ─────────────────────────────── */}
+                {section === 'ubicaciones' && (
+                  <UbicacionesSection
+                    byPoint={displayByPoint ?? []}
+                    summary={displaySummary!}
+                    pointFilter={pointFilter}
+                  />
+                )}
+
+                {/* ── Conversión ──────────────────────────────── */}
+                {section === 'conversion' && (
+                  <ConversionSection
+                    byPoint={displayByPoint ?? []}
+                    summary={displaySummary!}
+                    convQuality={convQuality}
+                    pointFilter={pointFilter}
+                  />
+                )}
+
+                {/* ── Horarios ────────────────────────────────── */}
+                {section === 'horarios' && (
+                  <HorariosSection
+                    projectId={selectedId}
+                    pointId={pointId || undefined}
+                    pointFilter={pointFilter}
+                  />
+                )}
+
+              </>
+            )}
+          </>
         )}
       </div>
     </div>

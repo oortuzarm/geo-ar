@@ -6,15 +6,12 @@ import {
   fetchProjectAnalyticsByPoint,
   fetchProjectAnalyticsByHour,
   fetchProjectAnalyticsByDay,
-  fetchProjectGeoDistribution,
 } from '../../lib/analytics'
 import type {
   ProjectAnalytics,
   PointAnalytics,
   HourBucket,
   DayBucket,
-  GeoBucket,
-  GeoDistribution,
 } from '../../lib/analytics'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import { usePlanFeatures } from '../../hooks/usePlanFeatures'
@@ -22,7 +19,7 @@ import PlanGate from '../../components/ui/PlanGate'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type LeftTab    = 'actividad' | 'conversion' | 'publico' | 'horarios'
+type LeftTab    = 'actividad' | 'conversion' | 'horarios'
 type SubTab     = 'entradas'  | 'clics'
 type InsightTag = 'positive'  | 'warning'    | 'info'    | 'neutral'
 
@@ -356,17 +353,6 @@ function TabEmpty({ icon, title, sub }: { icon: React.ReactNode; title: string; 
   )
 }
 
-// ── Geo helpers ───────────────────────────────────────────────────────────────
-
-function bucketsToBars(buckets: GeoBucket[]): { label: string; barPct: number; displayLabel: string }[] {
-  const maxCount = Math.max(...buckets.map(b => b.count), 1)
-  return buckets.map(b => ({
-    label:        b.label,
-    barPct:       Math.round((b.count / maxCount) * 100),
-    displayLabel: `${b.pct}%`,
-  }))
-}
-
 // ── Temporal helpers ──────────────────────────────────────────────────────────
 
 const HOUR_GROUP_LABELS = ['00h', '03h', '06h', '09h', '12h', '15h', '18h', '21h']
@@ -388,99 +374,6 @@ function mapDays(buckets: DayBucket[]): { label: string; barPct: number; count: 
   const days = DAY_LABELS.map((label, i) => ({ label, count: map.get(i) ?? 0 }))
   const max  = Math.max(...days.map(d => d.count), 1)
   return days.map(d => ({ ...d, barPct: Math.round((d.count / max) * 100) }))
-}
-
-// ── Public tab ────────────────────────────────────────────────────────────────
-
-type PublicSubTab = 'pais' | 'ciudad' | 'comuna'
-
-const PUBLIC_SUBTABS: { id: PublicSubTab; label: string }[] = [
-  { id: 'pais',   label: 'País'   },
-  { id: 'ciudad', label: 'Ciudad' },
-  { id: 'comuna', label: 'Comuna' },
-]
-
-function PublicTab({ projectId, pointId }: { projectId: string; pointId?: string }) {
-  const [sub, setSub]         = useState<PublicSubTab>('pais')
-  const [fade, setFade]       = useState(true)
-  const [mounted, setMounted] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [geo, setGeo]         = useState<GeoDistribution | null>(null)
-
-  useEffect(() => {
-    setLoading(true)
-    fetchProjectGeoDistribution(projectId, pointId)
-      .then(setGeo)
-      .finally(() => setLoading(false))
-  }, [projectId, pointId])
-
-  useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 150)
-    return () => clearTimeout(t)
-  }, [sub])
-
-  function changeSub(next: string) {
-    const n = next as PublicSubTab
-    if (n === sub) return
-    setFade(false); setMounted(false)
-    setTimeout(() => { setSub(n); setFade(true) }, 120)
-  }
-
-  const subData: GeoBucket[] = geo
-    ? (sub === 'pais' ? geo.countries : sub === 'ciudad' ? geo.cities : geo.communes)
-    : []
-  const bars = bucketsToBars(subData)
-  const hasData = bars.length > 0
-  const insight = hasData ? `${subData[0].label} lidera con el ${subData[0].pct}% del tráfico registrado.` : null
-
-  const globeIcon = (
-    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-        d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 004 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  )
-
-  return (
-    <>
-      <div className="flex items-center justify-between mb-3 shrink-0">
-        <h3 className="text-sm font-semibold text-gray-200">Público</h3>
-        <WidgetSubTabs options={PUBLIC_SUBTABS} value={sub} onChange={changeSub} />
-      </div>
-
-      {loading ? (
-        <TabSpinner />
-      ) : !hasData ? (
-        <>
-          <TabEmpty
-            icon={globeIcon}
-            title="Sin datos geográficos aún"
-            sub="Aparecerán cuando los usuarios visiten tu experiencia con ubicación activada."
-          />
-          <WidgetInsight text="Los datos de país, ciudad y comuna se registran al entrar al radio de activación." />
-        </>
-      ) : (
-        <div
-          className="flex-1 flex flex-col min-h-0"
-          style={{ opacity: fade ? 1 : 0, transition: 'opacity 0.12s ease' }}
-        >
-          <div className="flex-1 flex flex-col justify-between min-h-0">
-            {bars.map((row, i) => (
-              <DistBarRow
-                key={row.label}
-                label={row.label}
-                barPct={row.barPct}
-                displayLabel={row.displayLabel}
-                mounted={mounted}
-                delay={i * 50}
-              />
-            ))}
-          </div>
-          {insight && <WidgetInsight text={insight} />}
-        </div>
-      )}
-    </>
-  )
 }
 
 // ── Horarios tab ──────────────────────────────────────────────────────────────
@@ -650,7 +543,6 @@ function LeftWidget({ byPoint, projectId, pointId }: {
   const TABS: { id: LeftTab; label: string; tooltip: string }[] = [
     { id: 'actividad',  label: 'Actividad',  tooltip: 'Muestra la cantidad de entradas al radio y clics registrados por punto.' },
     { id: 'conversion', label: 'Conversión', tooltip: 'Porcentaje de usuarios que hicieron clic en la experiencia después de entrar al radio de activación.' },
-    { id: 'publico',    label: 'Público',    tooltip: 'Distribución geográfica de las personas que ingresaron al radio de activación.' },
     { id: 'horarios',   label: 'Horarios',   tooltip: 'Horarios y días en que los usuarios ingresaron físicamente a los radios de activación.' },
   ]
 
@@ -767,9 +659,6 @@ function LeftWidget({ byPoint, projectId, pointId }: {
             )}
           </>
         )}
-
-        {/* ── Público ── */}
-        {tab === 'publico' && <PublicTab projectId={projectId} pointId={pointId} />}
 
         {/* ── Horarios ── */}
         {tab === 'horarios' && <HorariosTab projectId={projectId} pointId={pointId} />}

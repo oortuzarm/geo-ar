@@ -42,14 +42,11 @@ function isClickOnCooldown(key: string): boolean {
 
 // ── Internal POST ──────────────────────────────────────────────────────────
 //
-// Rails backend requirements for temporal + geographic analytics:
+// Rails backend requirements for temporal analytics:
 //
 //   analytics_events columns to add:
 //     - latitude  float, nullable
 //     - longitude float, nullable
-//     - country   string, nullable  ← filled by background reverse-geocoding job
-//     - city      string, nullable
-//     - commune   string, nullable
 //     (created_at is standard Rails and already present)
 //
 //   New endpoints (GeoProjectsController or dedicated AnalyticsController):
@@ -57,13 +54,6 @@ function isClickOnCooldown(key: string): boolean {
 //       → { data: [{ hour: 0..23, count: number }] }
 //     GET /api/geo_projects/:id/analytics_by_day
 //       → { data: [{ day: 0..6, count: number }] }  (0 = Sunday, matches JS getDay())
-//     GET /api/geo_projects/:id/analytics_geo
-//       → { countries: GeoBucket[], cities: GeoBucket[], communes: GeoBucket[] }
-//         where GeoBucket = { label: string, count: number, pct: number }
-//
-//   Reverse geocoding: on analytics_event create, enqueue a background job that
-//   calls Nominatim (https://nominatim.openstreetmap.org/reverse) with the stored
-//   lat/lng and writes country/city/commune back to the record.
 
 function postEvent(
   eventType: string,
@@ -173,12 +163,6 @@ export interface PointAnalytics {
 
 export interface HourBucket { hour: number; count: number }
 export interface DayBucket  { day:  number; count: number }
-export interface GeoBucket  { label: string; count: number; pct: number }
-export interface GeoDistribution {
-  countries: GeoBucket[]
-  cities:    GeoBucket[]
-  communes:  GeoBucket[]
-}
 
 export function fetchProjectAnalytics(projectId: string): Promise<ProjectAnalytics> {
   return apiFetch<ProjectAnalytics>(`${API_BASE}/api/geo_projects/${projectId}/analytics`)
@@ -218,19 +202,3 @@ export async function fetchProjectAnalyticsByDay(projectId: string, pointId?: st
   return []
 }
 
-export async function fetchProjectGeoDistribution(projectId: string, pointId?: string): Promise<GeoDistribution> {
-  const empty: GeoDistribution = { countries: [], cities: [], communes: [] }
-  try {
-    const qs   = pointId ? `?point_id=${encodeURIComponent(pointId)}` : ''
-    const data = await apiFetch<unknown>(`${API_BASE}/api/geo_projects/${projectId}/analytics_geo${qs}`)
-    if (data && typeof data === 'object') {
-      const d = data as Record<string, unknown>
-      return {
-        countries: Array.isArray(d.countries) ? d.countries as GeoBucket[] : [],
-        cities:    Array.isArray(d.cities)    ? d.cities    as GeoBucket[] : [],
-        communes:  Array.isArray(d.communes)  ? d.communes  as GeoBucket[] : [],
-      }
-    }
-  } catch { /* endpoint not yet available */ }
-  return empty
-}

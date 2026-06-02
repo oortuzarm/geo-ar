@@ -144,6 +144,10 @@ const EMPTY_FORM = {
   ctaText:              '',
   ctaUrl:               '',
   featuresConfig:       DEFAULT_FEATURES_CONFIG as FeaturesConfig,
+  // API access
+  apiAccessEnabled:          true,
+  apiCredentialsUnlimited:   true,
+  apiCredentialsLimit:       '',
 }
 type PlanForm = typeof EMPTY_FORM
 
@@ -168,6 +172,9 @@ function planToForm(p: AdminPlan): PlanForm {
     ctaText:              p.ctaText ?? '',
     ctaUrl:               p.ctaUrl ?? '',
     featuresConfig:       p.featuresConfig ?? DEFAULT_FEATURES_CONFIG,
+    apiAccessEnabled:         p.apiAccessEnabled ?? true,
+    apiCredentialsUnlimited:  p.apiCredentialsLimit === null || p.apiCredentialsLimit === undefined,
+    apiCredentialsLimit:      p.apiCredentialsLimit == null ? '' : String(p.apiCredentialsLimit),
   }
 }
 
@@ -190,6 +197,10 @@ function formToPayload(f: PlanForm): CreatePlanPayload {
     ctaText:              f.ctaText.trim() || null,
     ctaUrl:               f.ctaUrl.trim() || null,
     featuresConfig:       f.featuresConfig,
+    apiAccessEnabled:     f.apiAccessEnabled,
+    apiCredentialsLimit:  f.apiAccessEnabled
+                            ? (f.apiCredentialsUnlimited ? null : (parseInt(f.apiCredentialsLimit) || 1))
+                            : null,
   }
 }
 
@@ -573,6 +584,38 @@ function PlanFormModal({ plan, saving, onSave, onClose }: PlanFormModalProps) {
                   label={label}
                 />
               ))}
+            </div>
+
+            {/* API access */}
+            <div className="border-t border-gray-700/50 pt-3 mt-1">
+              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2.5">
+                API
+              </p>
+              <Toggle
+                checked={form.apiAccessEnabled}
+                onChange={v => set('apiAccessEnabled', v)}
+                label="Acceso a API"
+              />
+              {form.apiAccessEnabled && (
+                <div className="mt-2.5 ml-0 space-y-2">
+                  <Toggle
+                    checked={form.apiCredentialsUnlimited}
+                    onChange={v => set('apiCredentialsUnlimited', v)}
+                    label="Credenciales ilimitadas"
+                  />
+                  {!form.apiCredentialsUnlimited && (
+                    <div className="flex flex-col gap-1.5">
+                      <FieldLabel>Máximo de credenciales API</FieldLabel>
+                      <TextInput
+                        type="number" min={1} step={1}
+                        value={form.apiCredentialsLimit}
+                        onChange={v => set('apiCredentialsLimit', v)}
+                        placeholder="Ej: 3"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

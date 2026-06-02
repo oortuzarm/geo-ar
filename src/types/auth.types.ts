@@ -16,5 +16,7 @@ export interface User {
   planName:               string | null
   planSlug:               string | null
   planFeaturesConfig:     FeaturesConfig | null
+  apiAccessEnabled:       boolean         // whether the plan includes API access
+  apiCredentialsLimit:    number | null   // null = unlimited
   onboardingCompleted:    boolean         // false → show onboarding flow
 }

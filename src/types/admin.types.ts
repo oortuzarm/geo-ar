@@ -70,6 +70,8 @@ export interface AdminPlan {
   annualDiscountPercent: number        // DB: annual_discount_percent
   yearlyPriceComputed:  number | null  // DB: yearly_price_computed (computed by model)
   locationLimit:        number | null  // null = unlimited
+  apiAccessEnabled:     boolean        // DB: api_access_enabled
+  apiCredentialsLimit:  number | null  // DB: api_credentials_limit, null = unlimited
   hasTrial:             boolean        // DB: has_trial
   trialDays:            number | null  // DB: trial_days
   isVisible:            boolean
@@ -95,6 +97,8 @@ export interface CreatePlanPayload {
   monthlyPrice:         number
   annualDiscountPercent: number
   locationLimit:        number | null
+  apiAccessEnabled?:    boolean
+  apiCredentialsLimit?: number | null
   hasTrial:             boolean
   trialDays:            number | null
   isVisible:            boolean

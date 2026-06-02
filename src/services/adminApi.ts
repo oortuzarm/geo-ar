@@ -207,6 +207,10 @@ function normalizePlan(raw: Record<string, unknown>): AdminPlan {
     annualDiscountPercent: Number(raw.annualDiscountPercent ?? raw.annual_discount_percent ?? 0),
     yearlyPriceComputed:   yearlyRaw   !== null ? Number(yearlyRaw)   : null,
     locationLimit:         locationRaw !== null ? Number(locationRaw) : null,
+    apiAccessEnabled:      Boolean(raw.apiAccessEnabled    ?? raw.api_access_enabled    ?? true),
+    apiCredentialsLimit:   (raw.apiCredentialsLimit ?? raw.api_credentials_limit ?? null) !== null
+                             ? Number(raw.apiCredentialsLimit ?? raw.api_credentials_limit)
+                             : null,
     hasTrial:              (raw.hasTrial               ?? raw.has_trial              ?? false) as boolean,
     trialDays:             trialDaysRaw !== null ? Number(trialDaysRaw) : null,
     isVisible:             (raw.isVisible              ?? raw.is_visible              ?? true)  as boolean,

@@ -35,3 +35,7 @@ export function regenerateCredentialSecret(id: string): Promise<RegenerateSecret
     method: 'POST',
   })
 }
+
+export function deleteCredential(id: string): Promise<void> {
+  return apiFetch<void>(url(`/api/api_credentials/${id}`), { method: 'DELETE' })
+}

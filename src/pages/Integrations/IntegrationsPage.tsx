@@ -10,6 +10,7 @@ import {
   createCredential,
   updateCredential,
   regenerateCredentialSecret,
+  deleteCredential,
 } from '../../services/integrationsApi'
 import type { ApiCredential, ApiCredentialWithSecret } from '../../types/integrations.types'
 
@@ -446,8 +447,10 @@ interface CredentialRowProps {
   credential:       ApiCredential
   isRegenerating:   boolean
   isTogglingActive: boolean
+  isDeleting:       boolean
   onRegenerate:     (id: string) => void
   onToggleActive:   (id: string, active: boolean) => void
+  onDelete:         (id: string) => void
   addToast:         (msg: string, type: 'success' | 'error') => void
 }
 
@@ -455,13 +458,16 @@ function CredentialRow({
   credential: cred,
   isRegenerating,
   isTogglingActive,
+  isDeleting,
   onRegenerate,
   onToggleActive,
+  onDelete,
   addToast,
 }: CredentialRowProps) {
   const [confirmRegen,      setConfirmRegen]      = useState(false)
   const [confirmDeactivate, setConfirmDeactivate] = useState(false)
-  const busy = isRegenerating || isTogglingActive
+  const [confirmDelete,     setConfirmDelete]     = useState(false)
+  const busy = isRegenerating || isTogglingActive || isDeleting
 
   return (
     <>
@@ -527,6 +533,24 @@ function CredentialRow({
             >
               {isTogglingActive ? <Spinner size="sm" /> : cred.active ? 'Desactivar' : 'Activar'}
             </button>
+            <button
+              disabled={busy}
+              onClick={() => setConfirmDelete(true)}
+              title="Eliminar credencial"
+              className="p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-950/30
+                         border border-transparent hover:border-red-900/40 transition-all
+                         disabled:opacity-40 disabled:cursor-not-allowed flex items-center"
+            >
+              {isDeleting
+                ? <Spinner size="sm" />
+                : (
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                )
+              }
+            </button>
           </div>
         </div>
 
@@ -570,6 +594,18 @@ function CredentialRow({
         onConfirm={() => { setConfirmDeactivate(false); onToggleActive(cred.id, false) }}
         onCancel={() => setConfirmDeactivate(false)}
       />
+
+      {/* Confirm delete */}
+      <Modal
+        open={confirmDelete}
+        title="Eliminar credencial"
+        description={`Esta acción eliminará "${cred.name}" y no podrá volver a utilizarse. Las integraciones que usen esta key dejarán de funcionar inmediatamente.`}
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        danger
+        onConfirm={() => { setConfirmDelete(false); onDelete(cred.id) }}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </>
   )
 }
@@ -591,6 +627,7 @@ function ApiCredentialsSection() {
   const [revealedSecret, setRevealedSecret] = useState<{ key: string; secret: string } | null>(null)
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null)
   const [togglingId,     setTogglingId]     = useState<string | null>(null)
+  const [deletingId,     setDeletingId]     = useState<string | null>(null)
 
   const activeCount = credentials.filter((c) => c.active).length
   const atLimit     = apiCredentialsLimit !== null && activeCount >= apiCredentialsLimit
@@ -641,6 +678,19 @@ function ApiCredentialsSection() {
       addToast('No se pudo actualizar la credencial.', 'error')
     } finally {
       setTogglingId(null)
+    }
+  }
+
+  async function handleDelete(id: string) {
+    setDeletingId(id)
+    try {
+      await deleteCredential(id)
+      setCredentials((prev) => prev.filter((c) => c.id !== id))
+      addToast('Credencial eliminada', 'success')
+    } catch {
+      addToast('No se pudo eliminar la credencial.', 'error')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -781,8 +831,10 @@ function ApiCredentialsSection() {
                     credential={cred}
                     isRegenerating={regeneratingId === cred.id}
                     isTogglingActive={togglingId === cred.id}
+                    isDeleting={deletingId === cred.id}
                     onRegenerate={handleRegenerate}
                     onToggleActive={handleToggleActive}
+                    onDelete={handleDelete}
                     addToast={addToast}
                   />
                 ))}

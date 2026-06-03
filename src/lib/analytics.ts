@@ -252,6 +252,45 @@ export async function fetchProjectAnalyticsByDay(
   return []
 }
 
+// ── Destinations analytics ─────────────────────────────────────────────────────
+
+export interface DestinationCategoryBucket {
+  category: string   // 'whatsapp' | 'website' | 'reservation' | ...
+  clicks:   number
+  share:    number   // 0–100 (% of contextual URL clicks)
+}
+
+export interface DestinationContentTypeBucket {
+  contentType: string   // 'url' | 'video' | 'audio' | 'file'
+  clicks:      number
+  share:       number   // 0–100 (% of all contextual clicks)
+}
+
+export interface DestinationsData {
+  totalClicks:      number
+  contextualClicks: number   // clicks WITH context_metadata
+  legacyClicks:     number   // clicks WITHOUT context (before Phase 1)
+  topContentType:   string | null
+  topCategory:      string | null
+  byContentType:    DestinationContentTypeBucket[]
+  byCategory:       DestinationCategoryBucket[]
+}
+
+export async function fetchProjectDestinations(
+  projectId: string,
+  pointId?:  string,
+  params?:   PeriodParams,
+): Promise<DestinationsData | null> {
+  try {
+    const qs = buildQS({ point_id: pointId, from: params?.from, to: params?.to })
+    return await apiFetch<DestinationsData>(
+      `${API_BASE}/api/geo_projects/${projectId}/analytics_destinations${qs}`
+    )
+  } catch {
+    return null
+  }
+}
+
 // ── Dwell analytics ────────────────────────────────────────────────────────────
 //
 // Rails endpoints to implement:

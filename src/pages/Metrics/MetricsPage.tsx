@@ -8,6 +8,7 @@ import {
   fetchProjectAnalyticsByDay,
   fetchProjectDwellAnalytics,
   fetchProjectDwellByPoint,
+  fetchProjectDestinations,
 } from '../../lib/analytics'
 import type {
   ProjectAnalytics,
@@ -17,6 +18,7 @@ import type {
   PeriodParams,
   DwellAnalytics,
   DwellPointAnalytics,
+  DestinationsData,
 } from '../../lib/analytics'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import { usePlanFeatures } from '../../hooks/usePlanFeatures'
@@ -1170,32 +1172,6 @@ function AnalyticsNav({ value, onChange }: { value: Section; onChange: (s: Secti
   )
 }
 
-// ── Coming soon placeholder ────────────────────────────────────────────────────
-
-function ComingSoonSection({ description, bullets }: { description: string; bullets: string[] }) {
-  return (
-    <div className="rounded-2xl border border-white/[0.06] bg-gray-900/40 px-6 sm:px-10 py-14 text-center">
-      <div className="w-12 h-12 rounded-2xl bg-gray-800 border border-white/[0.06]
-                      flex items-center justify-center mx-auto mb-5 text-gray-600">
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      </div>
-      <p className="text-sm font-semibold text-gray-300 mb-2">Próximamente</p>
-      <p className="text-xs text-gray-500 max-w-sm mx-auto leading-relaxed mb-6">{description}</p>
-      <div className="flex flex-col gap-2 items-center">
-        {bullets.map(b => (
-          <div key={b} className="flex items-center gap-2 text-xs text-gray-600">
-            <span className="w-1 h-1 rounded-full bg-brand-500/40 flex-shrink-0" />
-            {b}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 // ── Ubicaciones section ───────────────────────────────────────────────────────
 
 function UbicacionesSection({
@@ -1381,6 +1357,226 @@ const DWELL_BUCKETS = [
   { label: '5–10m',  key: '5to10m' },
   { label: '> 10m',  key: 'gt10m'  },
 ]
+
+// ── Destinations section ──────────────────────────────────────────────────────
+
+const CATEGORY_LABELS: Record<string, string> = {
+  whatsapp:    'WhatsApp',
+  website:     'Sitio web',
+  form:        'Formulario',
+  reservation: 'Reserva',
+  ecommerce:   'E-commerce',
+  social:      'Red social',
+  map:         'Mapa',
+  coupon:      'Cupón',
+  custom:      'Personalizado',
+}
+
+const CONTENT_TYPE_LABELS: Record<string, string> = {
+  url:   'URL',
+  video: 'Video',
+  audio: 'Audio',
+  file:  'Archivo',
+}
+
+function fmtN(n: number): string {
+  return n >= 1_000_000
+    ? `${(n / 1_000_000).toFixed(1)}M`
+    : n >= 1_000
+      ? `${(n / 1_000).toFixed(1)}k`
+      : String(n)
+}
+
+function deriveDestInsights(data: DestinationsData | null): string[] {
+  if (!data || data.totalClicks === 0) return []
+  const insights: string[] = []
+
+  const top = data.byCategory[0]
+  if (top) {
+    const label = CATEGORY_LABELS[top.category] ?? top.category
+    insights.push(`${label} es el destino más utilizado con ${top.share}% de los clics.`)
+  }
+
+  const mediaClicks = data.byContentType
+    .filter(ct => ct.contentType !== 'url')
+    .reduce((s, ct) => s + ct.clicks, 0)
+  if (mediaClicks > 0 && data.contextualClicks > 0) {
+    const pct = Math.round(mediaClicks / data.contextualClicks * 100)
+    insights.push(`${pct}% de los clics van hacia contenido multimedia (video, audio o archivos).`)
+  }
+
+  if (data.legacyClicks > 0 && data.contextualClicks === 0) {
+    insights.push(
+      'Los clics existentes son anteriores al tracking de destinos. ' +
+      'Los nuevos comenzarán a clasificarse automáticamente.'
+    )
+  } else if (data.legacyClicks > 0) {
+    const legacyPct = Math.round(data.legacyClicks / data.totalClicks * 100)
+    if (legacyPct >= 20) {
+      insights.push(
+        `${legacyPct}% de los clics son históricos sin categoría. ` +
+        'Los nuevos clics incluyen el tipo de destino completo.'
+      )
+    }
+  }
+
+  return insights.slice(0, 3)
+}
+
+function DestinacionesSection({
+  projectId,
+  pointId,
+  pointFilter,
+  params,
+}: {
+  projectId:   string
+  pointId?:    string
+  pointFilter: PointAnalytics | null
+  params?:     PeriodParams
+}) {
+  const [data,    setData]    = useState<DestinationsData | null | undefined>(undefined)
+  const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setLoading(true); setMounted(false)
+    fetchProjectDestinations(projectId, pointId, params)
+      .then(setData)
+      .catch(() => setData(null))
+      .finally(() => setLoading(false))
+  }, [projectId, pointId, params?.from, params?.to])
+
+  useEffect(() => {
+    if (!loading) {
+      const t = setTimeout(() => setMounted(true), 120)
+      return () => clearTimeout(t)
+    }
+  }, [loading])
+
+  const hasContextual = (data?.contextualClicks ?? 0) > 0
+  const topCat        = data?.byCategory[0]
+  const insights      = deriveDestInsights(data ?? null)
+
+  return (
+    <div className="space-y-5 animate-fade-in">
+      {pointFilter && (
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0" />
+          Mostrando datos para:{' '}
+          <span className="text-brand-300 font-medium">{pointFilter.pointName}</span>
+        </div>
+      )}
+
+      {loading ? (
+        <PageSkeleton />
+      ) : (
+        <>
+          {/* ── KPI cards ─────────────────────────────────────────── */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <KPICard
+              label="Total clics"
+              value={fmtN(data?.totalClicks ?? 0)}
+              sub="interacciones con destinos"
+            />
+            <KPICard
+              label="Destino líder"
+              value={
+                topCat
+                  ? (CATEGORY_LABELS[topCat.category] ?? topCat.category)
+                  : '—'
+              }
+              sub={topCat ? `${topCat.clicks} clics registrados` : 'sin datos aún'}
+              accent={!!topCat}
+            />
+            <KPICard
+              label="Categorías"
+              value={data?.byCategory.length ?? 0}
+              sub="tipos de destino distintos"
+            />
+            <KPICard
+              label="Participación líder"
+              value={topCat ? `${topCat.share}%` : '—'}
+              sub={topCat ? `del total de clics URL` : 'sin datos aún'}
+            />
+          </div>
+
+          {!hasContextual ? (
+            /* ── Empty state ────────────────────────────────────── */
+            <div className="rounded-2xl border border-white/[0.06] bg-gray-900/40 px-6 py-12 flex flex-col items-center gap-3 text-center">
+              <span className="text-3xl">🎯</span>
+              <p className="text-sm font-semibold text-gray-300">Sin datos de destinos aún</p>
+              <p className="text-xs text-gray-500 max-w-sm leading-relaxed">
+                {(data?.totalClicks ?? 0) > 0
+                  ? 'Los clics existentes son anteriores al tracking de destinos. Los nuevos clics comenzarán a clasificarse automáticamente por tipo de destino.'
+                  : 'Los datos aparecerán a medida que los usuarios interactúen con tus ubicaciones.'}
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* ── Ranking de categorías ────────────────────────── */}
+              {data!.byCategory.length > 0 && (
+                <div className="rounded-2xl border border-white/[0.06] bg-gray-900/40 px-5 py-5">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
+                    Ranking de destinos
+                  </p>
+                  <div className="space-y-3">
+                    {data!.byCategory.map((cat, i) => (
+                      <BarRow
+                        key={cat.category}
+                        label={CATEGORY_LABELS[cat.category] ?? cat.category}
+                        value={cat.clicks}
+                        maxValue={data!.byCategory[0].clicks}
+                        displayValue={`${cat.share}%`}
+                        mounted={mounted}
+                        delay={i * 55}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Por tipo de contenido ────────────────────────── */}
+              {data!.byContentType.length > 0 && (
+                <div className="rounded-2xl border border-white/[0.06] bg-gray-900/40 px-5 py-5">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
+                    Por tipo de contenido
+                  </p>
+                  <div className="space-y-3">
+                    {data!.byContentType.map((ct, i) => (
+                      <BarRow
+                        key={ct.contentType}
+                        label={CONTENT_TYPE_LABELS[ct.contentType] ?? ct.contentType}
+                        value={ct.clicks}
+                        maxValue={data!.byContentType[0].clicks}
+                        displayValue={`${ct.share}%`}
+                        mounted={mounted}
+                        delay={i * 55}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Insights ─────────────────────────────────────── */}
+              {insights.length > 0 && (
+                <div className="rounded-2xl border border-white/[0.06] bg-gray-900/40 px-5 py-5">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                    Insights de destinos
+                  </p>
+                  <div className="space-y-2.5">
+                    {insights.map((text, i) => (
+                      <WidgetInsight key={i} text={text} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
 
 function PermanenciaSection({
   projectId,
@@ -1762,10 +1958,18 @@ export default function MetricsPage() {
         {/* ── Secciones que no requieren datos ──────────────────────────── */}
 
         {section === 'destinos' && (
-          <ComingSoonSection
-            description="Destinos más utilizados, conversión por destino y destino por ubicación."
-            bullets={['WhatsApp', 'Landing page', 'Reserva / formulario', 'PDF', 'E-commerce']}
-          />
+          selectedId ? (
+            <DestinacionesSection
+              projectId={selectedId}
+              pointId={pointId || undefined}
+              pointFilter={pointFilter}
+              params={periodParams}
+            />
+          ) : (
+            <div className="flex items-center justify-center py-20">
+              <p className="text-sm text-gray-500">Selecciona un proyecto para ver destinos.</p>
+            </div>
+          )
         )}
 
         {section === 'api' && <ApiInfoSection />}

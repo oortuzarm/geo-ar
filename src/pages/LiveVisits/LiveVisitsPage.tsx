@@ -485,8 +485,8 @@ export default function LiveVisitsPage() {
             </div>
           )}
 
-          {/* ── Hotspot location selector — only when Zonas Calientes is active ── */}
-          {showHotspots && visiblePoints.length > 1 && (
+          {/* ── Location selector — visible when any spatial layer is active ── */}
+          {(showGpsIntensity || showHotspots) && visiblePoints.length > 1 && (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wide flex-shrink-0">
                 Ubicación:

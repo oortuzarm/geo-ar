@@ -2,6 +2,8 @@ import { apiFetch } from '../lib/apiFetch'
 
 const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/$/, '')
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+
 export interface HotspotPoint {
   lat:          number
   lng:          number
@@ -32,11 +34,13 @@ export interface FetchHotspotsParams {
   endDate?:   string  // YYYY-MM-DD, only for historical
 }
 
-export async function fetchHotspots(params: FetchHotspotsParams): Promise<HotspotsResponse> {
+// ── Public API ─────────────────────────────────────────────────────────────────
+
+export function fetchHotspots(params: FetchHotspotsParams): Promise<HotspotsResponse> {
   const qs = new URLSearchParams({ location_id: params.locationId, mode: params.mode })
   if (params.mode === 'historical') {
     if (params.startDate) qs.set('start_date', params.startDate)
     if (params.endDate)   qs.set('end_date',   params.endDate)
   }
-  return apiFetch<HotspotsResponse>(`${API_BASE}/api/v1/analytics/hotspots?${qs}`)
+  return apiFetch<HotspotsResponse>(`${API_BASE}/api/analytics/hotspots?${qs}`)
 }

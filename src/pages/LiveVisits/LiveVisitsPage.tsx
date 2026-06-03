@@ -455,6 +455,36 @@ export default function LiveVisitsPage() {
             </div>
           </div>
 
+          {/* ── Layer descriptions ───────────────────────────────────────────── */}
+          {(showGpsIntensity || showHotspots) && (
+            <div className="flex flex-col gap-1">
+              {showGpsIntensity && (
+                <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/70 flex-shrink-0 mt-[3px]" />
+                  <span>
+                    <span className="font-medium text-gray-400">Intensidad GPS</span>
+                    {' — '}
+                    {intensityMode === 'live'
+                      ? 'Usuarios conectados y activos en este momento.'
+                      : 'Usuarios que accedieron a tus áreas.'}
+                  </span>
+                </p>
+              )}
+              {showHotspots && (
+                <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400/70 flex-shrink-0 mt-[3px]" />
+                  <span>
+                    <span className="font-medium text-gray-400">Zonas Calientes</span>
+                    {' — '}
+                    {intensityMode === 'live'
+                      ? 'Sectores donde se están registrando más accesos en este momento.'
+                      : 'Sectores donde se registraron más accesos.'}
+                  </span>
+                </p>
+              )}
+            </div>
+          )}
+
           {/* ── Hotspot location selector — only when Zonas Calientes is active ── */}
           {showHotspots && visiblePoints.length > 1 && (
             <div className="flex items-center gap-2 flex-wrap">

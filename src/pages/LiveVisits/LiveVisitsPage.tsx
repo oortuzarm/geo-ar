@@ -27,18 +27,19 @@ function subtractDays(n: number): string {
 
 // ── Point visibility predicate ────────────────────────────────────────────────
 //
-// In live mode: only `active` matters.
-// In historical mode: additionally exclude points created AFTER the period's
-// end date — they didn't exist yet and must not appear (even with 0 intensity).
+// active=false does NOT exclude a point from Analytics — a temporarily
+// deactivated location still has historical and live visit data worth showing.
+//
+// The only exclusion rule is: in historical mode, a point created AFTER the
+// period's end date didn't exist yet and must be hidden completely.
 //
 // Uses createdAt.slice(0,10) so ISO-8601 timestamps compare correctly with
 // YYYY-MM-DD date strings via lexicographic order.
 function isPointInPeriod(
-  point: { active: boolean; createdAt?: string },
+  point:   { createdAt?: string },
   mode:    IntensityMode,
   endDate: string,
 ): boolean {
-  if (!point.active) return false
   if (mode !== 'historical' || !endDate || !point.createdAt) return true
   return point.createdAt.slice(0, 10) <= endDate
 }
@@ -218,11 +219,11 @@ export default function LiveVisitsPage() {
 
   // Hotspots: fetch when showHotspots is true, re-fetches on mode/point/date change.
   useEffect(() => {
-    const activePoints = points.filter(p => isPointInPeriod(p, intensityMode, hsDates.to))
-    // If the previously selected point is not in period, fall back to the first valid one.
-    const locationId = (selectedPointId && activePoints.some(p => p.id === selectedPointId))
+    const periodPoints = points.filter(p => isPointInPeriod(p, intensityMode, hsDates.to))
+    // If the previously selected point is outside the period, fall back to the first valid one.
+    const locationId = (selectedPointId && periodPoints.some(p => p.id === selectedPointId))
       ? selectedPointId
-      : activePoints[0]?.id
+      : periodPoints[0]?.id
     if (!showHotspots || !locationId) { setHotspots(null); return }
 
     let cancelled = false
@@ -250,16 +251,11 @@ export default function LiveVisitsPage() {
     )
   }
 
-  // Visible points: exclude inactive points AND points not yet created at period end.
+  // Visible points: in historical mode, exclude points created after the period end date.
+  // active=false does NOT exclude — analytics always shows all points regardless of status.
   const visiblePoints = points.filter(p => isPointInPeriod(p, intensityMode, hsDates.to))
   const visibleIds    = new Set(visiblePoints.map(p => p.id))
 
-  // Empty-state reasoning — only used when visiblePoints is empty.
-  // Separates "period filter eliminated all points" from "all points are hidden".
-  const activePoints      = points.filter(p => p.active)
-  const emptyDueToHistory = intensityMode === 'historical'
-                          && activePoints.length > 0
-                          && visiblePoints.length === 0
 
   // Build per-point activeNow map — restricted to visible points only.
   const activeNowMap: Record<string, number> = {}
@@ -727,20 +723,12 @@ export default function LiveVisitsPage() {
                     Crea una ubicación en el editor para verla aquí.
                   </p>
                 </>
-              ) : emptyDueToHistory ? (
+              ) : (
                 /* Case 2: points exist but none were created before the period end date */
                 <>
                   <p className="text-sm text-gray-600">No hay ubicaciones en este período.</p>
                   <p className="text-xs text-gray-700">
                     Las ubicaciones actuales fueron creadas después del rango seleccionado.
-                  </p>
-                </>
-              ) : (
-                /* Case 3: points exist but all are explicitly hidden (active = false) */
-                <>
-                  <p className="text-sm text-gray-600">Todas las ubicaciones están ocultas.</p>
-                  <p className="text-xs text-gray-700">
-                    Activá al menos una ubicación en el editor para verla aquí.
                   </p>
                 </>
               )}

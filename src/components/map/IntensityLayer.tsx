@@ -1,4 +1,3 @@
-import { Fragment } from 'react'
 import { Circle } from 'react-leaflet'
 import L from 'leaflet'
 import PolygonAreaLayer from './PolygonAreaLayer'
@@ -80,73 +79,33 @@ function computeHistoricalLevels(
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface HaloRing { radiusFactor: number; fillColor: string; fillOpacity: number }
-
 interface Palette {
   inactive: L.PathOptions
   core:     Record<IntensityLevel, L.PathOptions>
-  halo:     Record<IntensityLevel, HaloRing[]>
-}
-
-const HALO_BASE = { color: 'transparent', weight: 0, opacity: 0, interactive: false } as const
-
-// ── Shared halo geometry ──────────────────────────────────────────────────────
-//
-// Both modes use the same radiusFactor multipliers so the halo geometry is
-// consistent. Visual intensity difference between modes comes from fillOpacity,
-// not from different ring sizes. Rings are rendered outermost → innermost.
-//
-//   low    → 1 ring  (max 1.4× real radius)
-//   medium → 2 rings (max 2.0×)
-//   high   → 3 rings (max 2.5×)
-
-const HALO_FACTORS: Record<IntensityLevel, number[]> = {
-  low:    [1.4],
-  medium: [2.0, 1.4],
-  high:   [2.5, 1.8, 1.35],
 }
 
 // ── Live palette ──────────────────────────────────────────────────────────────
 //
-// Used by "En vivo" and by /app/live-visits (mode defaults to 'live').
-// Lower fillOpacity — map remains fully readable underneath.
+// Intensity is expressed entirely through fillOpacity, border weight and colour.
+// No external halos — geometry boundaries are respected for both circles and
+// polygons. Levels are separated by clearly visible opacity steps.
 
 const LIVE: Palette = {
   inactive: {
-    fillColor: '#a7f3d0', fillOpacity: 0.12,
-    color: '#6ee7b7', weight: 1, opacity: 0.32, interactive: false,
+    fillColor: '#a7f3d0', fillOpacity: 0.08,
+    color: '#6ee7b7', weight: 0.5, opacity: 0.20, interactive: false,
   },
   core: {
-    low:    { fillColor: '#6ee7b7', fillOpacity: 0.12, color: '#34d399', weight: 1.5, opacity: 0.55 },
-    medium: { fillColor: '#34d399', fillOpacity: 0.20, color: '#10b981', weight: 2,   opacity: 0.75 },
-    high:   { fillColor: '#86efac', fillOpacity: 0.30, color: '#4ade80', weight: 2.5, opacity: 0.95 },
-  },
-  halo: {
-    low: [
-      { radiusFactor: HALO_FACTORS.low[0],    fillColor: '#a7f3d0', fillOpacity: 0.22 },
-    ],
-    medium: [
-      { radiusFactor: HALO_FACTORS.medium[0], fillColor: '#34d399', fillOpacity: 0.16 },
-      { radiusFactor: HALO_FACTORS.medium[1], fillColor: '#34d399', fillOpacity: 0.30 },
-    ],
-    high: [
-      { radiusFactor: HALO_FACTORS.high[0],   fillColor: '#4ade80', fillOpacity: 0.14 },
-      { radiusFactor: HALO_FACTORS.high[1],   fillColor: '#4ade80', fillOpacity: 0.28 },
-      { radiusFactor: HALO_FACTORS.high[2],   fillColor: '#86efac', fillOpacity: 0.44 },
-    ],
+    low:    { fillColor: '#6ee7b7', fillOpacity: 0.18, color: '#34d399', weight: 1.5, opacity: 0.55 },
+    medium: { fillColor: '#34d399', fillOpacity: 0.35, color: '#10b981', weight: 2,   opacity: 0.75 },
+    high:   { fillColor: '#86efac', fillOpacity: 0.55, color: '#4ade80', weight: 2.5, opacity: 0.95 },
   },
 }
 
 // ── Historical palette ────────────────────────────────────────────────────────
 //
-// Used ONLY by /project/:id "Histórica" mode.
-// Same halo radiusFactor geometry as LIVE — only fillOpacity is higher to
-// express historical accumulation more visibly.
-//
-//   inactive → fillOpacity 0.06 — barely visible ghost
-//   low      → fillOpacity 0.22 — soft, visible but non-competing
-//   medium   → fillOpacity 0.52 — clearly active
-//   high     → fillOpacity 0.88 — dominant, near-solid
+// Higher opacity range than LIVE to reflect accumulated historical weight.
+// Same no-halo approach — differentiation comes from fillOpacity and weight only.
 
 const HISTORICAL: Palette = {
   inactive: {
@@ -157,20 +116,6 @@ const HISTORICAL: Palette = {
     low:    { fillColor: '#6ee7b7', fillOpacity: 0.22, color: '#34d399', weight: 1.5, opacity: 0.60 },
     medium: { fillColor: '#34d399', fillOpacity: 0.52, color: '#10b981', weight: 3,   opacity: 0.90 },
     high:   { fillColor: '#bbf7d0', fillOpacity: 0.88, color: '#22c55e', weight: 5,   opacity: 1.0  },
-  },
-  halo: {
-    low: [
-      { radiusFactor: HALO_FACTORS.low[0],    fillColor: '#a7f3d0', fillOpacity: 0.28 },
-    ],
-    medium: [
-      { radiusFactor: HALO_FACTORS.medium[0], fillColor: '#34d399', fillOpacity: 0.24 },
-      { radiusFactor: HALO_FACTORS.medium[1], fillColor: '#34d399', fillOpacity: 0.48 },
-    ],
-    high: [
-      { radiusFactor: HALO_FACTORS.high[0],   fillColor: '#4ade80', fillOpacity: 0.22 },
-      { radiusFactor: HALO_FACTORS.high[1],   fillColor: '#4ade80', fillOpacity: 0.44 },
-      { radiusFactor: HALO_FACTORS.high[2],   fillColor: '#86efac', fillOpacity: 0.68 },
-    ],
   },
 }
 
@@ -222,14 +167,10 @@ export default function IntensityLayer({ points, activeNow, mode = 'live' }: Pro
             : relativeIntensity(count, liveMax)
         )
 
-        // ── Polygon branch ────────────────────────────────────────────────────
-        // Renders the actual GeoJSON shape filled with the core intensity style.
-        // No concentric halo rings — the polygon IS the area, halos would extend
-        // beyond its real boundary. The core palette gives the same colour
-        // progression as the circle core (low → soft green, high → bright green).
-        if (isPolygon) {
-          const polyStyle = level === null ? palette.inactive : palette.core[level]
+        const style = level === null ? palette.inactive : palette.core[level]
 
+        // ── Polygon branch ────────────────────────────────────────────────────
+        if (isPolygon) {
           if (import.meta.env.DEV) {
             console.log(`[IntensityLayer] polygon "${point.name}" count=${count} level=${level ?? 'inactive'}`)
           }
@@ -238,53 +179,26 @@ export default function IntensityLayer({ points, activeNow, mode = 'live' }: Pro
             <PolygonAreaLayer
               key={point.id}
               polygon={point.activationPolygon!}
-              pathOptions={polyStyle}
+              pathOptions={style}
               interactive={false}
             />
           )
         }
 
-        // ── Radius branch (unchanged) ─────────────────────────────────────────
-        const radius = Math.min(point.activationRadius, 1000)
-
-        if (count === 0) {
-          return (
-            <Circle
-              key={point.id}
-              center={[point.latitude, point.longitude]}
-              radius={radius}
-              pathOptions={palette.inactive}
-            />
-          )
-        }
-
+        // ── Radius branch ─────────────────────────────────────────────────────
+        // Intensity is expressed via fill colour, opacity and border weight only.
+        // No external rings — visual effect stays within the real geometry boundary.
         if (import.meta.env.DEV) {
-          const coreStyle = palette.core[level!] as Record<string, unknown>
-          console.log(`[IntensityLayer] radius "${point.name}" count=${count} level=${level} fillOpacity=${coreStyle.fillOpacity}`)
+          console.log(`[IntensityLayer] radius "${point.name}" count=${count} level=${level ?? 'inactive'}`)
         }
-
-        const halos = palette.halo[level!]
 
         return (
-          <Fragment key={point.id}>
-            {halos.map((halo, i) => (
-              <Circle
-                key={i}
-                center={[point.latitude, point.longitude]}
-                radius={radius * halo.radiusFactor}
-                pathOptions={{
-                  ...HALO_BASE,
-                  fillColor:   halo.fillColor,
-                  fillOpacity: halo.fillOpacity,
-                }}
-              />
-            ))}
-            <Circle
-              center={[point.latitude, point.longitude]}
-              radius={radius}
-              pathOptions={{ ...palette.core[level!], interactive: false }}
-            />
-          </Fragment>
+          <Circle
+            key={point.id}
+            center={[point.latitude, point.longitude]}
+            radius={Math.min(point.activationRadius, 1000)}
+            pathOptions={{ ...style, interactive: false }}
+          />
         )
       })}
     </>

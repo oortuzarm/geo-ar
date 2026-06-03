@@ -633,7 +633,7 @@ export default function LiveVisitsPage() {
                     {showHotspots && (
                       <div className="flex items-center gap-5 flex-wrap">
                         <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
-                          Actividad:
+                          Zonas Calientes:
                         </span>
                         {[
                           { color: 'bg-blue-500',   label: 'Baja'     },

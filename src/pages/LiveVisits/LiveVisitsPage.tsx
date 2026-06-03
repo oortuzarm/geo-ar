@@ -428,18 +428,6 @@ export default function LiveVisitsPage() {
           <div className="flex flex-wrap items-center justify-between gap-y-2 min-w-0">
             <SectionLabel>Actividad Espacial</SectionLabel>
             <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={handleGpsPointsToggle}
-                className="text-xs text-gray-500 hover:text-gray-300 transition-colors whitespace-nowrap"
-              >
-                {showGpsPoints ? 'Ocultar puntos' : 'Mostrar puntos'}
-              </button>
-              <button
-                onClick={handleMapToggle}
-                className="text-xs text-gray-500 hover:text-gray-300 transition-colors whitespace-nowrap"
-              >
-                {mapVisible ? 'Ocultar mapa' : 'Mostrar mapa'}
-              </button>
               {/* Layer toggles: Intensidad GPS + Zonas Calientes (combinables) */}
               <VisualizationSelector
                 showGpsIntensity={showGpsIntensity}
@@ -544,34 +532,49 @@ export default function LiveVisitsPage() {
             </div>
           )}
 
-          {/* ── Period selector — visible in Histórica mode regardless of active layers ── */}
-          {intensityMode === 'historical' && (
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wide flex-shrink-0">
-                Período:
-              </span>
-              <input
-                type="date"
-                value={hsDates.from}
-                max={hsDates.to}
-                onChange={e => setHsDates(d => ({ ...d, from: e.target.value }))}
-                className="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg px-2 py-1
-                           text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-orange-500
-                           focus:border-transparent transition-colors"
-              />
-              <span className="text-gray-600 text-xs">→</span>
-              <input
-                type="date"
-                value={hsDates.to}
-                min={hsDates.from}
-                max={todayISO()}
-                onChange={e => setHsDates(d => ({ ...d, to: e.target.value }))}
-                className="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg px-2 py-1
-                           text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-orange-500
-                           focus:border-transparent transition-colors"
-              />
-            </div>
-          )}
+          {/* ── Secondary controls: Período (if historical) + Ocultar puntos/mapa ── */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {intensityMode === 'historical' && (
+              <>
+                <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wide flex-shrink-0">
+                  Período:
+                </span>
+                <input
+                  type="date"
+                  value={hsDates.from}
+                  max={hsDates.to}
+                  onChange={e => setHsDates(d => ({ ...d, from: e.target.value }))}
+                  className="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg px-2 py-1
+                             text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-orange-500
+                             focus:border-transparent transition-colors"
+                />
+                <span className="text-gray-600 text-xs">→</span>
+                <input
+                  type="date"
+                  value={hsDates.to}
+                  min={hsDates.from}
+                  max={todayISO()}
+                  onChange={e => setHsDates(d => ({ ...d, to: e.target.value }))}
+                  className="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg px-2 py-1
+                             text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-orange-500
+                             focus:border-transparent transition-colors"
+                />
+                <span className="text-gray-800 text-xs flex-shrink-0">·</span>
+              </>
+            )}
+            <button
+              onClick={handleGpsPointsToggle}
+              className="text-xs text-gray-500 hover:text-gray-300 transition-colors whitespace-nowrap"
+            >
+              {showGpsPoints ? 'Ocultar puntos' : 'Mostrar puntos'}
+            </button>
+            <button
+              onClick={handleMapToggle}
+              className="text-xs text-gray-500 hover:text-gray-300 transition-colors whitespace-nowrap"
+            >
+              {mapVisible ? 'Ocultar mapa' : 'Mostrar mapa'}
+            </button>
+          </div>
 
           {visiblePoints.length > 0 ? (
             <>

@@ -8,8 +8,10 @@ import IntensityModeSelector from '../../components/map/IntensityModeSelector'
 import type { IntensityMode } from '../../components/map/IntensityModeSelector'
 import VisualizationSelector from '../../components/maps/VisualizationSelector'
 import Spinner from '../../components/ui/Spinner'
-import { fetchLiveVisits, fetchHistoricalIntensity } from '../../services/liveVisitsApi'
+import { fetchLiveVisits } from '../../services/liveVisitsApi'
 import type { LiveVisitsResponse } from '../../services/liveVisitsApi'
+import { fetchProjectAnalyticsByPoint } from '../../lib/analytics'
+import type { PeriodParams } from '../../lib/analytics'
 import { fetchHotspots } from '../../services/hotspotApi'
 import type { HotspotPoint } from '../../services/hotspotApi'
 import { intensityFromCount } from '../../utils/liveVisits'
@@ -172,27 +174,29 @@ export default function LiveVisitsPage() {
     }
   }, [project?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Historical: fetch once when mode is switched to 'historical'.
+  // Historical intensity: re-fetches whenever project, mode, or period dates change.
+  // Uses analytics_by_point (supports from/to) instead of historical_intensity
+  // (no date filter — always returns all-time counts regardless of params).
   useEffect(() => {
     if (!project?.id || intensityMode !== 'historical') { setHistoricalMap(null); return }
     let cancelled = false
     setHistoricalLoading(true)
 
-    fetchHistoricalIntensity(project.id)
-      .then((data) => {
+    const periodParams: PeriodParams | undefined =
+      (hsDates.from && hsDates.to) ? { from: hsDates.from, to: hsDates.to } : undefined
+
+    fetchProjectAnalyticsByPoint(project.id, periodParams)
+      .then((pts) => {
         if (cancelled) return
         const map: Record<string, number> = {}
-        data.points.forEach((p) => {
-          const id = p.pointId ?? p.id
-          if (id) map[id] = p.count
-        })
+        pts.forEach((p) => { map[p.pointId] = p.radiusEntries })
         setHistoricalMap(map)
       })
       .catch(() => { /* keep null on error */ })
       .finally(() => { if (!cancelled) setHistoricalLoading(false) })
 
     return () => { cancelled = true }
-  }, [project?.id, intensityMode]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [project?.id, intensityMode, hsDates.from, hsDates.to]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Hotspots: fetch when showHotspots is true, re-fetches on mode/point/date change.
   useEffect(() => {

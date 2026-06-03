@@ -254,6 +254,13 @@ export default function LiveVisitsPage() {
   const visiblePoints = points.filter(p => isPointInPeriod(p, intensityMode, hsDates.to))
   const visibleIds    = new Set(visiblePoints.map(p => p.id))
 
+  // Empty-state reasoning — only used when visiblePoints is empty.
+  // Separates "period filter eliminated all points" from "all points are hidden".
+  const activePoints      = points.filter(p => p.active)
+  const emptyDueToHistory = intensityMode === 'historical'
+                          && activePoints.length > 0
+                          && visiblePoints.length === 0
+
   // Build per-point activeNow map — restricted to visible points only.
   const activeNowMap: Record<string, number> = {}
   liveData?.points
@@ -712,18 +719,28 @@ export default function LiveVisitsPage() {
           ) : (
             <div className="rounded-2xl border border-gray-800 bg-gray-900/50 flex flex-col
                             items-center justify-center gap-3 py-20 text-center">
-              {points.length > 0 ? (
+              {points.length === 0 ? (
+                /* Case 1: project has no points at all */
+                <>
+                  <p className="text-sm text-gray-600">No hay ubicaciones creadas.</p>
+                  <p className="text-xs text-gray-700">
+                    Crea una ubicación en el editor para verla aquí.
+                  </p>
+                </>
+              ) : emptyDueToHistory ? (
+                /* Case 2: points exist but none were created before the period end date */
+                <>
+                  <p className="text-sm text-gray-600">No hay ubicaciones en este período.</p>
+                  <p className="text-xs text-gray-700">
+                    Las ubicaciones actuales fueron creadas después del rango seleccionado.
+                  </p>
+                </>
+              ) : (
+                /* Case 3: points exist but all are explicitly hidden (active = false) */
                 <>
                   <p className="text-sm text-gray-600">Todas las ubicaciones están ocultas.</p>
                   <p className="text-xs text-gray-700">
                     Activá al menos una ubicación en el editor para verla aquí.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm text-gray-600">No hay ubicaciones configuradas en tu workspace.</p>
-                  <p className="text-xs text-gray-700">
-                    Agrega zonas GPS para ver la intensidad de visitas.
                   </p>
                 </>
               )}
@@ -734,19 +751,19 @@ export default function LiveVisitsPage() {
                              bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
                              transition-all duration-150 shadow-sm"
                 >
-                  {points.length > 0 ? (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      Ir al editor
-                    </>
-                  ) : (
+                  {points.length === 0 ? (
                     <>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
                       Nueva ubicación
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Ir al editor
                     </>
                   )}
                 </button>

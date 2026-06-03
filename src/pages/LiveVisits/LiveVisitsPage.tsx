@@ -27,20 +27,21 @@ function subtractDays(n: number): string {
 
 // ── Point visibility predicate ────────────────────────────────────────────────
 //
-// active=false does NOT exclude a point from Analytics — a temporarily
-// deactivated location still has historical and live visit data worth showing.
-//
-// The only exclusion rule is: in historical mode, a point created AFTER the
-// period's end date didn't exist yet and must be hidden completely.
+// Live mode:      active=true → visible   |   active=false → hidden
+// Historical mode: active is ignored; only createdAt matters.
+//                 createdAt <= endDate → visible (point existed during period)
+//                 createdAt >  endDate → hidden  (point didn't exist yet)
 //
 // Uses createdAt.slice(0,10) so ISO-8601 timestamps compare correctly with
 // YYYY-MM-DD date strings via lexicographic order.
 function isPointInPeriod(
-  point:   { createdAt?: string },
+  point:   { active: boolean; createdAt?: string },
   mode:    IntensityMode,
   endDate: string,
 ): boolean {
-  if (mode !== 'historical' || !endDate || !point.createdAt) return true
+  if (mode === 'live') return point.active
+  // historical: active is irrelevant — only existence during the period matters
+  if (!endDate || !point.createdAt) return true
   return point.createdAt.slice(0, 10) <= endDate
 }
 

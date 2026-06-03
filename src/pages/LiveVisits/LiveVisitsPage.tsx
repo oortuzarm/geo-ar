@@ -7,7 +7,6 @@ import type { IntensityLevel } from '../../components/map/GpsIntensityMap'
 import IntensityModeSelector from '../../components/map/IntensityModeSelector'
 import type { IntensityMode } from '../../components/map/IntensityModeSelector'
 import VisualizationSelector from '../../components/maps/VisualizationSelector'
-import type { VizMode } from '../../components/maps/VisualizationSelector'
 import Spinner from '../../components/ui/Spinner'
 import { fetchLiveVisits, fetchHistoricalIntensity } from '../../services/liveVisitsApi'
 import type { LiveVisitsResponse } from '../../services/liveVisitsApi'
@@ -99,8 +98,20 @@ export default function LiveVisitsPage() {
   const [historicalMap, setHistoricalMap] = useState<Record<string, number> | null>(null)
   const [historicalLoading, setHistoricalLoading] = useState(false)
 
-  // ── Hotspots state ──────────────────────────────────────────────────────────
-  const [vizMode,          setVizMode]          = useState<VizMode>('intensity')
+  // ── Layer state ──────────────────────────────────────────────────────────────
+  const [showGpsIntensity, setShowGpsIntensity] = useState(true)
+  const [showHotspots,     setShowHotspots]     = useState(false)
+
+  // At least one layer must stay active.
+  function handleToggleIntensity() {
+    if (showGpsIntensity && !showHotspots) return
+    setShowGpsIntensity(v => !v)
+  }
+  function handleToggleHotspots() {
+    if (showHotspots && !showGpsIntensity) return
+    setShowHotspots(v => !v)
+  }
+
   const [selectedPointId,  setSelectedPointId]  = useState<string>('')
   const [hotspots,         setHotspots]         = useState<HotspotPoint[] | null>(null)
   const [hotspotsLoading,  setHotspotsLoading]  = useState(false)
@@ -183,10 +194,10 @@ export default function LiveVisitsPage() {
     return () => { cancelled = true }
   }, [project?.id, intensityMode]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Hotspots: fetch when vizMode === 'hotspots', re-fetches on mode/point/date change.
+  // Hotspots: fetch when showHotspots is true, re-fetches on mode/point/date change.
   useEffect(() => {
     const locationId = selectedPointId || points[0]?.id
-    if (vizMode !== 'hotspots' || !locationId) { setHotspots(null); return }
+    if (!showHotspots || !locationId) { setHotspots(null); return }
 
     let cancelled = false
     setHotspotsLoading(true)
@@ -203,7 +214,7 @@ export default function LiveVisitsPage() {
       .finally(() => { if (!cancelled) setHotspotsLoading(false) })
 
     return () => { cancelled = true }
-  }, [vizMode, selectedPointId, points, intensityMode, hsDates.from, hsDates.to]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [showHotspots, selectedPointId, points, intensityMode, hsDates.from, hsDates.to]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
@@ -383,8 +394,13 @@ export default function LiveVisitsPage() {
               >
                 {mapVisible ? 'Ocultar mapa' : 'Mostrar mapa'}
               </button>
-              {/* Visualization toggle: Intensidad GPS | Zonas Calientes */}
-              <VisualizationSelector mode={vizMode} onChange={setVizMode} />
+              {/* Layer toggles: Intensidad GPS + Zonas Calientes (combinables) */}
+              <VisualizationSelector
+                showGpsIntensity={showGpsIntensity}
+                showHotspots={showHotspots}
+                onToggleIntensity={handleToggleIntensity}
+                onToggleHotspots={handleToggleHotspots}
+              />
               {/* Temporal toggle: En Vivo | Histórica */}
               <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
               {editorUrl && (
@@ -404,7 +420,7 @@ export default function LiveVisitsPage() {
           </div>
 
           {/* ── Hotspot controls (location selector + date range) ─────────── */}
-          {vizMode === 'hotspots' && points.length > 0 && (
+          {showHotspots && points.length > 0 && (
             <div className="space-y-3">
               {/* Location selector */}
               {points.length > 1 && (
@@ -474,18 +490,18 @@ export default function LiveVisitsPage() {
                       points={points}
                       activeNow={mapActiveNow}
                       showPoints={showGpsPoints}
-                      showIntensity={vizMode === 'intensity'}
-                      hotspots={vizMode === 'hotspots' && hotspots ? hotspots : undefined}
+                      showIntensity={showGpsIntensity}
+                      hotspots={showHotspots && hotspots ? hotspots : undefined}
                     />
-                    {/* Loading overlay — intensity historical or hotspots */}
-                    {((intensityMode === 'historical' && historicalLoading && vizMode === 'intensity') ||
-                      (vizMode === 'hotspots' && hotspotsLoading)) && (
+                    {/* Loading overlay */}
+                    {((intensityMode === 'historical' && historicalLoading && showGpsIntensity) ||
+                      (showHotspots && hotspotsLoading)) && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-950/70 backdrop-blur-sm">
                         <Spinner size="lg" />
                       </div>
                     )}
-                    {/* Hotspot empty state overlay */}
-                    {vizMode === 'hotspots' && !hotspotsLoading && !hotspotsError && hotspots !== null && hotspots.length === 0 && (
+                    {/* Hotspot empty state overlay — only when hotspots is the only active layer */}
+                    {showHotspots && !showGpsIntensity && !hotspotsLoading && !hotspotsError && hotspots !== null && hotspots.length === 0 && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-950/60 backdrop-blur-sm">
                         <div className="text-center px-6 space-y-1">
                           <p className="text-sm text-gray-400">Sin zonas calientes detectadas</p>
@@ -494,54 +510,55 @@ export default function LiveVisitsPage() {
                       </div>
                     )}
                     {/* Error overlay */}
-                    {vizMode === 'hotspots' && hotspotsError && (
+                    {showHotspots && hotspotsError && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-950/60 backdrop-blur-sm">
                         <p className="text-sm text-red-400">No se pudieron cargar las zonas calientes.</p>
                       </div>
                     )}
                   </div>
 
-                  {/* Legend */}
-                  {vizMode === 'intensity' && (
-                    <div className="flex items-center gap-5 flex-wrap">
-                      <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
-                        Intensidad:
-                      </span>
-                      {(['low', 'medium', 'high'] as IntensityLevel[]).map((level) => (
-                        <span key={level} className="flex items-center gap-1.5 text-xs text-gray-400">
-                          <span className={`w-3 h-3 rounded-full ${INTENSITY_DOT[level]} opacity-80 flex-shrink-0`} />
-                          {INTENSITY_LABEL[level]}
+                  {/* Legends — each shown independently when layer is active */}
+                  <div className="space-y-1.5">
+                    {showGpsIntensity && (
+                      <div className="flex items-center gap-5 flex-wrap">
+                        <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
+                          Intensidad:
                         </span>
-                      ))}
-                      <span className="text-[11px] text-gray-600 ml-auto">
-                        {intensityMode === 'historical' ? 'Acumulado histórico · relativa al máximo' : 'Radio máx. 1.000 m por zona'}
-                      </span>
-                    </div>
-                  )}
-                  {vizMode === 'hotspots' && (
-                    <div className="flex items-center gap-5 flex-wrap">
-                      <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
-                        Actividad:
-                      </span>
-                      {[
-                        { color: 'bg-blue-500',   label: 'Baja'      },
-                        { color: 'bg-green-500',  label: 'Media'     },
-                        { color: 'bg-yellow-500', label: 'Alta'      },
-                        { color: 'bg-red-500',    label: 'Muy alta'  },
-                      ].map(({ color, label }) => (
-                        <span key={label} className="flex items-center gap-1.5 text-xs text-gray-400">
-                          <span className={`w-3 h-3 rounded-full ${color} opacity-80 flex-shrink-0`} />
-                          {label}
+                        {(['low', 'medium', 'high'] as IntensityLevel[]).map((level) => (
+                          <span key={level} className="flex items-center gap-1.5 text-xs text-gray-400">
+                            <span className={`w-3 h-3 rounded-full ${INTENSITY_DOT[level]} opacity-80 flex-shrink-0`} />
+                            {INTENSITY_LABEL[level]}
+                          </span>
+                        ))}
+                        <span className="text-[11px] text-gray-600 ml-auto">
+                          {intensityMode === 'historical' ? 'Acumulado histórico · relativa al máximo' : 'Radio máx. 1.000 m por zona'}
                         </span>
-                      ))}
-                    </div>
-                  )}
+                      </div>
+                    )}
+                    {showHotspots && (
+                      <div className="flex items-center gap-5 flex-wrap">
+                        <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
+                          Actividad:
+                        </span>
+                        {[
+                          { color: 'bg-blue-500',   label: 'Baja'     },
+                          { color: 'bg-green-500',  label: 'Media'    },
+                          { color: 'bg-yellow-500', label: 'Alta'     },
+                          { color: 'bg-red-500',    label: 'Muy alta' },
+                        ].map(({ color, label }) => (
+                          <span key={label} className="flex items-center gap-1.5 text-xs text-gray-400">
+                            <span className={`w-3 h-3 rounded-full ${color} opacity-80 flex-shrink-0`} />
+                            {label}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
 
               {/* ── 4a. Ranking de zonas activas (Intensidad GPS) ──────────── */}
-              {vizMode === 'intensity' && (
-                <div className="space-y-2">
+              <div className="space-y-2">
                   <SectionLabel>Ranking de zonas activas</SectionLabel>
 
                   {activeRanked.length > 0 ? (
@@ -589,10 +606,9 @@ export default function LiveVisitsPage() {
                     </div>
                   ) : null}
                 </div>
-              )}
 
               {/* ── 4b. Zonas Más Activas (Hotspots) ──────────────────────── */}
-              {vizMode === 'hotspots' && (
+              {showHotspots && (
                 <div className="space-y-2">
                   <SectionLabel>Zonas Más Activas</SectionLabel>
 

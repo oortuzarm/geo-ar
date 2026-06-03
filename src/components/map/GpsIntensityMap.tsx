@@ -4,7 +4,9 @@ import { createGeoIcon } from './createGeoIcon'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
 import IntensityLayer from './IntensityLayer'
 import BaseMapLayer from './BaseMapLayer'
+import HotspotsLayer from '../maps/HotspotsLayer'
 import type { GeoPoint } from '../../types'
+import type { HotspotPoint } from '../../services/hotspotApi'
 
 // Re-export so callers (LiveVisitsPage) can keep their existing import paths.
 export type { IntensityLevel } from './IntensityLayer'
@@ -45,12 +47,20 @@ function FitBounds({ points }: { points: GeoPoint[] }) {
 // ── Public component ──────────────────────────────────────────────────────────
 
 export interface GpsIntensityMapProps {
-  points:      GeoPoint[]
-  activeNow?:  Record<string, number>  // pointId → active visitor count; omit to use mock
-  showPoints?: boolean                 // render pin markers; default true
+  points:          GeoPoint[]
+  activeNow?:      Record<string, number>  // pointId → active visitor count; omit to use mock
+  showPoints?:     boolean                 // render pin markers; default true
+  showIntensity?:  boolean                 // render IntensityLayer; default true
+  hotspots?:       HotspotPoint[]          // if provided, renders HotspotsLayer
 }
 
-export default function GpsIntensityMap({ points, activeNow, showPoints = true }: GpsIntensityMapProps) {
+export default function GpsIntensityMap({
+  points,
+  activeNow,
+  showPoints    = true,
+  showIntensity = true,
+  hotspots,
+}: GpsIntensityMapProps) {
   const resolvedActiveNow: Record<string, number> = {}
   points.forEach((p) => {
     resolvedActiveNow[p.id] = activeNow !== undefined
@@ -69,7 +79,12 @@ export default function GpsIntensityMap({ points, activeNow, showPoints = true }
     >
       <BaseMapLayer styleId="toner" />
       <FitBounds points={points} />
-      <IntensityLayer points={points} activeNow={resolvedActiveNow} />
+      {showIntensity && (
+        <IntensityLayer points={points} activeNow={resolvedActiveNow} />
+      )}
+      {hotspots && hotspots.length > 0 && (
+        <HotspotsLayer hotspots={hotspots} />
+      )}
       {showPoints && points.map((point) => (
         <Marker
           key={point.id}

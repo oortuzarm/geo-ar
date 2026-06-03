@@ -6,10 +6,23 @@ import GpsIntensityMap from '../../components/map/GpsIntensityMap'
 import type { IntensityLevel } from '../../components/map/GpsIntensityMap'
 import IntensityModeSelector from '../../components/map/IntensityModeSelector'
 import type { IntensityMode } from '../../components/map/IntensityModeSelector'
+import VisualizationSelector from '../../components/maps/VisualizationSelector'
+import type { VizMode } from '../../components/maps/VisualizationSelector'
 import Spinner from '../../components/ui/Spinner'
 import { fetchLiveVisits, fetchHistoricalIntensity } from '../../services/liveVisitsApi'
 import type { LiveVisitsResponse } from '../../services/liveVisitsApi'
+import { fetchHotspots } from '../../services/hotspotApi'
+import type { HotspotPoint } from '../../services/hotspotApi'
 import { intensityFromCount } from '../../utils/liveVisits'
+
+// ── Date helpers ──────────────────────────────────────────────────────────────
+
+function todayISO(): string { return new Date().toISOString().slice(0, 10) }
+function subtractDays(n: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() - n)
+  return d.toISOString().slice(0, 10)
+}
 
 // vsLastHour remains mocked until the backend provides trend data.
 function mockVsLastHour(pointId: string): string {
@@ -86,6 +99,17 @@ export default function LiveVisitsPage() {
   const [historicalMap, setHistoricalMap] = useState<Record<string, number> | null>(null)
   const [historicalLoading, setHistoricalLoading] = useState(false)
 
+  // ── Hotspots state ──────────────────────────────────────────────────────────
+  const [vizMode,          setVizMode]          = useState<VizMode>('intensity')
+  const [selectedPointId,  setSelectedPointId]  = useState<string>('')
+  const [hotspots,         setHotspots]         = useState<HotspotPoint[] | null>(null)
+  const [hotspotsLoading,  setHotspotsLoading]  = useState(false)
+  const [hotspotsError,    setHotspotsError]    = useState(false)
+  const [hsDates, setHsDates] = useState<{ from: string; to: string }>(() => ({
+    from: subtractDays(6),
+    to:   todayISO(),
+  }))
+
   const LIVE_MAP_VISIBLE_KEY = 'live_visits_map_visible'
   const [mapVisible, setMapVisible] = useState<boolean>(() => {
     const stored = localStorage.getItem(LIVE_MAP_VISIBLE_KEY)
@@ -158,6 +182,28 @@ export default function LiveVisitsPage() {
 
     return () => { cancelled = true }
   }, [project?.id, intensityMode]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Hotspots: fetch when vizMode === 'hotspots', re-fetches on mode/point/date change.
+  useEffect(() => {
+    const locationId = selectedPointId || points[0]?.id
+    if (vizMode !== 'hotspots' || !locationId) { setHotspots(null); return }
+
+    let cancelled = false
+    setHotspotsLoading(true)
+    setHotspotsError(false)
+
+    const mode = intensityMode === 'live' ? 'live' : 'historical'
+    fetchHotspots({
+      locationId,
+      mode,
+      ...(mode === 'historical' ? { startDate: hsDates.from, endDate: hsDates.to } : {}),
+    })
+      .then((res) => { if (!cancelled) setHotspots(res.data.hotspots) })
+      .catch(() => { if (!cancelled) setHotspotsError(true) })
+      .finally(() => { if (!cancelled) setHotspotsLoading(false) })
+
+    return () => { cancelled = true }
+  }, [vizMode, selectedPointId, points, intensityMode, hsDates.from, hsDates.to]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
@@ -319,11 +365,11 @@ export default function LiveVisitsPage() {
           </section>
         )}
 
-        {/* ── 3. Mapa de Intensidad GPS ──────────────────────────────────────── */}
+        {/* ── 3. Actividad Espacial ──────────────────────────────────────────── */}
         <section className="space-y-4">
 
           <div className="flex flex-wrap items-center justify-between gap-y-2 min-w-0">
-            <SectionLabel>Mapa de Intensidad GPS</SectionLabel>
+            <SectionLabel>Actividad Espacial</SectionLabel>
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={handleGpsPointsToggle}
@@ -337,6 +383,9 @@ export default function LiveVisitsPage() {
               >
                 {mapVisible ? 'Ocultar mapa' : 'Mostrar mapa'}
               </button>
+              {/* Visualization toggle: Intensidad GPS | Zonas Calientes */}
+              <VisualizationSelector mode={vizMode} onChange={setVizMode} />
+              {/* Temporal toggle: En Vivo | Histórica */}
               <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
               {editorUrl && (
                 <button
@@ -354,97 +403,268 @@ export default function LiveVisitsPage() {
             </div>
           </div>
 
+          {/* ── Hotspot controls (location selector + date range) ─────────── */}
+          {vizMode === 'hotspots' && points.length > 0 && (
+            <div className="space-y-3">
+              {/* Location selector */}
+              {points.length > 1 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wide flex-shrink-0">
+                    Ubicación:
+                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {points.map((p) => {
+                      const active = (selectedPointId || points[0]?.id) === p.id
+                      return (
+                        <button
+                          key={p.id}
+                          onClick={() => setSelectedPointId(p.id)}
+                          className={[
+                            'px-3 py-1 rounded-full text-[11px] font-medium transition-all whitespace-nowrap',
+                            active
+                              ? 'bg-orange-900/50 border border-orange-700/40 text-orange-300'
+                              : 'border border-gray-700/60 text-gray-500 hover:text-gray-300 hover:border-gray-600',
+                          ].join(' ')}
+                        >
+                          {p.name || 'Sin nombre'}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Date range — only for historical */}
+              {intensityMode === 'historical' && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wide flex-shrink-0">
+                    Período:
+                  </span>
+                  <input
+                    type="date"
+                    value={hsDates.from}
+                    max={hsDates.to}
+                    onChange={e => setHsDates(d => ({ ...d, from: e.target.value }))}
+                    className="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg px-2 py-1
+                               text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-orange-500
+                               focus:border-transparent transition-colors"
+                  />
+                  <span className="text-gray-600 text-xs">→</span>
+                  <input
+                    type="date"
+                    value={hsDates.to}
+                    min={hsDates.from}
+                    max={todayISO()}
+                    onChange={e => setHsDates(d => ({ ...d, to: e.target.value }))}
+                    className="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg px-2 py-1
+                               text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-orange-500
+                               focus:border-transparent transition-colors"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
           {points.length > 0 ? (
             <>
               {mapVisible && (
                 <>
                   <div className="relative rounded-2xl overflow-hidden border border-gray-800" style={{ height: '420px' }}>
-                    <GpsIntensityMap points={points} activeNow={mapActiveNow} showPoints={showGpsPoints} />
-                    {intensityMode === 'historical' && historicalLoading && (
+                    <GpsIntensityMap
+                      points={points}
+                      activeNow={mapActiveNow}
+                      showPoints={showGpsPoints}
+                      showIntensity={vizMode === 'intensity'}
+                      hotspots={vizMode === 'hotspots' && hotspots ? hotspots : undefined}
+                    />
+                    {/* Loading overlay — intensity historical or hotspots */}
+                    {((intensityMode === 'historical' && historicalLoading && vizMode === 'intensity') ||
+                      (vizMode === 'hotspots' && hotspotsLoading)) && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-950/70 backdrop-blur-sm">
                         <Spinner size="lg" />
+                      </div>
+                    )}
+                    {/* Hotspot empty state overlay */}
+                    {vizMode === 'hotspots' && !hotspotsLoading && !hotspotsError && hotspots !== null && hotspots.length === 0 && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-950/60 backdrop-blur-sm">
+                        <div className="text-center px-6 space-y-1">
+                          <p className="text-sm text-gray-400">Sin zonas calientes detectadas</p>
+                          <p className="text-xs text-gray-600">No hay datos de posición para el período seleccionado.</p>
+                        </div>
+                      </div>
+                    )}
+                    {/* Error overlay */}
+                    {vizMode === 'hotspots' && hotspotsError && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-950/60 backdrop-blur-sm">
+                        <p className="text-sm text-red-400">No se pudieron cargar las zonas calientes.</p>
                       </div>
                     )}
                   </div>
 
                   {/* Legend */}
-                  <div className="flex items-center gap-5 flex-wrap">
-                    <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
-                      Intensidad:
-                    </span>
-                    {(['low', 'medium', 'high'] as IntensityLevel[]).map((level) => (
-                      <span key={level} className="flex items-center gap-1.5 text-xs text-gray-400">
-                        <span className={`w-3 h-3 rounded-full ${INTENSITY_DOT[level]} opacity-80 flex-shrink-0`} />
-                        {INTENSITY_LABEL[level]}
+                  {vizMode === 'intensity' && (
+                    <div className="flex items-center gap-5 flex-wrap">
+                      <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
+                        Intensidad:
                       </span>
-                    ))}
-                    <span className="text-[11px] text-gray-600 ml-auto">
-                      {intensityMode === 'historical' ? 'Acumulado histórico · relativa al máximo' : 'Radio máx. 1.000 m por zona'}
-                    </span>
-                  </div>
+                      {(['low', 'medium', 'high'] as IntensityLevel[]).map((level) => (
+                        <span key={level} className="flex items-center gap-1.5 text-xs text-gray-400">
+                          <span className={`w-3 h-3 rounded-full ${INTENSITY_DOT[level]} opacity-80 flex-shrink-0`} />
+                          {INTENSITY_LABEL[level]}
+                        </span>
+                      ))}
+                      <span className="text-[11px] text-gray-600 ml-auto">
+                        {intensityMode === 'historical' ? 'Acumulado histórico · relativa al máximo' : 'Radio máx. 1.000 m por zona'}
+                      </span>
+                    </div>
+                  )}
+                  {vizMode === 'hotspots' && (
+                    <div className="flex items-center gap-5 flex-wrap">
+                      <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
+                        Actividad:
+                      </span>
+                      {[
+                        { color: 'bg-blue-500',   label: 'Baja'      },
+                        { color: 'bg-green-500',  label: 'Media'     },
+                        { color: 'bg-yellow-500', label: 'Alta'      },
+                        { color: 'bg-red-500',    label: 'Muy alta'  },
+                      ].map(({ color, label }) => (
+                        <span key={label} className="flex items-center gap-1.5 text-xs text-gray-400">
+                          <span className={`w-3 h-3 rounded-full ${color} opacity-80 flex-shrink-0`} />
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </>
               )}
 
-              {/* ── 4. Ranking de zonas ─────────────────────────────────────── */}
-              <div className="space-y-2">
-                <SectionLabel>Ranking de zonas activas</SectionLabel>
+              {/* ── 4a. Ranking de zonas activas (Intensidad GPS) ──────────── */}
+              {vizMode === 'intensity' && (
+                <div className="space-y-2">
+                  <SectionLabel>Ranking de zonas activas</SectionLabel>
 
-                {activeRanked.length > 0 ? (
-                  <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl overflow-hidden">
-                    {activeRanked.map(({ point, people }, idx) => (
-                      <div
-                        key={point.id}
-                        className={`flex items-center gap-3 sm:gap-4 px-4 py-3 ${
-                          idx < activeRanked.length - 1 ? 'border-b border-gray-800/60' : ''
-                        }`}
-                      >
-                        {/* Rank badge */}
-                        <span className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center
-                                          text-[10px] font-bold border ${
-                          idx === 0
-                            ? 'bg-brand-500/20 border-brand-500/30 text-brand-400'
-                            : 'bg-gray-800 border-gray-700/60 text-gray-500'
-                        }`}>
-                          {idx + 1}
-                        </span>
-
-                        {/* Point name */}
-                        <span className="flex-1 text-sm font-medium text-gray-200 truncate min-w-0">
-                          {point.name || 'Sin nombre'}
-                        </span>
-
-                        {/* Radius */}
-                        <span className="hidden sm:inline text-[11px] text-gray-600 tabular-nums flex-shrink-0">
-                          {point.activationRadius} m
-                        </span>
-
-                        {/* En vivo badge */}
-                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-500 flex-shrink-0">
-                          <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                  {activeRanked.length > 0 ? (
+                    <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl overflow-hidden">
+                      {activeRanked.map(({ point, people }, idx) => (
+                        <div
+                          key={point.id}
+                          className={`flex items-center gap-3 sm:gap-4 px-4 py-3 ${
+                            idx < activeRanked.length - 1 ? 'border-b border-gray-800/60' : ''
+                          }`}
+                        >
+                          <span className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center
+                                            text-[10px] font-bold border ${
+                            idx === 0
+                              ? 'bg-brand-500/20 border-brand-500/30 text-brand-400'
+                              : 'bg-gray-800 border-gray-700/60 text-gray-500'
+                          }`}>
+                            {idx + 1}
                           </span>
-                          En vivo
-                        </span>
+                          <span className="flex-1 text-sm font-medium text-gray-200 truncate min-w-0">
+                            {point.name || 'Sin nombre'}
+                          </span>
+                          <span className="hidden sm:inline text-[11px] text-gray-600 tabular-nums flex-shrink-0">
+                            {point.activationRadius} m
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-500 flex-shrink-0">
+                            <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                            </span>
+                            En vivo
+                          </span>
+                          <span className="text-sm font-semibold text-emerald-400 tabular-nums flex-shrink-0">
+                            {people} pers.
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : liveData !== null ? (
+                    <div className="bg-gray-900/50 border border-gray-800 rounded-2xl px-6 py-10 text-center space-y-2">
+                      <p className="text-sm text-gray-500">No hay zonas activas en este momento.</p>
+                      <p className="text-xs text-gray-600">
+                        Cuando una persona entre dentro del radio GPS de un punto, aparecerá aquí automáticamente.
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              )}
 
-                        {/* People count */}
-                        <span className="text-sm font-semibold text-emerald-400 tabular-nums flex-shrink-0">
-                          {people} pers.
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : liveData !== null ? (
-                  <div className="bg-gray-900/50 border border-gray-800 rounded-2xl px-6 py-10 text-center space-y-2">
-                    <p className="text-sm text-gray-500">
-                      No hay zonas activas en este momento.
-                    </p>
-                    <p className="text-xs text-gray-600">
-                      Cuando una persona entre dentro del radio GPS de un punto, aparecerá aquí automáticamente.
-                    </p>
-                  </div>
-                ) : null}
-              </div>
+              {/* ── 4b. Zonas Más Activas (Hotspots) ──────────────────────── */}
+              {vizMode === 'hotspots' && (
+                <div className="space-y-2">
+                  <SectionLabel>Zonas Más Activas</SectionLabel>
+
+                  {hotspotsLoading ? (
+                    <div className="flex justify-center py-8"><Spinner size="md" /></div>
+                  ) : hotspotsError ? (
+                    <div className="bg-gray-900/50 border border-gray-800 rounded-2xl px-6 py-8 text-center">
+                      <p className="text-sm text-red-400">Error al cargar las zonas calientes.</p>
+                    </div>
+                  ) : hotspots && hotspots.length > 0 ? (
+                    <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl overflow-hidden">
+                      {[...hotspots]
+                        .sort((a, b) => b.intensity - a.intensity)
+                        .slice(0, 5)
+                        .map((hs, idx) => {
+                          const pct = Math.round(hs.intensity * 100)
+                          const barColor =
+                            hs.intensity >= 0.75 ? 'bg-red-500' :
+                            hs.intensity >= 0.50 ? 'bg-yellow-500' :
+                            hs.intensity >= 0.25 ? 'bg-green-500' : 'bg-blue-500'
+                          return (
+                            <div
+                              key={idx}
+                              className={`flex items-center gap-3 sm:gap-4 px-4 py-3 ${
+                                idx < Math.min(hotspots.length, 5) - 1 ? 'border-b border-gray-800/60' : ''
+                              }`}
+                            >
+                              {/* Rank badge */}
+                              <span className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center
+                                                text-[10px] font-bold border ${
+                                idx === 0
+                                  ? 'bg-orange-900/40 border-orange-700/40 text-orange-400'
+                                  : 'bg-gray-800 border-gray-700/60 text-gray-500'
+                              }`}>
+                                {idx + 1}
+                              </span>
+
+                              {/* Label */}
+                              <span className="flex-1 text-sm font-medium text-gray-300 min-w-0">
+                                Zona #{idx + 1}
+                              </span>
+
+                              {/* Intensity bar */}
+                              <div className="hidden sm:flex items-center gap-2 w-28 flex-shrink-0">
+                                <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${barColor}`}
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Percentage */}
+                              <span className="text-sm font-semibold tabular-nums text-gray-200 flex-shrink-0 w-10 text-right">
+                                {pct}%
+                              </span>
+                            </div>
+                          )
+                        })}
+                    </div>
+                  ) : hotspots !== null ? (
+                    <div className="bg-gray-900/50 border border-gray-800 rounded-2xl px-6 py-10 text-center space-y-2">
+                      <p className="text-sm text-gray-500">Sin datos de zonas calientes.</p>
+                      <p className="text-xs text-gray-600">
+                        {intensityMode === 'live'
+                          ? 'No se detectaron posiciones GPS activas en esta ubicación.'
+                          : 'Probá ajustando el rango de fechas o seleccionando otra ubicación.'}
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              )}
             </>
           ) : (
             <div className="rounded-2xl border border-gray-800 bg-gray-900/50 flex flex-col

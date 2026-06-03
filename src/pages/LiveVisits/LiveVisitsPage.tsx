@@ -134,7 +134,8 @@ export default function LiveVisitsPage() {
     setShowHotspots(v => !v)
   }
 
-  const [selectedPointId,  setSelectedPointId]  = useState<string>('')
+  // Empty Set = all visible points selected (sentinel for "no filter active").
+  const [selectedPointIds, setSelectedPointIds] = useState<Set<string>>(new Set())
   const [hotspots,         setHotspots]         = useState<HotspotPoint[] | null>(null)
   const [hotspotsLoading,  setHotspotsLoading]  = useState(false)
   const [hotspotsError,    setHotspotsError]    = useState(false)
@@ -218,31 +219,36 @@ export default function LiveVisitsPage() {
     return () => { cancelled = true }
   }, [project?.id, intensityMode, hsDates.from, hsDates.to]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Hotspots: fetch when showHotspots is true, re-fetches on mode/point/date change.
+  // Hotspots: fetch for every filtered point in parallel, merge results.
+  // Re-fetches when selection, mode, period dates, or point pool changes.
   useEffect(() => {
     const periodPoints = points.filter(p => isPointInPeriod(p, intensityMode, hsDates.to))
-    // If the previously selected point is outside the period, fall back to the first valid one.
-    const locationId = (selectedPointId && periodPoints.some(p => p.id === selectedPointId))
-      ? selectedPointId
-      : periodPoints[0]?.id
-    if (!showHotspots || !locationId) { setHotspots(null); return }
+    const targets = selectedPointIds.size === 0
+      ? periodPoints
+      : periodPoints.filter(p => selectedPointIds.has(p.id))
+
+    if (!showHotspots || targets.length === 0) { setHotspots(null); return }
 
     let cancelled = false
     setHotspotsLoading(true)
     setHotspotsError(false)
 
     const mode = intensityMode === 'live' ? 'live' : 'historical'
-    fetchHotspots({
-      locationId,
-      mode,
-      ...(mode === 'historical' ? { startDate: hsDates.from, endDate: hsDates.to } : {}),
-    })
-      .then((res) => { if (!cancelled) setHotspots(res.data.hotspots) })
+    const dateParams = mode === 'historical' ? { startDate: hsDates.from, endDate: hsDates.to } : {}
+
+    Promise.all(
+      targets.map(p =>
+        fetchHotspots({ locationId: p.id, mode, ...dateParams })
+          .then(res => res.data.hotspots)
+          .catch(() => [] as HotspotPoint[])
+      )
+    )
+      .then(results => { if (!cancelled) setHotspots(results.flat()) })
       .catch(() => { if (!cancelled) setHotspotsError(true) })
       .finally(() => { if (!cancelled) setHotspotsLoading(false) })
 
     return () => { cancelled = true }
-  }, [showHotspots, selectedPointId, points, intensityMode, hsDates.from, hsDates.to]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [showHotspots, selectedPointIds, points, intensityMode, hsDates.from, hsDates.to]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
@@ -255,13 +261,17 @@ export default function LiveVisitsPage() {
   // Visible points: in historical mode, exclude points created after the period end date.
   // active=false does NOT exclude — analytics always shows all points regardless of status.
   const visiblePoints = points.filter(p => isPointInPeriod(p, intensityMode, hsDates.to))
-  const visibleIds    = new Set(visiblePoints.map(p => p.id))
 
+  // Filtered points: apply the location selector (empty Set = all visible, no filter).
+  const filteredPoints = selectedPointIds.size === 0
+    ? visiblePoints
+    : visiblePoints.filter(p => selectedPointIds.has(p.id))
+  const filteredIds    = new Set(filteredPoints.map(p => p.id))
 
-  // Build per-point activeNow map — restricted to visible points only.
+  // Build per-point activeNow map — restricted to filtered (selected) points only.
   const activeNowMap: Record<string, number> = {}
   liveData?.points
-    .filter(p => visibleIds.has(p.id))
+    .filter(p => filteredIds.has(p.id))
     .forEach((p) => { activeNowMap[p.id] = p.activeNow })
 
   // Which data drives the map depends on the current mode.
@@ -269,7 +279,7 @@ export default function LiveVisitsPage() {
     ? activeNowMap
     : (historicalMap ?? {})
 
-  const ranked = visiblePoints
+  const ranked = filteredPoints
     .map((p) => ({
       point:      p,
       people:     activeNowMap[p.id] ?? 0,
@@ -493,16 +503,37 @@ export default function LiveVisitsPage() {
               </span>
               <div className="flex items-center gap-1.5 flex-wrap">
                 {visiblePoints.map((p) => {
-                  const active = (selectedPointId || visiblePoints[0]?.id) === p.id
+                  // Empty Set = all selected (sentinel); otherwise check membership.
+                  const isSelected = selectedPointIds.size === 0 || selectedPointIds.has(p.id)
                   return (
                     <button
                       key={p.id}
-                      onClick={() => setSelectedPointId(p.id)}
+                      onClick={() => {
+                        const allIds = new Set(visiblePoints.map(v => v.id))
+                        setSelectedPointIds(prev => {
+                          if (prev.size === 0) {
+                            // All selected — deselect just this one
+                            const next = new Set(allIds)
+                            next.delete(p.id)
+                            return next.size > 0 ? next : new Set()
+                          }
+                          const next = new Set(prev)
+                          if (next.has(p.id)) {
+                            next.delete(p.id)
+                            // If now empty → reset to "all selected"
+                            return next.size > 0 ? next : new Set()
+                          } else {
+                            next.add(p.id)
+                            // If all are now selected → reset to sentinel
+                            return next.size >= allIds.size ? new Set() : next
+                          }
+                        })
+                      }}
                       className={[
                         'px-3 py-1 rounded-full text-[11px] font-medium transition-all whitespace-nowrap',
-                        active
-                          ? 'bg-orange-900/50 border border-orange-700/40 text-orange-300'
-                          : 'border border-gray-700/60 text-gray-500 hover:text-gray-300 hover:border-gray-600',
+                        isSelected
+                          ? 'bg-brand-900/50 border border-brand-600/40 text-brand-300'
+                          : 'border border-gray-700/60 text-gray-600 line-through opacity-50 hover:opacity-70',
                       ].join(' ')}
                     >
                       {p.name || 'Sin nombre'}
@@ -548,7 +579,7 @@ export default function LiveVisitsPage() {
                 <>
                   <div className="relative rounded-2xl overflow-hidden border border-gray-800" style={{ height: '420px' }}>
                     <GpsIntensityMap
-                      points={visiblePoints}
+                      points={filteredPoints}
                       activeNow={mapActiveNow}
                       showPoints={showGpsPoints}
                       showIntensity={showGpsIntensity}

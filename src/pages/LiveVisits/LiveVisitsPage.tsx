@@ -25,6 +25,24 @@ function subtractDays(n: number): string {
   return d.toISOString().slice(0, 10)
 }
 
+// ── Point visibility predicate ────────────────────────────────────────────────
+//
+// In live mode: only `active` matters.
+// In historical mode: additionally exclude points created AFTER the period's
+// end date — they didn't exist yet and must not appear (even with 0 intensity).
+//
+// Uses createdAt.slice(0,10) so ISO-8601 timestamps compare correctly with
+// YYYY-MM-DD date strings via lexicographic order.
+function isPointInPeriod(
+  point: { active: boolean; createdAt?: string },
+  mode:    IntensityMode,
+  endDate: string,
+): boolean {
+  if (!point.active) return false
+  if (mode !== 'historical' || !endDate || !point.createdAt) return true
+  return point.createdAt.slice(0, 10) <= endDate
+}
+
 // vsLastHour remains mocked until the backend provides trend data.
 function mockVsLastHour(pointId: string): string {
   const sum = pointId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
@@ -200,8 +218,8 @@ export default function LiveVisitsPage() {
 
   // Hotspots: fetch when showHotspots is true, re-fetches on mode/point/date change.
   useEffect(() => {
-    const activePoints = points.filter(p => p.active)
-    // If the previously selected point is now hidden, fall back to the first visible one.
+    const activePoints = points.filter(p => isPointInPeriod(p, intensityMode, hsDates.to))
+    // If the previously selected point is not in period, fall back to the first valid one.
     const locationId = (selectedPointId && activePoints.some(p => p.id === selectedPointId))
       ? selectedPointId
       : activePoints[0]?.id
@@ -232,8 +250,8 @@ export default function LiveVisitsPage() {
     )
   }
 
-  // Visible points: exclude inactive (hidden) points from all UI surfaces.
-  const visiblePoints = points.filter(p => p.active)
+  // Visible points: exclude inactive points AND points not yet created at period end.
+  const visiblePoints = points.filter(p => isPointInPeriod(p, intensityMode, hsDates.to))
   const visibleIds    = new Set(visiblePoints.map(p => p.id))
 
   // Build per-point activeNow map — restricted to visible points only.

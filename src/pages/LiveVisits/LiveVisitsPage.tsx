@@ -429,65 +429,60 @@ export default function LiveVisitsPage() {
             </div>
           </div>
 
-          {/* ── Hotspot controls (location selector + date range) ─────────── */}
-          {showHotspots && visiblePoints.length > 0 && (
-            <div className="space-y-3">
-              {/* Location selector */}
-              {visiblePoints.length > 1 && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wide flex-shrink-0">
-                    Ubicación:
-                  </span>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {visiblePoints.map((p) => {
-                      const active = (selectedPointId || visiblePoints[0]?.id) === p.id
-                      return (
-                        <button
-                          key={p.id}
-                          onClick={() => setSelectedPointId(p.id)}
-                          className={[
-                            'px-3 py-1 rounded-full text-[11px] font-medium transition-all whitespace-nowrap',
-                            active
-                              ? 'bg-orange-900/50 border border-orange-700/40 text-orange-300'
-                              : 'border border-gray-700/60 text-gray-500 hover:text-gray-300 hover:border-gray-600',
-                          ].join(' ')}
-                        >
-                          {p.name || 'Sin nombre'}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
+          {/* ── Hotspot location selector — only when Zonas Calientes is active ── */}
+          {showHotspots && visiblePoints.length > 1 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wide flex-shrink-0">
+                Ubicación:
+              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {visiblePoints.map((p) => {
+                  const active = (selectedPointId || visiblePoints[0]?.id) === p.id
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setSelectedPointId(p.id)}
+                      className={[
+                        'px-3 py-1 rounded-full text-[11px] font-medium transition-all whitespace-nowrap',
+                        active
+                          ? 'bg-orange-900/50 border border-orange-700/40 text-orange-300'
+                          : 'border border-gray-700/60 text-gray-500 hover:text-gray-300 hover:border-gray-600',
+                      ].join(' ')}
+                    >
+                      {p.name || 'Sin nombre'}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
-              {/* Date range — only for historical */}
-              {intensityMode === 'historical' && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wide flex-shrink-0">
-                    Período:
-                  </span>
-                  <input
-                    type="date"
-                    value={hsDates.from}
-                    max={hsDates.to}
-                    onChange={e => setHsDates(d => ({ ...d, from: e.target.value }))}
-                    className="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg px-2 py-1
-                               text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-orange-500
-                               focus:border-transparent transition-colors"
-                  />
-                  <span className="text-gray-600 text-xs">→</span>
-                  <input
-                    type="date"
-                    value={hsDates.to}
-                    min={hsDates.from}
-                    max={todayISO()}
-                    onChange={e => setHsDates(d => ({ ...d, to: e.target.value }))}
-                    className="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg px-2 py-1
-                               text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-orange-500
-                               focus:border-transparent transition-colors"
-                  />
-                </div>
-              )}
+          {/* ── Period selector — visible in Histórica mode regardless of active layers ── */}
+          {intensityMode === 'historical' && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wide flex-shrink-0">
+                Período:
+              </span>
+              <input
+                type="date"
+                value={hsDates.from}
+                max={hsDates.to}
+                onChange={e => setHsDates(d => ({ ...d, from: e.target.value }))}
+                className="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg px-2 py-1
+                           text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-orange-500
+                           focus:border-transparent transition-colors"
+              />
+              <span className="text-gray-600 text-xs">→</span>
+              <input
+                type="date"
+                value={hsDates.to}
+                min={hsDates.from}
+                max={todayISO()}
+                onChange={e => setHsDates(d => ({ ...d, to: e.target.value }))}
+                className="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg px-2 py-1
+                           text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-orange-500
+                           focus:border-transparent transition-colors"
+              />
             </div>
           )}
 

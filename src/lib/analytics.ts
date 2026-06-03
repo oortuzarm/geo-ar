@@ -266,6 +266,15 @@ export interface DestinationContentTypeBucket {
   share:       number   // 0–100 (% of all contextual clicks)
 }
 
+export interface DestinationLocationBucket {
+  pointId:       string
+  pointName:     string
+  totalClicks:   number
+  topDest:       string | null   // destination_category or content_type fallback
+  topDestClicks: number
+  topDestShare:  number          // 0–100
+}
+
 export interface DestinationsData {
   totalClicks:      number
   contextualClicks: number   // clicks WITH context_metadata
@@ -274,6 +283,7 @@ export interface DestinationsData {
   topCategory:      string | null
   byContentType:    DestinationContentTypeBucket[]
   byCategory:       DestinationCategoryBucket[]
+  byLocation:       DestinationLocationBucket[]
 }
 
 export async function fetchProjectDestinations(

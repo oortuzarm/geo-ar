@@ -1387,6 +1387,11 @@ function fmtN(n: number): string {
       : String(n)
 }
 
+// Unified label for a destination key (can be a category or content_type).
+function destLabel(key: string): string {
+  return CATEGORY_LABELS[key] ?? CONTENT_TYPE_LABELS[key] ?? key
+}
+
 function deriveDestInsights(data: DestinationsData | null): string[] {
   if (!data || data.totalClicks === 0) return []
   const insights: string[] = []
@@ -1395,6 +1400,18 @@ function deriveDestInsights(data: DestinationsData | null): string[] {
   if (top) {
     const label = CATEGORY_LABELS[top.category] ?? top.category
     insights.push(`${label} es el destino más utilizado con ${top.share}% de los clics.`)
+  }
+
+  const topLoc = data.byLocation[0]
+  if (topLoc) {
+    insights.push(
+      `La ubicación "${topLoc.pointName}" concentra la mayor cantidad de clics hacia destinos (${topLoc.totalClicks}).`
+    )
+  }
+
+  if (topLoc?.topDest) {
+    const lbl = destLabel(topLoc.topDest)
+    insights.push(`El destino líder de "${topLoc.pointName}" es ${lbl}.`)
   }
 
   const mediaClicks = data.byContentType
@@ -1420,7 +1437,7 @@ function deriveDestInsights(data: DestinationsData | null): string[] {
     }
   }
 
-  return insights.slice(0, 3)
+  return insights.slice(0, 4)
 }
 
 function DestinacionesSection({
@@ -1554,6 +1571,58 @@ function DestinacionesSection({
                       />
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* ── Por ubicación ────────────────────────────────── */}
+              {data!.byLocation.length > 0 ? (
+                <div className="rounded-2xl border border-white/[0.06] bg-gray-900/40 px-5 py-5">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
+                    Destinos por ubicación
+                  </p>
+
+                  {/* Header row */}
+                  <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto] gap-x-4 mb-2 px-1">
+                    <span className="text-[10px] font-medium text-gray-600 uppercase tracking-wide">Ubicación</span>
+                    <span className="text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right w-12">Clics</span>
+                    <span className="text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right w-28">Destino líder</span>
+                    <span className="text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right w-16">Partic.</span>
+                  </div>
+
+                  <div className="divide-y divide-white/[0.04]">
+                    {data!.byLocation.map((loc) => (
+                      <div
+                        key={loc.pointId}
+                        className="grid sm:grid-cols-[1fr_auto_auto_auto] gap-x-4 gap-y-0.5 py-2.5 px-1
+                                   hover:bg-white/[0.02] transition-colors rounded-lg group"
+                      >
+                        <span className="text-sm text-gray-300 truncate group-hover:text-gray-100 transition-colors">
+                          {loc.pointName}
+                        </span>
+                        <span className="text-sm tabular-nums text-gray-400 text-right w-12">
+                          {loc.totalClicks}
+                        </span>
+                        <span className="text-sm text-right w-28 truncate">
+                          {loc.topDest ? (
+                            <span className="text-gray-300">
+                              {destLabel(loc.topDest)}
+                            </span>
+                          ) : (
+                            <span className="text-gray-600">—</span>
+                          )}
+                        </span>
+                        <span className="text-sm tabular-nums text-gray-500 text-right w-16">
+                          {loc.topDest ? `${loc.topDestShare}%` : '—'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-white/[0.06] bg-gray-900/40 px-5 py-8 text-center">
+                  <p className="text-xs text-gray-500">
+                    Sin datos por ubicación aún — aparecerán con los próximos clics.
+                  </p>
                 </div>
               )}
 

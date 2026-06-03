@@ -1652,7 +1652,10 @@ export default function PublicPage({
 
     if (!userLocation) {
       if (isOpen && point.lookiarUrl && (!point.contentType || point.contentType === 'url')) {
-        trackPointClick(id!, point.id)
+        trackPointClick(id!, point.id, {
+          contentType:         point.contentType ?? 'url',
+          destinationCategory: point.destinationCategory ?? null,
+        })
         window.location.href = point.lookiarUrl
         return
       }
@@ -1661,7 +1664,10 @@ export default function PublicPage({
     }
 
     setAccessError(null)
-    trackPointClick(id!, point.id)
+    trackPointClick(id!, point.id, {
+      contentType:         point.contentType ?? 'url',
+      destinationCategory: point.destinationCategory ?? null,
+    })
 
     console.log('[Access] → Iniciando acceso', {
       projectId: id,

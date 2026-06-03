@@ -55,19 +55,34 @@ function isClickOnCooldown(key: string): boolean {
 //     GET /api/geo_projects/:id/analytics_by_day
 //       → { data: [{ day: 0..6, count: number }] }  (0 = Sunday, matches JS getDay())
 
+// Context enrichment for point_click events (content type + destination category).
+// Uses plain strings to avoid importing GeoPoint domain types into this library.
+export interface ClickContext {
+  contentType?:         string
+  destinationCategory?: string | null
+}
+
 function postEvent(
   eventType: string,
   projectId: string,
-  pointId: string,
+  pointId:   string,
   location?: { latitude: number; longitude: number } | null,
+  context?:  ClickContext,
 ): void {
-  const url  = `${API_BASE}/api/analytics_events`
+  const url = `${API_BASE}/api/analytics_events`
+
+  // Build contextMetadata only when there is something worth storing.
+  const contextMetadata: Record<string, string> = {}
+  if (context?.contentType)         contextMetadata['content_type']         = context.contentType
+  if (context?.destinationCategory) contextMetadata['destination_category'] = context.destinationCategory
+
   const body = JSON.stringify({
     projectId,
     pointId,
     eventType,
     sessionId: getAnalyticsSessionId(),
     ...(location && { latitude: location.latitude, longitude: location.longitude }),
+    ...(Object.keys(contextMetadata).length > 0 && { contextMetadata }),
   })
 
   console.log(`[ANALYTICS_CLICK_SENT] eventType=${eventType} pointId=${pointId}`)
@@ -134,15 +149,22 @@ export function trackDwellCancelled(projectId: string, pointId: string): void {
  * Fires on every real click — not deduplicated across time.
  * Only suppresses clicks within a 500ms window to prevent accidental double-taps.
  * Call when the user taps "Ir a experiencia" / custom button text.
+ *
+ * Pass `context` to enrich the event with content type and destination category
+ * so Analytics → Destinations can be built from historical data.
  */
-export function trackPointClick(projectId: string, pointId: string): void {
+export function trackPointClick(
+  projectId: string,
+  pointId:   string,
+  context?:  ClickContext,
+): void {
   const key = `${projectId}:${pointId}`
   console.log(`[ANALYTICS_CLICK_ATTEMPT] pointId=${pointId} t=${Date.now()}`)
   if (isClickOnCooldown(key)) {
     console.log(`[ANALYTICS_CLICK_ATTEMPT] blocked — within 500ms cooldown`)
     return
   }
-  postEvent('point_click', projectId, pointId)
+  postEvent('point_click', projectId, pointId, undefined, context)
 }
 
 // ── Analytics fetch ────────────────────────────────────────────────────────

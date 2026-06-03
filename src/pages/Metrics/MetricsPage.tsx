@@ -1041,8 +1041,8 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
 
 // ── KPI card (LookiAR style) ──────────────────────────────────────────────────
 
-function KPICard({ label, value, sub, accent, className = '' }: {
-  label: string; value: string | number; sub?: string; accent?: boolean; className?: string
+function KPICard({ label, value, sub, accent, compact, className = '' }: {
+  label: string; value: string | number; sub?: string; accent?: boolean; compact?: boolean; className?: string
 }) {
   return (
     <div className={[
@@ -1056,9 +1056,13 @@ function KPICard({ label, value, sub, accent, className = '' }: {
       <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider font-medium leading-none">
         {label}
       </p>
-      <p className={`text-3xl sm:text-[2.625rem] font-bold tabular-nums leading-none break-all ${
-        accent ? 'text-brand-300' : 'text-gray-100'
-      }`}>
+      <p className={[
+        'font-bold',
+        compact
+          ? 'text-xl sm:text-2xl leading-snug line-clamp-2 break-words'
+          : 'text-3xl sm:text-[2.625rem] tabular-nums leading-none break-all',
+        accent ? 'text-brand-300' : 'text-gray-100',
+      ].join(' ')}>
         {value}
       </p>
       {sub && <p className="text-[10px] sm:text-[11px] text-gray-600 leading-snug">{sub}</p>}
@@ -1369,7 +1373,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   social:      'Red social',
   map:         'Mapa',
   coupon:      'Cupón',
-  custom:      'Personalizado',
+  custom:      'Sin categoría',
 }
 
 const CONTENT_TYPE_LABELS: Record<string, string> = {
@@ -1504,6 +1508,7 @@ function DestinacionesSection({
               }
               sub={topCat ? `${topCat.clicks} clics registrados` : 'sin datos aún'}
               accent={!!topCat}
+              compact
             />
             <KPICard
               label="Categorías"
@@ -1593,27 +1598,43 @@ function DestinacionesSection({
                     {data!.byLocation.map((loc) => (
                       <div
                         key={loc.pointId}
-                        className="grid sm:grid-cols-[1fr_auto_auto_auto] gap-x-4 gap-y-0.5 py-2.5 px-1
-                                   hover:bg-white/[0.02] transition-colors rounded-lg group"
+                        className="py-2.5 px-1 hover:bg-white/[0.02] transition-colors rounded-lg group"
                       >
-                        <span className="text-sm text-gray-300 truncate group-hover:text-gray-100 transition-colors">
-                          {loc.pointName}
-                        </span>
-                        <span className="text-sm tabular-nums text-gray-400 text-right w-12">
-                          {loc.totalClicks}
-                        </span>
-                        <span className="text-sm text-right w-28 truncate">
-                          {loc.topDest ? (
-                            <span className="text-gray-300">
-                              {destLabel(loc.topDest)}
-                            </span>
-                          ) : (
-                            <span className="text-gray-600">—</span>
-                          )}
-                        </span>
-                        <span className="text-sm tabular-nums text-gray-500 text-right w-16">
-                          {loc.topDest ? `${loc.topDestShare}%` : '—'}
-                        </span>
+                        {/* Mobile: name + compact data line */}
+                        <div className="sm:hidden">
+                          <p className="text-sm text-gray-300 truncate group-hover:text-gray-100 transition-colors">
+                            {loc.pointName}
+                          </p>
+                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                            <span className="text-xs tabular-nums text-gray-500">{loc.totalClicks} clics</span>
+                            {loc.topDest && (
+                              <>
+                                <span className="text-gray-700 text-xs">·</span>
+                                <span className="text-xs text-gray-400">{destLabel(loc.topDest)}</span>
+                                <span className="text-gray-700 text-xs">·</span>
+                                <span className="text-xs tabular-nums text-gray-500">{loc.topDestShare}%</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Desktop: grid columns */}
+                        <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto] gap-x-4 items-center">
+                          <span className="text-sm text-gray-300 truncate group-hover:text-gray-100 transition-colors">
+                            {loc.pointName}
+                          </span>
+                          <span className="text-sm tabular-nums text-gray-400 text-right w-12">
+                            {loc.totalClicks}
+                          </span>
+                          <span className="text-sm text-right w-28 truncate">
+                            {loc.topDest
+                              ? <span className="text-gray-300">{destLabel(loc.topDest)}</span>
+                              : <span className="text-gray-600">—</span>}
+                          </span>
+                          <span className="text-sm tabular-nums text-gray-500 text-right w-16">
+                            {loc.topDest ? `${loc.topDestShare}%` : '—'}
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>

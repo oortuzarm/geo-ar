@@ -196,7 +196,11 @@ export default function LiveVisitsPage() {
 
   // Hotspots: fetch when showHotspots is true, re-fetches on mode/point/date change.
   useEffect(() => {
-    const locationId = selectedPointId || points[0]?.id
+    const activePoints = points.filter(p => p.active)
+    // If the previously selected point is now hidden, fall back to the first visible one.
+    const locationId = (selectedPointId && activePoints.some(p => p.id === selectedPointId))
+      ? selectedPointId
+      : activePoints[0]?.id
     if (!showHotspots || !locationId) { setHotspots(null); return }
 
     let cancelled = false
@@ -224,16 +228,22 @@ export default function LiveVisitsPage() {
     )
   }
 
-  // Build per-point activeNow map from live API response.
+  // Visible points: exclude inactive (hidden) points from all UI surfaces.
+  const visiblePoints = points.filter(p => p.active)
+  const visibleIds    = new Set(visiblePoints.map(p => p.id))
+
+  // Build per-point activeNow map — restricted to visible points only.
   const activeNowMap: Record<string, number> = {}
-  liveData?.points.forEach((p) => { activeNowMap[p.id] = p.activeNow })
+  liveData?.points
+    .filter(p => visibleIds.has(p.id))
+    .forEach((p) => { activeNowMap[p.id] = p.activeNow })
 
   // Which data drives the map depends on the current mode.
   const mapActiveNow: Record<string, number> = intensityMode === 'live'
     ? activeNowMap
     : (historicalMap ?? {})
 
-  const ranked = points
+  const ranked = visiblePoints
     .map((p) => ({
       point:      p,
       people:     activeNowMap[p.id] ?? 0,
@@ -420,17 +430,17 @@ export default function LiveVisitsPage() {
           </div>
 
           {/* ── Hotspot controls (location selector + date range) ─────────── */}
-          {showHotspots && points.length > 0 && (
+          {showHotspots && visiblePoints.length > 0 && (
             <div className="space-y-3">
               {/* Location selector */}
-              {points.length > 1 && (
+              {visiblePoints.length > 1 && (
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wide flex-shrink-0">
                     Ubicación:
                   </span>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    {points.map((p) => {
-                      const active = (selectedPointId || points[0]?.id) === p.id
+                    {visiblePoints.map((p) => {
+                      const active = (selectedPointId || visiblePoints[0]?.id) === p.id
                       return (
                         <button
                           key={p.id}
@@ -481,13 +491,13 @@ export default function LiveVisitsPage() {
             </div>
           )}
 
-          {points.length > 0 ? (
+          {visiblePoints.length > 0 ? (
             <>
               {mapVisible && (
                 <>
                   <div className="relative rounded-2xl overflow-hidden border border-gray-800" style={{ height: '420px' }}>
                     <GpsIntensityMap
-                      points={points}
+                      points={visiblePoints}
                       activeNow={mapActiveNow}
                       showPoints={showGpsPoints}
                       showIntensity={showGpsIntensity}
@@ -685,10 +695,21 @@ export default function LiveVisitsPage() {
           ) : (
             <div className="rounded-2xl border border-gray-800 bg-gray-900/50 flex flex-col
                             items-center justify-center gap-3 py-20 text-center">
-              <p className="text-sm text-gray-600">No hay ubicaciones configuradas en tu workspace.</p>
-              <p className="text-xs text-gray-700">
-                Agrega zonas GPS para ver la intensidad de visitas.
-              </p>
+              {points.length > 0 ? (
+                <>
+                  <p className="text-sm text-gray-600">Todas las ubicaciones están ocultas.</p>
+                  <p className="text-xs text-gray-700">
+                    Activá al menos una ubicación en el editor para verla aquí.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-600">No hay ubicaciones configuradas en tu workspace.</p>
+                  <p className="text-xs text-gray-700">
+                    Agrega zonas GPS para ver la intensidad de visitas.
+                  </p>
+                </>
+              )}
               {editorUrl && (
                 <button
                   onClick={() => navigate(editorUrl)}
@@ -696,10 +717,21 @@ export default function LiveVisitsPage() {
                              bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
                              transition-all duration-150 shadow-sm"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Nueva ubicación
+                  {points.length > 0 ? (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Ir al editor
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Nueva ubicación
+                    </>
+                  )}
                 </button>
               )}
             </div>

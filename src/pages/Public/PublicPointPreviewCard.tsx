@@ -3,11 +3,12 @@ import { formatDistance } from '../../features/geolocation/haversine'
 import type { GeoPoint } from '../../types'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
 
-// Badge variants mirror the three possible access states visible from a glance.
-type StatusVariant = 'ok' | 'block' | 'neutral'
+// Badge variants mirror the four possible access states visible from a glance.
+type StatusVariant = 'ok' | 'warn' | 'block' | 'neutral'
 
 const BADGE: Record<StatusVariant, string> = {
   ok:      'bg-emerald-50 border-emerald-200 text-emerald-700',
+  warn:    'bg-amber-50 border-amber-200 text-amber-700',
   block:   'bg-red-50 border-red-200 text-red-700',
   neutral: 'bg-gray-100 border-gray-200 text-gray-600',
 }
@@ -60,7 +61,7 @@ export default function PublicPointPreviewCard({
       break
     case 'live-visits':
       label   = avail.liveVisitsLabel
-      variant = 'block'
+      variant = 'warn'
       break
   }
 

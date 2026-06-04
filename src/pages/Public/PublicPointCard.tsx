@@ -580,12 +580,18 @@ export default function PublicPointCard({
                   </svg>
                 }
                 label={avail.liveVisitsLabel}
-                variant={avail.liveVisitsAvailable ? 'ok' : 'block'}
+                variant={avail.liveVisitsAvailable ? 'ok' : 'warn'}
                 expandLabel={!avail.liveVisitsAvailable ? 'Ver detalle' : undefined}
-                detail={!avail.liveVisitsAvailable
-                  ? <p>Esta experiencia se activará cuando haya más personas presentes en el lugar.</p>
-                  : undefined
-                }
+                detail={!avail.liveVisitsAvailable ? (
+                  <p>
+                    {avail.liveVisitsRemaining === undefined
+                      ? 'Esta experiencia se activará cuando haya más personas presentes en el lugar.'
+                      : avail.liveVisitsRemaining === 1
+                        ? 'Falta 1 persona para activar esta experiencia.'
+                        : `Faltan ${avail.liveVisitsRemaining} personas para activar esta experiencia.`
+                    }
+                  </p>
+                ) : undefined}
               />
             )}
 

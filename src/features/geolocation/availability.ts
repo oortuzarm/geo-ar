@@ -75,6 +75,7 @@ export interface PointAvailability {
   liveVisitsLabel:     string
   liveVisitsCurrent:   number | undefined  // active people count (from heartbeat)
   liveVisitsMinimum:   number | undefined
+  liveVisitsRemaining: number | undefined  // max(0, minimum - current); undefined when current unknown
 }
 
 // ── Area check ────────────────────────────────────────────────────────────────
@@ -223,8 +224,9 @@ export function computePointAvailability(
   let liveVisitsActive    = false
   let liveVisitsAvailable = true
   let liveVisitsLabel     = ''
-  let liveVisitsCurrent: number | undefined
-  let liveVisitsMinimum: number | undefined
+  let liveVisitsCurrent:   number | undefined
+  let liveVisitsMinimum:   number | undefined
+  let liveVisitsRemaining: number | undefined
 
   if (av?.liveVisitsEnabled && av.liveVisitsMinimum !== undefined) {
     liveVisitsActive   = true
@@ -235,12 +237,15 @@ export function computePointAvailability(
       // Count not yet known — optimistic: don't block yet, label shows the requirement.
       liveVisitsAvailable = true
       liveVisitsLabel     = `Mínimo ${liveVisitsMinimum} persona${liveVisitsMinimum === 1 ? '' : 's'} en el área`
+      liveVisitsRemaining = undefined
     } else if (liveVisitsCount < liveVisitsMinimum) {
       liveVisitsAvailable = false
       liveVisitsLabel     = `Personas presentes: ${liveVisitsCount} / ${liveVisitsMinimum}`
+      liveVisitsRemaining = liveVisitsMinimum - liveVisitsCount
     } else {
       liveVisitsAvailable = true
       liveVisitsLabel     = `Personas presentes: ${liveVisitsCount} / ${liveVisitsMinimum}`
+      liveVisitsRemaining = 0
     }
   }
 
@@ -273,6 +278,6 @@ export function computePointAvailability(
     scheduleDays, scheduleStartTime, scheduleEndTime,
     quotaActive, quotaAvailable, quotaLabel, quotaRemaining, quotaTotal,
     liveVisitsActive, liveVisitsAvailable, liveVisitsLabel,
-    liveVisitsCurrent, liveVisitsMinimum,
+    liveVisitsCurrent, liveVisitsMinimum, liveVisitsRemaining,
   }
 }

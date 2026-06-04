@@ -3,8 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Spinner                    from '../../components/ui/Spinner'
 import { useGeoStore }            from '../../store/geoStore'
 import { ApiError }               from '../../lib/apiFetch'
-import { geoProjectsApi, geoPointsApi } from '../../services'
-import type { GeoProject, GeoPoint }    from '../../types'
+import { geoPointsApi }           from '../../services'
+import { useWorkspace }           from '../../hooks/useWorkspace'
+import type { GeoPoint }          from '../../types'
 import {
   getSmartLink,
   createSmartLink,
@@ -100,22 +101,18 @@ function SuccessScreen({ link, onViewList, onEdit }: {
         <p className="text-sm text-gray-400 mt-1">Ya podés usarlo en QR, WhatsApp, email y campañas.</p>
       </div>
 
-      {/* Public URL box */}
       <div className="bg-gray-800/60 border border-gray-700 rounded-xl px-4 py-3 space-y-2">
         <p className="text-[11px] text-gray-500 uppercase tracking-wide font-medium">URL pública</p>
         <p className="text-sm font-mono text-brand-400 break-all">{link.publicUrl}</p>
         <button
           onClick={handleCopy}
           className={`w-full py-2 rounded-lg text-sm font-semibold transition-all
-            ${copied
-              ? 'bg-emerald-600 text-white'
-              : 'bg-brand-600 hover:bg-brand-500 text-white'}`}
+            ${copied ? 'bg-emerald-600 text-white' : 'bg-brand-600 hover:bg-brand-500 text-white'}`}
         >
           {copied ? '✓ Copiado' : 'Copiar URL'}
         </button>
       </div>
 
-      {/* Actions */}
       <div className="flex flex-col gap-2">
         <button
           onClick={onEdit}
@@ -139,84 +136,81 @@ function SuccessScreen({ link, onViewList, onEdit }: {
 // ── Form page ─────────────────────────────────────────────────────────────────
 
 export default function SmartLinkFormPage() {
-  const { id }        = useParams<{ id: string }>()
-  const isEdit        = Boolean(id)
-  const navigate      = useNavigate()
-  const { addToast }  = useGeoStore()
+  const { id }       = useParams<{ id: string }>()
+  const isEdit       = Boolean(id)
+  const navigate     = useNavigate()
+  const { addToast } = useGeoStore()
 
-  // ── Form state ─────────────────────────────────────────────────────────────
-  const [name,           setName]           = useState('')
-  const [destinationUrl, setDestinationUrl] = useState('')
-  const [scopeType,      setScopeType]      = useState<'project' | 'geo_points'>('project')
-  const [slug,           setSlug]           = useState('')
+  // The workspace project is the single active project for this organization.
+  // Same pattern used by MetricsPage, LiveVisitsPage, SettingsPage, etc.
+  const { project: workspaceProject, loading: workspaceLoading } = useWorkspace()
+
+  // For edit mode, the Smart Link already has a fixed projectId.
+  // We store it after loading the existing link so GeoPoints load correctly
+  // even before the workspace finishes resolving.
+  const [editProjectId, setEditProjectId] = useState('')
+
+  // The effective project ID used for everything in this form.
+  // Create: workspace project (auto-resolved, never shown to user).
+  // Edit:   the Smart Link's own project (immutable from the UI).
+  const activeProjectId = isEdit ? editProjectId : (workspaceProject?.id ?? '')
+
+  // ── Form state ──────────────────────────────────────────────────────────────
+  const [name,             setName]             = useState('')
+  const [destinationUrl,   setDestinationUrl]   = useState('')
+  const [scopeType,        setScopeType]        = useState<'project' | 'geo_points'>('project')
+  const [slug,             setSlug]             = useState('')
   const [selectedPointIds, setSelectedPointIds] = useState<Set<string>>(new Set())
-  const [selectedProjectId, setSelectedProjectId] = useState('')
 
-  // ── Remote data ────────────────────────────────────────────────────────────
-  const [projects,     setProjects]     = useState<GeoProject[]>([])
-  const [points,       setPoints]       = useState<GeoPoint[]>([])
-  const [loadingInit,  setLoadingInit]  = useState(true)
-  const [loadingPts,   setLoadingPts]   = useState(false)
+  // ── Remote data ─────────────────────────────────────────────────────────────
+  const [points,      setPoints]      = useState<GeoPoint[]>([])
+  const [loadingInit, setLoadingInit] = useState(isEdit)
+  const [loadingPts,  setLoadingPts]  = useState(false)
 
-  // ── Submission ─────────────────────────────────────────────────────────────
-  const [submitting,   setSubmitting]   = useState(false)
-  const [formError,    setFormError]    = useState<string | null>(null)
-  const [createdLink,  setCreatedLink]  = useState<SmartLink | null>(null)
+  // ── Submission ──────────────────────────────────────────────────────────────
+  const [submitting,  setSubmitting]  = useState(false)
+  const [formError,   setFormError]   = useState<string | null>(null)
+  const [createdLink, setCreatedLink] = useState<SmartLink | null>(null)
 
-  // ── Validation errors ──────────────────────────────────────────────────────
+  // ── Validation errors ────────────────────────────────────────────────────────
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  // ── Load initial data ──────────────────────────────────────────────────────
+  // ── Load existing Smart Link (edit only) ─────────────────────────────────────
   useEffect(() => {
-    async function init() {
-      setLoadingInit(true)
-      try {
-        const [projectList, existingLink] = await Promise.all([
-          geoProjectsApi.listProjects(),
-          isEdit && id ? getSmartLink(id) : Promise.resolve(null),
-        ])
-        setProjects(projectList)
-
-        if (existingLink) {
-          setName(existingLink.name)
-          setDestinationUrl(existingLink.destinationUrl)
-          setScopeType(existingLink.scopeType)
-          setSlug(existingLink.slug)
-          setSelectedProjectId(existingLink.projectId)
-          setSelectedPointIds(new Set(existingLink.geoPointIds))
-        } else if (projectList.length > 0) {
-          setSelectedProjectId(projectList[0].id)
-        }
-      } catch {
-        setFormError('No se pudo cargar la información necesaria.')
-      } finally {
-        setLoadingInit(false)
-      }
-    }
-    void init()
+    if (!isEdit || !id) return
+    setLoadingInit(true)
+    getSmartLink(id)
+      .then((link) => {
+        setName(link.name)
+        setDestinationUrl(link.destinationUrl)
+        setScopeType(link.scopeType)
+        setSlug(link.slug)
+        setEditProjectId(link.projectId)
+        setSelectedPointIds(new Set(link.geoPointIds))
+      })
+      .catch(() => setFormError('No se pudo cargar el Smart Link.'))
+      .finally(() => setLoadingInit(false))
   }, [id, isEdit])
 
-  // ── Load GeoPoints when project changes ────────────────────────────────────
+  // ── Load GeoPoints when activeProjectId resolves ─────────────────────────────
   useEffect(() => {
-    if (!selectedProjectId) { setPoints([]); return }
+    if (!activeProjectId) { setPoints([]); return }
     let cancelled = false
     setLoadingPts(true)
-    geoPointsApi.listPoints(selectedProjectId)
+    geoPointsApi.listPoints(activeProjectId)
       .then((pts) => { if (!cancelled) setPoints(pts) })
       .catch(() => { if (!cancelled) setPoints([]) })
       .finally(() => { if (!cancelled) setLoadingPts(false) })
     return () => { cancelled = true }
-  }, [selectedProjectId])
+  }, [activeProjectId])
 
-  // ── Slug auto-fill from name (only when empty) ─────────────────────────────
+  // ── Slug auto-fill from name (only when empty on create) ─────────────────────
   function handleNameChange(value: string) {
     setName(value)
-    if (!isEdit && !slug) {
-      setSlug(slugify(value))
-    }
+    if (!isEdit && !slug) setSlug(slugify(value))
   }
 
-  // ── Toggle point selection ─────────────────────────────────────────────────
+  // ── Toggle GeoPoint selection ────────────────────────────────────────────────
   function togglePoint(ptId: string) {
     setSelectedPointIds((prev) => {
       const next = new Set(prev)
@@ -225,14 +219,15 @@ export default function SmartLinkFormPage() {
     })
   }
 
-  // ── Validate ───────────────────────────────────────────────────────────────
+  // ── Validate ─────────────────────────────────────────────────────────────────
   function validate(): boolean {
     const e: Record<string, string> = {}
-    if (!name.trim())            e.name = 'El nombre es obligatorio.'
-    if (!destinationUrl.trim())  e.destinationUrl = 'La URL destino es obligatoria.'
+    if (!name.trim())
+      e.name = 'El nombre es obligatorio.'
+    if (!destinationUrl.trim())
+      e.destinationUrl = 'La URL destino es obligatoria.'
     else if (!/^https?:\/\/.+/.test(destinationUrl))
       e.destinationUrl = 'La URL debe comenzar con http:// o https://'
-    if (!selectedProjectId)      e.project = 'Seleccioná un proyecto.'
     if (slug && !SLUG_RE.test(slug))
       e.slug = 'Solo letras minúsculas, números y guiones.'
     if (scopeType === 'geo_points' && selectedPointIds.size === 0)
@@ -241,7 +236,7 @@ export default function SmartLinkFormPage() {
     return Object.keys(e).length === 0
   }
 
-  // ── Submit ─────────────────────────────────────────────────────────────────
+  // ── Submit ────────────────────────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setFormError(null)
@@ -250,21 +245,20 @@ export default function SmartLinkFormPage() {
     setSubmitting(true)
     try {
       if (isEdit && id) {
-        const patch: Parameters<typeof updateSmartLink>[1] = {
+        await updateSmartLink(id, {
           name:            name.trim(),
           destination_url: destinationUrl.trim(),
           scope_type:      scopeType,
           ...(slug ? { slug } : {}),
           ...(scopeType === 'geo_points' ? { geo_point_ids: [...selectedPointIds] } : {}),
-        }
-        await updateSmartLink(id, patch)
+        })
         addToast('Smart Link actualizado', 'success')
         navigate('/app/smart-links')
       } else {
         const result = await createSmartLink({
           name:             name.trim(),
           destination_url:  destinationUrl.trim(),
-          project_id:       selectedProjectId,
+          project_id:       activeProjectId,  // workspace project, resolved automatically
           scope_type:       scopeType,
           destination_type: 'external_url',
           status:           'active',
@@ -289,7 +283,7 @@ export default function SmartLinkFormPage() {
     }
   }
 
-  // ── Success screen ─────────────────────────────────────────────────────────
+  // ── Success screen ────────────────────────────────────────────────────────────
   if (createdLink) {
     return (
       <div className="text-gray-100 min-h-full">
@@ -302,8 +296,8 @@ export default function SmartLinkFormPage() {
     )
   }
 
-  // ── Loading ────────────────────────────────────────────────────────────────
-  if (loadingInit) {
+  // ── Loading (workspace or edit fetch) ────────────────────────────────────────
+  if (workspaceLoading || loadingInit) {
     return (
       <div className="flex justify-center py-20">
         <Spinner size="lg" />
@@ -311,7 +305,7 @@ export default function SmartLinkFormPage() {
     )
   }
 
-  // ── Form ───────────────────────────────────────────────────────────────────
+  // ── Form ──────────────────────────────────────────────────────────────────────
   const title = isEdit ? 'Editar Smart Link' : 'Nuevo Smart Link'
 
   return (
@@ -378,25 +372,6 @@ export default function SmartLinkFormPage() {
             />
           </Field>
 
-          {/* Project selector */}
-          {!isEdit && (
-            <Field label="Proyecto" error={errors.project}>
-              <select
-                value={selectedProjectId}
-                onChange={(e) => { setSelectedProjectId(e.target.value); setSelectedPointIds(new Set()) }}
-                className={`bg-gray-800 border rounded-lg px-3 py-2.5 text-sm text-gray-100
-                           focus:outline-none focus:ring-2 focus:ring-brand-500
-                           focus:border-transparent transition-colors
-                           ${errors.project ? 'border-red-500' : 'border-gray-700 hover:border-gray-600'}`}
-              >
-                {projects.length === 0
-                  ? <option value="">Sin proyectos disponibles</option>
-                  : projects.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)
-                }
-              </select>
-            </Field>
-          )}
-
           {/* Scope */}
           <Field label="Dónde debe funcionar" error={errors.points}>
             <div className="grid grid-cols-2 gap-2">
@@ -424,9 +399,7 @@ export default function SmartLinkFormPage() {
                     <Spinner size="sm" /> Cargando ubicaciones…
                   </div>
                 ) : points.length === 0 ? (
-                  <p className="text-xs text-gray-600 py-2">
-                    {selectedProjectId ? 'Este proyecto no tiene ubicaciones.' : 'Seleccioná un proyecto primero.'}
-                  </p>
+                  <p className="text-xs text-gray-600 py-2">Este proyecto no tiene ubicaciones.</p>
                 ) : (
                   <>
                     <p className="text-[11px] text-gray-500">
@@ -484,27 +457,6 @@ export default function SmartLinkFormPage() {
               />
             </div>
           </Field>
-
-          {/* Status toggle (edit only) */}
-          {isEdit && (
-            <Field label="Estado">
-              <div className="flex gap-2">
-                {(['active', 'paused'] as const).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => {/* handled on save */ void 0}}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-gray-700 text-gray-400 cursor-default"
-                  >
-                    {s === 'active' ? '● Activo' : '● Pausado'}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[11px] text-gray-600">
-                Para cambiar el estado, usa el botón "Pausar / Activar" desde el listado.
-              </p>
-            </Field>
-          )}
 
           {/* Submit */}
           <div className="flex justify-end gap-3 pt-2">

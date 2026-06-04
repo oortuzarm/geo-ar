@@ -34,6 +34,7 @@ import CommunityPage            from './pages/Community/CommunityPage'
 import ProtectedRoute           from './components/auth/ProtectedRoute'
 import AdminRoute               from './components/auth/AdminRoute'
 import RootLayout               from './components/routing/RootLayout'
+import SmartLinkPublicPage      from './pages/SmartLink/SmartLinkPublicPage'
 
 // ── Auth pages (public — redirect to /app if already logged in) ───────────────
 
@@ -97,6 +98,21 @@ const protectedChildren = [
 ]
 
 // ── Landing-only router (ubyca.com, www.ubyca.com) ───────────────────────────
+// ── go.ubyca.com router ───────────────────────────────────────────────────────
+// Minimal public router — no auth, no studio, no nav.
+// Routes: /:organizationSlug/:smartLinkSlug → public smart link resolver.
+
+export const smartLinkRouter = createBrowserRouter([
+  {
+    path: '/:organizationSlug/:smartLinkSlug',
+    element: <SmartLinkPublicPage />,
+  },
+  {
+    path: '*',
+    element: <SmartLinkPublicPage />,  // renders 'not_found' for missing params
+  },
+])
+
 // LandingV2Page is now the official home. LandingPage kept at /landing-old.
 
 export const landingRouter = createBrowserRouter([

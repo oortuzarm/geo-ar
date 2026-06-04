@@ -3,6 +3,15 @@ import { apiFetch } from '../lib/apiFetch'
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
 const url  = (path: string) => `${BASE}${path}`
 
+// ── Public types (go.ubyca.com resolver) ─────────────────────────────────────
+
+export interface PublicSmartLink {
+  name:             string
+  slug:             string
+  organizationSlug: string
+  status:           'active' | 'paused' | 'archived'
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface SmartLink {
@@ -68,4 +77,15 @@ export function updateSmartLink(id: string, patch: UpdateSmartLinkPayload): Prom
 
 export function deleteSmartLink(id: string): Promise<void> {
   return apiFetch<void>(url(`/api/smart_links/${id}`), { method: 'DELETE' })
+}
+
+// ── Public resolver (no auth, used on go.ubyca.com) ──────────────────────────
+
+export function resolvePublicSmartLink(
+  organizationSlug: string,
+  slug: string,
+): Promise<PublicSmartLink> {
+  return apiFetch<PublicSmartLink>(
+    url(`/api/public/smart_links/${organizationSlug}/${slug}`)
+  )
 }

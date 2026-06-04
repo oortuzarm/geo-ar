@@ -1,4 +1,4 @@
-import { apiFetch } from '../lib/apiFetch'
+import { apiFetch, ApiError } from '../lib/apiFetch'
 
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
 const url  = (path: string) => `${BASE}${path}`
@@ -80,12 +80,26 @@ export function deleteSmartLink(id: string): Promise<void> {
 }
 
 // ── Public resolver (no auth, used on go.ubyca.com) ──────────────────────────
+//
+// Uses fetch directly with credentials: 'omit' — the backend CORS policy for
+// /api/public/smart_links/* sets Access-Control-Allow-Credentials: false, so
+// apiFetch (which always sends credentials: 'include') would be rejected.
+// All other Studio functions above use apiFetch normally.
 
-export function resolvePublicSmartLink(
+export async function resolvePublicSmartLink(
   organizationSlug: string,
   slug: string,
 ): Promise<PublicSmartLink> {
-  return apiFetch<PublicSmartLink>(
-    url(`/api/public/smart_links/${organizationSlug}/${slug}`)
+  const res = await fetch(
+    url(`/api/public/smart_links/${organizationSlug}/${slug}`),
+    {
+      credentials: 'omit',
+      headers: { 'Content-Type': 'application/json' },
+    },
   )
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new ApiError(res.status, body || res.statusText)
+  }
+  return res.json() as Promise<PublicSmartLink>
 }

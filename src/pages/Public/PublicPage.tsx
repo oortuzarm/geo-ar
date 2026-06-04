@@ -1353,7 +1353,8 @@ export default function PublicPage({
   useEffect(() => {
     if (!id) return // skip in prefetched preview mode (no project id)
     const sessionId = getLiveVisitSessionId()
-    const timer = setInterval(() => {
+
+    function heartbeatTick() {
       const loc   = userLocationRef.current
       const all   = pointsRef.current
       const active = all.filter((p) => p.active)
@@ -1410,7 +1411,12 @@ export default function PublicPage({
       }
 
       if (import.meta.env.DEV) console.groupEnd()
-    }, 15_000)
+    }
+
+    // Fire immediately so the live count is available as soon as location is known,
+    // then repeat every 15 seconds.
+    heartbeatTick()
+    const timer = setInterval(heartbeatTick, 15_000)
     return () => clearInterval(timer)
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 

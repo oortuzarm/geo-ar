@@ -2302,6 +2302,7 @@ export default function PublicPage({
           isEmbed={isEmbed}
           pointCreatedAt={(selectedPoint as { createdAt?: string }).createdAt ?? project?.createdAt}
           dwellProgress={getDwellProgress(selectedPoint.id, selectedPoint)}
+          liveVisitsCount={liveVisitCounts[selectedPoint.id]}
         />
       )}
 

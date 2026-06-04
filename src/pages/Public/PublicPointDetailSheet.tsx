@@ -22,13 +22,14 @@ interface PublicPointDetailSheetProps {
   isEmbed?:               boolean
   pointCreatedAt?:        string
   dwellProgress?:         DwellProgress
+  liveVisitsCount?:       number
 }
 
 export default function PublicPointDetailSheet({
   point, distance, userLocation, onClose, onActivate,
   isActivating, accessMessage, accessFallbackUrl,
   routeStatus, walkingDistanceMeters, walkingDurationSeconds, address,
-  isEmbed = false, pointCreatedAt, dwellProgress,
+  isEmbed = false, pointCreatedAt, dwellProgress, liveVisitsCount,
 }: PublicPointDetailSheetProps) {
   const galleryImages = getPointGalleryImages(point)
   const hasGallery    = galleryImages.length > 0
@@ -108,6 +109,7 @@ export default function PublicPointDetailSheet({
               address={address}
               pointCreatedAt={pointCreatedAt}
               dwellProgress={dwellProgress}
+              liveVisitsCount={liveVisitsCount}
             />
           </div>
         </div>

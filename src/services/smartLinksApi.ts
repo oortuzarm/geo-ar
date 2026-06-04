@@ -86,6 +86,46 @@ export function deleteSmartLink(id: string): Promise<void> {
 // apiFetch (which always sends credentials: 'include') would be rejected.
 // All other Studio functions above use apiFetch normally.
 
+export interface ValidateSmartLinkPayload {
+  latitude:              number
+  longitude:             number
+  session_id:            string
+  accuracy?:             number
+  dwell_elapsed_seconds?: number
+}
+
+export interface ValidateSmartLinkResult {
+  allowed:           boolean
+  destinationUrl:    string | null
+  matchedGeoPointId: string | null
+  reason:            string | null
+  message:           string | null
+  smartLink:         PublicSmartLink
+  availability:      Record<string, unknown>
+}
+
+// Public validate — credentials: 'omit' for the same CORS reason as resolve.
+export async function validatePublicSmartLink(
+  organizationSlug: string,
+  slug: string,
+  payload: ValidateSmartLinkPayload,
+): Promise<ValidateSmartLinkResult> {
+  const res = await fetch(
+    url(`/api/public/smart_links/${organizationSlug}/${slug}/validate`),
+    {
+      method: 'POST',
+      credentials: 'omit',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    },
+  )
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new ApiError(res.status, body || res.statusText)
+  }
+  return res.json() as Promise<ValidateSmartLinkResult>
+}
+
 export async function resolvePublicSmartLink(
   organizationSlug: string,
   slug: string,

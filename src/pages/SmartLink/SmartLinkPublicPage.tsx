@@ -1,27 +1,38 @@
-import { useEffect, useState } from 'react'
-import { useParams }           from 'react-router-dom'
-import { ApiError }            from '../../lib/apiFetch'
-import { getLiveVisitSessionId } from '../../utils/liveVisits'
+import { useEffect, useRef, useState } from 'react'
+import { useParams }                   from 'react-router-dom'
+import { ApiError }                    from '../../lib/apiFetch'
+import { useGeoStore }                 from '../../store/geoStore'
+import { useGeolocation, requestLocation } from '../../hooks/useGeolocation'
+import { sendHeartbeat }               from '../../services/liveVisitsApi'
+import { getLiveVisitSessionId }       from '../../utils/liveVisits'
 import {
   resolvePublicSmartLink,
   validatePublicSmartLink,
   type PublicSmartLink,
 } from '../../services/smartLinksApi'
 
-// ── Error types (resolution phase) ───────────────────────────────────────────
+// ── Resolution error types ────────────────────────────────────────────────────
 
 type ResolveError = 'not_found' | 'paused' | 'api_error'
 
 // ── Validation state machine ──────────────────────────────────────────────────
+//
+// Same design as /public:
+//   idle       → user hasn't tapped yet
+//   requesting → GPS prompt in progress (requestLocation called)
+//   validating → POST /validate in flight
+//   unlocked   → backend allowed, destinationUrl ready, heartbeat running
+//   blocked    → backend denied or GPS error, message shown
 
-type ValidationPhase =
+type ValidationState =
   | { phase: 'idle' }
-  | { phase: 'requesting' }              // waiting for GPS
-  | { phase: 'validating' }              // POST in flight
-  | { phase: 'blocked'; message: string }// backend rejected
-  | { phase: 'location_error' }          // GPS denied / unavailable
+  | { phase: 'requesting' }
+  | { phase: 'validating' }
+  | { phase: 'unlocked'; destinationUrl: string; matchedGeoPointId: string }
+  | { phase: 'blocked';  message: string }
+  | { phase: 'location_error' }
 
-// ── Layout wrapper ────────────────────────────────────────────────────────────
+// ── Layout ────────────────────────────────────────────────────────────────────
 
 function Screen({ children }: { children: React.ReactNode }) {
   return (
@@ -34,56 +45,36 @@ function Screen({ children }: { children: React.ReactNode }) {
   )
 }
 
-// ── Loading (resolution) ──────────────────────────────────────────────────────
+// ── Spinner inline ────────────────────────────────────────────────────────────
 
-function LoadingScreen() {
-  return (
-    <Screen>
-      <div className="space-y-3">
-        <p className="text-sm text-gray-400">Validando acceso…</p>
-        <div className="flex justify-center">
-          <span className="w-5 h-5 border-2 border-gray-600 border-t-gray-300 rounded-full animate-spin" />
-        </div>
-      </div>
-    </Screen>
-  )
+function Spin({ size = 'md' }: { size?: 'sm' | 'md' }) {
+  const cls = size === 'sm'
+    ? 'w-4 h-4 border-2 border-white/30 border-t-white'
+    : 'w-5 h-5 border-2 border-gray-600 border-t-gray-300'
+  return <span className={`${cls} rounded-full animate-spin inline-block`} />
 }
 
-// ── Resolve error screens ─────────────────────────────────────────────────────
+// ── Resolve error screen ──────────────────────────────────────────────────────
 
 function ResolveErrorScreen({ type, onRetry }: { type: ResolveError; onRetry?: () => void }) {
-  const config = {
-    not_found: {
-      icon: '🔗',
-      title: 'Smart Link no encontrado',
-      description: 'La URL solicitada no existe o fue eliminada.',
-    },
-    paused: {
-      icon: '⏸',
-      title: 'Smart Link no disponible',
-      description: 'Este Smart Link se encuentra desactivado.',
-    },
-    api_error: {
-      icon: '⚠️',
-      title: 'No fue posible cargar este Smart Link',
-      description: 'Ocurrió un error al conectar con el servidor.',
-    },
+  const cfg = {
+    not_found: { icon: '🔗', title: 'Smart Link no encontrado',           desc: 'La URL solicitada no existe o fue eliminada.'                    },
+    paused:    { icon: '⏸',  title: 'Smart Link no disponible',           desc: 'Este Smart Link se encuentra desactivado.'                       },
+    api_error: { icon: '⚠️',  title: 'No fue posible cargar este Smart Link', desc: 'Ocurrió un error al conectar con el servidor.'                },
   }[type]
 
   return (
     <Screen>
       <div className="space-y-4">
-        <span className="text-4xl">{config.icon}</span>
+        <span className="text-4xl">{cfg.icon}</span>
         <div className="space-y-2">
-          <h1 className="text-lg font-semibold text-gray-100">{config.title}</h1>
-          <p className="text-sm text-gray-500 leading-relaxed">{config.description}</p>
+          <h1 className="text-lg font-semibold text-gray-100">{cfg.title}</h1>
+          <p className="text-sm text-gray-500 leading-relaxed">{cfg.desc}</p>
         </div>
         {type === 'api_error' && onRetry && (
-          <button
-            onClick={onRetry}
+          <button onClick={onRetry}
             className="mt-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-sm
-                       font-semibold rounded-xl transition-all active:scale-[0.98]"
-          >
+                       font-semibold rounded-xl transition-all active:scale-[0.98]">
             Reintentar
           </button>
         )}
@@ -92,36 +83,35 @@ function ResolveErrorScreen({ type, onRetry }: { type: ResolveError; onRetry?: (
   )
 }
 
-// ── Resolved screen (with validation flow) ────────────────────────────────────
+// ── Main experience screen ────────────────────────────────────────────────────
+//
+// Renders the Smart Link identity + the correct UI for each validation phase.
 
-function ResolvedScreen({
-  smartLink,
-  validation,
-  onContinue,
+function ExperienceScreen({
+  smartLink, validation, onContinue,
 }: {
   smartLink:  PublicSmartLink
-  validation: ValidationPhase
+  validation: ValidationState
   onContinue: () => void
 }) {
   const busy = validation.phase === 'requesting' || validation.phase === 'validating'
 
-  // GPS denied
+  // ── GPS denied ─────────────────────────────────────────────────────────────
   if (validation.phase === 'location_error') {
     return (
       <Screen>
         <div className="space-y-4">
           <span className="text-4xl">📍</span>
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold text-gray-100">No pudimos obtener tu ubicación</h2>
+            <h2 className="text-base font-semibold text-gray-100">{smartLink.name}</h2>
+            <h3 className="text-sm font-medium text-gray-300">No pudimos obtener tu ubicación</h3>
             <p className="text-sm text-gray-500 leading-relaxed">
               Debes permitir el acceso a tu ubicación para continuar.
             </p>
           </div>
-          <button
-            onClick={onContinue}
+          <button onClick={onContinue}
             className="w-full py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold
-                       rounded-xl text-sm transition-all active:scale-[0.98]"
-          >
+                       rounded-xl text-sm transition-all active:scale-[0.98]">
             Reintentar
           </button>
         </div>
@@ -129,27 +119,25 @@ function ResolvedScreen({
     )
   }
 
-  // Backend rejected
+  // ── Backend denied ─────────────────────────────────────────────────────────
   if (validation.phase === 'blocked') {
     return (
       <Screen>
-        <div className="space-y-4">
-          <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20
-                          flex items-center justify-center mx-auto">
-            <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-            </svg>
-          </div>
-          <div className="space-y-2">
+        <div className="space-y-5">
+          <div className="space-y-1.5">
             <h2 className="text-base font-semibold text-gray-100">{smartLink.name}</h2>
-            <p className="text-sm text-gray-400 leading-relaxed">{validation.message}</p>
+            {/* Availability status chip — reuses /public language */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border
+                            bg-amber-500/10 border-amber-500/20 text-amber-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+              <span className="text-xs font-medium">No disponible</span>
+            </div>
           </div>
-          <button
-            onClick={onContinue}
+          {/* Message from backend — same text /public shows */}
+          <p className="text-sm text-gray-400 leading-relaxed">{validation.message}</p>
+          <button onClick={onContinue}
             className="w-full py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold
-                       rounded-xl text-sm transition-all active:scale-[0.98]"
-          >
+                       rounded-xl text-sm transition-all active:scale-[0.98]">
             Reintentar
           </button>
         </div>
@@ -157,7 +145,46 @@ function ResolvedScreen({
     )
   }
 
-  // Idle / requesting / validating
+  // ── Unlocked — show "Abrir experiencia" ────────────────────────────────────
+  //
+  // User stays on go.ubyca.com; heartbeat keeps running in background.
+  // window.open keeps go.ubyca.com alive so GPS tracking continues.
+  if (validation.phase === 'unlocked') {
+    return (
+      <Screen>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20
+                            flex items-center justify-center mx-auto">
+              <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h1 className="text-xl font-bold text-gray-100">{smartLink.name}</h1>
+            {/* Availability status chip */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border
+                            bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+              <span className="text-xs font-medium">Disponible</span>
+            </div>
+          </div>
+          {/* Explicit user action — never automatic redirect */}
+          <button
+            onClick={() => window.open(validation.destinationUrl, '_blank', 'noopener,noreferrer')}
+            className="w-full py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold
+                       rounded-xl text-sm transition-all active:scale-[0.98]
+                       shadow-lg shadow-brand-900/50">
+            Abrir experiencia →
+          </button>
+          <p className="text-xs text-gray-600">
+            Tu posición sigue siendo monitoreada mientras permanezcas en esta página.
+          </p>
+        </div>
+      </Screen>
+    )
+  }
+
+  // ── Idle / requesting / validating ─────────────────────────────────────────
   return (
     <Screen>
       <div className="space-y-6">
@@ -182,11 +209,8 @@ function ResolvedScreen({
           className="w-full py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold
                      rounded-xl text-sm transition-all active:scale-[0.98]
                      disabled:opacity-70 disabled:cursor-not-allowed
-                     shadow-lg shadow-brand-900/50 flex items-center justify-center gap-2"
-        >
-          {busy && (
-            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          )}
+                     shadow-lg shadow-brand-900/50 flex items-center justify-center gap-2">
+          {busy && <Spin size="sm" />}
           {busy ? 'Validando ubicación…' : 'Continuar →'}
         </button>
       </div>
@@ -202,15 +226,22 @@ export default function SmartLinkPublicPage() {
     smartLinkSlug:    string
   }>()
 
-  // Resolution phase
+  // ── GPS — same pattern as /public ─────────────────────────────────────────
+  // userLocation lives in geoStore so it's shared across the component tree.
+  // locationActive gates watchPosition — only starts after the user grants GPS.
+  const { userLocation, setUserLocation } = useGeoStore()
+  const [locationActive, setLocationActive] = useState(false)
+  useGeolocation(locationActive)
+
+  // Keep a ref so the heartbeat interval always reads the latest coords without
+  // restarting the interval on every GPS update — same pattern as PublicPage.
+  const locationRef = useRef(userLocation)
+  useEffect(() => { locationRef.current = userLocation }, [userLocation])
+
+  // ── Resolution phase ───────────────────────────────────────────────────────
   const [loading,      setLoading]      = useState(true)
   const [smartLink,    setSmartLink]    = useState<PublicSmartLink | null>(null)
   const [resolveError, setResolveError] = useState<ResolveError | null>(null)
-
-  // Validation phase
-  const [validation, setValidation] = useState<ValidationPhase>({ phase: 'idle' })
-
-  // ── Resolve Smart Link on mount ───────────────────────────────────────────
 
   function resolve() {
     setLoading(true)
@@ -233,47 +264,80 @@ export default function SmartLinkPublicPage() {
   }
 
   useEffect(() => {
-    if (organizationSlug && smartLinkSlug) {
-      resolve()
-    } else {
-      setResolveError('not_found')
-      setLoading(false)
-    }
+    if (organizationSlug && smartLinkSlug) resolve()
+    else { setResolveError('not_found'); setLoading(false) }
   }, [organizationSlug, smartLinkSlug]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Validation on "Continuar" ─────────────────────────────────────────────
+  // ── Validation state ───────────────────────────────────────────────────────
+  const [validation, setValidation] = useState<ValidationState>({ phase: 'idle' })
 
+  // ── Heartbeat — same mechanism as /public ─────────────────────────────────
+  // Starts once matchedGeoPointId is known (after successful validate).
+  // Runs every 5 seconds, same interval as PublicPage.
+  // Feeds geo_point_live_visits → Live Visits → Intensidad GPS → Zonas Calientes.
+  useEffect(() => {
+    if (validation.phase !== 'unlocked') return
+    const { matchedGeoPointId } = validation
+    const sessionId = getLiveVisitSessionId()
+
+    function heartbeatTick() {
+      const loc = locationRef.current
+      if (!loc) return
+      sendHeartbeat(matchedGeoPointId, {
+        session_id: sessionId,
+        lat:        loc.latitude,
+        lng:        loc.longitude,
+        accuracy:   loc.accuracy,
+      })
+    }
+
+    heartbeatTick()
+    const timer = setInterval(heartbeatTick, 5_000)
+    return () => clearInterval(timer)
+  }, [validation.phase === 'unlocked' ? validation.matchedGeoPointId : null]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Continuar handler ──────────────────────────────────────────────────────
   async function handleContinue() {
     setValidation({ phase: 'requesting' })
 
-    // Step 1 — get GPS position
-    let position: GeolocationPosition
-    try {
-      position = await new Promise<GeolocationPosition>((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 15_000,
-          maximumAge: 0,
+    // Step 1 — GPS (same as /public: getCurrentPosition first time, then watch)
+    if (!userLocation) {
+      await new Promise<void>((resolve) => {
+        requestLocation((loc, status) => {
+          setUserLocation(loc, status)
+          if (loc) {
+            setLocationActive(true)  // start watchPosition
+            locationRef.current = loc
+          }
+          resolve()
         })
-      )
-    } catch {
+      })
+    }
+
+    const loc = locationRef.current
+    if (!loc) {
       setValidation({ phase: 'location_error' })
       return
     }
 
-    // Step 2 — send to backend
+    // Step 2 — POST /validate (backend owns all validation logic)
     setValidation({ phase: 'validating' })
     try {
       const result = await validatePublicSmartLink(organizationSlug, smartLinkSlug, {
-        latitude:   position.coords.latitude,
-        longitude:  position.coords.longitude,
+        latitude:   loc.latitude,
+        longitude:  loc.longitude,
         session_id: getLiveVisitSessionId(),
-        accuracy:   position.coords.accuracy,
+        accuracy:   loc.accuracy,
       })
 
-      if (result.allowed && result.destinationUrl) {
-        // Backend-provided URL — never reconstructed on the client
-        window.location.href = result.destinationUrl
+      if (result.allowed && result.destinationUrl && result.matchedGeoPointId) {
+        // Activate GPS watch now that we have an area to track
+        setLocationActive(true)
+        setValidation({
+          phase:             'unlocked',
+          destinationUrl:    result.destinationUrl,
+          matchedGeoPointId: result.matchedGeoPointId,
+        })
       } else {
         setValidation({
           phase:   'blocked',
@@ -286,22 +350,36 @@ export default function SmartLinkPublicPage() {
         try {
           const body = JSON.parse(err.message) as { message?: string; error?: string }
           msg = body.message || body.error || msg
-        } catch { /* keep default msg */ }
+        } catch { /* keep default */ }
       }
       setValidation({ phase: 'blocked', message: msg })
     }
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ── Render ─────────────────────────────────────────────────────────────────
 
-  if (loading)       return <LoadingScreen />
-  if (resolveError)  return <ResolveErrorScreen type={resolveError} onRetry={resolve} />
-  if (smartLink)     return (
-    <ResolvedScreen
-      smartLink={smartLink}
-      validation={validation}
-      onContinue={handleContinue}
-    />
-  )
+  if (loading) {
+    return (
+      <Screen>
+        <div className="space-y-3">
+          <p className="text-sm text-gray-400">Validando acceso…</p>
+          <div className="flex justify-center"><Spin /></div>
+        </div>
+      </Screen>
+    )
+  }
+
+  if (resolveError) return <ResolveErrorScreen type={resolveError} onRetry={resolve} />
+
+  if (smartLink) {
+    return (
+      <ExperienceScreen
+        smartLink={smartLink}
+        validation={validation}
+        onContinue={handleContinue}
+      />
+    )
+  }
+
   return <ResolveErrorScreen type="api_error" onRetry={resolve} />
 }

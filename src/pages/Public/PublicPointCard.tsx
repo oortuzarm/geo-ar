@@ -581,6 +581,11 @@ export default function PublicPointCard({
                 }
                 label={avail.liveVisitsLabel}
                 variant={avail.liveVisitsAvailable ? 'ok' : 'block'}
+                expandLabel={!avail.liveVisitsAvailable ? 'Ver detalle' : undefined}
+                detail={!avail.liveVisitsAvailable
+                  ? <p>Esta experiencia se activará cuando haya más personas presentes en el lugar.</p>
+                  : undefined
+                }
               />
             )}
 

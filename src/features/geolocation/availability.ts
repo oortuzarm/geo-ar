@@ -232,15 +232,15 @@ export function computePointAvailability(
     liveVisitsCurrent  = liveVisitsCount
 
     if (liveVisitsCount === undefined) {
-      // Count not yet known — optimistic: don't block yet, label shows pending.
+      // Count not yet known — optimistic: don't block yet, label shows the requirement.
       liveVisitsAvailable = true
-      liveVisitsLabel     = `Mínimo ${liveVisitsMinimum} personas requeridas`
+      liveVisitsLabel     = `Mínimo ${liveVisitsMinimum} persona${liveVisitsMinimum === 1 ? '' : 's'} en el área`
     } else if (liveVisitsCount < liveVisitsMinimum) {
       liveVisitsAvailable = false
-      liveVisitsLabel     = `${liveVisitsCount} / ${liveVisitsMinimum} personas presentes`
+      liveVisitsLabel     = `Personas presentes: ${liveVisitsCount} / ${liveVisitsMinimum}`
     } else {
       liveVisitsAvailable = true
-      liveVisitsLabel     = `${liveVisitsCount} / ${liveVisitsMinimum} personas presentes`
+      liveVisitsLabel     = `Personas presentes: ${liveVisitsCount} / ${liveVisitsMinimum}`
     }
   }
 

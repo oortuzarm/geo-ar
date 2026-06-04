@@ -13,20 +13,21 @@ const BADGE: Record<StatusVariant, string> = {
 }
 
 interface PublicPointPreviewCardProps {
-  point:         GeoPoint
-  distance:      number | null
+  point:            GeoPoint
+  distance:         number | null
   /** Raw user coordinates — required for polygon-mode area checks. */
-  userLocation?: { latitude: number; longitude: number } | null
-  onViewDetail:  () => void
-  onClose:       () => void
+  userLocation?:    { latitude: number; longitude: number } | null
+  onViewDetail:     () => void
+  onClose:          () => void
+  liveVisitsCount?: number
 }
 
 export default function PublicPointPreviewCard({
-  point, distance, userLocation, onViewDetail, onClose,
+  point, distance, userLocation, onViewDetail, onClose, liveVisitsCount,
 }: PublicPointPreviewCardProps) {
   // Derived from the same computePointAvailability used by PublicPointCard —
   // both components always agree on the access state.
-  const avail = computePointAvailability(point, distance, userLocation)
+  const avail = computePointAvailability(point, distance, userLocation, liveVisitsCount)
 
   // Map the blocked reason to a compact badge label + colour.
   let label:   string

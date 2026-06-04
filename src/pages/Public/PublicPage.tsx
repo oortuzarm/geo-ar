@@ -2278,6 +2278,7 @@ export default function PublicPage({
             userLocation={userLocation}
             onViewDetail={handleViewDetail}
             onClose={handleExitSelectedPoint}
+            liveVisitsCount={liveVisitCounts[selectedPoint.id]}
           />
         </div>
       )}

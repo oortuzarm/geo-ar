@@ -3,6 +3,7 @@ import type { GeoProject, GeoPoint, AccessResponse } from '../types'
 import { apiFetch, ApiError } from '../lib/apiFetch'
 import { LocalGeoRepository } from './LocalGeoRepository'
 import { normalizeGeoPoint } from '../lib/normalizeGeoPoint'
+import { getLiveVisitSessionId } from '../utils/liveVisits'
 
 // Rails may return snake_case keys. Map the ones that would otherwise be silently undefined.
 function normalizeProject(raw: Record<string, unknown>): GeoProject {
@@ -187,9 +188,13 @@ export class RemoteGeoRepository implements IGeoRepository {
     const localTime = `${hh}:${mm}`
     const localDay  = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][now.getDay()]
 
+    // session_id is sent so the backend can count this user in geo_point_live_visits
+    // when validating live_visits_minimum.
+    const sessionId = getLiveVisitSessionId()
+
     return apiFetch<AccessResponse>(
       this.url(`/api/public/geo_projects/${projectId}/geo_points/${pointId}/access`),
-      { method: 'POST', body: JSON.stringify({ latitude: lat, longitude: lng, localTime, localDay, accessMode }) },
+      { method: 'POST', body: JSON.stringify({ latitude: lat, longitude: lng, localTime, localDay, accessMode, session_id: sessionId }) },
     )
   }
 

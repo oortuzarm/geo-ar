@@ -36,7 +36,7 @@ export function formatDays(days: string[]): string {
 
 // ── Public types ──────────────────────────────────────────────────────────────
 
-export type BlockedReason = 'no-location' | 'radius' | 'schedule' | 'quota' | null
+export type BlockedReason = 'no-location' | 'radius' | 'schedule' | 'quota' | 'live-visits' | null
 
 export interface PointAvailability {
   // ── Core access gate — the ONLY canAccess flag any component should use ──
@@ -68,6 +68,13 @@ export interface PointAvailability {
   quotaLabel:     string
   quotaRemaining: number | undefined
   quotaTotal:     number | undefined
+
+  // ── Live visits ───────────────────────────────────────────────────────────
+  liveVisitsActive:    boolean
+  liveVisitsAvailable: boolean
+  liveVisitsLabel:     string
+  liveVisitsCurrent:   number | undefined  // active people count (from heartbeat)
+  liveVisitsMinimum:   number | undefined
 }
 
 // ── Area check ────────────────────────────────────────────────────────────────
@@ -112,6 +119,7 @@ export function computePointAvailability(
   point: GeoPoint,
   distance: number | null,
   userLocation?: { latitude: number; longitude: number } | null,
+  liveVisitsCount?: number,
 ): PointAvailability {
 
   // ── Area check (radius or polygon) ────────────────────────────────────────
@@ -211,8 +219,33 @@ export function computePointAvailability(
     }
   }
 
+  // ── Live visits ───────────────────────────────────────────────────────────
+  let liveVisitsActive    = false
+  let liveVisitsAvailable = true
+  let liveVisitsLabel     = ''
+  let liveVisitsCurrent: number | undefined
+  let liveVisitsMinimum: number | undefined
+
+  if (av?.liveVisitsEnabled && av.liveVisitsMinimum !== undefined) {
+    liveVisitsActive   = true
+    liveVisitsMinimum  = av.liveVisitsMinimum
+    liveVisitsCurrent  = liveVisitsCount
+
+    if (liveVisitsCount === undefined) {
+      // Count not yet known — optimistic: don't block yet, label shows pending.
+      liveVisitsAvailable = true
+      liveVisitsLabel     = `Mínimo ${liveVisitsMinimum} personas requeridas`
+    } else if (liveVisitsCount < liveVisitsMinimum) {
+      liveVisitsAvailable = false
+      liveVisitsLabel     = `${liveVisitsCount} / ${liveVisitsMinimum} personas presentes`
+    } else {
+      liveVisitsAvailable = true
+      liveVisitsLabel     = `${liveVisitsCount} / ${liveVisitsMinimum} personas presentes`
+    }
+  }
+
   // ── Composite gate ────────────────────────────────────────────────────────
-  // All three conditions must hold. Checked in priority order so blockedReason
+  // All conditions must hold. Checked in priority order so blockedReason
   // reflects the outermost blocker (the one the user needs to fix first).
   //
   // For polygon mode: no location → no-location. Outside polygon → 'radius'
@@ -223,13 +256,15 @@ export function computePointAvailability(
     hasLocation &&
     insideArea &&
     scheduleAvailable &&
-    quotaAvailable
+    quotaAvailable &&
+    liveVisitsAvailable
 
   let blockedReason: BlockedReason = null
-  if (!hasLocation)          blockedReason = 'no-location'
-  else if (!insideArea)      blockedReason = 'radius'
-  else if (!scheduleAvailable) blockedReason = 'schedule'
-  else if (!quotaAvailable)    blockedReason = 'quota'
+  if (!hasLocation)             blockedReason = 'no-location'
+  else if (!insideArea)         blockedReason = 'radius'
+  else if (!scheduleAvailable)  blockedReason = 'schedule'
+  else if (!quotaAvailable)     blockedReason = 'quota'
+  else if (!liveVisitsAvailable) blockedReason = 'live-visits'
 
   return {
     canAccess, blockedReason,
@@ -237,5 +272,7 @@ export function computePointAvailability(
     scheduleActive, scheduleAvailable, scheduleLabel,
     scheduleDays, scheduleStartTime, scheduleEndTime,
     quotaActive, quotaAvailable, quotaLabel, quotaRemaining, quotaTotal,
+    liveVisitsActive, liveVisitsAvailable, liveVisitsLabel,
+    liveVisitsCurrent, liveVisitsMinimum,
   }
 }

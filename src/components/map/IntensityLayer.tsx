@@ -125,9 +125,10 @@ interface Props {
   points:    GeoPoint[]
   activeNow: Record<string, number>
   mode?:     'live' | 'historical'
+  pane?:     string
 }
 
-export default function IntensityLayer({ points, activeNow, mode = 'live' }: Props) {
+export default function IntensityLayer({ points, activeNow, mode = 'live', pane }: Props) {
   const palette = mode === 'historical' ? HISTORICAL : LIVE
 
   const historicalLevelMap = mode === 'historical'
@@ -181,6 +182,7 @@ export default function IntensityLayer({ points, activeNow, mode = 'live' }: Pro
               polygon={point.activationPolygon!}
               pathOptions={style}
               interactive={false}
+              pane={pane}
             />
           )
         }
@@ -198,6 +200,7 @@ export default function IntensityLayer({ points, activeNow, mode = 'live' }: Pro
             center={[point.latitude, point.longitude]}
             radius={Math.min(point.activationRadius, 1000)}
             pathOptions={{ ...style, interactive: false }}
+            pane={pane}
           />
         )
       })}

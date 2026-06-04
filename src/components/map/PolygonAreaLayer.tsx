@@ -30,6 +30,8 @@ interface PolygonAreaLayerProps {
    * so clicks pass through to the underlying map and markers.
    */
   interactive?:  boolean
+  /** Leaflet pane name. Omit to use the default overlayPane. */
+  pane?:         string
 }
 
 const STYLE_DEFAULT: L.PathOptions = {
@@ -45,6 +47,7 @@ export default function PolygonAreaLayer({
   onClick,
   pathOptions,
   interactive = true,
+  pane,
 }: PolygonAreaLayerProps) {
   const map        = useMap()
   const layerRef   = useRef<L.GeoJSON | null>(null)
@@ -55,7 +58,7 @@ export default function PolygonAreaLayer({
 
   useEffect(() => {
     const style = pathOptions ?? STYLE_DEFAULT
-    const layer = L.geoJSON(polygon, { style, interactive })
+    const layer = L.geoJSON(polygon, { style, interactive, ...(pane ? { pane } : {}) })
 
     if (interactive && onClick !== undefined) {
       layer.on('click', (e: L.LeafletMouseEvent) => {
@@ -73,7 +76,7 @@ export default function PolygonAreaLayer({
       layer.remove()
       layerRef.current = null
     }
-  }, [polygon, interactive, map]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [polygon, interactive, pane, map]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Update style imperatively when selection / dim state changes ──────────
   // Avoids destroying and recreating the layer on every click.

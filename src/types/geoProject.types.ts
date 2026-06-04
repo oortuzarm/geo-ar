@@ -39,6 +39,8 @@ export interface GeoPointAvailability {
   quotaEnabled?: boolean
   quotaLimit?: number
   quotaUsed?: number          // reserved for future backend tracking
+  liveVisitsEnabled?: boolean
+  liveVisitsMinimum?: number  // minimum active people required to unlock
 }
 
 // ── Content types ─────────────────────────────────────────────────────────────

@@ -43,13 +43,17 @@ export function fetchHistoricalIntensity(projectId: string): Promise<HistoricalI
   )
 }
 
+export interface HeartbeatResponse {
+  active_now?: number  // current active visitor count for this point
+}
+
 export function sendHeartbeat(
   geoPointId: string,
   payload: { session_id: string; lat: number; lng: number; accuracy: number },
-): Promise<void> {
-  if (!API_BASE) return Promise.resolve()
-  return apiFetch<void>(
+): Promise<HeartbeatResponse> {
+  if (!API_BASE) return Promise.resolve({})
+  return apiFetch<HeartbeatResponse>(
     `${API_BASE}/api/public/geo_points/${geoPointId}/live_visit`,
     { method: 'POST', body: JSON.stringify(payload) },
-  )
+  ).catch(() => ({}))
 }

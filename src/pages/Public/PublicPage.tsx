@@ -150,10 +150,11 @@ const LOAD_TIMEOUT_MS = 10_000
 type LocationFilter = 'all' | 'available'
 
 /**
- * Returns true when a point is available right now based on schedule and quota rules.
- * Does NOT consider geofence / GPS distance — that is checked at activation time.
+ * Returns true when a point is available right now based on schedule, quota and live
+ * visits rules. Does NOT consider geofence / GPS distance — checked at activation time.
+ * liveVisitCounts: current active visitor counts from heartbeat responses.
  */
-function isPointAvailableNow(point: GeoPoint): boolean {
+function isPointAvailableNow(point: GeoPoint, liveVisitCounts: Record<string, number>): boolean {
   const avail = point.availability
   if (!avail) return true
 
@@ -171,6 +172,12 @@ function isPointAvailableNow(point: GeoPoint): boolean {
 
   if (avail.quotaEnabled && avail.quotaLimit != null) {
     if ((avail.quotaUsed ?? 0) >= avail.quotaLimit) return false
+  }
+
+  if (avail.liveVisitsEnabled && avail.liveVisitsMinimum != null) {
+    const count = liveVisitCounts[point.id]
+    // If count is not yet known, don't block the point from display.
+    if (count !== undefined && count < avail.liveVisitsMinimum) return false
   }
 
   return true
@@ -828,6 +835,8 @@ export default function PublicPage({
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null)
   const [distances, setDistances] = useState<Record<string, number>>({})
   const [addresses, setAddresses] = useState<Record<string, string>>({})
+  // Active visitor count per point, updated on each heartbeat response.
+  const [liveVisitCounts, setLiveVisitCounts] = useState<Record<string, number>>({})
   const [activatingPointId, setActivatingPointId] = useState<string | null>(null)
   const [accessError, setAccessError] = useState<{
     pointId: string
@@ -1388,7 +1397,11 @@ export default function PublicPage({
           if (import.meta.env.DEV) {
             console.log('  → enviando heartbeat | geoPointId:', pt.id, '| payload:', payload)
           }
-          sendHeartbeat(pt.id, payload).catch(() => {})
+          sendHeartbeat(pt.id, payload).then((res) => {
+            if (res?.active_now !== undefined) {
+              setLiveVisitCounts((prev) => ({ ...prev, [pt.id]: res.active_now! }))
+            }
+          })
         } else {
           if (import.meta.env.DEV) {
             console.log('  → heartbeat omitido | fuera del área de activación')
@@ -1801,7 +1814,7 @@ export default function PublicPage({
   // `points`          = all admin-enabled points (the "ubicaciones" universe)
   // `availablePoints` = subset currently accessible by schedule + quota rules
   // `displayedPoints` = what actually renders on the map and in the list
-  const availablePoints = points.filter(isPointAvailableNow)
+  const availablePoints = points.filter((p) => isPointAvailableNow(p, liveVisitCounts))
   const displayedPoints = locationFilter === 'available' ? availablePoints : points
 
   function getDwellProgress(ptId: string, pt: GeoPoint): DwellProgress | undefined {
@@ -1854,6 +1867,7 @@ export default function PublicPage({
           address={pt.instructions ?? addresses[pt.id]}
           pointCreatedAt={pt.createdAt}
           dwellProgress={getDwellProgress(pt.id, pt)}
+          liveVisitsCount={liveVisitCounts[pt.id]}
         />
       </div>
     ))

@@ -174,6 +174,8 @@ interface PublicPointCardProps {
    *  badges centred at top, more spacious chips and CTA. */
   isDetail?: boolean
   dwellProgress?: DwellProgress
+  /** Current active visitor count for this point, from the heartbeat response. */
+  liveVisitsCount?: number
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -183,7 +185,7 @@ export default function PublicPointCard({
   routeStatus, walkingDistanceMeters, walkingDurationSeconds,
   isActivating, accessMessage, accessFallbackUrl, address,
   hideImage = false, pointCreatedAt, isDetail = false,
-  dwellProgress,
+  dwellProgress, liveVisitsCount,
 }: PublicPointCardProps) {
   const [descExpanded, setDescExpanded] = useState(false)
   const [showRouteWarning, setShowRouteWarning] = useState(false)
@@ -191,7 +193,7 @@ export default function PublicPointCard({
 
   // Single availability computation — all chips, button state, and messages
   // derive exclusively from this object. Never re-check schedules below.
-  const avail = computePointAvailability(point, distance, userLocation)
+  const avail = computePointAvailability(point, distance, userLocation, liveVisitsCount)
 
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${point.latitude},${point.longitude}&travelmode=walking`
 
@@ -562,6 +564,23 @@ export default function PublicPointCard({
                 variant={avail.quotaAvailable ? (avail.quotaRemaining === 1 ? 'warn' : 'ok') : 'block'}
                 expandLabel="Ver detalle"
                 detail={<QuotaDetail avail={avail} />}
+              />
+            )}
+
+            {/* Live visits chip — only when a minimum people threshold is configured */}
+            {avail.liveVisitsActive && (
+              <StatusChip
+                icon={
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                }
+                label={avail.liveVisitsLabel}
+                variant={avail.liveVisitsAvailable ? 'ok' : 'block'}
               />
             )}
 

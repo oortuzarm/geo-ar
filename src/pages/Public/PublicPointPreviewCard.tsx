@@ -57,6 +57,10 @@ export default function PublicPointPreviewCard({
       label   = avail.quotaLabel
       variant = 'block'
       break
+    case 'live-visits':
+      label   = avail.liveVisitsLabel
+      variant = 'block'
+      break
   }
 
   return (

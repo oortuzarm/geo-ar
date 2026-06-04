@@ -11,6 +11,29 @@ import type { HotspotPoint } from '../../services/hotspotApi'
 // Re-export so callers (LiveVisitsPage) can keep their existing import paths.
 export type { IntensityLevel } from './IntensityLayer'
 
+// ── Custom panes ──────────────────────────────────────────────────────────────
+//
+// Leaflet renders all SVG vector layers in the same overlayPane (z-index 400).
+// Within that pane, stacking order is DOM-insertion order — unreliable across
+// React re-renders. Custom panes with explicit z-indexes guarantee that
+// HotspotsLayer always renders above IntensityLayer regardless of render order.
+//
+//   intensityPane → z-index 410  (below hotspots)
+//   hotspotsPane  → z-index 420  (above intensity)
+
+function CreatePane({ name, zIndex }: { name: string; zIndex: number }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!map.getPane(name)) {
+      const pane = map.createPane(name)
+      pane.style.zIndex = String(zIndex)
+      // Pointer events off — individual layers control their own interactivity.
+      pane.style.pointerEvents = 'none'
+    }
+  }, [map, name, zIndex])
+  return null
+}
+
 // ── Mock helpers (used when no real activeNow data is available) ───────────────
 
 export function mockPointIntensity(pointId: string): 'low' | 'medium' | 'high' {
@@ -78,12 +101,14 @@ export default function GpsIntensityMap({
       zoomControl
     >
       <BaseMapLayer styleId="toner" />
+      <CreatePane name="intensityPane" zIndex={410} />
+      <CreatePane name="hotspotsPane"  zIndex={420} />
       <FitBounds points={points} />
       {showIntensity && (
-        <IntensityLayer points={points} activeNow={resolvedActiveNow} />
+        <IntensityLayer points={points} activeNow={resolvedActiveNow} pane="intensityPane" />
       )}
       {hotspots && hotspots.length > 0 && (
-        <HotspotsLayer hotspots={hotspots} />
+        <HotspotsLayer hotspots={hotspots} pane="hotspotsPane" />
       )}
       {showPoints && points.map((point) => (
         <Marker

@@ -11,9 +11,10 @@ function hotspotColor(intensity: number): string {
 
 interface Props {
   hotspots: HotspotPoint[]
+  pane?:    string
 }
 
-export default function HotspotsLayer({ hotspots }: Props) {
+export default function HotspotsLayer({ hotspots, pane }: Props) {
   return (
     <>
       {hotspots.map((hs, i) => {
@@ -23,6 +24,7 @@ export default function HotspotsLayer({ hotspots }: Props) {
             key={`hs-${i}-${hs.lat}-${hs.lng}`}
             center={[hs.lat, hs.lng]}
             radius={hs.radiusMeters}
+            pane={pane}
             pathOptions={{
               color,
               fillColor:   color,

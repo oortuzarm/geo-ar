@@ -151,11 +151,10 @@ function AvailabilityRules({
   const scheduleDays    = availability?.scheduleDays ?? []
   const startTime       = availability?.scheduleStartTime ?? ''
   const endTime         = availability?.scheduleEndTime ?? ''
-  const quotaEnabled    = availability?.quotaEnabled ?? false
-  const quotaLimit      = availability?.quotaLimit ?? 1
-
-  // Mock-only state — not persisted to API until the feature ships.
-  const [liveVisitsMinPeople, setLiveVisitsMinPeople] = useState<number | ''>('')
+  const quotaEnabled       = availability?.quotaEnabled ?? false
+  const quotaLimit         = availability?.quotaLimit ?? 1
+  const liveVisitsEnabled  = availability?.liveVisitsEnabled ?? false
+  const liveVisitsMinimum  = availability?.liveVisitsMinimum ?? 1
 
   function toggleDay(day: string) {
     const next = scheduleDays.includes(day)
@@ -283,43 +282,40 @@ function AvailabilityRules({
           <span className={`text-sm ${canUseLiveVisits ? 'text-gray-300' : 'text-gray-600'}`}>
             Visitas en vivo
           </span>
-          {!canUseLiveVisits && (
-            <span className="text-xs text-gray-600" title="Esta función no está disponible en tu plan actual.">🔒 No disponible</span>
-          )}
+          {canUseLiveVisits
+            ? <Toggle enabled={liveVisitsEnabled} onToggle={() => onChange({ liveVisitsEnabled: !liveVisitsEnabled })} />
+            : <span className="text-xs text-gray-600" title="Esta función no está disponible en tu plan actual.">🔒 No disponible</span>
+          }
         </div>
 
         <p className={`text-xs ${canUseLiveVisits ? 'text-gray-500' : 'text-gray-700'}`}>
           Activa esta experiencia cuando haya una cantidad mínima de personas dentro del área GPS en tiempo real.
         </p>
 
-        <div className="flex flex-col gap-1">
-          <label className={`text-xs font-medium uppercase tracking-wide ${canUseLiveVisits ? 'text-gray-400' : 'text-gray-600'}`}>
-            Mínimo de personas dentro del área
-          </label>
-          <input
-            type="number"
-            min={1}
-            placeholder="Ej: 10"
-            value={liveVisitsMinPeople}
-            disabled={!canUseLiveVisits}
-            onChange={(e) => {
-              const raw = e.target.value
-              setLiveVisitsMinPeople(raw === '' ? '' : parseInt(raw, 10) || '')
-            }}
-            className={`bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm
-                       text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500
-                       focus:border-transparent transition-colors w-full${
-                         !canUseLiveVisits ? ' opacity-40 cursor-not-allowed' : ''
-                       }`}
-          />
-        </div>
-
-        <p className={`text-xs ${canUseLiveVisits ? 'text-gray-500' : 'text-gray-700'}`}>
-          {liveVisitsMinPeople === ''
-            ? 'La experiencia permanecerá activa independientemente de la cantidad de personas.'
-            : `La experiencia se activará automáticamente cuando se detecten al menos ${liveVisitsMinPeople} personas dentro de esta zona.`
-          }
-        </p>
+        {canUseLiveVisits && liveVisitsEnabled && (
+          <>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                Mínimo de personas dentro del área
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={liveVisitsMinimum}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value)
+                  if (!isNaN(val) && val >= 1) onChange({ liveVisitsMinimum: val })
+                }}
+                className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm
+                           text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500
+                           focus:border-transparent transition-colors w-full"
+              />
+            </div>
+            <p className="text-xs text-gray-500">
+              {`La experiencia se activará cuando haya al menos ${liveVisitsMinimum} persona${liveVisitsMinimum === 1 ? '' : 's'} dentro del área en tiempo real.`}
+            </p>
+          </>
+        )}
       </div>
     </div>
   )

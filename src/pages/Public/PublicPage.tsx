@@ -1416,7 +1416,7 @@ export default function PublicPage({
     // Fire immediately so the live count is available as soon as location is known,
     // then repeat every 15 seconds.
     heartbeatTick()
-    const timer = setInterval(heartbeatTick, 15_000)
+    const timer = setInterval(heartbeatTick, 5_000)
     return () => clearInterval(timer)
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 

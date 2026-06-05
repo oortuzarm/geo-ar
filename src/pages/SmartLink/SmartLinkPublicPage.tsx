@@ -740,6 +740,8 @@ function SmartLinkLanding({
   const hasOtherPts = points.length > 1
   const busy        = validation.phase === 'requesting' || validation.phase === 'validating'
 
+  const [detailOpen, setDetailOpen] = useState(false)
+
   // ── Location chip derivation (mirrors PublicPointCard logic) ────────────────
   let locationLabel:   string   = 'Fuera del área'
   let locationVariant: 'ok' | 'warn' | 'block' | 'neutral' = 'block'
@@ -766,6 +768,14 @@ function SmartLinkLanding({
       }
     }
   }
+
+  const hasAvailabilityDetail = avail !== null && (
+    distance !== null ||
+    avail.scheduleActive ||
+    avail.quotaActive ||
+    avail.liveVisitsActive ||
+    Boolean(selectedPoint?.requiresDwellTime && selectedPoint.dwellTimeSeconds)
+  )
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -837,11 +847,32 @@ function SmartLinkLanding({
               </div>
             )}
 
-            {avail && (
-              <div className="space-y-1.5 pt-0.5">
+            {hasAvailabilityDetail && (
+              <>
+                <button
+                  onClick={() => setDetailOpen((o) => !o)}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl
+                             border border-gray-200 bg-gray-50 text-sm text-gray-600
+                             hover:bg-gray-100 active:scale-[0.99] transition-all duration-150"
+                >
+                  <span className="font-medium">
+                    {detailOpen ? 'Ocultar detalle' : 'Ver detalle de disponibilidad'}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${detailOpen ? 'rotate-180' : ''}`}
+                    viewBox="0 0 20 20" fill="currentColor"
+                  >
+                    <path fillRule="evenodd" clipRule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    />
+                  </svg>
+                </button>
 
-                {/* Location chip — only when GPS is active */}
-                {distance !== null && (
+                {detailOpen && avail && (
+                  <div className="space-y-1.5 pt-0.5">
+
+                    {/* Location chip — only when GPS is active */}
+                    {distance !== null && (
                   <StatusChip
                     icon={
                       <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
@@ -931,7 +962,9 @@ function SmartLinkLanding({
                   </div>
                 )}
 
-              </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

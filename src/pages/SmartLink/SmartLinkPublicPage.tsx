@@ -16,6 +16,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { ReactNode }                        from 'react'
 import { useParams }                             from 'react-router-dom'
 import { MapContainer, Marker, useMap }           from 'react-leaflet'
 import L                                         from 'leaflet'
@@ -34,7 +35,8 @@ import RoutePolyline                             from '../../components/map/Rout
 import BaseMapLayer                              from '../../components/map/BaseMapLayer'
 import MapController                             from '../../components/map/MapController'
 import type { FlyTarget }                        from '../../components/map/MapController'
-import { fetchWalkingRoute }                     from '../../features/routing/orsClient'
+import { fetchWalkingRoute, formatDuration }     from '../../features/routing/orsClient'
+import { StatusChip, ScheduleDetail, QuotaDetail } from '../../components/availability/AvailabilityChips'
 import {
   resolvePublicSmartLink,
   validatePublicSmartLink,
@@ -677,11 +679,15 @@ function SmartLinkLanding({
   // Fetches an ORS pedestrian route from userLocation to the selected point.
   // Silently fails if ORS key is missing or the API is unavailable — no route
   // is shown rather than breaking the UI.  The route does NOT influence bounds.
-  const [routeLatLngs, setRouteLatLngs] = useState<[number, number][] | null>(null)
+  const [routeLatLngs,          setRouteLatLngs]          = useState<[number, number][] | null>(null)
+  const [walkingDistanceMeters, setWalkingDistanceMeters] = useState<number | undefined>(undefined)
+  const [walkingDurationSeconds, setWalkingDurationSeconds] = useState<number | undefined>(undefined)
 
   useEffect(() => {
     if (!userLocation || !selectedPoint) {
       setRouteLatLngs(null)
+      setWalkingDistanceMeters(undefined)
+      setWalkingDurationSeconds(undefined)
       return
     }
 
@@ -691,8 +697,20 @@ function SmartLinkLanding({
       userLocation.latitude,  userLocation.longitude,
       selectedPoint.latitude, selectedPoint.longitude,
     )
-      .then((result) => { if (!cancelled) setRouteLatLngs(result.latLngs) })
-      .catch(() =>      { if (!cancelled) setRouteLatLngs(null) })
+      .then((result) => {
+        if (!cancelled) {
+          setRouteLatLngs(result.latLngs)
+          setWalkingDistanceMeters(result.distanceMeters)
+          setWalkingDurationSeconds(result.durationSeconds)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setRouteLatLngs(null)
+          setWalkingDistanceMeters(undefined)
+          setWalkingDurationSeconds(undefined)
+        }
+      })
 
     return () => { cancelled = true }
   // Re-fetch when the user picks a different point or location becomes available.
@@ -721,6 +739,33 @@ function SmartLinkLanding({
 
   const hasOtherPts = points.length > 1
   const busy        = validation.phase === 'requesting' || validation.phase === 'validating'
+
+  // ── Location chip derivation (mirrors PublicPointCard logic) ────────────────
+  let locationLabel:   string   = 'Fuera del área'
+  let locationVariant: 'ok' | 'warn' | 'block' | 'neutral' = 'block'
+  let locationDetail:  ReactNode = null
+
+  if (avail) {
+    if (avail.insideArea) {
+      locationLabel   = 'Dentro del área'
+      locationVariant = 'ok'
+    } else {
+      locationLabel = avail.distanceToEdge !== null && avail.distanceToEdge > 0
+        ? `A ${formatDistance(avail.distanceToEdge)} del área`
+        : 'Fuera del área'
+      locationVariant = 'block'
+
+      if (walkingDistanceMeters !== undefined && selectedPoint) {
+        const walkToEdge = Math.max(0, walkingDistanceMeters - selectedPoint.activationRadius)
+        locationDetail = (
+          <p>
+            {formatDistance(walkToEdge)} caminando
+            {walkingDurationSeconds !== undefined && ` · ${formatDuration(walkingDurationSeconds)}`}
+          </p>
+        )
+      }
+    }
+  }
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -792,51 +837,100 @@ function SmartLinkLanding({
               </div>
             )}
 
-            {userLocation && avail && (
-              <div className="flex flex-wrap gap-1.5 pt-0.5">
-                <span className={[
-                  'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border',
-                  avail.insideArea
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    : 'bg-gray-50 text-gray-600 border-gray-200',
-                ].join(' ')}>
-                  {avail.insideArea
-                    ? 'Dentro del área'
-                    : distance !== null
-                      ? `A ${formatDistance(distance)}`
-                      : 'Fuera del área'
-                  }
-                </span>
+            {avail && (
+              <div className="space-y-1.5 pt-0.5">
+
+                {/* Location chip — only when GPS is active */}
+                {distance !== null && (
+                  <StatusChip
+                    icon={
+                      <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" clipRule="evenodd"
+                          d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 15.507 17 13.207 17 10a7 7 0 10-14 0c0 3.207 1.698 5.507 3.354 7.115a14.92 14.92 0 002.757 2.198 10.4 10.4 0 00.523.282l.018.008.006.003zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                        />
+                      </svg>
+                    }
+                    label={locationLabel}
+                    variant={locationVariant}
+                    expandLabel={locationDetail != null ? 'Ver ruta' : undefined}
+                    detail={locationDetail}
+                  />
+                )}
+
+                {/* Schedule chip */}
                 {avail.scheduleActive && (
-                  <span className={[
-                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border',
-                    avail.scheduleAvailable
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-red-50 text-red-700 border-red-200',
-                  ].join(' ')}>
-                    {avail.scheduleLabel}
-                  </span>
+                  <StatusChip
+                    icon={
+                      <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 20 20" fill="none"
+                        stroke="currentColor" strokeWidth={1.75}>
+                        <circle cx="10" cy="10" r="7.5" />
+                        <path strokeLinecap="round" d="M10 6.5V10l2 2" />
+                      </svg>
+                    }
+                    label={avail.scheduleLabel}
+                    variant={avail.scheduleAvailable ? 'ok' : 'block'}
+                    expandLabel="Ver horarios"
+                    detail={<ScheduleDetail avail={avail} />}
+                  />
                 )}
+
+                {/* Quota chip */}
                 {avail.quotaActive && (
-                  <span className={[
-                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border',
-                    avail.quotaAvailable
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-red-50 text-red-700 border-red-200',
-                  ].join(' ')}>
-                    {avail.quotaLabel}
-                  </span>
+                  <StatusChip
+                    icon={
+                      <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" clipRule="evenodd"
+                          d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z"
+                        />
+                      </svg>
+                    }
+                    label={avail.quotaLabel}
+                    variant={avail.quotaAvailable ? (avail.quotaRemaining === 1 ? 'warn' : 'ok') : 'block'}
+                    expandLabel="Ver detalle"
+                    detail={<QuotaDetail avail={avail} />}
+                  />
                 )}
+
+                {/* Live visits chip */}
                 {avail.liveVisitsActive && (
-                  <span className={[
-                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border',
-                    avail.liveVisitsAvailable
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-amber-50 text-amber-700 border-amber-200',
-                  ].join(' ')}>
-                    {avail.liveVisitsLabel}
-                  </span>
+                  <StatusChip
+                    icon={
+                      <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                    }
+                    label={avail.liveVisitsLabel}
+                    variant={avail.liveVisitsAvailable ? 'ok' : 'warn'}
+                    expandLabel={!avail.liveVisitsAvailable ? 'Ver detalle' : undefined}
+                    detail={!avail.liveVisitsAvailable ? (
+                      <p>
+                        {avail.liveVisitsRemaining === undefined
+                          ? 'Esta experiencia se activará cuando haya más personas presentes en el lugar.'
+                          : avail.liveVisitsRemaining === 1
+                            ? 'Falta 1 persona para activar esta experiencia.'
+                            : `Faltan ${avail.liveVisitsRemaining} personas para activar esta experiencia.`
+                        }
+                      </p>
+                    ) : undefined}
+                  />
                 )}
+
+                {/* Permanencia — informational, no timer needed */}
+                {selectedPoint?.requiresDwellTime && selectedPoint.dwellTimeSeconds && (
+                  <div className="rounded-xl border px-3 py-2.5 bg-amber-50 border-amber-200">
+                    <div className="flex items-center gap-2">
+                      <span className="text-amber-700 text-sm">⏳</span>
+                      <span className="text-xs font-medium flex-1 leading-none text-amber-700">
+                        Permanecé {Math.ceil(selectedPoint.dwellTimeSeconds / 60)} min en el área para desbloquear
+                      </span>
+                    </div>
+                  </div>
+                )}
+
               </div>
             )}
           </div>

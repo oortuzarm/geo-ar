@@ -10,6 +10,11 @@ export interface PublicSmartLink {
   slug:             string
   organizationSlug: string
   status:           'active' | 'paused' | 'archived'
+  // Optional landing-page fields — returned by the backend when available.
+  // The Rails API may serialize these as snake_case; resolvePublicSmartLink normalizes them.
+  projectId?:   string
+  scopeType?:   'project' | 'geo_points'
+  geoPointIds?: string[]
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -141,5 +146,12 @@ export async function resolvePublicSmartLink(
     const body = await res.text().catch(() => '')
     throw new ApiError(res.status, body || res.statusText)
   }
-  return res.json() as Promise<PublicSmartLink>
+  const raw = await res.json() as Record<string, unknown>
+  // Normalize optional landing-page fields from snake_case (Rails) or camelCase.
+  return {
+    ...raw,
+    projectId:   (raw.projectId   ?? raw.project_id)   as string | undefined,
+    scopeType:   (raw.scopeType   ?? raw.scope_type)   as 'project' | 'geo_points' | undefined,
+    geoPointIds: (raw.geoPointIds ?? raw.geo_point_ids) as string[] | undefined,
+  } as PublicSmartLink
 }

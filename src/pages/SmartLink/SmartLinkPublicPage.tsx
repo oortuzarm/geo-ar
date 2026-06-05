@@ -1,28 +1,89 @@
-import { useEffect, useRef, useState } from 'react'
-import { useParams }                   from 'react-router-dom'
-import { ApiError }                    from '../../lib/apiFetch'
-import { useGeoStore }                 from '../../store/geoStore'
-import { useGeolocation, requestLocation } from '../../hooks/useGeolocation'
-import { sendHeartbeat }               from '../../services/liveVisitsApi'
-import { getLiveVisitSessionId }       from '../../utils/liveVisits'
+/**
+ * SmartLinkPublicPage — Landing Geolocalizada (V1.5)
+ *
+ * CORS note (P1):
+ *   All public fetches (project, points) use credentials:'omit' via the
+ *   slFetchProject / slListPoints helpers below, matching the policy already
+ *   established for the smart-link resolve/validate endpoints.  This avoids
+ *   CORS rejections from go.ubyca.com when the backend sets
+ *   Access-Control-Allow-Credentials: false on /api/public/* routes.
+ *
+ * Backend requirement (P2):
+ *   GET /api/public/smart_links/{orgSlug}/{slug} must include project_id
+ *   (snake_case) in its JSON response. resolvePublicSmartLink() normalises it
+ *   to projectId. Without this field the landing degrades gracefully (no map,
+ *   no gallery) but full functionality requires it.
+ */
+
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useParams }                             from 'react-router-dom'
+import { MapContainer, Marker }                  from 'react-leaflet'
+import L                                         from 'leaflet'
+import { ApiError, apiFetch }                    from '../../lib/apiFetch'
+import { normalizeGeoPoint }                     from '../../lib/normalizeGeoPoint'
+import { useGeoStore }                           from '../../store/geoStore'
+import { useGeolocation, requestLocation }       from '../../hooks/useGeolocation'
+import { sendHeartbeat }                         from '../../services/liveVisitsApi'
+import { getLiveVisitSessionId }                 from '../../utils/liveVisits'
+import { haversineDistance, formatDistance }     from '../../features/geolocation/haversine'
+import { computePointAvailability }              from '../../features/geolocation/availability'
+import { getPointGalleryImages }                 from '../../lib/pointImageUtils'
+import PointImageCarousel                        from '../../components/public/PointImageCarousel'
+import PublicPointMarker                         from '../../components/map/PublicPointMarker'
+import BaseMapLayer                              from '../../components/map/BaseMapLayer'
+import MapController                             from '../../components/map/MapController'
+import type { FlyTarget }                        from '../../components/map/MapController'
 import {
   resolvePublicSmartLink,
   validatePublicSmartLink,
   type PublicSmartLink,
 } from '../../services/smartLinksApi'
+import type { GeoProject, GeoPoint } from '../../types'
+
+// ── P1: credential-less public fetchers ──────────────────────────────────────
+//
+// These bypass the repository layer (which uses credentials:'include') so that
+// requests from go.ubyca.com comply with the same CORS policy as the smart-link
+// resolve / validate endpoints.  The normalisation mirrors RemoteGeoRepository.
+
+const SL_API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/$/, '')
+
+async function slFetchProject(id: string): Promise<GeoProject | null> {
+  try {
+    const raw = await apiFetch<Record<string, unknown>>(
+      `${SL_API_BASE}/api/public/geo_projects/${id}`,
+      { credentials: 'omit' },
+    )
+    return {
+      ...raw,
+      coverImage:  (raw.coverImage  ?? raw.cover_image)  as string | undefined,
+      shareText:   (raw.shareText   ?? raw.share_text)   as string | undefined,
+      geoPointIds: ((raw.geoPointIds ?? raw.geo_point_ids ?? []) as string[]),
+      createdAt:   (raw.createdAt   ?? raw.created_at)   as string,
+      updatedAt:   (raw.updatedAt   ?? raw.updated_at)   as string,
+    } as GeoProject
+  } catch {
+    return null
+  }
+}
+
+async function slListPoints(projectId: string): Promise<GeoPoint[]> {
+  try {
+    const raw = await apiFetch<Record<string, unknown>[]>(
+      `${SL_API_BASE}/api/public/geo_projects/${projectId}/geo_points?_cb=${Date.now()}`,
+      { credentials: 'omit' },
+    )
+    return raw.map(normalizeGeoPoint)
+  } catch {
+    return []
+  }
+}
 
 // ── Resolution error types ────────────────────────────────────────────────────
 
 type ResolveError = 'not_found' | 'paused' | 'api_error'
 
 // ── Validation state machine ──────────────────────────────────────────────────
-//
-// Same design as /public:
-//   idle       → user hasn't tapped yet
-//   requesting → GPS prompt in progress (requestLocation called)
-//   validating → POST /validate in flight
-//   unlocked   → backend allowed, destinationUrl ready, heartbeat running
-//   blocked    → backend denied or GPS error, message shown
 
 type ValidationState =
   | { phase: 'idle' }
@@ -32,25 +93,12 @@ type ValidationState =
   | { phase: 'blocked';  message: string }
   | { phase: 'location_error' }
 
-// ── Layout ────────────────────────────────────────────────────────────────────
-
-function Screen({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center px-4 text-gray-100">
-      <div className="w-full max-w-sm space-y-8 text-center">
-        <img src="/logo-blanco.png" alt="Ubyca" className="h-7 mx-auto opacity-90" />
-        {children}
-      </div>
-    </div>
-  )
-}
-
-// ── Spinner inline ────────────────────────────────────────────────────────────
+// ── Inline spinner ────────────────────────────────────────────────────────────
 
 function Spin({ size = 'md' }: { size?: 'sm' | 'md' }) {
   const cls = size === 'sm'
     ? 'w-4 h-4 border-2 border-white/30 border-t-white'
-    : 'w-5 h-5 border-2 border-gray-600 border-t-gray-300'
+    : 'w-5 h-5 border-2 border-gray-300 border-t-gray-600'
   return <span className={`${cls} rounded-full animate-spin inline-block`} />
 }
 
@@ -58,163 +106,517 @@ function Spin({ size = 'md' }: { size?: 'sm' | 'md' }) {
 
 function ResolveErrorScreen({ type, onRetry }: { type: ResolveError; onRetry?: () => void }) {
   const cfg = {
-    not_found: { icon: '🔗', title: 'Smart Link no encontrado',           desc: 'La URL solicitada no existe o fue eliminada.'                    },
-    paused:    { icon: '⏸',  title: 'Smart Link no disponible',           desc: 'Este Smart Link se encuentra desactivado.'                       },
-    api_error: { icon: '⚠️',  title: 'No fue posible cargar este Smart Link', desc: 'Ocurrió un error al conectar con el servidor.'                },
+    not_found: {
+      icon: '🔗',
+      title: 'Smart Link no encontrado',
+      desc:  'La URL solicitada no existe o fue eliminada.',
+    },
+    paused: {
+      icon: '⏸',
+      title: 'Smart Link no disponible',
+      desc:  'Este Smart Link se encuentra desactivado.',
+    },
+    api_error: {
+      icon: '⚠️',
+      title: 'No fue posible cargar este Smart Link',
+      desc:  'Ocurrió un error al conectar con el servidor.',
+    },
   }[type]
 
   return (
-    <Screen>
-      <div className="space-y-4">
-        <span className="text-4xl">{cfg.icon}</span>
-        <div className="space-y-2">
-          <h1 className="text-lg font-semibold text-gray-100">{cfg.title}</h1>
-          <p className="text-sm text-gray-500 leading-relaxed">{cfg.desc}</p>
+    <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center px-4 text-gray-100">
+      <div className="w-full max-w-sm space-y-8 text-center">
+        <img src="/logo-blanco.png" alt="Ubyca" className="h-7 mx-auto opacity-90" />
+        <div className="space-y-4">
+          <span className="text-4xl">{cfg.icon}</span>
+          <div className="space-y-2">
+            <h1 className="text-lg font-semibold text-gray-100">{cfg.title}</h1>
+            <p className="text-sm text-gray-500 leading-relaxed">{cfg.desc}</p>
+          </div>
+          {type === 'api_error' && onRetry && (
+            <button
+              onClick={onRetry}
+              className="mt-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-sm
+                         font-semibold rounded-xl transition-all active:scale-[0.98]"
+            >
+              Reintentar
+            </button>
+          )}
         </div>
-        {type === 'api_error' && onRetry && (
-          <button onClick={onRetry}
-            className="mt-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-sm
-                       font-semibold rounded-xl transition-all active:scale-[0.98]">
-            Reintentar
-          </button>
-        )}
       </div>
-    </Screen>
+    </div>
   )
 }
 
-// ── Main experience screen ────────────────────────────────────────────────────
-//
-// Renders the Smart Link identity + the correct UI for each validation phase.
+// ── Availability badge ────────────────────────────────────────────────────────
 
-function ExperienceScreen({
-  smartLink, validation, onContinue,
+function AvailabilityBadge({ validation }: { validation: ValidationState }) {
+  if (validation.phase === 'unlocked') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                       bg-emerald-50 border border-emerald-200">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+        <span className="text-xs font-semibold text-emerald-700">Disponible</span>
+      </span>
+    )
+  }
+  if (validation.phase === 'blocked') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                       bg-amber-50 border border-amber-200">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+        <span className="text-xs font-semibold text-amber-700">No disponible</span>
+      </span>
+    )
+  }
+  if (validation.phase === 'location_error') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                       bg-gray-100 border border-gray-200">
+        <span className="text-xs leading-none">📍</span>
+        <span className="text-xs font-semibold text-gray-500">Sin ubicación</span>
+      </span>
+    )
+  }
+  if (validation.phase === 'requesting' || validation.phase === 'validating') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                       bg-gray-100 border border-gray-200">
+        <Spin size="sm" />
+        <span className="text-xs font-semibold text-gray-500">Validando…</span>
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                     bg-gray-100 border border-gray-200">
+      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
+      <span className="text-xs font-semibold text-gray-500">Verificar ubicación</span>
+    </span>
+  )
+}
+
+// ── User location Leaflet icon ────────────────────────────────────────────────
+
+const USER_DOT_ICON = L.divIcon({
+  className: '',
+  html: '<div style="width:14px;height:14px;border-radius:50%;background:#3B82F6;border:2.5px solid white;box-shadow:0 0 0 3px rgba(59,130,246,0.25)"></div>',
+  iconSize:   [14, 14],
+  iconAnchor: [7, 7],
+})
+
+// ── Landing map ───────────────────────────────────────────────────────────────
+//
+// Read-only / visual-only map.  No GPS watchers, no analytics, no sessions,
+// no validate calls, no heartbeats.
+
+interface LandingMapProps {
+  points:          GeoPoint[]
+  selectedPointId: string | null
+  userLocation:    { latitude: number; longitude: number } | null
+  onSelectPoint:   (id: string) => void
+  flyKey:          string | null
+  flyTarget:       FlyTarget | null
+}
+
+function LandingMap({
+  points, selectedPointId, userLocation, onSelectPoint, flyKey, flyTarget,
+}: LandingMapProps) {
+  const bounds = useMemo(() => {
+    if (points.length === 0) return null
+    const lats = points.map((p) => p.latitude)
+    const lngs = points.map((p) => p.longitude)
+    const pad = 0.006
+    return L.latLngBounds(
+      [Math.min(...lats) - pad, Math.min(...lngs) - pad],
+      [Math.max(...lats) + pad, Math.max(...lngs) + pad],
+    )
+  }, [points])
+
+  if (points.length === 0) return null
+
+  const center = bounds
+    ? ([bounds.getCenter().lat, bounds.getCenter().lng] as [number, number])
+    : ([points[0].latitude, points[0].longitude] as [number, number])
+
+  return (
+    <MapContainer
+      center={center}
+      zoom={14}
+      bounds={bounds ?? undefined}
+      boundsOptions={{ padding: [32, 32] }}
+      style={{ width: '100%', height: '100%' }}
+      zoomControl={false}
+      attributionControl={false}
+    >
+      <BaseMapLayer styleId="streets" />
+      <MapController flyKey={flyKey} flyTarget={flyTarget} />
+
+      {points.map((p) => (
+        <PublicPointMarker
+          key={p.id}
+          point={p}
+          selected={p.id === selectedPointId}
+          dimmed={selectedPointId !== null && p.id !== selectedPointId}
+          onClick={() => onSelectPoint(p.id)}
+          small
+        />
+      ))}
+
+      {userLocation && (
+        <Marker
+          position={[userLocation.latitude, userLocation.longitude]}
+          icon={USER_DOT_ICON}
+          zIndexOffset={2000}
+        />
+      )}
+    </MapContainer>
+  )
+}
+
+// ── CTA button ────────────────────────────────────────────────────────────────
+
+function CTAButton({
+  validation,
+  selectedPoint,
+  onContinue,
 }: {
-  smartLink:  PublicSmartLink
-  validation: ValidationState
-  onContinue: () => void
+  validation:    ValidationState
+  selectedPoint: GeoPoint | null
+  onContinue:    () => void
 }) {
   const busy = validation.phase === 'requesting' || validation.phase === 'validating'
 
-  // ── GPS denied ─────────────────────────────────────────────────────────────
-  if (validation.phase === 'location_error') {
-    return (
-      <Screen>
-        <div className="space-y-4">
-          <span className="text-4xl">📍</span>
-          <div className="space-y-2">
-            <h2 className="text-base font-semibold text-gray-100">{smartLink.name}</h2>
-            <h3 className="text-sm font-medium text-gray-300">No pudimos obtener tu ubicación</h3>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Debes permitir el acceso a tu ubicación para continuar.
-            </p>
-          </div>
-          <button onClick={onContinue}
-            className="w-full py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold
-                       rounded-xl text-sm transition-all active:scale-[0.98]">
-            Reintentar
-          </button>
-        </div>
-      </Screen>
-    )
-  }
-
-  // ── Backend denied ─────────────────────────────────────────────────────────
-  if (validation.phase === 'blocked') {
-    return (
-      <Screen>
-        <div className="space-y-5">
-          <div className="space-y-1.5">
-            <h2 className="text-base font-semibold text-gray-100">{smartLink.name}</h2>
-            {/* Availability status chip — reuses /public language */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border
-                            bg-amber-500/10 border-amber-500/20 text-amber-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-              <span className="text-xs font-medium">No disponible</span>
-            </div>
-          </div>
-          {/* Message from backend — same text /public shows */}
-          <p className="text-sm text-gray-400 leading-relaxed">{validation.message}</p>
-          <button onClick={onContinue}
-            className="w-full py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold
-                       rounded-xl text-sm transition-all active:scale-[0.98]">
-            Reintentar
-          </button>
-        </div>
-      </Screen>
-    )
-  }
-
-  // ── Unlocked — show "Abrir experiencia" ────────────────────────────────────
-  //
-  // User stays on go.ubyca.com; heartbeat keeps running in background.
-  // window.open keeps go.ubyca.com alive so GPS tracking continues.
   if (validation.phase === 'unlocked') {
     return (
-      <Screen>
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20
-                            flex items-center justify-center mx-auto">
-              <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h1 className="text-xl font-bold text-gray-100">{smartLink.name}</h1>
-            {/* Availability status chip */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border
-                            bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-              <span className="text-xs font-medium">Disponible</span>
-            </div>
-          </div>
-          {/* Explicit user action — never automatic redirect */}
-          <button
-            onClick={() => window.open(validation.destinationUrl, '_blank', 'noopener,noreferrer')}
-            className="w-full py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold
-                       rounded-xl text-sm transition-all active:scale-[0.98]
-                       shadow-lg shadow-brand-900/50">
-            Abrir experiencia →
-          </button>
-          <p className="text-xs text-gray-600">
-            Tu posición sigue siendo monitoreada mientras permanezcas en esta página.
-          </p>
-        </div>
-      </Screen>
+      <button
+        onClick={() => window.open(validation.destinationUrl, '_blank', 'noopener,noreferrer')}
+        className="w-full py-4 bg-brand-600 hover:bg-brand-500 text-white font-bold
+                   rounded-2xl text-[15px] transition-all active:scale-[0.98]
+                   shadow-lg shadow-brand-900/30"
+      >
+        {selectedPoint?.buttonText || 'Abrir experiencia →'}
+      </button>
     )
   }
 
-  // ── Idle / requesting / validating ─────────────────────────────────────────
+  if (validation.phase === 'blocked' || validation.phase === 'location_error') {
+    return (
+      <button
+        onClick={onContinue}
+        className="w-full py-4 bg-brand-600 hover:bg-brand-500 text-white font-bold
+                   rounded-2xl text-[15px] transition-all active:scale-[0.98]"
+      >
+        Reintentar
+      </button>
+    )
+  }
+
   return (
-    <Screen>
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <div className="w-12 h-12 rounded-full bg-brand-500/10 border border-brand-500/20
-                          flex items-center justify-center mx-auto">
-            <svg className="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101
-                   m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-            </svg>
+    <button
+      onClick={onContinue}
+      disabled={busy}
+      className="w-full py-4 bg-brand-600 hover:bg-brand-500 text-white font-bold
+                 rounded-2xl text-[15px] transition-all active:scale-[0.98]
+                 disabled:opacity-70 disabled:cursor-not-allowed
+                 flex items-center justify-center gap-2.5"
+    >
+      {busy && <Spin size="sm" />}
+      {busy ? 'Validando ubicación…' : 'Continuar →'}
+    </button>
+  )
+}
+
+// ── SmartLinkLanding ──────────────────────────────────────────────────────────
+
+interface SmartLinkLandingProps {
+  smartLink:    PublicSmartLink
+  project:      GeoProject | null
+  /** P7: already filtered by scopeType in parent */
+  points:       GeoPoint[]
+  validation:   ValidationState
+  userLocation: { latitude: number; longitude: number } | null
+  /** P4: keyed by geoPointId — only the matched point has a real count */
+  liveVisitsMap: Record<string, number>
+  onContinue:   () => void
+}
+
+function SmartLinkLanding({
+  smartLink, project, points, validation, userLocation, liveVisitsMap, onContinue,
+}: SmartLinkLandingProps) {
+
+  // ── P6: selectedPointId validated against active points list ─────────────
+  const [selectedPointId, setSelectedPointId] = useState<string | null>(
+    smartLink.geoPointIds?.[0] ?? null,
+  )
+
+  // Whenever the points list changes (initial load or scope update), ensure
+  // selectedPointId corresponds to an actual active point in the list.
+  useEffect(() => {
+    if (points.length === 0) return
+    const isValid = points.some((p) => p.id === selectedPointId)
+    if (!isValid) setSelectedPointId(points[0].id)
+  }, [points, selectedPointId])
+
+  // After validation succeeds, lock onto the matched point.
+  useEffect(() => {
+    if (validation.phase === 'unlocked') {
+      setSelectedPointId(validation.matchedGeoPointId)
+    }
+  }, [validation])
+
+  const selectedPoint = useMemo(
+    () => points.find((p) => p.id === selectedPointId) ?? points[0] ?? null,
+    [points, selectedPointId],
+  )
+
+  // ── Hero images ─────────────────────────────────────────────────────────────
+  const heroImages = useMemo(() => {
+    if (selectedPoint) {
+      const imgs = getPointGalleryImages(selectedPoint)
+      if (imgs.length > 0) return imgs
+    }
+    if (project?.coverImage) return [project.coverImage]
+    return []
+  }, [selectedPoint, project?.coverImage])
+
+  // ── Distance & availability ─────────────────────────────────────────────────
+  const distance = useMemo(() => {
+    if (!userLocation || !selectedPoint) return null
+    return haversineDistance(
+      userLocation.latitude, userLocation.longitude,
+      selectedPoint.latitude, selectedPoint.longitude,
+    )
+  }, [userLocation, selectedPoint])
+
+  // P4: look up live visits count for the SELECTED point specifically.
+  // Only the matchedGeoPointId will have a real count (from heartbeat).
+  // Other points get undefined → computePointAvailability shows the minimum
+  // requirement optimistically instead of a wrong count.
+  const avail = useMemo(
+    () => selectedPoint
+      ? computePointAvailability(
+          selectedPoint,
+          distance,
+          userLocation,
+          liveVisitsMap[selectedPoint.id],
+        )
+      : null,
+    [selectedPoint, distance, userLocation, liveVisitsMap],
+  )
+
+  // ── Map fly-to ──────────────────────────────────────────────────────────────
+  const [flyKey,    setFlyKey]    = useState<string | null>(null)
+  const [flyTarget, setFlyTarget] = useState<FlyTarget | null>(null)
+
+  function handleSelectPoint(id: string) {
+    setSelectedPointId(id)
+    const p = points.find((pt) => pt.id === id)
+    if (p) {
+      setFlyKey(`point-${id}-${Date.now()}`)
+      setFlyTarget({ lat: p.latitude, lng: p.longitude, zoom: 16 })
+    }
+  }
+
+  // ── Derived display values ───────────────────────────────────────────────────
+  // P5: "Cómo llegar" depends on point coordinates, NOT on legacy instructions text.
+  //     Every active point has latitude + longitude, so it's always available.
+  const hasDirections = selectedPoint !== null
+  const mapsUrl = selectedPoint
+    ? `https://www.google.com/maps/dir/?api=1&destination=${selectedPoint.latitude},${selectedPoint.longitude}&travelmode=walking`
+    : null
+
+  const hasOtherPts = points.length > 1
+  const busy        = validation.phase === 'requesting' || validation.phase === 'validating'
+
+  return (
+    <div className="min-h-screen bg-white flex flex-col">
+
+      {/* ── Scrollable body ── */}
+      <div className="flex-1 pb-36">
+
+        {/* ── HERO ── */}
+        <div className="relative w-full bg-gray-900 overflow-hidden" style={{ maxHeight: '320px' }}>
+          {heroImages.length > 0 ? (
+            <PointImageCarousel images={heroImages} />
+          ) : (
+            <div className="w-full aspect-[4/3] bg-gradient-to-br from-brand-900 via-brand-800 to-gray-900" />
+          )}
+          <div className="absolute inset-x-0 bottom-0 h-2/3
+                          bg-gradient-to-t from-black/80 via-black/40 to-transparent
+                          pointer-events-none" />
+          <div className="absolute top-4 left-4 pointer-events-none">
+            <img src="/logo-blanco.png" alt="Ubyca" className="h-5 opacity-75" />
           </div>
-          <h1 className="text-xl font-bold text-gray-100">{smartLink.name}</h1>
-          <p className="text-sm text-gray-500 leading-relaxed">
-            Esta experiencia requiere validar tu ubicación para continuar.
-          </p>
+          <div className="absolute inset-x-0 bottom-0 px-4 pb-4 pointer-events-none">
+            {project && (
+              <p className="text-white/55 text-[10px] font-semibold uppercase tracking-widest
+                            mb-0.5 line-clamp-1">
+                {project.title}
+              </p>
+            )}
+            <h1 className="text-white font-bold text-xl leading-tight line-clamp-2 drop-shadow-sm">
+              {selectedPoint?.name || smartLink.name}
+            </h1>
+          </div>
         </div>
 
-        <button
-          onClick={onContinue}
-          disabled={busy}
-          className="w-full py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold
-                     rounded-xl text-sm transition-all active:scale-[0.98]
-                     disabled:opacity-70 disabled:cursor-not-allowed
-                     shadow-lg shadow-brand-900/50 flex items-center justify-center gap-2">
-          {busy && <Spin size="sm" />}
-          {busy ? 'Validando ubicación…' : 'Continuar →'}
-        </button>
+        {/* ── STATUS + MESSAGE ── */}
+        <div className="px-4 pt-4 pb-1">
+          <AvailabilityBadge validation={validation} />
+          {validation.phase === 'blocked' && (
+            <p className="mt-2 text-sm text-gray-500 leading-relaxed">{validation.message}</p>
+          )}
+          {validation.phase === 'location_error' && (
+            <p className="mt-2 text-sm text-gray-500 leading-relaxed">
+              Debes permitir el acceso a tu ubicación para continuar.
+            </p>
+          )}
+          {validation.phase === 'idle' && (
+            <p className="mt-2 text-sm text-gray-500 leading-relaxed">
+              Esta experiencia requiere verificar tu ubicación.
+            </p>
+          )}
+        </div>
+
+        {/* ── POINT CONTENT ── */}
+        {selectedPoint && (
+          <div className="px-4 py-3 space-y-2.5">
+            {selectedPoint.description && (
+              <p className="text-sm text-gray-700 leading-relaxed">{selectedPoint.description}</p>
+            )}
+            {selectedPoint.instructions && (
+              <div className="flex items-start gap-2">
+                <svg className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-400"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243
+                       a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <p className="text-sm text-gray-500 leading-snug">{selectedPoint.instructions}</p>
+              </div>
+            )}
+
+            {userLocation && avail && (
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                <span className={[
+                  'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border',
+                  avail.insideArea
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : 'bg-gray-50 text-gray-600 border-gray-200',
+                ].join(' ')}>
+                  {avail.insideArea
+                    ? 'Dentro del área'
+                    : distance !== null
+                      ? `A ${formatDistance(distance)}`
+                      : 'Fuera del área'
+                  }
+                </span>
+                {avail.scheduleActive && (
+                  <span className={[
+                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border',
+                    avail.scheduleAvailable
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-red-50 text-red-700 border-red-200',
+                  ].join(' ')}>
+                    {avail.scheduleLabel}
+                  </span>
+                )}
+                {avail.quotaActive && (
+                  <span className={[
+                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border',
+                    avail.quotaAvailable
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-red-50 text-red-700 border-red-200',
+                  ].join(' ')}>
+                    {avail.quotaLabel}
+                  </span>
+                )}
+                {avail.liveVisitsActive && (
+                  <span className={[
+                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border',
+                    avail.liveVisitsAvailable
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-amber-50 text-amber-700 border-amber-200',
+                  ].join(' ')}>
+                    {avail.liveVisitsLabel}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── MAP ── */}
+        {points.length > 0 && (
+          <div className="px-4 mt-3">
+            {hasOtherPts && (
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                Puntos del proyecto
+              </p>
+            )}
+            <div className="h-52 rounded-2xl overflow-hidden border border-gray-200
+                            shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
+              <LandingMap
+                points={points}
+                selectedPointId={selectedPointId}
+                userLocation={userLocation}
+                onSelectPoint={handleSelectPoint}
+                flyKey={flyKey}
+                flyTarget={flyTarget}
+              />
+            </div>
+            {hasOtherPts && (
+              <p className="text-[10px] text-gray-400 text-center mt-1.5">
+                Tocá un punto para explorar su contenido
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* ── PROJECT INFO (secondary) ── */}
+        {project && (project.shareText || project.subtitle) && (
+          <div className="mx-4 mt-5 px-4 py-3 bg-gray-50 rounded-xl border border-gray-100">
+            <p className="text-[11px] text-gray-400 leading-relaxed">
+              {project.shareText || project.subtitle}
+            </p>
+          </div>
+        )}
       </div>
-    </Screen>
+
+      {/* ── P3: Sticky CTA bar with safe-area-inset-bottom ── */}
+      <div
+        className="fixed inset-x-0 bottom-0 bg-white/95 backdrop-blur-md
+                   border-t border-gray-100 px-4 pt-3 space-y-2
+                   shadow-[0_-4px_24px_rgba(0,0,0,0.07)]"
+        style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}
+      >
+        <CTAButton
+          validation={validation}
+          selectedPoint={selectedPoint}
+          onContinue={onContinue}
+        />
+
+        {/* P5: "Cómo llegar" uses point coordinates — always shown when a point is selected */}
+        {hasDirections && mapsUrl && !busy && (
+          <button
+            onClick={() => window.open(mapsUrl, '_blank', 'noopener,noreferrer')}
+            className="w-full py-3 flex items-center justify-center gap-2
+                       rounded-xl text-sm font-semibold text-gray-600
+                       bg-gray-50 border border-gray-200
+                       hover:bg-gray-100 active:scale-[0.98] transition-all"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="3 11 22 2 13 21 11 13 3 11" />
+            </svg>
+            Cómo llegar
+          </button>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -226,19 +628,15 @@ export default function SmartLinkPublicPage() {
     smartLinkSlug:    string
   }>()
 
-  // ── GPS — same pattern as /public ─────────────────────────────────────────
-  // userLocation lives in geoStore so it's shared across the component tree.
-  // locationActive gates watchPosition — only starts after the user grants GPS.
+  // ── GPS (unchanged) ───────────────────────────────────────────────────────
   const { userLocation, setUserLocation } = useGeoStore()
   const [locationActive, setLocationActive] = useState(false)
   useGeolocation(locationActive)
 
-  // Keep a ref so the heartbeat interval always reads the latest coords without
-  // restarting the interval on every GPS update — same pattern as PublicPage.
   const locationRef = useRef(userLocation)
   useEffect(() => { locationRef.current = userLocation }, [userLocation])
 
-  // ── Resolution phase ───────────────────────────────────────────────────────
+  // ── Resolution ────────────────────────────────────────────────────────────
   const [loading,      setLoading]      = useState(true)
   const [smartLink,    setSmartLink]    = useState<PublicSmartLink | null>(null)
   const [resolveError, setResolveError] = useState<ResolveError | null>(null)
@@ -268,13 +666,48 @@ export default function SmartLinkPublicPage() {
     else { setResolveError('not_found'); setLoading(false) }
   }, [organizationSlug, smartLinkSlug]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Validation state ───────────────────────────────────────────────────────
+  // ── Project + points — P1: credentials:'omit' via slFetchProject/slListPoints ─
+  const [project, setProject] = useState<GeoProject | null>(null)
+  const [points,  setPoints]  = useState<GeoPoint[]>([])
+
+  useEffect(() => {
+    if (!smartLink?.projectId) return
+    const projectId = smartLink.projectId
+    Promise.all([
+      slFetchProject(projectId),
+      slListPoints(projectId),
+    ]).then(([proj, pts]) => {
+      if (proj) setProject(proj)
+      setPoints(pts.filter((p) => p.active))
+    })
+  }, [smartLink?.projectId])
+
+  // ── P7: Filter displayed points by scope ──────────────────────────────────
+  // scopeType='geo_points': show only the points this Smart Link can unlock.
+  // scopeType='project' (or absent): show all active project points.
+  // This prevents the map from showing points the user cannot unlock via this link.
+  const displayPoints = useMemo(() => {
+    if (
+      smartLink?.scopeType === 'geo_points' &&
+      smartLink.geoPointIds &&
+      smartLink.geoPointIds.length > 0
+    ) {
+      const scopedIds = new Set(smartLink.geoPointIds)
+      return points.filter((p) => scopedIds.has(p.id))
+    }
+    return points
+  }, [points, smartLink?.scopeType, smartLink?.geoPointIds])
+
+  // ── Validation state (unchanged) ─────────────────────────────────────────
   const [validation, setValidation] = useState<ValidationState>({ phase: 'idle' })
 
-  // ── Heartbeat — same mechanism as /public ─────────────────────────────────
-  // Starts once matchedGeoPointId is known (after successful validate).
-  // Runs every 5 seconds, same interval as PublicPage.
-  // Feeds geo_point_live_visits → Live Visits → Intensidad GPS → Zonas Calientes.
+  // ── P4: liveVisitsMap (per-point) instead of a single global count ────────
+  // Heartbeat only runs for matchedGeoPointId, so only that point gets a real
+  // count.  Other points receive undefined → computePointAvailability falls
+  // back to the optimistic "minimum required" label, which is correct.
+  const [liveVisitsMap, setLiveVisitsMap] = useState<Record<string, number>>({})
+
+  // ── Heartbeat (unchanged frequency/payload/endpoint) ─────────────────────
   useEffect(() => {
     if (validation.phase !== 'unlocked') return
     const { matchedGeoPointId } = validation
@@ -288,6 +721,10 @@ export default function SmartLinkPublicPage() {
         lat:        loc.latitude,
         lng:        loc.longitude,
         accuracy:   loc.accuracy,
+      }).then((res) => {
+        if (res.active_now !== undefined) {
+          setLiveVisitsMap((prev) => ({ ...prev, [matchedGeoPointId]: res.active_now! }))
+        }
       })
     }
 
@@ -296,20 +733,19 @@ export default function SmartLinkPublicPage() {
     return () => clearInterval(timer)
   }, [validation.phase === 'unlocked' ? validation.matchedGeoPointId : null]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Continuar handler ──────────────────────────────────────────────────────
+  // ── Continuar handler (unchanged) ────────────────────────────────────────
   async function handleContinue() {
     setValidation({ phase: 'requesting' })
 
-    // Step 1 — GPS (same as /public: getCurrentPosition first time, then watch)
     if (!userLocation) {
-      await new Promise<void>((resolve) => {
+      await new Promise<void>((res) => {
         requestLocation((loc, status) => {
           setUserLocation(loc, status)
           if (loc) {
-            setLocationActive(true)  // start watchPosition
+            setLocationActive(true)
             locationRef.current = loc
           }
-          resolve()
+          res()
         })
       })
     }
@@ -320,7 +756,6 @@ export default function SmartLinkPublicPage() {
       return
     }
 
-    // Step 2 — POST /validate (backend owns all validation logic)
     setValidation({ phase: 'validating' })
     try {
       const result = await validatePublicSmartLink(organizationSlug, smartLinkSlug, {
@@ -331,7 +766,6 @@ export default function SmartLinkPublicPage() {
       })
 
       if (result.allowed && result.destinationUrl && result.matchedGeoPointId) {
-        // Activate GPS watch now that we have an area to track
         setLocationActive(true)
         setValidation({
           phase:             'unlocked',
@@ -356,16 +790,19 @@ export default function SmartLinkPublicPage() {
     }
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────────
 
   if (loading) {
     return (
-      <Screen>
-        <div className="space-y-3">
-          <p className="text-sm text-gray-400">Validando acceso…</p>
-          <div className="flex justify-center"><Spin /></div>
+      <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center px-4 text-gray-100">
+        <div className="w-full max-w-sm space-y-8 text-center">
+          <img src="/logo-blanco.png" alt="Ubyca" className="h-7 mx-auto opacity-90" />
+          <div className="space-y-3">
+            <p className="text-sm text-gray-400">Cargando…</p>
+            <div className="flex justify-center"><Spin /></div>
+          </div>
         </div>
-      </Screen>
+      </div>
     )
   }
 
@@ -373,9 +810,13 @@ export default function SmartLinkPublicPage() {
 
   if (smartLink) {
     return (
-      <ExperienceScreen
+      <SmartLinkLanding
         smartLink={smartLink}
+        project={project}
+        points={displayPoints}
         validation={validation}
+        userLocation={userLocation}
+        liveVisitsMap={liveVisitsMap}
         onContinue={handleContinue}
       />
     )

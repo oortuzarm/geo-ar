@@ -272,6 +272,31 @@ function UserFlyController({
   return null
 }
 
+// Recalibrates Leaflet after the map container resizes (expand / collapse).
+// setTimeout(50) gives the browser time to apply the new CSS dimensions before
+// Leaflet reads them.  Saves and restores center+zoom so the view is preserved.
+function SizeController({ isExpanded }: { isExpanded: boolean }) {
+  const map = useMap()
+  const prevRef = useRef(isExpanded)
+
+  useEffect(() => {
+    if (isExpanded === prevRef.current) return
+    prevRef.current = isExpanded
+
+    const center = map.getCenter()
+    const zoom   = map.getZoom()
+
+    const timer = setTimeout(() => {
+      map.invalidateSize({ animate: false })
+      map.setView(center, zoom, { animate: false })
+    }, 50)
+
+    return () => clearTimeout(timer)
+  }, [map, isExpanded])
+
+  return null
+}
+
 // ── Landing map ───────────────────────────────────────────────────────────────
 //
 // Read-only / visual-only map.  No GPS watchers, no analytics, no sessions,
@@ -297,6 +322,12 @@ function LandingMap({
   const [centeredOnUser, setCenteredOnUser] = useState(false)
   // Incrementing this triggers BoundsController to re-apply fitBounds.
   const [boundsResetKey, setBoundsResetKey] = useState(0)
+
+  // ── Fullscreen expand toggle ────────────────────────────────────────────────
+  // When true the map wrapper becomes position:fixed covering the full viewport.
+  // SizeController calls invalidateSize() + restores center/zoom after the CSS
+  // change so Leaflet tiles and markers render correctly at the new size.
+  const [isExpanded, setIsExpanded] = useState(false)
 
   function handleLocationToggle() {
     if (!centeredOnUser) {
@@ -374,10 +405,19 @@ function LandingMap({
     ? ([initialBounds.getCenter().lat, initialBounds.getCenter().lng] as [number, number])
     : ([points[0].latitude, points[0].longitude] as [number, number])
 
+  // ── Button bar common style ─────────────────────────────────────────────────
+  const btnCls = 'w-10 h-10 flex items-center justify-center bg-white rounded-full ' +
+                 'border border-gray-200/60 shadow-md transition-all duration-150 ' +
+                 'active:scale-95 hover:shadow-lg'
+
   return (
-    // relative wrapper so the toggle button can be positioned over the map.
-    // h-full / w-full fill the parent container (h-52 in SmartLinkLanding).
-    <div className="relative h-full w-full">
+    // Normal:   relative h-full w-full  →  fills the h-52 parent container.
+    // Expanded: fixed inset-0 z-[9999]  →  covers the full viewport.
+    // position:fixed escapes overflow:hidden on the parent, no DOM move needed.
+    <div className={isExpanded
+      ? 'fixed inset-0 z-[9999] bg-white'
+      : 'relative h-full w-full'
+    }>
       <MapContainer
         center={center}
         zoom={14}
@@ -386,10 +426,10 @@ function LandingMap({
         attributionControl={false}
       >
         <BaseMapLayer styleId="streets" />
-        {/* BoundsController: initial fitBounds + re-fires when boundsResetKey increments */}
         <BoundsController bounds={initialBounds} resetKey={boundsResetKey} />
-        {/* UserFlyController: setView to user coords on false→true transition */}
         <UserFlyController centeredOnUser={centeredOnUser} userLocation={userLocation} />
+        {/* SizeController: invalidateSize + restore view after expand / collapse */}
+        <SizeController isExpanded={isExpanded} />
         <MapController flyKey={flyKey} flyTarget={flyTarget} />
 
         {points.map((p) => (
@@ -403,7 +443,6 @@ function LandingMap({
           />
         ))}
 
-        {/* Walking route — visual only, no analytics, no bounds effect */}
         {routeLatLngs && routeLatLngs.length >= 2 && (
           <RoutePolyline latLngs={routeLatLngs} />
         )}
@@ -417,33 +456,48 @@ function LandingMap({
         )}
       </MapContainer>
 
-      {/* Location toggle button — overlaid on map, bottom-right corner.
-          Matches the visual style and icons of /public's location button.
-          No analytics, no GPS requests, no heartbeat. */}
+      {/* Location toggle — bottom-right */}
       {userLocation && (
         <button
           onClick={handleLocationToggle}
-          className="absolute right-2 bottom-2 z-[450]
-                     w-10 h-10 flex items-center justify-center
-                     bg-white rounded-full border border-gray-200/60 shadow-md
-                     transition-all duration-150 active:scale-95 hover:shadow-lg"
+          className={`absolute right-2 bottom-2 z-[450] ${btnCls}`}
           title={centeredOnUser ? 'Vista del proyecto' : 'Mi ubicación'}
           aria-label={centeredOnUser ? 'Vista del proyecto' : 'Mi ubicación'}
         >
           {centeredOnUser ? (
-            /* Return-to-overview icon (green) — same SVG as /public */
             <svg className="h-5 w-5 text-green-500" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 9V5h4M15 5h4v4M15 19h4v-4M5 15v4h4" />
             </svg>
           ) : (
-            /* Navigation arrow (blue) — same SVG as /public */
             <svg className="h-5 w-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2 L4 22 L12 17.5 L20 22 Z" />
             </svg>
           )}
         </button>
       )}
+
+      {/* Expand / collapse — bottom-left */}
+      <button
+        onClick={() => setIsExpanded((e) => !e)}
+        className={`absolute left-2 bottom-2 z-[450] ${btnCls}`}
+        title={isExpanded ? 'Reducir mapa' : 'Ampliar mapa'}
+        aria-label={isExpanded ? 'Reducir mapa' : 'Ampliar mapa'}
+      >
+        {isExpanded ? (
+          /* Collapse / exit-fullscreen icon */
+          <svg className="h-5 w-5 text-gray-600" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M8 3v3a2 2 0 01-2 2H3M21 8h-3a2 2 0 01-2-2V3M3 16h3a2 2 0 012 2v3M16 21v-3a2 2 0 012-2h3" />
+          </svg>
+        ) : (
+          /* Expand / enter-fullscreen icon */
+          <svg className="h-5 w-5 text-gray-600" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M8 3H5a2 2 0 00-2 2v3M21 8V5a2 2 0 00-2-2h-3M3 16v3a2 2 0 002 2h3M16 21h3a2 2 0 002-2v-3" />
+          </svg>
+        )}
+      </button>
     </div>
   )
 }

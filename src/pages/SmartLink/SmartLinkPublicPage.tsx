@@ -30,9 +30,11 @@ import { computePointAvailability }              from '../../features/geolocatio
 import { getPointGalleryImages }                 from '../../lib/pointImageUtils'
 import PointImageCarousel                        from '../../components/public/PointImageCarousel'
 import PublicPointMarker                         from '../../components/map/PublicPointMarker'
+import RoutePolyline                             from '../../components/map/RoutePolyline'
 import BaseMapLayer                              from '../../components/map/BaseMapLayer'
 import MapController                             from '../../components/map/MapController'
 import type { FlyTarget }                        from '../../components/map/MapController'
+import { fetchWalkingRoute }                     from '../../features/routing/orsClient'
 import {
   resolvePublicSmartLink,
   validatePublicSmartLink,
@@ -198,10 +200,27 @@ function AvailabilityBadge({ validation }: { validation: ValidationState }) {
 
 // ── User location Leaflet icon ────────────────────────────────────────────────
 
+// "Mi ubicación" marker — blue dot + small white pill label.
+// The label is embedded in the divIcon HTML so no extra react-leaflet component
+// is needed.  iconAnchor [7,7] places the dot's centre at the map coordinate.
+// iconSize width (120) is wide enough to render the pill without clipping.
 const USER_DOT_ICON = L.divIcon({
   className: '',
-  html: '<div style="width:14px;height:14px;border-radius:50%;background:#3B82F6;border:2.5px solid white;box-shadow:0 0 0 3px rgba(59,130,246,0.25)"></div>',
-  iconSize:   [14, 14],
+  html: `<div style="display:flex;align-items:center;gap:4px;pointer-events:none">
+    <div style="
+      width:14px;height:14px;flex-shrink:0;border-radius:50%;
+      background:#3B82F6;border:2.5px solid white;
+      box-shadow:0 0 0 3px rgba(59,130,246,0.25)
+    "></div>
+    <span style="
+      font:600 10px/14px system-ui,sans-serif;
+      color:#1d4ed8;white-space:nowrap;pointer-events:none;
+      background:rgba(255,255,255,0.93);
+      padding:0 5px;border-radius:3px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.18)
+    ">Mi ubicación</span>
+  </div>`,
+  iconSize:   [120, 14],
   iconAnchor: [7, 7],
 })
 
@@ -256,10 +275,12 @@ interface LandingMapProps {
   onSelectPoint:   (id: string) => void
   flyKey:          string | null
   flyTarget:       FlyTarget | null
+  /** Walking route from userLocation to selectedPoint — visual only, no analytics */
+  routeLatLngs:    [number, number][] | null
 }
 
 function LandingMap({
-  points, selectedPointId, userLocation, onSelectPoint, flyKey, flyTarget,
+  points, selectedPointId, userLocation, onSelectPoint, flyKey, flyTarget, routeLatLngs,
 }: LandingMapProps) {
   // Compute initial map bounds that include each point's activation area.
   //
@@ -350,6 +371,11 @@ function LandingMap({
           small
         />
       ))}
+
+      {/* Walking route — visual only, no analytics, no bounds effect */}
+      {routeLatLngs && routeLatLngs.length >= 2 && (
+        <RoutePolyline latLngs={routeLatLngs} />
+      )}
 
       {userLocation && (
         <Marker
@@ -492,6 +518,31 @@ function SmartLinkLanding({
       : null,
     [selectedPoint, distance, userLocation, liveVisitsMap],
   )
+
+  // ── Walking route (visual only — no analytics, no new GPS watcher) ──────────
+  // Fetches an ORS pedestrian route from userLocation to the selected point.
+  // Silently fails if ORS key is missing or the API is unavailable — no route
+  // is shown rather than breaking the UI.  The route does NOT influence bounds.
+  const [routeLatLngs, setRouteLatLngs] = useState<[number, number][] | null>(null)
+
+  useEffect(() => {
+    if (!userLocation || !selectedPoint) {
+      setRouteLatLngs(null)
+      return
+    }
+
+    let cancelled = false
+
+    fetchWalkingRoute(
+      userLocation.latitude,  userLocation.longitude,
+      selectedPoint.latitude, selectedPoint.longitude,
+    )
+      .then((result) => { if (!cancelled) setRouteLatLngs(result.latLngs) })
+      .catch(() =>      { if (!cancelled) setRouteLatLngs(null) })
+
+    return () => { cancelled = true }
+  // Re-fetch when the user picks a different point or location becomes available.
+  }, [selectedPoint?.id, userLocation]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Map fly-to ──────────────────────────────────────────────────────────────
   const [flyKey,    setFlyKey]    = useState<string | null>(null)
@@ -654,6 +705,7 @@ function SmartLinkLanding({
                 onSelectPoint={handleSelectPoint}
                 flyKey={flyKey}
                 flyTarget={flyTarget}
+                routeLatLngs={routeLatLngs}
               />
             </div>
             {hasOtherPts && (

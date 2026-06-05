@@ -525,8 +525,11 @@ function CTAButton({
   hasLocation:   boolean
   onContinue:    () => void
 }) {
-  const busy = validation.phase === 'requesting' || validation.phase === 'validating'
+  const busy    = validation.phase === 'requesting' || validation.phase === 'validating'
+  // Single source of truth for the action label — reutilizes Punto GPS buttonText.
+  const ctaText = selectedPoint?.buttonText || 'Acceder al contenido'
 
+  // ── Unlocked: active CTA, opens destination ─────────────────────────────────
   if (validation.phase === 'unlocked') {
     return (
       <button
@@ -535,12 +538,30 @@ function CTAButton({
                    rounded-2xl text-[15px] transition-all active:scale-[0.98]
                    shadow-lg shadow-brand-900/30"
       >
-        {selectedPoint?.buttonText || 'Abrir experiencia →'}
+        {ctaText}
       </button>
     )
   }
 
-  if (validation.phase === 'blocked' || validation.phase === 'location_error') {
+  // ── Blocked by validation: show buttonText disabled ─────────────────────────
+  // The backend already evaluated the user's position — "Reintentar" is not
+  // useful here.  The disabled button communicates what they'll access once
+  // they meet the requirements (enter area, wait for schedule, etc.).
+  if (validation.phase === 'blocked') {
+    return (
+      <button
+        disabled
+        className="w-full py-4 bg-gray-100 text-gray-400 font-bold
+                   rounded-2xl text-[15px] border border-gray-200
+                   cursor-not-allowed shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+      >
+        {ctaText}
+      </button>
+    )
+  }
+
+  // ── GPS error: Reintentar is valid — user can grant permissions or go outside ─
+  if (validation.phase === 'location_error') {
     return (
       <button
         onClick={onContinue}
@@ -552,11 +573,11 @@ function CTAButton({
     )
   }
 
-  // idle / requesting / validating
+  // ── idle / requesting / validating ──────────────────────────────────────────
   const label =
     validation.phase === 'requesting' ? 'Obteniendo ubicación…' :
     validation.phase === 'validating' ? 'Verificando…'          :
-    hasLocation                       ? 'Continuar →'           :
+    hasLocation                       ? ctaText                 :
                                         'Permitir ubicación →'
 
   return (

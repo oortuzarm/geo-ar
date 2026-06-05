@@ -22,7 +22,7 @@ import L                                         from 'leaflet'
 import { ApiError, apiFetch }                    from '../../lib/apiFetch'
 import { normalizeGeoPoint }                     from '../../lib/normalizeGeoPoint'
 import { useGeoStore }                           from '../../store/geoStore'
-import { useGeolocation, requestLocation }       from '../../hooks/useGeolocation'
+import { useGeolocation, getCurrentPosition }    from '../../hooks/useGeolocation'
 import { sendHeartbeat }                         from '../../services/liveVisitsApi'
 import { getLiveVisitSessionId }                 from '../../utils/liveVisits'
 import { haversineDistance, formatDistance }     from '../../features/geolocation/haversine'
@@ -180,12 +180,21 @@ function AvailabilityBadge({ validation }: { validation: ValidationState }) {
       </span>
     )
   }
-  if (validation.phase === 'requesting' || validation.phase === 'validating') {
+  if (validation.phase === 'requesting') {
     return (
       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                        bg-gray-100 border border-gray-200">
         <Spin size="sm" />
-        <span className="text-xs font-semibold text-gray-500">Validando…</span>
+        <span className="text-xs font-semibold text-gray-500">Obteniendo ubicación…</span>
+      </span>
+    )
+  }
+  if (validation.phase === 'validating') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                       bg-gray-100 border border-gray-200">
+        <Spin size="sm" />
+        <span className="text-xs font-semibold text-gray-500">Verificando…</span>
       </span>
     )
   }
@@ -507,10 +516,13 @@ function LandingMap({
 function CTAButton({
   validation,
   selectedPoint,
+  hasLocation,
   onContinue,
 }: {
   validation:    ValidationState
   selectedPoint: GeoPoint | null
+  /** True when userLocation is already in store (GPS previously granted). */
+  hasLocation:   boolean
   onContinue:    () => void
 }) {
   const busy = validation.phase === 'requesting' || validation.phase === 'validating'
@@ -540,6 +552,13 @@ function CTAButton({
     )
   }
 
+  // idle / requesting / validating
+  const label =
+    validation.phase === 'requesting' ? 'Obteniendo ubicación…' :
+    validation.phase === 'validating' ? 'Verificando…'          :
+    hasLocation                       ? 'Continuar →'           :
+                                        'Permitir ubicación →'
+
   return (
     <button
       onClick={onContinue}
@@ -550,7 +569,7 @@ function CTAButton({
                  flex items-center justify-center gap-2.5"
     >
       {busy && <Spin size="sm" />}
-      {busy ? 'Validando ubicación…' : 'Continuar →'}
+      {label}
     </button>
   )
 }
@@ -850,6 +869,7 @@ function SmartLinkLanding({
         <CTAButton
           validation={validation}
           selectedPoint={selectedPoint}
+          hasLocation={userLocation !== null}
           onContinue={onContinue}
         />
 
@@ -987,27 +1007,42 @@ export default function SmartLinkPublicPage() {
     return () => clearInterval(timer)
   }, [validation.phase === 'unlocked' ? validation.matchedGeoPointId : null]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Continuar handler (unchanged) ────────────────────────────────────────
+  // ── Continuar handler ────────────────────────────────────────────────────
+  //
+  // Root cause of the 2-click bug (now fixed):
+  //   requestLocation() called its callback *synchronously* with (null,'requesting')
+  //   before GPS responded, which resolved the Promise immediately with loc=null,
+  //   causing location_error even though the user had accepted the GPS prompt.
+  //
+  // Fix: use getCurrentPosition() which returns a genuine Promise that resolves
+  //   only when the browser delivers real coordinates (or rejects on denial/timeout).
+  //   No intermediate 'requesting' callback fires — the flow is linear.
   async function handleContinue() {
     setValidation({ phase: 'requesting' })
 
-    if (!userLocation) {
-      await new Promise<void>((res) => {
-        requestLocation((loc, status) => {
-          setUserLocation(loc, status)
-          if (loc) {
-            setLocationActive(true)
-            locationRef.current = loc
-          }
-          res()
-        })
-      })
-    }
+    // Use coordinates already in the store when available (GPS previously granted).
+    let loc = locationRef.current
 
-    const loc = locationRef.current
     if (!loc) {
-      setValidation({ phase: 'location_error' })
-      return
+      try {
+        // Awaits until the browser delivers real GPS coordinates.
+        // Rejects on PERMISSION_DENIED (code 1), POSITION_UNAVAILABLE (code 2),
+        // or TIMEOUT (code 3) — all genuine failures shown as location_error.
+        const pos = await getCurrentPosition()
+        loc = {
+          latitude:  pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy:  pos.coords.accuracy,
+        }
+        setUserLocation(loc, 'active')
+        setLocationActive(true)
+        locationRef.current = loc
+      } catch (err) {
+        const code = (err as GeolocationPositionError)?.code
+        setUserLocation(null, code === 1 ? 'denied' : 'unavailable')
+        setValidation({ phase: 'location_error' })
+        return
+      }
     }
 
     setValidation({ phase: 'validating' })

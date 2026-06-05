@@ -222,29 +222,77 @@ interface LandingMapProps {
 function LandingMap({
   points, selectedPointId, userLocation, onSelectPoint, flyKey, flyTarget,
 }: LandingMapProps) {
-  const bounds = useMemo(() => {
+  // Compute initial map bounds that include each point's activation area.
+  //
+  // For radius mode: extend lat/lng by the circle radius converted to degrees,
+  // so the full activation ring is visible, not just the centre marker.
+  // For polygon mode: use the polygon vertices directly.
+  //
+  // `points` is already filtered to the Smart Link's visible scope
+  // (all project points for scopeType='project', or geoPointIds subset for
+  // scopeType='geo_points') — see displayPoints in SmartLinkPublicPage.
+  //
+  // boundsOptions.maxZoom=17 prevents over-zooming on very small radii.
+  // boundsOptions.padding=[32,32] adds 32px of visual breathing room.
+  const initialBounds = useMemo(() => {
     if (points.length === 0) return null
-    const lats = points.map((p) => p.latitude)
-    const lngs = points.map((p) => p.longitude)
-    const pad = 0.006
-    return L.latLngBounds(
-      [Math.min(...lats) - pad, Math.min(...lngs) - pad],
-      [Math.max(...lats) + pad, Math.max(...lngs) + pad],
-    )
+
+    let latMin = Infinity, latMax = -Infinity, lngMin = Infinity, lngMax = -Infinity
+
+    for (const p of points) {
+      // Always include the marker centre (guarantees at least one valid coord)
+      latMin = Math.min(latMin, p.latitude)
+      latMax = Math.max(latMax, p.latitude)
+      lngMin = Math.min(lngMin, p.longitude)
+      lngMax = Math.max(lngMax, p.longitude)
+
+      if (p.activationMode === 'polygon' && p.activationPolygon) {
+        // Polygon mode: expand bounds to cover every vertex of the polygon.
+        const geom = p.activationPolygon.geometry
+        const rings: number[][][] =
+          geom.type === 'Polygon'
+            ? (geom.coordinates as number[][][])
+            : geom.type === 'MultiPolygon'
+              ? (geom.coordinates as number[][][][]).flat()
+              : []
+        for (const ring of rings) {
+          for (const pos of ring) {
+            // GeoJSON position: [longitude, latitude, ...optional elevation]
+            latMin = Math.min(latMin, pos[1])
+            latMax = Math.max(latMax, pos[1])
+            lngMin = Math.min(lngMin, pos[0])
+            lngMax = Math.max(lngMax, pos[0])
+          }
+        }
+      } else {
+        // Radius mode: bounding box of the activation circle in degree space.
+        // dLat = metres / (metres per degree of latitude)  ~111 320 m/°
+        // dLng = dLat / cos(latitude)  — longitude degrees are shorter near the poles
+        const r    = p.activationRadius
+        const dLat = r / 111_320
+        const dLng = r / (111_320 * Math.cos(p.latitude * (Math.PI / 180)))
+        latMin = Math.min(latMin, p.latitude  - dLat)
+        latMax = Math.max(latMax, p.latitude  + dLat)
+        lngMin = Math.min(lngMin, p.longitude - dLng)
+        lngMax = Math.max(lngMax, p.longitude + dLng)
+      }
+    }
+
+    return L.latLngBounds([latMin, lngMin], [latMax, lngMax])
   }, [points])
 
   if (points.length === 0) return null
 
-  const center = bounds
-    ? ([bounds.getCenter().lat, bounds.getCenter().lng] as [number, number])
+  const center = initialBounds
+    ? ([initialBounds.getCenter().lat, initialBounds.getCenter().lng] as [number, number])
     : ([points[0].latitude, points[0].longitude] as [number, number])
 
   return (
     <MapContainer
       center={center}
       zoom={14}
-      bounds={bounds ?? undefined}
-      boundsOptions={{ padding: [32, 32] }}
+      bounds={initialBounds ?? undefined}
+      boundsOptions={{ padding: [32, 32], maxZoom: 17 }}
       style={{ width: '100%', height: '100%' }}
       zoomControl={false}
       attributionControl={false}

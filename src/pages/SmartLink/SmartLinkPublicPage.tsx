@@ -677,14 +677,23 @@ function SmartLinkLanding({
 
   // ── Walking route (visual only — no analytics, no new GPS watcher) ──────────
   // Fetches an ORS pedestrian route from userLocation to the selected point.
-  // Silently fails if ORS key is missing or the API is unavailable — no route
-  // is shown rather than breaking the UI.  The route does NOT influence bounds.
-  const [routeLatLngs,          setRouteLatLngs]          = useState<[number, number][] | null>(null)
-  const [walkingDistanceMeters, setWalkingDistanceMeters] = useState<number | undefined>(undefined)
+  // Falls back to a straight line if ORS is unavailable — the route does NOT
+  // influence bounds, analytics, or validation.
+  //
+  // BUG FIX: userLocation is a Zustand object whose reference changes on every
+  // GPS tick even when coordinates are identical.  Depending on the full object
+  // caused the effect to fire and cancel the ORS request on every GPS update,
+  // so the route never resolved.  Using primitive lat/lng values as dependencies
+  // means the effect only re-fires when coordinates actually change numerically.
+  const [routeLatLngs,           setRouteLatLngs]           = useState<[number, number][] | null>(null)
+  const [walkingDistanceMeters,  setWalkingDistanceMeters]  = useState<number | undefined>(undefined)
   const [walkingDurationSeconds, setWalkingDurationSeconds] = useState<number | undefined>(undefined)
 
+  const userLat = userLocation?.latitude
+  const userLng = userLocation?.longitude
+
   useEffect(() => {
-    if (!userLocation || !selectedPoint) {
+    if (userLat === undefined || userLng === undefined || !selectedPoint) {
       setRouteLatLngs(null)
       setWalkingDistanceMeters(undefined)
       setWalkingDurationSeconds(undefined)
@@ -693,10 +702,7 @@ function SmartLinkLanding({
 
     let cancelled = false
 
-    fetchWalkingRoute(
-      userLocation.latitude,  userLocation.longitude,
-      selectedPoint.latitude, selectedPoint.longitude,
-    )
+    fetchWalkingRoute(userLat, userLng, selectedPoint.latitude, selectedPoint.longitude)
       .then((result) => {
         if (!cancelled) {
           setRouteLatLngs(result.latLngs)
@@ -706,15 +712,19 @@ function SmartLinkLanding({
       })
       .catch(() => {
         if (!cancelled) {
-          setRouteLatLngs(null)
+          // ORS unavailable (no key, rate limit, network) — show a straight line
+          // so the map always has a visual route. Does not affect analytics/validation.
+          setRouteLatLngs([
+            [userLat, userLng],
+            [selectedPoint.latitude, selectedPoint.longitude],
+          ])
           setWalkingDistanceMeters(undefined)
           setWalkingDurationSeconds(undefined)
         }
       })
 
     return () => { cancelled = true }
-  // Re-fetch when the user picks a different point or location becomes available.
-  }, [selectedPoint?.id, userLocation]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedPoint?.id, userLat, userLng])
 
   // ── Map fly-to ──────────────────────────────────────────────────────────────
   const [flyKey,    setFlyKey]    = useState<string | null>(null)

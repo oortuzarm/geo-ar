@@ -17,7 +17,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams }                             from 'react-router-dom'
-import { MapContainer, Marker }                  from 'react-leaflet'
+import { MapContainer, Marker, useMap }           from 'react-leaflet'
 import L                                         from 'leaflet'
 import { ApiError, apiFetch }                    from '../../lib/apiFetch'
 import { normalizeGeoPoint }                     from '../../lib/normalizeGeoPoint'
@@ -205,6 +205,45 @@ const USER_DOT_ICON = L.divIcon({
   iconAnchor: [7, 7],
 })
 
+// ── BoundsController ─────────────────────────────────────────────────────────
+//
+// Inner Leaflet component (must live inside MapContainer to call useMap).
+//
+// WHY this exists:
+//   When MapContainer first mounts, Leaflet reads the container's pixel size to
+//   calibrate its internal coordinate system.  If the surrounding CSS layout
+//   hasn't been painted yet (flex containers, overflow:hidden, border-radius),
+//   Leaflet may measure a 0×0 box and miscalculate the initial fitBounds,
+//   leaving the points off-centre or clipped to a corner.
+//
+//   Solution: wait one animation frame (so the browser has completed layout and
+//   paint), call invalidateSize() to let Leaflet re-read the true container
+//   dimensions, then apply fitBounds with the pre-computed bounds.
+//
+// LOOP SAFETY:
+//   The effect depends only on [map, bounds].  `map` is the stable Leaflet
+//   instance (never changes for the lifetime of this MapContainer).  `bounds`
+//   changes only when the `points` prop changes — which happens once on initial
+//   load, not on every user interaction.  flyTo actions (MapController) don't
+//   mutate `bounds`, so they are never overridden by this effect.
+
+const MAP_BOUNDS_OPTIONS: L.FitBoundsOptions = { padding: [32, 32], maxZoom: 17 }
+
+function BoundsController({ bounds }: { bounds: L.LatLngBounds | null }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!bounds) return
+    const raf = requestAnimationFrame(() => {
+      map.invalidateSize()
+      map.fitBounds(bounds, MAP_BOUNDS_OPTIONS)
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [map, bounds])
+
+  return null
+}
+
 // ── Landing map ───────────────────────────────────────────────────────────────
 //
 // Read-only / visual-only map.  No GPS watchers, no analytics, no sessions,
@@ -291,13 +330,14 @@ function LandingMap({
     <MapContainer
       center={center}
       zoom={14}
-      bounds={initialBounds ?? undefined}
-      boundsOptions={{ padding: [32, 32], maxZoom: 17 }}
       style={{ width: '100%', height: '100%' }}
       zoomControl={false}
       attributionControl={false}
     >
       <BaseMapLayer styleId="streets" />
+      {/* BoundsController applies fitBounds after one RAF so Leaflet reads
+          the true container dimensions (see component comment above). */}
+      <BoundsController bounds={initialBounds} />
       <MapController flyKey={flyKey} flyTarget={flyTarget} />
 
       {points.map((p) => (

@@ -200,27 +200,10 @@ function AvailabilityBadge({ validation }: { validation: ValidationState }) {
 
 // ── User location Leaflet icon ────────────────────────────────────────────────
 
-// "Mi ubicación" marker — blue dot + small white pill label.
-// The label is embedded in the divIcon HTML so no extra react-leaflet component
-// is needed.  iconAnchor [7,7] places the dot's centre at the map coordinate.
-// iconSize width (120) is wide enough to render the pill without clipping.
 const USER_DOT_ICON = L.divIcon({
   className: '',
-  html: `<div style="display:flex;align-items:center;gap:4px;pointer-events:none">
-    <div style="
-      width:14px;height:14px;flex-shrink:0;border-radius:50%;
-      background:#3B82F6;border:2.5px solid white;
-      box-shadow:0 0 0 3px rgba(59,130,246,0.25)
-    "></div>
-    <span style="
-      font:600 10px/14px system-ui,sans-serif;
-      color:#1d4ed8;white-space:nowrap;pointer-events:none;
-      background:rgba(255,255,255,0.93);
-      padding:0 5px;border-radius:3px;
-      box-shadow:0 1px 3px rgba(0,0,0,0.18)
-    ">Mi ubicación</span>
-  </div>`,
-  iconSize:   [120, 14],
+  html: '<div style="width:14px;height:14px;border-radius:50%;background:#3B82F6;border:2.5px solid white;box-shadow:0 0 0 3px rgba(59,130,246,0.25)"></div>',
+  iconSize:   [14, 14],
   iconAnchor: [7, 7],
 })
 
@@ -248,7 +231,9 @@ const USER_DOT_ICON = L.divIcon({
 
 const MAP_BOUNDS_OPTIONS: L.FitBoundsOptions = { padding: [32, 32], maxZoom: 17 }
 
-function BoundsController({ bounds }: { bounds: L.LatLngBounds | null }) {
+// resetKey: incrementing from outside re-applies fitBounds with animation
+// (used by the location toggle button to return to the project overview).
+function BoundsController({ bounds, resetKey }: { bounds: L.LatLngBounds | null; resetKey: number }) {
   const map = useMap()
 
   useEffect(() => {
@@ -258,7 +243,31 @@ function BoundsController({ bounds }: { bounds: L.LatLngBounds | null }) {
       map.fitBounds(bounds, MAP_BOUNDS_OPTIONS)
     })
     return () => cancelAnimationFrame(raf)
-  }, [map, bounds])
+  }, [map, bounds, resetKey])
+
+  return null
+}
+
+// Flies to the user's GPS position when centeredOnUser transitions false → true.
+// When the toggle reverses, does nothing — BoundsController handles the return
+// to overview via boundsResetKey.  prevRef prevents a setView on initial mount.
+function UserFlyController({
+  centeredOnUser,
+  userLocation,
+}: {
+  centeredOnUser: boolean
+  userLocation:   { latitude: number; longitude: number } | null
+}) {
+  const map = useMap()
+  const prevRef = useRef(false)
+
+  useEffect(() => {
+    const wasAlreadyCentered = prevRef.current
+    prevRef.current = centeredOnUser
+    if (centeredOnUser && !wasAlreadyCentered && userLocation) {
+      map.setView([userLocation.latitude, userLocation.longitude], 17, { animate: true })
+    }
+  }, [map, centeredOnUser, userLocation])
 
   return null
 }
@@ -282,6 +291,24 @@ interface LandingMapProps {
 function LandingMap({
   points, selectedPointId, userLocation, onSelectPoint, flyKey, flyTarget, routeLatLngs,
 }: LandingMapProps) {
+  // ── Toggle state for the location button ───────────────────────────────────
+  // false = "go to my location" (navigation arrow)
+  // true  = "return to project overview" (fit-to-bounds icon)
+  const [centeredOnUser, setCenteredOnUser] = useState(false)
+  // Incrementing this triggers BoundsController to re-apply fitBounds.
+  const [boundsResetKey, setBoundsResetKey] = useState(0)
+
+  function handleLocationToggle() {
+    if (!centeredOnUser) {
+      // Go to user's GPS position — UserFlyController watches this transition.
+      setCenteredOnUser(true)
+    } else {
+      // Return to project overview — BoundsController re-applies fitBounds.
+      setCenteredOnUser(false)
+      setBoundsResetKey((k) => k + 1)
+    }
+  }
+
   // Compute initial map bounds that include each point's activation area.
   //
   // For radius mode: extend lat/lng by the circle radius converted to degrees,
@@ -348,43 +375,76 @@ function LandingMap({
     : ([points[0].latitude, points[0].longitude] as [number, number])
 
   return (
-    <MapContainer
-      center={center}
-      zoom={14}
-      style={{ width: '100%', height: '100%' }}
-      zoomControl={false}
-      attributionControl={false}
-    >
-      <BaseMapLayer styleId="streets" />
-      {/* BoundsController applies fitBounds after one RAF so Leaflet reads
-          the true container dimensions (see component comment above). */}
-      <BoundsController bounds={initialBounds} />
-      <MapController flyKey={flyKey} flyTarget={flyTarget} />
+    // relative wrapper so the toggle button can be positioned over the map.
+    // h-full / w-full fill the parent container (h-52 in SmartLinkLanding).
+    <div className="relative h-full w-full">
+      <MapContainer
+        center={center}
+        zoom={14}
+        style={{ width: '100%', height: '100%' }}
+        zoomControl={false}
+        attributionControl={false}
+      >
+        <BaseMapLayer styleId="streets" />
+        {/* BoundsController: initial fitBounds + re-fires when boundsResetKey increments */}
+        <BoundsController bounds={initialBounds} resetKey={boundsResetKey} />
+        {/* UserFlyController: setView to user coords on false→true transition */}
+        <UserFlyController centeredOnUser={centeredOnUser} userLocation={userLocation} />
+        <MapController flyKey={flyKey} flyTarget={flyTarget} />
 
-      {points.map((p) => (
-        <PublicPointMarker
-          key={p.id}
-          point={p}
-          selected={p.id === selectedPointId}
-          dimmed={selectedPointId !== null && p.id !== selectedPointId}
-          onClick={() => onSelectPoint(p.id)}
-          small
-        />
-      ))}
+        {points.map((p) => (
+          <PublicPointMarker
+            key={p.id}
+            point={p}
+            selected={p.id === selectedPointId}
+            dimmed={selectedPointId !== null && p.id !== selectedPointId}
+            onClick={() => onSelectPoint(p.id)}
+            small
+          />
+        ))}
 
-      {/* Walking route — visual only, no analytics, no bounds effect */}
-      {routeLatLngs && routeLatLngs.length >= 2 && (
-        <RoutePolyline latLngs={routeLatLngs} />
-      )}
+        {/* Walking route — visual only, no analytics, no bounds effect */}
+        {routeLatLngs && routeLatLngs.length >= 2 && (
+          <RoutePolyline latLngs={routeLatLngs} />
+        )}
 
+        {userLocation && (
+          <Marker
+            position={[userLocation.latitude, userLocation.longitude]}
+            icon={USER_DOT_ICON}
+            zIndexOffset={2000}
+          />
+        )}
+      </MapContainer>
+
+      {/* Location toggle button — overlaid on map, bottom-right corner.
+          Matches the visual style and icons of /public's location button.
+          No analytics, no GPS requests, no heartbeat. */}
       {userLocation && (
-        <Marker
-          position={[userLocation.latitude, userLocation.longitude]}
-          icon={USER_DOT_ICON}
-          zIndexOffset={2000}
-        />
+        <button
+          onClick={handleLocationToggle}
+          className="absolute right-2 bottom-2 z-[450]
+                     w-10 h-10 flex items-center justify-center
+                     bg-white rounded-full border border-gray-200/60 shadow-md
+                     transition-all duration-150 active:scale-95 hover:shadow-lg"
+          title={centeredOnUser ? 'Vista del proyecto' : 'Mi ubicación'}
+          aria-label={centeredOnUser ? 'Vista del proyecto' : 'Mi ubicación'}
+        >
+          {centeredOnUser ? (
+            /* Return-to-overview icon (green) — same SVG as /public */
+            <svg className="h-5 w-5 text-green-500" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 9V5h4M15 5h4v4M15 19h4v-4M5 15v4h4" />
+            </svg>
+          ) : (
+            /* Navigation arrow (blue) — same SVG as /public */
+            <svg className="h-5 w-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2 L4 22 L12 17.5 L20 22 Z" />
+            </svg>
+          )}
+        </button>
       )}
-    </MapContainer>
+    </div>
   )
 }
 

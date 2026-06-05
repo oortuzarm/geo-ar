@@ -33,8 +33,6 @@ import PointImageCarousel                        from '../../components/public/P
 import PublicPointMarker                         from '../../components/map/PublicPointMarker'
 import RoutePolyline                             from '../../components/map/RoutePolyline'
 import BaseMapLayer                              from '../../components/map/BaseMapLayer'
-import MapController                             from '../../components/map/MapController'
-import type { FlyTarget }                        from '../../components/map/MapController'
 import { fetchWalkingRoute, formatDuration }     from '../../features/routing/orsClient'
 import { StatusChip, ScheduleDetail, QuotaDetail } from '../../components/availability/AvailabilityChips'
 import {
@@ -308,6 +306,96 @@ function SizeController({ isExpanded }: { isExpanded: boolean }) {
   return null
 }
 
+// ── Map mode type ─────────────────────────────────────────────────────────────
+
+type MapMode = 'all' | 'location' | 'follow'
+
+// ── computePointActivationBounds ──────────────────────────────────────────────
+//
+// Returns a LatLngBounds that fits the point's full activation area:
+//   - polygon mode: uses the actual polygon vertices
+//   - radius mode:  computes the bounding box of the activation circle
+
+function computePointActivationBounds(point: GeoPoint): L.LatLngBounds {
+  if (point.activationMode === 'polygon' && point.activationPolygon) {
+    const geom = point.activationPolygon.geometry
+    const rings: number[][][] =
+      geom.type === 'Polygon'
+        ? (geom.coordinates as number[][][])
+        : geom.type === 'MultiPolygon'
+          ? (geom.coordinates as number[][][][]).flat()
+          : []
+    const latLngs: [number, number][] = []
+    for (const ring of rings) {
+      for (const pos of ring) latLngs.push([pos[1], pos[0]])
+    }
+    if (latLngs.length > 0) return L.latLngBounds(latLngs)
+  }
+  const { latitude: lat, longitude: lng, activationRadius: r } = point
+  const dLat = r / 111_320
+  const dLng = r / (111_320 * Math.cos(lat * Math.PI / 180))
+  return L.latLngBounds([lat - dLat, lng - dLng], [lat + dLat, lng + dLng])
+}
+
+// ── PointActivationController ─────────────────────────────────────────────────
+//
+// Fits the map to the selected point's activation area (radius or polygon)
+// whenever selectedPointId changes.  Skips initial mount so BoundsController's
+// overview fitBounds remains the first view the user sees.
+
+function PointActivationController({
+  points, selectedPointId,
+}: {
+  points:          GeoPoint[]
+  selectedPointId: string | null
+}) {
+  const map       = useMap()
+  const mounted   = useRef(false)
+  const pointsRef = useRef(points)
+  useEffect(() => { pointsRef.current = points }, [points])
+
+  useEffect(() => {
+    if (!mounted.current) { mounted.current = true; return }
+    if (!selectedPointId) return
+    const pt = pointsRef.current.find((p) => p.id === selectedPointId)
+    if (!pt) return
+    const bounds = computePointActivationBounds(pt)
+    requestAnimationFrame(() => {
+      map.fitBounds(bounds, { padding: [48, 48], maxZoom: 17, animate: true })
+    })
+  }, [map, selectedPointId])
+
+  return null
+}
+
+// ── FollowRouteController ─────────────────────────────────────────────────────
+//
+// When active, keeps both the user marker and the selected point in view by
+// re-applying fitBounds whenever the user's GPS position changes.
+// Coordinates are tracked as primitives so the effect only fires on real moves.
+
+function FollowRouteController({
+  active, userLat, userLng, selectedPoint,
+}: {
+  active:        boolean
+  userLat:       number | undefined
+  userLng:       number | undefined
+  selectedPoint: GeoPoint | null
+}) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!active || userLat === undefined || userLng === undefined || !selectedPoint) return
+    const bounds = L.latLngBounds(
+      [userLat, userLng],
+      [selectedPoint.latitude, selectedPoint.longitude],
+    )
+    map.fitBounds(bounds, { padding: [64, 64], maxZoom: 16, animate: true })
+  }, [map, active, userLat, userLng, selectedPoint?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return null
+}
+
 // ── Landing map ───────────────────────────────────────────────────────────────
 //
 // Read-only / visual-only map.  No GPS watchers, no analytics, no sessions,
@@ -318,21 +406,25 @@ interface LandingMapProps {
   selectedPointId: string | null
   userLocation:    { latitude: number; longitude: number } | null
   onSelectPoint:   (id: string) => void
-  flyKey:          string | null
-  flyTarget:       FlyTarget | null
   /** Walking route from userLocation to selectedPoint — visual only, no analytics */
   routeLatLngs:    [number, number][] | null
 }
 
 function LandingMap({
-  points, selectedPointId, userLocation, onSelectPoint, flyKey, flyTarget, routeLatLngs,
+  points, selectedPointId, userLocation, onSelectPoint, routeLatLngs,
 }: LandingMapProps) {
-  // ── Toggle state for the location button ───────────────────────────────────
-  // false = "go to my location" (navigation arrow)
-  // true  = "return to project overview" (fit-to-bounds icon)
-  const [centeredOnUser, setCenteredOnUser] = useState(false)
+  // ── Map mode + bounds reset ───────────────────────────────────────────────
+  // 'all'      → fitBounds(initialBounds)  — project overview
+  // 'location' → flyTo(userLocation)        — one-shot fly, no tracking
+  // 'follow'   → fitBounds(user + point)   — continuous tracking while GPS moves
+  const [mapMode,       setMapMode]       = useState<MapMode>('all')
   // Incrementing this triggers BoundsController to re-apply fitBounds.
   const [boundsResetKey, setBoundsResetKey] = useState(0)
+
+  // Derived values needed by controllers inside MapContainer
+  const selectedPoint  = points.find((p) => p.id === selectedPointId) ?? null
+  const userLat        = userLocation?.latitude
+  const userLng        = userLocation?.longitude
 
   // ── Fullscreen expand toggle ────────────────────────────────────────────────
   // When true the map wrapper becomes position:fixed covering the full viewport.
@@ -341,14 +433,13 @@ function LandingMap({
   const [isExpanded, setIsExpanded] = useState(false)
 
   function handleLocationToggle() {
-    if (!centeredOnUser) {
-      // Go to user's GPS position — UserFlyController watches this transition.
-      setCenteredOnUser(true)
-    } else {
-      // Return to project overview — BoundsController re-applies fitBounds.
-      setCenteredOnUser(false)
-      setBoundsResetKey((k) => k + 1)
-    }
+    // 'follow' → 'all': re-apply initial overview bounds
+    if (mapMode === 'follow') setBoundsResetKey((k) => k + 1)
+    setMapMode((mode) => {
+      if (mode === 'all')      return 'location'
+      if (mode === 'location') return 'follow'
+      return 'all'
+    })
   }
 
   // Compute initial map bounds that include each point's activation area.
@@ -438,10 +529,16 @@ function LandingMap({
       >
         <BaseMapLayer styleId="streets" />
         <BoundsController bounds={initialBounds} resetKey={boundsResetKey} />
-        <UserFlyController centeredOnUser={centeredOnUser} userLocation={userLocation} />
+        <UserFlyController centeredOnUser={mapMode === 'location'} userLocation={userLocation} />
+        <PointActivationController points={points} selectedPointId={selectedPointId} />
+        <FollowRouteController
+          active={mapMode === 'follow'}
+          userLat={userLat}
+          userLng={userLng}
+          selectedPoint={selectedPoint}
+        />
         {/* SizeController: invalidateSize + restore view after expand / collapse */}
         <SizeController isExpanded={isExpanded} />
-        <MapController flyKey={flyKey} flyTarget={flyTarget} />
 
         {points.map((p) => (
           <PublicPointMarker
@@ -467,22 +564,39 @@ function LandingMap({
         )}
       </MapContainer>
 
-      {/* Location toggle — bottom-right */}
+      {/* Location toggle (3-state) — bottom-right */}
       {userLocation && (
         <button
           onClick={handleLocationToggle}
           className={`absolute right-2 bottom-2 z-[450] ${btnCls}`}
-          title={centeredOnUser ? 'Vista del proyecto' : 'Mi ubicación'}
-          aria-label={centeredOnUser ? 'Vista del proyecto' : 'Mi ubicación'}
+          title={
+            mapMode === 'all'      ? 'Mi ubicación' :
+            mapMode === 'location' ? 'Seguir ruta'  : 'Mostrar todos'
+          }
+          aria-label={
+            mapMode === 'all'      ? 'Mi ubicación' :
+            mapMode === 'location' ? 'Seguir ruta'  : 'Mostrar todos'
+          }
         >
-          {centeredOnUser ? (
+          {/* 'all' — navigation arrow: click to fly to my location */}
+          {mapMode === 'all' && (
+            <svg className="h-5 w-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2 L4 22 L12 17.5 L20 22 Z" />
+            </svg>
+          )}
+          {/* 'location' — crosshair: click to enable follow-route mode */}
+          {mapMode === 'location' && (
+            <svg className="h-5 w-5 text-green-500" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M22 12h-4M2 12h4M12 2v4M12 18v4" />
+            </svg>
+          )}
+          {/* 'follow' — fit-to-bounds: click to return to project overview */}
+          {mapMode === 'follow' && (
             <svg className="h-5 w-5 text-green-500" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 9V5h4M15 5h4v4M15 19h4v-4M5 15v4h4" />
-            </svg>
-          ) : (
-            <svg className="h-5 w-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2 L4 22 L12 17.5 L20 22 Z" />
             </svg>
           )}
         </button>
@@ -726,17 +840,8 @@ function SmartLinkLanding({
     return () => { cancelled = true }
   }, [selectedPoint?.id, userLat, userLng])
 
-  // ── Map fly-to ──────────────────────────────────────────────────────────────
-  const [flyKey,    setFlyKey]    = useState<string | null>(null)
-  const [flyTarget, setFlyTarget] = useState<FlyTarget | null>(null)
-
   function handleSelectPoint(id: string) {
     setSelectedPointId(id)
-    const p = points.find((pt) => pt.id === id)
-    if (p) {
-      setFlyKey(`point-${id}-${Date.now()}`)
-      setFlyTarget({ lat: p.latitude, lng: p.longitude, zoom: 16 })
-    }
   }
 
   // ── Derived display values ───────────────────────────────────────────────────
@@ -994,8 +1099,6 @@ function SmartLinkLanding({
                 selectedPointId={selectedPointId}
                 userLocation={userLocation}
                 onSelectPoint={handleSelectPoint}
-                flyKey={flyKey}
-                flyTarget={flyTarget}
                 routeLatLngs={routeLatLngs}
               />
             </div>

@@ -25,6 +25,9 @@ import PlansPage               from './pages/Plans/PlansPage'
 import IntegrationsPage        from './pages/Integrations/IntegrationsPage'
 import SmartLinksPage          from './pages/SmartLinks/SmartLinksPage'
 import SmartLinkFormPage       from './pages/SmartLinks/SmartLinkFormPage'
+import SmartProxiesPage        from './pages/SmartProxies/SmartProxiesPage'
+import SmartProxyFormPage      from './pages/SmartProxies/SmartProxyFormPage'
+import SmartProxyDetailPage    from './pages/SmartProxies/SmartProxyDetailPage'
 import AccountPage              from './pages/Account/AccountPage'
 import PrivacyPolicyPage        from './pages/Legal/PrivacyPolicyPage'
 import TermsAndConditionsPage   from './pages/Legal/TermsAndConditionsPage'
@@ -79,6 +82,10 @@ const protectedChildren = [
       { path: 'smart-links',             element: <SmartLinksPage /> },
       { path: 'smart-links/new',         element: <SmartLinkFormPage /> },
       { path: 'smart-links/:id/edit',    element: <SmartLinkFormPage /> },
+      { path: 'smart-proxies',           element: <SmartProxiesPage /> },
+      { path: 'smart-proxies/new',       element: <SmartProxyFormPage /> },
+      { path: 'smart-proxies/:id',       element: <SmartProxyDetailPage /> },
+      { path: 'smart-proxies/:id/edit',  element: <SmartProxyFormPage /> },
       // Legacy multi-project view — kept accessible but not linked from the sidebar
       { path: 'projects',   element: <HomePage /> },
     ],

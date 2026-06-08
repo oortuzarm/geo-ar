@@ -1,5 +1,6 @@
 {
   "routes": [
+    { "src": "/proxy/(.*)", "dest": "https://geo-ar-api-production.up.railway.app/proxy/$1" },
     { "src": "/public/([^/]+)", "dest": "/api/og?id=$1" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }

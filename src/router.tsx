@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { useEffect }                    from 'react'
 import LandingPage              from './pages/Landing/LandingPage'
 import LandingV2Page            from './pages/Landing/LandingV2Page'
 import ContactPage              from './pages/Contact/ContactPage'
@@ -104,12 +105,31 @@ const protectedChildren = [
   },
 ]
 
-// ── Landing-only router (ubyca.com, www.ubyca.com) ───────────────────────────
+// ── ProxyGateway ──────────────────────────────────────────────────────────────
+// Defense-in-depth: if Vercel didn't intercept /proxy/* (dev, misconfiguration),
+// redirect the browser directly to the Rails backend so the Smart Proxy works.
+// In production this component should never render — vercel.json routes /proxy/*
+// to Railway before index.html is served.
+function ProxyGateway() {
+  useEffect(() => {
+    const apiBase = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/$/, '')
+    window.location.replace(`${apiBase}${window.location.pathname}${window.location.search}`)
+  }, [])
+  return (
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <p className="text-gray-600 text-sm">Cargando proxy…</p>
+    </div>
+  )
+}
+
 // ── go.ubyca.com router ───────────────────────────────────────────────────────
 // Minimal public router — no auth, no studio, no nav.
-// Routes: /:organizationSlug/:smartLinkSlug → public smart link resolver.
+// /proxy/* is handled by Vercel routing before React ever loads (vercel.json).
+// ProxyGateway is the React-side fallback for dev/misconfiguration.
 
 export const smartLinkRouter = createBrowserRouter([
+  { path: '/proxy/:orgSlug/:proxySlug/*', element: <ProxyGateway /> },
+  { path: '/proxy/:orgSlug/:proxySlug',   element: <ProxyGateway /> },
   {
     path: '/:organizationSlug/:smartLinkSlug',
     element: <SmartLinkPublicPage />,

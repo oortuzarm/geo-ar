@@ -112,19 +112,46 @@ const USER_DOT_ICON = L.divIcon({
 
 // ── BoundsController ─────────────────────────────────────────────────────────
 
-const MAP_BOUNDS_OPTIONS: L.FitBoundsOptions = { padding: [32, 32], maxZoom: 17 }
+const MAP_BOUNDS_OPTIONS: L.FitBoundsOptions = { padding: [48, 48], maxZoom: 16 }
 
-function BoundsController({ bounds, resetKey }: { bounds: L.LatLngBounds | null; resetKey: number }) {
+function BoundsController({
+  bounds,
+  resetKey,
+  userLocation,
+}: {
+  bounds:       L.LatLngBounds | null
+  resetKey:     number
+  userLocation: { latitude: number; longitude: number } | null
+}) {
   const map = useMap()
+  // True once we have expanded the view to include user location.
+  // Reset when bounds/resetKey change so the expansion re-runs after each overview reset.
+  const locationFittedRef = useRef(false)
 
+  // Primary fit: the selected point's activation area (on mount, bounds change, or reset).
   useEffect(() => {
     if (!bounds) return
+    locationFittedRef.current = false
     const raf = requestAnimationFrame(() => {
       map.invalidateSize()
       map.fitBounds(bounds, MAP_BOUNDS_OPTIONS)
     })
     return () => cancelAnimationFrame(raf)
   }, [map, bounds, resetKey])
+
+  // Secondary fit: expand once to include user location when GPS first becomes available.
+  // After the first expansion locationFittedRef stays true so GPS drift never re-triggers this.
+  useEffect(() => {
+    if (!bounds) return
+    if (locationFittedRef.current) return
+    if (!userLocation) return
+    locationFittedRef.current = true
+    const expanded = L.latLngBounds(bounds.getSouthWest(), bounds.getNorthEast())
+    expanded.extend([userLocation.latitude, userLocation.longitude])
+    requestAnimationFrame(() => {
+      map.fitBounds(expanded, { ...MAP_BOUNDS_OPTIONS, animate: true })
+    })
+  }, [map, bounds, userLocation]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return null
 }
@@ -285,46 +312,22 @@ function LandingMap({
     })
   }
 
+  // Capture the initial selected point ID once so subsequent user-driven point
+  // selections (handled by PointActivationController) don't reset the overview bounds.
+  const initialSelectedIdRef = useRef(selectedPointId)
+
+  // Overview bounds: the initial main point's activation area.
+  // Intentionally does NOT include selectedPointId in deps — the overview always
+  // frames the point that was deep-linked (or points[0]), not the one the user
+  // tapped later. userLocation expansion is handled inside BoundsController.
   const initialBounds = useMemo(() => {
-    if (points.length === 0) return null
-
-    let latMin = Infinity, latMax = -Infinity, lngMin = Infinity, lngMax = -Infinity
-
-    for (const p of points) {
-      latMin = Math.min(latMin, p.latitude)
-      latMax = Math.max(latMax, p.latitude)
-      lngMin = Math.min(lngMin, p.longitude)
-      lngMax = Math.max(lngMax, p.longitude)
-
-      if (p.activationMode === 'polygon' && p.activationPolygon) {
-        const geom = p.activationPolygon.geometry
-        const rings: number[][][] =
-          geom.type === 'Polygon'
-            ? (geom.coordinates as number[][][])
-            : geom.type === 'MultiPolygon'
-              ? (geom.coordinates as number[][][][]).flat()
-              : []
-        for (const ring of rings) {
-          for (const pos of ring) {
-            latMin = Math.min(latMin, pos[1])
-            latMax = Math.max(latMax, pos[1])
-            lngMin = Math.min(lngMin, pos[0])
-            lngMax = Math.max(lngMax, pos[0])
-          }
-        }
-      } else {
-        const r    = p.activationRadius
-        const dLat = r / 111_320
-        const dLng = r / (111_320 * Math.cos(p.latitude * (Math.PI / 180)))
-        latMin = Math.min(latMin, p.latitude  - dLat)
-        latMax = Math.max(latMax, p.latitude  + dLat)
-        lngMin = Math.min(lngMin, p.longitude - dLng)
-        lngMax = Math.max(lngMax, p.longitude + dLng)
-      }
-    }
-
-    return L.latLngBounds([latMin, lngMin], [latMax, lngMax])
-  }, [points])
+    const mainPoint =
+      points.find((p) => p.id === initialSelectedIdRef.current) ??
+      points[0] ??
+      null
+    if (!mainPoint) return null
+    return computePointActivationBounds(mainPoint)
+  }, [points]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (points.length === 0) return null
 
@@ -349,7 +352,7 @@ function LandingMap({
         attributionControl={false}
       >
         <BaseMapLayer styleId="streets" />
-        <BoundsController bounds={initialBounds} resetKey={boundsResetKey} />
+        <BoundsController bounds={initialBounds} resetKey={boundsResetKey} userLocation={userLocation} />
         <UserFlyController centeredOnUser={mapMode === 'location'} userLocation={userLocation} />
         <PointActivationController points={points} selectedPointId={selectedPointId} />
         <FollowRouteController

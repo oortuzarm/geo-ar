@@ -1150,6 +1150,22 @@ function SmartLinkLanding({
             Cómo llegar
           </button>
         )}
+
+        {/* Discovery: gateway to the global public map */}
+        <button
+          onClick={() => { window.location.href = '/public' }}
+          className="w-full py-2 flex items-center justify-center gap-1.5
+                     text-sm text-gray-400 hover:text-gray-500 active:scale-[0.98]
+                     transition-all"
+        >
+          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+          </svg>
+          Ver todas las ubicaciones
+        </button>
       </div>
     </div>
   )

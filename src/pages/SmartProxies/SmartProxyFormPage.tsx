@@ -104,7 +104,8 @@ function CompatibilityPanel({ state, result }: { state: ScanState; result: ScanR
       <div className="px-3.5 py-3 rounded-xl bg-red-950/50 border border-red-800/40 space-y-2">
         <p className="text-xs font-semibold text-red-300">❌ No compatible</p>
         <p className="text-[11px] text-red-400/80 leading-snug">
-          Este sitio utiliza restricciones que impiden el funcionamiento correcto de Smart Proxy.
+          Este sitio presenta restricciones importantes y podría no funcionar correctamente dentro
+          de Smart Proxy. Recomendamos probarlo antes de compartirlo con usuarios finales.
         </p>
         {risks.length > 0 && (
           <ul className="space-y-0.5">
@@ -248,8 +249,7 @@ export default function SmartProxyFormPage() {
     )
   }
 
-  const isScanning    = scanState === 'scanning'
-  const isIncompatible = !isEdit && scanState === 'incompatible'
+  const isScanning = scanState === 'scanning'
 
   return (
     <div className="text-gray-100 min-h-full">
@@ -345,11 +345,8 @@ export default function SmartProxyFormPage() {
                 {saving && <Spinner size="sm" />}
                 Guardar cambios
               </button>
-            ) : isIncompatible ? (
-              /* Incompatible: no submit allowed */
-              null
-            ) : scanState === 'partial' ? (
-              /* Partial: warn but allow creation */
+            ) : scanState === 'partial' || scanState === 'incompatible' ? (
+              /* Partial or incompatible: warn but allow creation */
               <button
                 type="submit"
                 disabled={saving || isScanning}

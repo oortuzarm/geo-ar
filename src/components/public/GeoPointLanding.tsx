@@ -852,7 +852,7 @@ export default function GeoPointLanding({
                 Puntos del proyecto
               </p>
             )}
-            <div className="h-52 rounded-2xl overflow-hidden border border-gray-200
+            <div className="relative z-0 h-52 rounded-2xl overflow-hidden border border-gray-200
                             shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
               <LandingMap
                 points={points}

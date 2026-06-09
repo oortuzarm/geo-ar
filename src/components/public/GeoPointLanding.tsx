@@ -744,14 +744,10 @@ export default function GeoPointLanding({
               Esta experiencia requiere verificar tu ubicación.
             </p>
           )}
+          {selectedPoint?.description && (
+            <p className="mt-2 text-sm text-gray-700 leading-relaxed whitespace-pre-line">{selectedPoint.description}</p>
+          )}
         </div>
-
-        {/* ── DESCRIPTION ── */}
-        {selectedPoint?.description && (
-          <div className="px-4 pt-2 pb-1">
-            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{selectedPoint.description}</p>
-          </div>
-        )}
 
         {/* ── LOCATION / AVAILABILITY DETAIL ── */}
         {selectedPoint && (

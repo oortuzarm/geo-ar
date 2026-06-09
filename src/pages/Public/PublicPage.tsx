@@ -1552,7 +1552,8 @@ export default function PublicPage({
   }
 
   function handleViewDetail() {
-    setMobileState('detail')
+    if (!selectedPointId || !id) return
+    window.location.href = `/public/${id}?point=${selectedPointId}`
   }
 
   function handleCloseDetail() {

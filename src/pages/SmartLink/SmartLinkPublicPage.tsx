@@ -868,7 +868,7 @@ function SmartLinkLanding({
       locationVariant = 'ok'
     } else {
       locationLabel = avail.distanceToEdge !== null && avail.distanceToEdge > 0
-        ? `A ${formatDistance(avail.distanceToEdge)} del área`
+        ? `Estás a ${formatDistance(avail.distanceToEdge)} del área`
         : 'Fuera del área'
       locationVariant = 'block'
 
@@ -1071,7 +1071,7 @@ function SmartLinkLanding({
                     <div className="flex items-center gap-2">
                       <span className="text-amber-700 text-sm">⏳</span>
                       <span className="text-xs font-medium flex-1 leading-none text-amber-700">
-                        Permanecé {Math.ceil(selectedPoint.dwellTimeSeconds / 60)} min en el área para desbloquear
+                        Debes permanecer {Math.ceil(selectedPoint.dwellTimeSeconds / 60)} minutos dentro del área
                       </span>
                     </div>
                   </div>

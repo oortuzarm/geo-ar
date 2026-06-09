@@ -216,7 +216,7 @@ export function computePointAvailability(
       quotaLabel     = 'Sin cupos disponibles'
     } else {
       quotaAvailable = true
-      quotaLabel     = quotaRemaining === 1 ? 'Queda 1 cupo' : `Quedan ${quotaRemaining} cupos`
+      quotaLabel     = quotaRemaining === 1 ? 'Queda 1 cupo disponible' : `Quedan ${quotaRemaining} cupos disponibles`
     }
   }
 
@@ -236,15 +236,15 @@ export function computePointAvailability(
     if (liveVisitsCount === undefined) {
       // Count not yet known — optimistic: don't block yet, label shows the requirement.
       liveVisitsAvailable = true
-      liveVisitsLabel     = `Mínimo ${liveVisitsMinimum} persona${liveVisitsMinimum === 1 ? '' : 's'} en el área`
+      liveVisitsLabel     = `Mínimo ${liveVisitsMinimum} persona${liveVisitsMinimum === 1 ? '' : 's'} dentro del área`
       liveVisitsRemaining = undefined
     } else if (liveVisitsCount < liveVisitsMinimum) {
       liveVisitsAvailable = false
-      liveVisitsLabel     = `Personas presentes: ${liveVisitsCount} / ${liveVisitsMinimum}`
+      liveVisitsLabel     = `Hay ${liveVisitsCount} persona${liveVisitsCount === 1 ? '' : 's'} dentro del área (mínimo: ${liveVisitsMinimum})`
       liveVisitsRemaining = liveVisitsMinimum - liveVisitsCount
     } else {
       liveVisitsAvailable = true
-      liveVisitsLabel     = `Personas presentes: ${liveVisitsCount} / ${liveVisitsMinimum}`
+      liveVisitsLabel     = `Hay ${liveVisitsCount} persona${liveVisitsCount === 1 ? '' : 's'} dentro del área (mínimo: ${liveVisitsMinimum})`
       liveVisitsRemaining = 0
     }
   }

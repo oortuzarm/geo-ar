@@ -445,12 +445,10 @@ function LandingMap({
 function CTAButton({
   validation,
   selectedPoint,
-  hasLocation,
   onContinue,
 }: {
   validation:    ValidationState
   selectedPoint: GeoPoint | null
-  hasLocation:   boolean
   onContinue:    () => void
 }) {
   const busy    = validation.phase === 'requesting' || validation.phase === 'validating'
@@ -489,7 +487,7 @@ function CTAButton({
         className="w-full py-4 bg-brand-600 hover:bg-brand-500 text-white font-bold
                    rounded-2xl text-[15px] transition-all active:scale-[0.98]"
       >
-        Reintentar
+        Reintentar ubicación
       </button>
     )
   }
@@ -497,8 +495,7 @@ function CTAButton({
   const label =
     validation.phase === 'requesting' ? 'Obteniendo ubicación…' :
     validation.phase === 'validating' ? 'Verificando…'          :
-    hasLocation                       ? 'Verificar ubicación'   :
-                                        'Permitir ubicación →'
+                                        'Permitir ubicación'
 
   return (
     <button
@@ -893,7 +890,6 @@ export default function GeoPointLanding({
         <CTAButton
           validation={validation}
           selectedPoint={selectedPoint}
-          hasLocation={userLocation !== null}
           onContinue={onContinue}
         />
 

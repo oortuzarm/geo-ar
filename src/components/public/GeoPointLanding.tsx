@@ -918,7 +918,7 @@ export default function GeoPointLanding({
         )}
 
         <button
-          onClick={() => { window.location.href = '/public' }}
+          onClick={() => { window.location.href = project?.id ? `/public/${project.id}` : '/public' }}
           className="w-full py-2 flex items-center justify-center gap-1.5
                      text-sm text-gray-400 hover:text-gray-500 active:scale-[0.98]
                      transition-all"

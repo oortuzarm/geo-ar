@@ -92,6 +92,13 @@ export interface SmartProxyHotspots {
   }
 }
 
+export interface ScanResult {
+  status:          'compatible' | 'partial' | 'incompatible'
+  score:           number
+  notes:           string[]
+  detected_risks:  string[]
+}
+
 export interface CreateSmartProxyPayload {
   name:            string
   destination_url: string
@@ -161,6 +168,13 @@ export function fetchSmartProxyIntensity(
   if (params?.to)   qs.set('to',   params.to)
   const q = qs.toString() ? `?${qs}` : ''
   return apiFetch<SmartProxyIntensity>(url(`/api/smart_proxies/${id}/analytics/intensity${q}`))
+}
+
+export function scanSmartProxy(destinationUrl: string): Promise<ScanResult> {
+  return apiFetch<ScanResult>(url('/api/smart_proxies/scan'), {
+    method: 'POST',
+    body:   JSON.stringify({ destination_url: destinationUrl }),
+  })
 }
 
 export function fetchSmartProxyHotspots(

@@ -59,28 +59,6 @@ function ActiveBadge({ active }: { active: boolean }) {
   )
 }
 
-const PROXY_STATUS_STYLES: Record<SmartProxy['proxyStatus'], string> = {
-  unknown:   'bg-gray-700/40 text-gray-500 border-gray-600/30',
-  supported: 'bg-brand-500/10 text-brand-400 border-brand-500/20',
-  partial:   'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  failed:    'bg-red-500/10 text-red-400 border-red-500/20',
-}
-
-const PROXY_STATUS_LABELS: Record<SmartProxy['proxyStatus'], string> = {
-  unknown:   'Desconocido',
-  supported: 'Compatible',
-  partial:   'Parcial',
-  failed:    'Error',
-}
-
-function ProxyStatusBadge({ status }: { status: SmartProxy['proxyStatus'] }) {
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${PROXY_STATUS_STYLES[status]}`}>
-      {PROXY_STATUS_LABELS[status]}
-    </span>
-  )
-}
-
 // ── Row ───────────────────────────────────────────────────────────────────────
 
 function SmartProxyRow({
@@ -120,7 +98,6 @@ function SmartProxyRow({
           <p className="text-[11px] text-gray-500 mt-0.5 truncate">{proxy.destinationUrl}</p>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          <ProxyStatusBadge status={proxy.proxyStatus} />
           <ActiveBadge active={proxy.active} />
         </div>
       </div>

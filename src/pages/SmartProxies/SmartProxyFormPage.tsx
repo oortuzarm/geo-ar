@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import Spinner                    from '../../components/ui/Spinner'
-import { useGeoStore }            from '../../store/geoStore'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate, useParams }      from 'react-router-dom'
+import Spinner                         from '../../components/ui/Spinner'
+import { useGeoStore }                 from '../../store/geoStore'
 import {
   getSmartProxy,
   createSmartProxy,
   updateSmartProxy,
+  scanSmartProxy,
   type SmartProxy,
+  type ScanResult,
 } from '../../services/smartProxiesApi'
+
+type ScanState = 'idle' | 'scanning' | 'compatible' | 'partial' | 'incompatible'
 
 // ── Field ─────────────────────────────────────────────────────────────────────
 
@@ -45,13 +49,87 @@ const inputCls = `
   transition-colors
 `.trim()
 
+// ── Compatibility Panel ───────────────────────────────────────────────────────
+
+function CompatibilityPanel({ state, result }: { state: ScanState; result: ScanResult | null }) {
+  if (state === 'idle') return null
+
+  if (state === 'scanning') {
+    return (
+      <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl
+                      bg-gray-800/60 border border-gray-700/60">
+        <Spinner size="sm" />
+        <span className="text-xs text-gray-400">Analizando compatibilidad...</span>
+      </div>
+    )
+  }
+
+  if (state === 'compatible') {
+    return (
+      <div className="px-3.5 py-3 rounded-xl bg-emerald-950/50 border border-emerald-800/40 space-y-1">
+        <p className="text-xs font-semibold text-emerald-300">✅ Compatible</p>
+        <p className="text-[11px] text-emerald-400/80 leading-snug">
+          Este sitio es compatible con Smart Proxy y puede utilizarse normalmente.
+        </p>
+      </div>
+    )
+  }
+
+  if (state === 'partial') {
+    const items = [...(result?.notes ?? []), ...(result?.detected_risks ?? [])]
+    return (
+      <div className="px-3.5 py-3 rounded-xl bg-amber-950/50 border border-amber-800/40 space-y-2">
+        <p className="text-xs font-semibold text-amber-300">⚠️ Compatibilidad parcial</p>
+        <p className="text-[11px] text-amber-400/80 leading-snug">
+          Este sitio funciona parcialmente dentro de Smart Proxy.
+          Algunas funcionalidades podrían no funcionar correctamente debido a restricciones del sitio.
+        </p>
+        {items.length > 0 && (
+          <ul className="space-y-0.5">
+            {items.map((item, i) => (
+              <li key={i} className="text-[11px] text-amber-500/70 flex items-start gap-1.5">
+                <span className="mt-0.5 flex-shrink-0">·</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    )
+  }
+
+  if (state === 'incompatible') {
+    const risks = result?.detected_risks ?? []
+    return (
+      <div className="px-3.5 py-3 rounded-xl bg-red-950/50 border border-red-800/40 space-y-2">
+        <p className="text-xs font-semibold text-red-300">❌ No compatible</p>
+        <p className="text-[11px] text-red-400/80 leading-snug">
+          Este sitio utiliza restricciones que impiden el funcionamiento correcto de Smart Proxy.
+        </p>
+        {risks.length > 0 && (
+          <ul className="space-y-0.5">
+            {risks.map((risk, i) => (
+              <li key={i} className="text-[11px] text-red-500/70 flex items-start gap-1.5">
+                <span className="mt-0.5 flex-shrink-0">·</span>
+                {risk}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    )
+  }
+
+  return null
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function SmartProxyFormPage() {
-  const navigate      = useNavigate()
-  const { id }        = useParams<{ id: string }>()
-  const { addToast }  = useGeoStore()
-  const isEdit        = Boolean(id)
+  const navigate     = useNavigate()
+  const { id }       = useParams<{ id: string }>()
+  const { addToast } = useGeoStore()
+  const isEdit       = Boolean(id)
 
   const [name,           setName]           = useState('')
   const [destinationUrl, setDestinationUrl] = useState('')
@@ -60,6 +138,11 @@ export default function SmartProxyFormPage() {
   const [saving,         setSaving]         = useState(false)
   const [errors,         setErrors]         = useState<Record<string, string>>({})
   const [proxy,          setProxy]          = useState<SmartProxy | null>(null)
+  const [scanState,      setScanState]      = useState<ScanState>('idle')
+  const [scanResult,     setScanResult]     = useState<ScanResult | null>(null)
+
+  // Prevents firing a scan when the edit form pre-populates the URL field
+  const skipNextScan = useRef(false)
 
   useEffect(() => {
     if (!isEdit || !id) return
@@ -70,13 +153,51 @@ export default function SmartProxyFormPage() {
         if (cancelled) return
         setProxy(p)
         setName(p.name)
-        setDestinationUrl(p.destinationUrl)
         setSlug(p.slug)
+        skipNextScan.current = true
+        setDestinationUrl(p.destinationUrl)
       })
       .catch(() => addToast('No se pudo cargar el Smart Proxy.', 'error'))
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Debounced compatibility scan
+  useEffect(() => {
+    if (skipNextScan.current) {
+      skipNextScan.current = false
+      return
+    }
+
+    const trimmed = destinationUrl.trim()
+    if (!trimmed || !/^https?:\/\/.+/.test(trimmed)) {
+      setScanState('idle')
+      setScanResult(null)
+      return
+    }
+
+    setScanState('scanning')
+    setScanResult(null)
+
+    let cancelled = false
+    const timer = setTimeout(() => {
+      scanSmartProxy(trimmed)
+        .then((result) => {
+          if (!cancelled) {
+            setScanResult(result)
+            setScanState(result.status)
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setScanState('idle')
+        })
+    }, 700)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [destinationUrl])
 
   function validate(): boolean {
     const errs: Record<string, string> = {}
@@ -127,6 +248,9 @@ export default function SmartProxyFormPage() {
     )
   }
 
+  const isScanning    = scanState === 'scanning'
+  const isIncompatible = !isEdit && scanState === 'incompatible'
+
   return (
     <div className="text-gray-100 min-h-full">
       <header className="border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm sticky top-0 z-20 hidden md:block">
@@ -169,19 +293,23 @@ export default function SmartProxyFormPage() {
             />
           </Field>
 
-          <Field
-            label="URL de destino"
-            hint="La URL original del sitio que querés proxificar."
-            error={errors.destinationUrl}
-          >
-            <input
-              type="url"
-              value={destinationUrl}
-              onChange={(e) => setDestinationUrl(e.target.value)}
-              placeholder="https://www.ejemplo.com"
-              className={inputCls}
-            />
-          </Field>
+          {/* URL field + compatibility panel */}
+          <div className="space-y-2">
+            <Field
+              label="URL de destino"
+              hint={scanState === 'idle' ? 'La URL original del sitio que querés proxificar.' : undefined}
+              error={errors.destinationUrl}
+            >
+              <input
+                type="url"
+                value={destinationUrl}
+                onChange={(e) => setDestinationUrl(e.target.value)}
+                placeholder="https://www.ejemplo.com"
+                className={inputCls}
+              />
+            </Field>
+            <CompatibilityPanel state={scanState} result={scanResult} />
+          </div>
 
           <Field
             label="Slug personalizado (opcional)"
@@ -203,17 +331,48 @@ export default function SmartProxyFormPage() {
             </div>
           )}
 
+          {/* Buttons */}
           <div className="flex items-center gap-3 pt-2">
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-500
-                         text-white text-sm font-semibold rounded-xl transition-all
-                         active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {saving && <Spinner size="sm" />}
-              {isEdit ? 'Guardar cambios' : 'Crear Smart Proxy'}
-            </button>
+            {isEdit ? (
+              /* Edit mode: always show save button, just disable while scanning */
+              <button
+                type="submit"
+                disabled={saving || isScanning}
+                className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-500
+                           text-white text-sm font-semibold rounded-xl transition-all
+                           active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {saving && <Spinner size="sm" />}
+                Guardar cambios
+              </button>
+            ) : isIncompatible ? (
+              /* Incompatible: no submit allowed */
+              null
+            ) : scanState === 'partial' ? (
+              /* Partial: warn but allow creation */
+              <button
+                type="submit"
+                disabled={saving || isScanning}
+                className="flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-500
+                           text-white text-sm font-semibold rounded-xl transition-all
+                           active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {saving && <Spinner size="sm" />}
+                Crear igualmente
+              </button>
+            ) : (
+              /* Idle or compatible: normal create button */
+              <button
+                type="submit"
+                disabled={saving || isScanning}
+                className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-500
+                           text-white text-sm font-semibold rounded-xl transition-all
+                           active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {(saving || isScanning) && <Spinner size="sm" />}
+                Crear Smart Proxy
+              </button>
+            )}
             <button
               type="button"
               onClick={() => navigate('/app/smart-proxies')}

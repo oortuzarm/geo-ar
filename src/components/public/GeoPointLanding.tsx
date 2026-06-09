@@ -882,7 +882,7 @@ export default function GeoPointLanding({
 
       {/* ── Sticky CTA bar ── */}
       <div
-        className="fixed inset-x-0 bottom-0 z-50 bg-white/95 backdrop-blur-md
+        className="fixed inset-x-0 bottom-0 z-[1001] bg-white/95 backdrop-blur-md
                    border-t border-gray-100 px-4 pt-3 space-y-2
                    shadow-[0_-4px_24px_rgba(0,0,0,0.07)]"
         style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}

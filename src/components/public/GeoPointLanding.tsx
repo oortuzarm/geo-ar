@@ -551,14 +551,10 @@ export default function GeoPointLanding({
     [points, selectedPointId],
   )
 
-  const heroImages = useMemo(() => {
-    if (selectedPoint) {
-      const imgs = getPointGalleryImages(selectedPoint)
-      if (imgs.length > 0) return imgs
-    }
-    if (project?.coverImage) return [project.coverImage]
-    return []
-  }, [selectedPoint, project?.coverImage])
+  const heroImages = useMemo(
+    () => (selectedPoint ? getPointGalleryImages(selectedPoint) : []),
+    [selectedPoint],
+  )
 
   const distance = useMemo(() => {
     if (!userLocation || !selectedPoint) return null

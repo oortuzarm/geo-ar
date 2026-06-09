@@ -50,11 +50,11 @@ export default function PointImageCarousel({ images, className = '' }: Props) {
         style={{ transform: `translateX(-${current * 100}%)` }}
       >
         {images.map((url, i) => (
-          <div key={i} className="w-full flex-shrink-0 aspect-[4/3]">
+          <div key={i} className="w-full flex-shrink-0">
             <img
               src={url}
               alt=""
-              className="w-full h-full object-cover"
+              className="w-full aspect-[4/3] object-cover block"
               loading={i === 0 ? 'eager' : 'lazy'}
             />
           </div>

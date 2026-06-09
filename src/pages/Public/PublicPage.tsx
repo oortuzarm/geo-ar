@@ -1848,7 +1848,11 @@ export default function PublicPage({
         if (!resolvedUrl || !resolvedUrl.startsWith('http')) {
           setLandingValidation({ phase: 'blocked', message: 'No se encontró una URL válida para esta experiencia.' })
         } else {
-          window.location.href = resolvedUrl
+          setLandingValidation({
+            phase:             'unlocked',
+            matchedGeoPointId: point.id,
+            onActivate:        () => { window.location.href = resolvedUrl },
+          })
         }
       }
     } catch (err) {

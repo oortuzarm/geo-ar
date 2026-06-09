@@ -897,6 +897,8 @@ export default function PublicPage({
   const [landingValidation, setLandingValidation] = useState<ValidationState>({ phase: 'idle' })
   // Prevents auto-trigger from firing more than once per page load
   const landingAutoStartedRef = useRef(false)
+  // Saved when phase reaches 'unlocked' so area-monitoring can restore it on re-entry
+  const landingUnlockedStateRef = useRef<{ onActivate: () => void; matchedGeoPointId: string } | null>(null)
 
   // ── Location toggle state ──────────────────────────────────────────────────
   // True whenever the button should show "return to project view" (⬚) instead
@@ -1812,12 +1814,15 @@ export default function PublicPage({
         const pos = await getCurrentPosition()
         loc = { latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy }
         setUserLocation(loc, 'active')
+        setLocationActive(true)
       } catch (err) {
         const code = (err as GeolocationPositionError)?.code
         setUserLocation(null, code === 1 ? 'denied' : 'unavailable')
         setLandingValidation({ phase: 'location_error' })
         return
       }
+    } else {
+      setLocationActive(true)
     }
 
     setLandingValidation({ phase: 'validating' })
@@ -1833,11 +1838,9 @@ export default function PublicPage({
         if (!fileUrl || !fileUrl.startsWith('http')) {
           setLandingValidation({ phase: 'blocked', message: 'No se encontró el archivo para esta experiencia.' })
         } else {
-          setLandingValidation({
-            phase:             'unlocked',
-            matchedGeoPointId: point.id,
-            onActivate:        () => setUnlockedContent(raw as AccessResponse),
-          })
+          const onActivate = () => setUnlockedContent(raw as AccessResponse)
+          landingUnlockedStateRef.current = { onActivate, matchedGeoPointId: point.id }
+          setLandingValidation({ phase: 'unlocked', matchedGeoPointId: point.id, onActivate })
         }
       } else {
         const resolvedUrl =
@@ -1848,11 +1851,9 @@ export default function PublicPage({
         if (!resolvedUrl || !resolvedUrl.startsWith('http')) {
           setLandingValidation({ phase: 'blocked', message: 'No se encontró una URL válida para esta experiencia.' })
         } else {
-          setLandingValidation({
-            phase:             'unlocked',
-            matchedGeoPointId: point.id,
-            onActivate:        () => { window.location.href = resolvedUrl },
-          })
+          const onActivate = () => { window.location.href = resolvedUrl }
+          landingUnlockedStateRef.current = { onActivate, matchedGeoPointId: point.id }
+          setLandingValidation({ phase: 'unlocked', matchedGeoPointId: point.id, onActivate })
         }
       }
     } catch (err) {
@@ -1892,6 +1893,28 @@ export default function PublicPage({
       })
       .catch(() => { /* permissions API unavailable — user must click manually */ })
   }, [points]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep landing unlocked/blocked in sync with the user's physical position.
+  // Runs whenever GPS position updates while the landing is active.
+  useEffect(() => {
+    if (!deepLinkedPointIdRef.current) return
+    if (!userLocation) return
+
+    const phase = landingValidation.phase
+    if (phase !== 'unlocked' && phase !== 'blocked') return
+
+    const point = points.find((p) => p.id === deepLinkedPointIdRef.current)
+    if (!point) return
+
+    const inside = isInsideActivationArea(point, userLocation.latitude, userLocation.longitude)
+
+    if (phase === 'unlocked' && !inside) {
+      setLandingValidation({ phase: 'blocked', message: 'Saliste del área de acceso.' })
+    } else if (phase === 'blocked' && inside && landingUnlockedStateRef.current) {
+      const { onActivate, matchedGeoPointId } = landingUnlockedStateRef.current
+      setLandingValidation({ phase: 'unlocked', matchedGeoPointId, onActivate })
+    }
+  }, [userLocation, landingValidation.phase, points]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Early returns ──────────────────────────────────────────────────────────
 

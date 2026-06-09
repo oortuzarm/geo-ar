@@ -895,6 +895,8 @@ export default function PublicPage({
 
   // ── Landing mode validation state ─────────────────────────────────────────
   const [landingValidation, setLandingValidation] = useState<ValidationState>({ phase: 'idle' })
+  // Prevents auto-trigger from firing more than once per page load
+  const landingAutoStartedRef = useRef(false)
 
   // ── Location toggle state ──────────────────────────────────────────────────
   // True whenever the button should show "return to project view" (⬚) instead
@@ -1867,6 +1869,25 @@ export default function PublicPage({
       setLandingValidation({ phase: 'blocked', message: msg })
     }
   }
+
+  // Auto-trigger landing validation when GPS permission is already granted (avoids re-prompting
+  // the user after navigating from the map back to a GeoPoint landing on a fresh page load).
+  useEffect(() => {
+    if (landingAutoStartedRef.current) return
+    if (!deepLinkedPointIdRef.current) return
+    if (!points.some((p) => p.id === deepLinkedPointIdRef.current)) return
+    if (!navigator.permissions) return
+
+    navigator.permissions
+      .query({ name: 'geolocation' as PermissionName })
+      .then((result) => {
+        if (result.state === 'granted' && !landingAutoStartedRef.current) {
+          landingAutoStartedRef.current = true
+          void handleLandingContinue()
+        }
+      })
+      .catch(() => { /* permissions API unavailable — user must click manually */ })
+  }, [points]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Early returns ──────────────────────────────────────────────────────────
 

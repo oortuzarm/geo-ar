@@ -497,7 +497,7 @@ function CTAButton({
   const label =
     validation.phase === 'requesting' ? 'Obteniendo ubicación…' :
     validation.phase === 'validating' ? 'Verificando…'          :
-    hasLocation                       ? ctaText                 :
+    hasLocation                       ? 'Verificar ubicación'   :
                                         'Permitir ubicación →'
 
   return (

@@ -17,7 +17,7 @@ import { sendHeartbeat } from '../../services/liveVisitsApi'
 import { fetchWalkingRoute } from '../../features/routing/orsClient'
 import type { RouteResult } from '../../features/routing/orsClient'
 import type { RouteStatus, DwellProgress } from './PublicPointCard'
-import { useGeolocation } from '../../hooks/useGeolocation'
+import { useGeolocation, getCurrentPosition } from '../../hooks/useGeolocation'
 import { useMapStyle } from '../../hooks/useMapStyle'
 import { useGeoStore } from '../../store/geoStore'
 import MapStyleToggle from '../../components/map/MapStyleToggle'
@@ -32,6 +32,7 @@ import PublicPointDetailSheet from './PublicPointDetailSheet'
 import Spinner from '../../components/ui/Spinner'
 import ToastContainer from '../../components/ui/Toast'
 import type { GeoProject, GeoPoint, LocationStatus, UserLocation, AccessResponse } from '../../types'
+import GeoPointLanding, { type ValidationState } from '../../components/public/GeoPointLanding'
 
 /** Minimum distance in meters the user must move before recalculating the route */
 const ROUTE_RECALC_THRESHOLD_M = 15
@@ -892,6 +893,9 @@ export default function PublicPage({
   // Cleared when the user closes the media panel.
   const [unlockedContent, setUnlockedContent] = useState<AccessResponse | null>(null)
 
+  // ── Landing mode validation state ─────────────────────────────────────────
+  const [landingValidation, setLandingValidation] = useState<ValidationState>({ phase: 'idle' })
+
   // ── Location toggle state ──────────────────────────────────────────────────
   // True whenever the button should show "return to project view" (⬚) instead
   // of the navigation arrow (▲). Set by two events:
@@ -1221,18 +1225,6 @@ export default function PublicPage({
         setPoints(activePoints)
         setLoading(false)
 
-        // Deep-link: /public/:id?point=:geoPointId → open that point's detail directly.
-        const deepId = deepLinkedPointIdRef.current
-        if (deepId) {
-          const target = activePoints.find((p) => p.id === deepId)
-          if (target) {
-            setSelectedPointId(target.id)
-            setMobileState('detail')
-            flyToCounterRef.current += 1
-            setFlyToKey(`point-${target.id}-${flyToCounterRef.current}`)
-            setFlyToTarget({ lat: target.latitude, lng: target.longitude, zoom: 17, panOffsetPx: 80 })
-          }
-        }
       })
       .catch((err) => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current)
@@ -1800,6 +1792,81 @@ export default function PublicPage({
     }
   }, [activatingPointId, userLocation, id, addToast, prefetched])
 
+  // ── Landing mode handler ──────────────────────────────────────────────────
+  async function handleLandingContinue() {
+    const pointId = deepLinkedPointIdRef.current
+    if (!pointId || !id) return
+
+    const point = points.find((p) => p.id === pointId)
+    if (!point) return
+
+    setLandingValidation({ phase: 'requesting' })
+
+    let loc = userLocationRef.current
+
+    if (!loc) {
+      try {
+        const pos = await getCurrentPosition()
+        loc = { latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy }
+        setUserLocation(loc, 'active')
+      } catch (err) {
+        const code = (err as GeolocationPositionError)?.code
+        setUserLocation(null, code === 1 ? 'denied' : 'unavailable')
+        setLandingValidation({ phase: 'location_error' })
+        return
+      }
+    }
+
+    setLandingValidation({ phase: 'validating' })
+    try {
+      const raw = await geoPointsApi.requestPointAccess(
+        id, point.id, loc.latitude, loc.longitude, point.accessMode,
+      )
+      const r = raw as Record<string, unknown>
+      const contentType = (typeof r.content_type === 'string' ? r.content_type : null) ?? 'url'
+
+      if (contentType !== 'url') {
+        const fileUrl = typeof r.file_url === 'string' ? r.file_url : ''
+        if (!fileUrl || !fileUrl.startsWith('http')) {
+          setLandingValidation({ phase: 'blocked', message: 'No se encontró el archivo para esta experiencia.' })
+        } else {
+          setLandingValidation({
+            phase:             'unlocked',
+            matchedGeoPointId: point.id,
+            onActivate:        () => setUnlockedContent(raw as AccessResponse),
+          })
+        }
+      } else {
+        const resolvedUrl =
+          (typeof r.url          === 'string' && r.url)          ||
+          (typeof r.redirect_url === 'string' && r.redirect_url) ||
+          (typeof r.target_url   === 'string' && r.target_url)   ||
+          ''
+        if (!resolvedUrl || !resolvedUrl.startsWith('http')) {
+          setLandingValidation({ phase: 'blocked', message: 'No se encontró una URL válida para esta experiencia.' })
+        } else {
+          window.location.href = resolvedUrl
+        }
+      }
+    } catch (err) {
+      let msg = 'No se pudo validar el acceso. Intenta nuevamente.'
+      if (err instanceof ApiError) {
+        try {
+          const parsed: unknown = JSON.parse((err as ApiError).message)
+          if (parsed && typeof parsed === 'object' && 'message' in parsed)
+            msg = String((parsed as { message: unknown }).message)
+          else if (parsed && typeof parsed === 'object' && 'error' in parsed)
+            msg = String((parsed as { error: unknown }).error)
+        } catch {
+          const status = (err as ApiError).status
+          if (status === 403)      msg = 'Proyecto no publicado.'
+          else if (status === 404) msg = 'Punto no encontrado.'
+        }
+      }
+      setLandingValidation({ phase: 'blocked', message: msg })
+    }
+  }
+
   // ── Early returns ──────────────────────────────────────────────────────────
 
   if (loading) {
@@ -1813,6 +1880,26 @@ export default function PublicPage({
 
   if (loadError) return <ErrorScreen error={loadError} id={id} />
   if (!project)  return <ErrorScreen error="not-found" id={id} />
+
+  // ── Landing mode: ?point=:id → full-page GeoPoint landing experience ─────
+  if (deepLinkedPointIdRef.current && points.some((p) => p.id === deepLinkedPointIdRef.current)) {
+    return (
+      <>
+        <GeoPointLanding
+          initialPointId={deepLinkedPointIdRef.current}
+          project={project}
+          points={points}
+          validation={landingValidation}
+          userLocation={userLocation}
+          liveVisitsMap={liveVisitCounts}
+          onContinue={() => { void handleLandingContinue() }}
+        />
+        {unlockedContent && unlockedContent.content_type !== 'url' && (
+          <UnlockedContentPanel content={unlockedContent} onClose={() => setUnlockedContent(null)} />
+        )}
+      </>
+    )
+  }
 
   // Fallback center for MapContainer's initial mount prop.
   // PublicInitialViewController (inside MapContainer) applies the real view once.

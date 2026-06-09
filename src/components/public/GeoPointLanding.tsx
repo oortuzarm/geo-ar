@@ -740,12 +740,16 @@ export default function GeoPointLanding({
           )}
         </div>
 
-        {/* ── POINT CONTENT ── */}
+        {/* ── DESCRIPTION ── */}
+        {selectedPoint?.description && (
+          <div className="px-4 pt-2 pb-1">
+            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{selectedPoint.description}</p>
+          </div>
+        )}
+
+        {/* ── LOCATION / AVAILABILITY DETAIL ── */}
         {selectedPoint && (
           <div className="px-4 py-3 space-y-2.5">
-            {selectedPoint.description && (
-              <p className="text-sm text-gray-700 leading-relaxed">{selectedPoint.description}</p>
-            )}
             {selectedPoint.instructions && (
               <div className="flex items-start gap-2">
                 <svg className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-400"

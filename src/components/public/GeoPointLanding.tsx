@@ -909,14 +909,6 @@ export default function GeoPointLanding({
           </div>
         )}
 
-        {/* ── PROJECT INFO (secondary) ── */}
-        {project && (project.shareText || project.subtitle) && (
-          <div className="mx-4 mt-5 px-4 py-3 bg-gray-50 rounded-xl border border-gray-100">
-            <p className="text-[11px] text-gray-400 leading-relaxed">
-              {project.shareText || project.subtitle}
-            </p>
-          </div>
-        )}
       </div>
 
       {/* ── Sticky CTA bar ── */}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { MapContainer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import Supercluster from 'supercluster'
@@ -826,6 +826,9 @@ export default function PublicPage({
   const { id: idParam } = useParams<{ id: string }>()
   const id = prefetched?.project.id ?? idParam
   const isTemporaryPreview = Boolean(prefetched)
+  const [searchParams] = useSearchParams()
+  // Captured once at mount so a URL change after load doesn't re-trigger selection.
+  const deepLinkedPointIdRef = useRef(searchParams.get('point'))
   const { userLocation, locationStatus, setUserLocation, addToast } = useGeoStore()
   const { styleId: mapStyleId, setStyle: setMapStyle } = useMapStyle()
   const [project, setProject] = useState<GeoProject | null>(null)
@@ -1217,6 +1220,19 @@ export default function PublicPage({
         setProject(proj)
         setPoints(activePoints)
         setLoading(false)
+
+        // Deep-link: /public/:id?point=:geoPointId → open that point's detail directly.
+        const deepId = deepLinkedPointIdRef.current
+        if (deepId) {
+          const target = activePoints.find((p) => p.id === deepId)
+          if (target) {
+            setSelectedPointId(target.id)
+            setMobileState('detail')
+            flyToCounterRef.current += 1
+            setFlyToKey(`point-${target.id}-${flyToCounterRef.current}`)
+            setFlyToTarget({ lat: target.latitude, lng: target.longitude, zoom: 17, panOffsetPx: 80 })
+          }
+        }
       })
       .catch((err) => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current)

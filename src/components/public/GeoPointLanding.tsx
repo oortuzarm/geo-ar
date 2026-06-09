@@ -48,7 +48,13 @@ function Spin({ size = 'md' }: { size?: 'sm' | 'md' }) {
 
 function AvailabilityBadge({ validation }: { validation: ValidationState }) {
   if (validation.phase === 'unlocked') {
-    return null
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                       bg-emerald-50 border border-emerald-200">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+        <span className="text-xs font-semibold text-emerald-700">Disponible</span>
+      </span>
+    )
   }
   if (validation.phase === 'blocked') {
     return (

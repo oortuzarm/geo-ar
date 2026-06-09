@@ -48,13 +48,7 @@ function Spin({ size = 'md' }: { size?: 'sm' | 'md' }) {
 
 function AvailabilityBadge({ validation }: { validation: ValidationState }) {
   if (validation.phase === 'unlocked') {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                       bg-emerald-50 border border-emerald-200">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
-        <span className="text-xs font-semibold text-emerald-700">Disponible</span>
-      </span>
-    )
+    return null
   }
   if (validation.phase === 'blocked') {
     return (
@@ -732,7 +726,7 @@ export default function GeoPointLanding({
         <div className="px-4 pt-4 pb-1">
           <AvailabilityBadge validation={validation} />
           {validation.phase === 'blocked' && (
-            <p className="mt-2 text-sm text-gray-500 leading-relaxed">{validation.message}</p>
+            <p className="mt-2 text-sm text-gray-500 leading-relaxed">Ingresa al área para desbloquear el contenido</p>
           )}
           {validation.phase === 'location_error' && (
             <p className="mt-2 text-sm text-gray-500 leading-relaxed">

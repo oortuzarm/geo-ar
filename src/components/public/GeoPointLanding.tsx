@@ -12,7 +12,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode }                        from 'react'
-import { MapContainer, Marker, useMap }           from 'react-leaflet'
+import { MapContainer, Marker, Circle, Polygon, useMap } from 'react-leaflet'
 import L                                         from 'leaflet'
 import { haversineDistance, formatDistance }     from '../../features/geolocation/haversine'
 import { computePointAvailability }              from '../../features/geolocation/availability'
@@ -230,6 +230,39 @@ function computePointActivationBounds(point: GeoPoint): L.LatLngBounds {
   return L.latLngBounds([lat - dLat, lng - dLng], [lat + dLat, lng + dLng])
 }
 
+// ── ActivationZone ────────────────────────────────────────────────────────────
+
+const ZONE_STYLE = {
+  color:       '#3B82F6',
+  fillColor:   '#3B82F6',
+  fillOpacity: 0.08,
+  weight:      1.5,
+  opacity:     0.35,
+} as const
+
+function ActivationZone({ point }: { point: GeoPoint }) {
+  if (point.activationMode === 'polygon' && point.activationPolygon) {
+    const geom = point.activationPolygon.geometry
+    const rings: number[][][] =
+      geom.type === 'Polygon'
+        ? (geom.coordinates as number[][][])
+        : geom.type === 'MultiPolygon'
+          ? (geom.coordinates as number[][][][]).flat()
+          : []
+    if (rings.length === 0) return null
+    // GeoJSON uses [lng, lat]; Leaflet <Polygon> expects [lat, lng]
+    const positions = rings.map((ring) => ring.map((pos): [number, number] => [pos[1], pos[0]]))
+    return <Polygon positions={positions} pathOptions={ZONE_STYLE} />
+  }
+  return (
+    <Circle
+      center={[point.latitude, point.longitude]}
+      radius={point.activationRadius}
+      pathOptions={ZONE_STYLE}
+    />
+  )
+}
+
 // ── PointActivationController ─────────────────────────────────────────────────
 
 function PointActivationController({
@@ -363,16 +396,19 @@ function LandingMap({
         />
         <SizeController isExpanded={isExpanded} />
 
-        {points.map((p) => (
-          <PublicPointMarker
-            key={p.id}
-            point={p}
-            selected={p.id === selectedPointId}
-            dimmed={selectedPointId !== null && p.id !== selectedPointId}
-            onClick={() => onSelectPoint(p.id)}
-            small
-          />
-        ))}
+        {selectedPoint && (
+          <>
+            <ActivationZone point={selectedPoint} />
+            <PublicPointMarker
+              key={selectedPoint.id}
+              point={selectedPoint}
+              selected
+              dimmed={false}
+              onClick={() => onSelectPoint(selectedPoint.id)}
+              small
+            />
+          </>
+        )}
 
         {routeLatLngs && routeLatLngs.length >= 2 && (
           <RoutePolyline latLngs={routeLatLngs} />

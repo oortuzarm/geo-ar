@@ -3,6 +3,7 @@ import Modal from '../../components/ui/Modal'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
 import { fetchProjectAnalyticsByPoint, type PointAnalytics } from '../../lib/analytics'
 import type { GeoPoint } from '../../types'
+import GeoPointShareModal from './GeoPointShareModal'
 
 function urlDomain(url: string): string {
   try { return new URL(url).hostname.replace('www.', '') }
@@ -95,6 +96,7 @@ export default function GeoPointsList({
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set())
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [isWorking, setIsWorking] = useState(false)
+  const [sharePoint, setSharePoint] = useState<GeoPoint | null>(null)
 
   // ── Sort ────────────────────────────────────────────────────────────────────
   const [sortKey, setSortKey] = useState<SortKey>('name')
@@ -471,6 +473,26 @@ export default function GeoPointsList({
                       </span>
                     )}
 
+                    {/* Compartir — always visible when not in selection mode */}
+                    {!selectionMode && projectId && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSharePoint(point) }}
+                        className="flex-shrink-0 w-6 h-6 flex items-center justify-center
+                                   rounded text-gray-600 hover:text-gray-300
+                                   hover:bg-gray-700/60 transition-colors"
+                        title="Compartir"
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                          strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}>
+                          <circle cx="18" cy="5" r="3" />
+                          <circle cx="6" cy="12" r="3" />
+                          <circle cx="18" cy="19" r="3" />
+                          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                        </svg>
+                      </button>
+                    )}
+
                     {/* Toggle — in Orden and Nombre modes only */}
                     {!selectionMode && metric === null && sortKey !== 'date' && (
                       <button
@@ -524,6 +546,16 @@ export default function GeoPointsList({
         onCancel={() => setConfirmDelete(false)}
         danger
       />
+
+      {/* ── Share modal ── */}
+      {sharePoint && projectId && (
+        <GeoPointShareModal
+          point={sharePoint}
+          projectId={projectId}
+          isOpen
+          onClose={() => setSharePoint(null)}
+        />
+      )}
     </div>
   )
 }

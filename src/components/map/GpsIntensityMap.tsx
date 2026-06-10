@@ -15,11 +15,12 @@ export type { IntensityLevel } from './IntensityLayer'
 //
 // Leaflet renders all SVG vector layers in the same overlayPane (z-index 400).
 // Within that pane, stacking order is DOM-insertion order — unreliable across
-// React re-renders. Custom panes with explicit z-indexes guarantee that
-// HotspotsLayer always renders above IntensityLayer regardless of render order.
+// React re-renders. Custom panes with explicit z-indexes guarantee consistent
+// rendering order regardless of React re-renders.
 //
-//   intensityPane → z-index 410  (below hotspots)
-//   hotspotsPane  → z-index 420  (above intensity)
+//   intensityPane    → z-index 410  (base heatmap)
+//   outsideAreasPane → z-index 415  (outside-areas clusters, above intensity)
+//   hotspotsPane     → z-index 420  (hotspot clusters, topmost)
 
 function CreatePane({ name, zIndex }: { name: string; zIndex: number }) {
   const map = useMap()
@@ -70,19 +71,21 @@ function FitBounds({ points }: { points: GeoPoint[] }) {
 // ── Public component ──────────────────────────────────────────────────────────
 
 export interface GpsIntensityMapProps {
-  points:          GeoPoint[]
-  activeNow?:      Record<string, number>  // pointId → active visitor count; omit to use mock
-  showPoints?:     boolean                 // render pin markers; default true
-  showIntensity?:  boolean                 // render IntensityLayer; default true
-  hotspots?:       HotspotPoint[]          // if provided, renders HotspotsLayer
+  points:                GeoPoint[]
+  activeNow?:            Record<string, number>  // pointId → active visitor count; omit to use mock
+  showPoints?:           boolean                 // render pin markers; default true
+  showIntensity?:        boolean                 // render IntensityLayer; default true
+  hotspots?:             HotspotPoint[]          // if provided, renders HotspotsLayer (warm ramp)
+  outsideAreasHotspots?: HotspotPoint[]          // if provided, renders outside-areas layer (blue ramp)
 }
 
 export default function GpsIntensityMap({
   points,
   activeNow,
-  showPoints    = true,
-  showIntensity = true,
+  showPoints           = true,
+  showIntensity        = true,
   hotspots,
+  outsideAreasHotspots,
 }: GpsIntensityMapProps) {
   const resolvedActiveNow: Record<string, number> = {}
   points.forEach((p) => {
@@ -101,11 +104,15 @@ export default function GpsIntensityMap({
       zoomControl
     >
       <BaseMapLayer styleId="toner" />
-      <CreatePane name="intensityPane" zIndex={410} />
-      <CreatePane name="hotspotsPane"  zIndex={420} />
+      <CreatePane name="intensityPane"    zIndex={410} />
+      <CreatePane name="outsideAreasPane" zIndex={415} />
+      <CreatePane name="hotspotsPane"     zIndex={420} />
       <FitBounds points={points} />
       {showIntensity && (
         <IntensityLayer points={points} activeNow={resolvedActiveNow} pane="intensityPane" />
+      )}
+      {outsideAreasHotspots && outsideAreasHotspots.length > 0 && (
+        <HotspotsLayer hotspots={outsideAreasHotspots} pane="outsideAreasPane" variant="cold" />
       )}
       {hotspots && hotspots.length > 0 && (
         <HotspotsLayer hotspots={hotspots} pane="hotspotsPane" />

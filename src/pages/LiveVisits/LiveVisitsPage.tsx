@@ -315,11 +315,8 @@ export default function LiveVisitsPage() {
     }))
     .sort((a, b) => b.people - a.people)
 
-  const totalPeople  = liveData?.activeNow ?? 0
   const activeRanked = ranked.filter((r) => r.people > 0)
   const top          = activeRanked[0] ?? null
-
-  const activeNowDisplay: string | number = liveData === null ? '—' : totalPeople
 
   const peakLabel = liveData?.peakToday?.label ?? null
   const peakHint  = liveData?.peakToday != null ? `${liveData.peakToday.count} registros` : undefined
@@ -353,12 +350,31 @@ export default function LiveVisitsPage() {
         {/* ── 1. General ─────────────────────────────────────────────────────── */}
         <section className="space-y-3">
           <SectionLabel>General</SectionLabel>
+
+          {/* Live visit breakdown: inside / outside / total */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <StatTile
-              label="Personas activas ahora"
-              value={activeNowDisplay}
+              label="En áreas"
+              value={liveData === null ? '—' : (liveData.liveVisitsInsideAreas ?? 0)}
               valueClass="text-2xl text-emerald-400"
+              hint="Personas activas dentro de GeoPoints activos."
             />
+            <StatTile
+              label="Fuera de áreas"
+              value={liveData === null ? '—' : (liveData.liveVisitsOutsideAreas ?? 0)}
+              valueClass="text-2xl text-blue-400"
+              hint="Personas activas fuera de GeoPoints activos."
+            />
+            <StatTile
+              label="Total en vivo"
+              value={liveData === null ? '—' : (liveData.liveVisitsTotal ?? 0)}
+              valueClass="text-2xl text-gray-100"
+              hint="Suma de visitas dentro y fuera de áreas."
+            />
+          </div>
+
+          {/* Analytics: trend + peak */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <StatTile
               label="Vs última hora"
               value={
@@ -386,7 +402,8 @@ export default function LiveVisitsPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Las métricas representan dispositivos activos físicamente dentro de las áreas GPS configuradas.
+            "En áreas" cuenta sesiones activas dentro de GeoPoints activos.
+            "Fuera de áreas" cuenta sesiones activas fuera de todos los GeoPoints activos.
             Una sesión permanece activa hasta 45 segundos después del último heartbeat recibido.
           </p>
         </section>

@@ -12,11 +12,14 @@ export interface LiveVisitPoint {
 }
 
 export interface LiveVisitsResponse {
-  activeNow:            number
-  mostActivePoint:      LiveVisitPoint | null
-  points:               LiveVisitPoint[]
-  lastHourDeltaPercent: number | null
-  peakToday:            { label: string; count: number } | null
+  activeNow:              number
+  liveVisitsInsideAreas:  number
+  liveVisitsOutsideAreas: number
+  liveVisitsTotal:        number
+  mostActivePoint:        LiveVisitPoint | null
+  points:                 LiveVisitPoint[]
+  lastHourDeltaPercent:   number | null
+  peakToday:              { label: string; count: number } | null
 }
 
 export function fetchLiveVisits(projectId: string): Promise<LiveVisitsResponse> {

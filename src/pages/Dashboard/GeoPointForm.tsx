@@ -377,6 +377,9 @@ export default function GeoPointForm({
   const [uploadState,   setUploadState]   = useState<'idle' | 'uploading' | 'done' | 'error'>('idle')
   const [uploadError,   setUploadError]   = useState<string | null>(null)
   const [urlError,      setUrlError]      = useState<string | null>(null)
+  const [nameError,        setNameError]        = useState<string | null>(null)
+  const [descriptionError, setDescriptionError] = useState<string | null>(null)
+  const [contentError,     setContentError]     = useState<string | null>(null)
 
   // ── Address state ─────────────────────────────────────────────────────────
   const [addressCustom,   setAddressCustom]   = useState(point.instructions ?? '')
@@ -425,6 +428,8 @@ export default function GeoPointForm({
       setMediaFile(null)
       setUploadState('idle')
       setUploadError(null)
+      setContentError(null)
+      setUrlError(null)
       if (ct !== 'url') {
         setDestinationCategory(undefined)
       }
@@ -493,6 +498,10 @@ export default function GeoPointForm({
     if (contentType !== 'url') return ''
     const normalized = normalizeUrl(lookiarUrl)
     if (normalized !== lookiarUrl) setLookiarUrl(normalized)
+    if (!normalized) {
+      setUrlError('La URL del contenido es obligatoria.')
+      return null
+    }
     if (!isValidUrl(normalized)) {
       setUrlError('La URL no es válida.')
       return null
@@ -502,14 +511,43 @@ export default function GeoPointForm({
   }
 
   // Push all local text state to the parent store in one shot.
-  // Returns false and blocks persistence when the URL field is invalid.
+  // Returns false and blocks persistence when required fields are missing or invalid.
   function flush(): boolean {
+    let valid = true
+
+    if (!name.trim()) {
+      setNameError('El nombre del punto es obligatorio.')
+      valid = false
+    } else {
+      setNameError(null)
+    }
+
+    if (!description.trim()) {
+      setDescriptionError('La descripción es obligatoria.')
+      valid = false
+    } else {
+      setDescriptionError(null)
+    }
+
     const normalizedUrl = validateUrl()
-    if (normalizedUrl === null) return false
+    if (normalizedUrl === null) valid = false
+
+    if (contentType !== 'url' && !mediaFile) {
+      setContentError(
+        contentType === 'video' ? 'El video del contenido es obligatorio.'
+        : contentType === 'audio' ? 'El audio del contenido es obligatorio.'
+        : 'El archivo descargable es obligatorio.'
+      )
+      valid = false
+    } else if (contentType !== 'url') {
+      setContentError(null)
+    }
+
+    if (!valid) return false
 
     const contentData =
       contentType === 'url'
-        ? { url: normalizedUrl }
+        ? { url: normalizedUrl as string }
         : mediaFile
           ? { file_url: mediaFile.url, file_name: mediaFile.fileName, mime_type: mediaFile.mimeType }
           : { file_url: '', file_name: '', mime_type: '' }
@@ -518,7 +556,7 @@ export default function GeoPointForm({
       name,
       contentType,
       contentData,
-      lookiarUrl:          contentType === 'url' ? normalizedUrl : undefined,
+      lookiarUrl:          contentType === 'url' ? normalizedUrl as string : undefined,
       destinationCategory: contentType === 'url' ? destinationCategory : undefined,
       description:         description    || undefined,
       instructions:        addressCustom  || undefined,
@@ -551,6 +589,7 @@ export default function GeoPointForm({
       const url = await uploadFile(file)
       setMediaFile({ url, fileName: file.name, mimeType: file.type, size: file.size })
       setUploadState('done')
+      setContentError(null)
       // Commit immediately so a blur/save isn't required
       onChange({
         contentType,
@@ -605,18 +644,21 @@ export default function GeoPointForm({
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
 
         {/* Nombre */}
-        <Input
-          label="Nombre del punto*"
-          placeholder="Ej: Entrada principal"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onBlur={() => onChange({ name })}
-        />
+        <div className="flex flex-col gap-1">
+          <Input
+            label="Nombre del punto *"
+            placeholder="Ej: Entrada principal"
+            value={name}
+            onChange={(e) => { setName(e.target.value); setNameError(null) }}
+            onBlur={() => onChange({ name })}
+          />
+          {nameError && <p className="text-xs text-red-400">{nameError}</p>}
+        </div>
 
         {/* ── Tipo de contenido ──────────────────────────────────────────── */}
         <div className="flex flex-col gap-2">
           <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Tipo de contenido
+            Tipo de contenido *
           </span>
           <div className="grid grid-cols-2 gap-2">
             {CONTENT_TYPES.map(({ type, label, icon }) => {
@@ -769,6 +811,7 @@ export default function GeoPointForm({
                 className="hidden"
                 onChange={handleMediaFileSelect}
               />
+              {contentError && <p className="text-xs text-red-400">{contentError}</p>}
             </div>
           )
         })()}
@@ -1194,19 +1237,24 @@ export default function GeoPointForm({
         {/* Descripción */}
         <div>
           <Textarea
-            label="Descripción"
+            label="Descripción *"
             placeholder="Qué verá el usuario en esta experiencia"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => { setDescription(e.target.value); setDescriptionError(null) }}
             onBlur={() => onChange({ description: description || undefined })}
             maxLength={300}
           />
-          <p className={[
-            'text-xs text-right mt-1 tabular-nums',
-            description.length >= 270 ? 'text-yellow-500' : 'text-gray-600',
-          ].join(' ')}>
-            {description.length} / 300
-          </p>
+          <div className="flex items-center justify-between mt-1">
+            {descriptionError
+              ? <p className="text-xs text-red-400">{descriptionError}</p>
+              : <span />}
+            <p className={[
+              'text-xs tabular-nums',
+              description.length >= 270 ? 'text-yellow-500' : 'text-gray-600',
+            ].join(' ')}>
+              {description.length} / 300
+            </p>
+          </div>
         </div>
 
         {/* Dirección (auto-geocodificada) */}

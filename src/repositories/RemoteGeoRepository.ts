@@ -11,7 +11,7 @@ function normalizeProject(raw: Record<string, unknown>): GeoProject {
     ...raw,
     userId:                   (raw.userId                  ?? raw.user_id                  ?? null) as string | null,
     coverImage:               raw.coverImage               ?? raw.cover_image,
-    projectLogoUrl:           raw.projectLogoUrl           ?? raw.project_logo_url,
+    projectLogoUrl:           raw.projectLogoUrl           ?? raw.project_logo_url ?? raw.logo_url,
     shareText:                raw.shareText                ?? raw.share_text,
     markerImage:              raw.markerImage              ?? raw.marker_image,
     howToGet:                 raw.howToGet                 ?? raw.how_to_get,

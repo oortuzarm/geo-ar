@@ -702,17 +702,6 @@ export default function GeoPointLanding({
       {/* ── Scrollable body ── */}
       <div className="flex-1 pb-56">
 
-        {/* ── PROJECT LOGO ── */}
-        {project?.projectLogoUrl && (
-          <div className="flex justify-center items-center py-3 px-6 bg-white border-b border-gray-100">
-            <img
-              src={project.projectLogoUrl}
-              alt={project.title}
-              className="max-h-10 object-contain"
-            />
-          </div>
-        )}
-
         {/* ── HERO ── */}
         <div className="relative w-full bg-gray-900 overflow-hidden" style={{ maxHeight: '320px' }}>
           {heroImages.length > 0 ? (
@@ -727,15 +716,29 @@ export default function GeoPointLanding({
             <img src="/logo-blanco.png" alt="Ubyca" className="h-5 opacity-75" />
           </div>
           <div className="absolute inset-x-0 bottom-0 px-4 pb-4 pointer-events-none">
-            {project && (
-              <p className="text-white/55 text-[10px] font-semibold uppercase tracking-widest
-                            mb-0.5 line-clamp-1">
-                {project.title}
-              </p>
-            )}
-            <h1 className="text-white font-bold text-xl leading-tight line-clamp-2 drop-shadow-sm">
-              {selectedPoint?.name || project?.title || 'Experiencia'}
-            </h1>
+            <div className="flex items-end gap-3">
+              {project?.projectLogoUrl && (
+                <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0
+                                bg-white/10 backdrop-blur-sm ring-1 ring-white/25 mb-0.5">
+                  <img
+                    src={project.projectLogoUrl}
+                    alt={project.title}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                {project && (
+                  <p className="text-white/55 text-[10px] font-semibold uppercase tracking-widest
+                                mb-0.5 line-clamp-1">
+                    {project.title}
+                  </p>
+                )}
+                <h1 className="text-white font-bold text-xl leading-tight line-clamp-2 drop-shadow-sm">
+                  {selectedPoint?.name || project?.title || 'Experiencia'}
+                </h1>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -2259,16 +2259,13 @@ export default function PublicPage({
             </div>
 
             <div className="flex items-center gap-3 px-4 pb-3">
-              {(project.projectLogoUrl || project.coverImage) && (
-                <div className={`w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-white/10 shadow-lg${
-                  project.projectLogoUrl ? ' bg-white' : ''
-                }`}>
-                  <img
-                    src={project.projectLogoUrl ?? project.coverImage!}
-                    alt={project.title}
-                    className={`w-full h-full ${project.projectLogoUrl ? 'object-contain p-1.5' : 'object-cover'}`}
-                  />
-                </div>
+              {project.coverImage && (
+                <img
+                  src={project.coverImage}
+                  alt={project.title}
+                  className="w-14 h-14 rounded-xl object-cover flex-shrink-0
+                             ring-1 ring-white/10 shadow-lg"
+                />
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-700 line-clamp-2 leading-snug">
@@ -2471,16 +2468,12 @@ export default function PublicPage({
       {/* ── DESKTOP PANEL (hidden on mobile, always hidden in embed) ─────────*/}
       <div className={isEmbed ? 'hidden' : 'hidden md:block flex-shrink-0 bg-white border-t border-gray-200 px-4 pt-3 pb-4 max-h-[55vh] overflow-y-auto'}>
         <div className="flex items-start gap-3 mb-3">
-          {(project.projectLogoUrl || project.coverImage) && (
-            <div className={`w-12 h-12 rounded-lg overflow-hidden flex-shrink-0${
-              project.projectLogoUrl ? ' bg-white border border-gray-200' : ''
-            }`}>
-              <img
-                src={project.projectLogoUrl ?? project.coverImage!}
-                alt={project.title}
-                className={`w-full h-full ${project.projectLogoUrl ? 'object-contain p-1' : 'object-cover'}`}
-              />
-            </div>
+          {project.coverImage && (
+            <img
+              src={project.coverImage}
+              alt={project.title}
+              className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+            />
           )}
           <div className="flex-1 min-w-0">
             <h1 className="font-bold text-gray-800 text-base leading-tight">{project.title}</h1>

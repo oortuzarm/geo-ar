@@ -271,6 +271,30 @@ export default function ProjectPanel({ onMarkUnsaved }: ProjectPanelProps) {
           />
         </section>
 
+        {/* ── Identidad pública del proyecto ──────────────────────────────── */}
+        <section>
+          <h3 className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-1">
+            Identidad pública del proyecto
+          </h3>
+          <p className="text-xs text-gray-500 mb-4 leading-snug">
+            Configuración visual del proyecto en páginas públicas.
+          </p>
+
+          <div>
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
+              Logo del proyecto
+            </p>
+            <ImageField
+              value={project.projectLogoUrl}
+              label="Logo del proyecto"
+              description="Este logo representa la identidad visual del proyecto y podrá mostrarse en las páginas públicas."
+              onUpload={(url) => field('projectLogoUrl', url)}
+              onRemove={() => field('projectLogoUrl', undefined)}
+              blocked={imagesBlocked}
+            />
+          </div>
+        </section>
+
         {/* ── Nombre del proyecto ──────────────────────────────────────────── */}
         <section>
           <label

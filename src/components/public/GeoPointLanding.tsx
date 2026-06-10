@@ -702,6 +702,17 @@ export default function GeoPointLanding({
       {/* ── Scrollable body ── */}
       <div className="flex-1 pb-56">
 
+        {/* ── PROJECT LOGO ── */}
+        {project?.projectLogoUrl && (
+          <div className="flex justify-center items-center py-3 px-6 bg-white border-b border-gray-100">
+            <img
+              src={project.projectLogoUrl}
+              alt={project.title}
+              className="max-h-10 object-contain"
+            />
+          </div>
+        )}
+
         {/* ── HERO ── */}
         <div className="relative w-full bg-gray-900 overflow-hidden" style={{ maxHeight: '320px' }}>
           {heroImages.length > 0 ? (

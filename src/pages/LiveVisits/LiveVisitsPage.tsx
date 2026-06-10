@@ -25,6 +25,15 @@ function subtractDays(n: number): string {
   return d.toISOString().slice(0, 10)
 }
 
+// Add T12:00:00 so the date is parsed in local time, not UTC midnight.
+const periodFmt = new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'short' })
+function formatPeriodLabel(from: string, to: string): string {
+  const parse = (iso: string) => new Date(`${iso}T12:00:00`)
+  return from === to
+    ? periodFmt.format(parse(from))
+    : `${periodFmt.format(parse(from))} – ${periodFmt.format(parse(to))}`
+}
+
 // ── Point visibility predicate ────────────────────────────────────────────────
 //
 // Live mode:      active=true → visible   |   active=false → hidden
@@ -180,14 +189,15 @@ export default function LiveVisitsPage() {
     })
   }
 
-  // Polling: fetch live data every 15 s while the page is open.
+  // Polling: fetch live + period data every 15 s. Re-triggers immediately when
+  // project or the selected date range changes.
   useEffect(() => {
     if (!project?.id) return
     let cancelled = false
 
     const load = async () => {
       try {
-        const data = await fetchLiveVisits(project!.id)
+        const data = await fetchLiveVisits(project!.id, { from: hsDates.from, to: hsDates.to })
         if (!cancelled) setLiveData(data)
       } catch {
         // silently keep previous data on error
@@ -201,7 +211,7 @@ export default function LiveVisitsPage() {
       clearInterval(timer)
       setLiveData(null)
     }
-  }, [project?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [project?.id, hsDates.from, hsDates.to]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Historical intensity: re-fetches whenever project, mode, or period dates change.
   // Uses analytics_by_point (supports from/to) instead of historical_intensity
@@ -354,22 +364,22 @@ export default function LiveVisitsPage() {
           {/* Live visit breakdown: inside / outside / total */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <StatTile
-              label="En áreas"
+              label="En ubicaciones"
               value={liveData === null ? '—' : (liveData.liveVisitsInsideAreas ?? 0)}
               valueClass="text-2xl text-emerald-400"
-              hint="Personas activas dentro de GeoPoints activos."
+              hint="Personas activas dentro de ubicaciones activas."
             />
             <StatTile
-              label="Fuera de áreas"
+              label="Fuera de ubicaciones"
               value={liveData === null ? '—' : (liveData.liveVisitsOutsideAreas ?? 0)}
               valueClass="text-2xl text-blue-400"
-              hint="Personas activas fuera de GeoPoints activos."
+              hint="Personas activas fuera de ubicaciones activas."
             />
             <StatTile
               label="Total en vivo"
               value={liveData === null ? '—' : (liveData.liveVisitsTotal ?? 0)}
               valueClass="text-2xl text-gray-100"
-              hint="Suma de visitas dentro y fuera de áreas."
+              hint="Suma de visitas dentro y fuera de ubicaciones."
             />
           </div>
 
@@ -402,13 +412,44 @@ export default function LiveVisitsPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            "En áreas" cuenta sesiones activas dentro de GeoPoints activos.
-            "Fuera de áreas" cuenta sesiones activas fuera de todos los GeoPoints activos.
+            "En ubicaciones" cuenta sesiones activas dentro de ubicaciones activas.
+            "Fuera de ubicaciones" cuenta sesiones activas fuera de todas las ubicaciones activas.
             Una sesión permanece activa hasta 45 segundos después del último heartbeat recibido.
           </p>
         </section>
 
-        {/* ── 2. Punto GPS más activo (solo cuando hay visitantes) ───────────── */}
+        {/* ── 2. Resumen del período ─────────────────────────────────────────── */}
+        <section className="space-y-3">
+          <div className="flex items-baseline gap-2">
+            <SectionLabel>Resumen del período</SectionLabel>
+            <span className="text-[11px] text-gray-600">
+              {formatPeriodLabel(hsDates.from, hsDates.to)}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <StatTile
+              label="Personas en ubicaciones"
+              value={liveData === null ? '—' : (liveData.periodPeopleInsideAreas ?? 0)}
+              valueClass="text-2xl text-emerald-400"
+              hint="Personas únicas registradas dentro de ubicaciones activas durante el período."
+            />
+            <StatTile
+              label="Personas fuera de ubicaciones"
+              value={liveData === null ? '—' : (liveData.periodPeopleOutsideAreas ?? 0)}
+              valueClass="text-2xl text-blue-400"
+              hint="Personas únicas registradas fuera de ubicaciones activas durante el período."
+            />
+            <StatTile
+              label="Personas totales"
+              value={liveData === null ? '—' : (liveData.periodPeopleTotal ?? 0)}
+              valueClass="text-2xl text-gray-100"
+              hint="Total de personas únicas registradas durante el período."
+            />
+          </div>
+        </section>
+
+        {/* ── 3. Punto GPS más activo (solo cuando hay visitantes) ───────────── */}
         {top && (
           <section className="space-y-3">
             <SectionLabel>Punto GPS más activo</SectionLabel>

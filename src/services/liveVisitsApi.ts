@@ -12,20 +12,27 @@ export interface LiveVisitPoint {
 }
 
 export interface LiveVisitsResponse {
-  activeNow:              number
-  liveVisitsInsideAreas:  number
-  liveVisitsOutsideAreas: number
-  liveVisitsTotal:        number
-  mostActivePoint:        LiveVisitPoint | null
-  points:                 LiveVisitPoint[]
-  lastHourDeltaPercent:   number | null
-  peakToday:              { label: string; count: number } | null
+  activeNow:               number
+  liveVisitsInsideAreas:   number
+  liveVisitsOutsideAreas:  number
+  liveVisitsTotal:         number
+  periodPeopleInsideAreas:  number
+  periodPeopleOutsideAreas: number
+  periodPeopleTotal:        number
+  mostActivePoint:         LiveVisitPoint | null
+  points:                  LiveVisitPoint[]
+  lastHourDeltaPercent:    number | null
+  peakToday:               { label: string; count: number } | null
 }
 
-export function fetchLiveVisits(projectId: string): Promise<LiveVisitsResponse> {
-  return apiFetch<LiveVisitsResponse>(
-    `${API_BASE}/api/geo_projects/${projectId}/live_visits`,
-  )
+export function fetchLiveVisits(
+  projectId: string,
+  params?: { from?: string; to?: string },
+): Promise<LiveVisitsResponse> {
+  const url = new URL(`${API_BASE}/api/geo_projects/${projectId}/live_visits`)
+  if (params?.from) url.searchParams.set('from', params.from)
+  if (params?.to)   url.searchParams.set('to',   params.to)
+  return apiFetch<LiveVisitsResponse>(url.toString())
 }
 
 export interface HistoricalIntensityPoint {

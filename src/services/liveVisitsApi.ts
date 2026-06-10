@@ -67,3 +67,16 @@ export function sendHeartbeat(
     { method: 'POST', body: JSON.stringify(payload) },
   ).catch(() => ({}))
 }
+
+// Project-level heartbeat — records GPS presence regardless of area membership.
+// Used by the backend to feed "Actividad Fuera de Áreas" analytics.
+export function sendProjectHeartbeat(
+  projectId: string,
+  payload: { session_id: string; lat: number; lng: number; accuracy: number },
+): Promise<void> {
+  if (!API_BASE) return Promise.resolve()
+  return apiFetch<void>(
+    `${API_BASE}/api/public/geo_projects/${projectId}/live_location`,
+    { method: 'POST', body: JSON.stringify(payload) },
+  ).catch(() => {})
+}

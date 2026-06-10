@@ -21,7 +21,7 @@ import { ApiError, apiFetch }                   from '../../lib/apiFetch'
 import { normalizeGeoPoint }                    from '../../lib/normalizeGeoPoint'
 import { useGeoStore }                          from '../../store/geoStore'
 import { useGeolocation, getCurrentPosition }   from '../../hooks/useGeolocation'
-import { sendHeartbeat }                        from '../../services/liveVisitsApi'
+import { sendHeartbeat, sendProjectHeartbeat }  from '../../services/liveVisitsApi'
 import { getLiveVisitSessionId }                from '../../utils/liveVisits'
 import {
   resolvePublicSmartLink,
@@ -222,6 +222,29 @@ export default function SmartLinkPublicPage() {
     const timer = setInterval(heartbeatTick, 5_000)
     return () => clearInterval(timer)
   }, [validation.phase === 'unlocked' ? validation.matchedGeoPointId : null]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Project-level heartbeat — fires whenever GPS is available, regardless of validation state.
+  // Starts as soon as the project loads; actual sends begin once locationRef has a fix.
+  useEffect(() => {
+    const projectId = smartLink?.projectId
+    if (!projectId) return
+    const sessionId = getLiveVisitSessionId()
+
+    function projectHeartbeatTick() {
+      const loc = locationRef.current
+      if (!loc) return
+      sendProjectHeartbeat(projectId!, {
+        session_id: sessionId,
+        lat:        loc.latitude,
+        lng:        loc.longitude,
+        accuracy:   loc.accuracy,
+      })
+    }
+
+    projectHeartbeatTick()
+    const timer = setInterval(projectHeartbeatTick, 5_000)
+    return () => clearInterval(timer)
+  }, [smartLink?.projectId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Continuar handler ─────────────────────────────────────────────────────
   async function handleContinue() {

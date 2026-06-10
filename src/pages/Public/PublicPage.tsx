@@ -13,7 +13,7 @@ import { isInsideActivationArea } from '../../features/geolocation/availability'
 import { reverseGeocode } from '../../features/geolocation/geocoding'
 import { trackRadiusEnter, trackPointClick, trackDwellStarted, trackDwellCompleted, trackDwellCancelled } from '../../lib/analytics'
 import { getLiveVisitSessionId } from '../../utils/liveVisits'
-import { sendHeartbeat } from '../../services/liveVisitsApi'
+import { sendHeartbeat, sendProjectHeartbeat } from '../../services/liveVisitsApi'
 import { fetchWalkingRoute } from '../../features/routing/orsClient'
 import type { RouteResult } from '../../features/routing/orsClient'
 import type { RouteStatus, DwellProgress } from './PublicPointCard'
@@ -1386,6 +1386,13 @@ export default function PublicPage({
 
       if (import.meta.env.DEV) {
         console.log('ubicación del usuario → lat:', loc.latitude, '| lng:', loc.longitude, '| accuracy:', loc.accuracy, 'm')
+      }
+
+      // Project-level heartbeat: always fire when GPS is valid, regardless of area membership.
+      // id is guaranteed non-null here — the outer `if (!id) return` guard ran before this tick.
+      sendProjectHeartbeat(id!, { session_id: sessionId, lat: loc.latitude, lng: loc.longitude, accuracy: loc.accuracy })
+      if (import.meta.env.DEV) {
+        console.log('[LiveVisits] → heartbeat de proyecto | projectId:', id)
       }
 
       for (const pt of active) {

@@ -27,6 +27,20 @@ export interface HotspotsResponse {
   data: HotspotsData
 }
 
+export interface OutsideAreasData {
+  mode:     'historical' | 'live'
+  hotspots: HotspotPoint[]
+  meta: {
+    totalPoints:          number
+    outsidePoints:        number
+    activeGeoPointsCount: number
+  }
+}
+
+export interface OutsideAreasResponse {
+  data: OutsideAreasData
+}
+
 export interface FetchHotspotsParams {
   locationId: string
   mode:       'live' | 'historical'
@@ -52,17 +66,12 @@ export function fetchHotspots(params: FetchHotspotsParams): Promise<HotspotsResp
   return apiFetch<HotspotsResponse>(`${API_BASE}/api/analytics/hotspots?${qs}`)
 }
 
-// Returns GPS clusters that fall outside all configured GeoPoints for the project.
-// Reuses the same /api/analytics/hotspots endpoint with project_id + outside_areas=true.
-export function fetchOutsideAreasHotspots(params: FetchOutsideAreasParams): Promise<HotspotsResponse> {
-  const qs = new URLSearchParams({
-    project_id:    params.projectId,
-    mode:          params.mode,
-    outside_areas: 'true',
-  })
+// Returns GPS clusters recorded outside all active GeoPoints of the project.
+export function fetchOutsideAreasHotspots(params: FetchOutsideAreasParams): Promise<OutsideAreasResponse> {
+  const qs = new URLSearchParams({ project_id: params.projectId, mode: params.mode })
   if (params.mode === 'historical') {
     if (params.startDate) qs.set('start_date', params.startDate)
     if (params.endDate)   qs.set('end_date',   params.endDate)
   }
-  return apiFetch<HotspotsResponse>(`${API_BASE}/api/analytics/hotspots?${qs}`)
+  return apiFetch<OutsideAreasResponse>(`${API_BASE}/api/analytics/outside_areas?${qs}`)
 }

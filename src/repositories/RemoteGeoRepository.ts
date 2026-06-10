@@ -104,7 +104,11 @@ export class RemoteGeoRepository implements IGeoRepository {
     }))
     const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_projects/${id}/sync`), {
       method: 'PATCH',
-      body: JSON.stringify({ ...project, geoPoints: serializedPoints }),
+      body: JSON.stringify({
+        ...project,
+        project_logo_url: project.projectLogoUrl,
+        geoPoints: serializedPoints,
+      }),
       timeout: hasImage ? 60_000 : 30_000,
     })
     return normalizeProject(raw)

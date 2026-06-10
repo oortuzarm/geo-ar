@@ -127,6 +127,7 @@ export default function DashboardPage() {
         `[Save] payload=${payloadKb} KB | puntos=${currentPoints.length} | imágenes en payload=${imagesInPayload} | imágenes omitidas=${imagesSkipped}`,
       )
       console.log('[InitialView Save Payload]', projectPayload.publicInitialViewMode)
+      console.log('[Save][DEBUG] projectLogoUrl:', projectPayload.projectLogoUrl ?? '(sin logo)')
 
       pointsPayload.forEach((pt) => {
         if (pt.contentType && pt.contentType !== 'url') {

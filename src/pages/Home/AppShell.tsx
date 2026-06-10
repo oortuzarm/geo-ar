@@ -496,13 +496,15 @@ export default function AppShell() {
             <IntegrationsIcon />
             Integraciones
           </NavLink>
-          <NavLink
-            to="/app/smart-links"
-            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
-          >
-            <SmartLinksIcon />
-            Smart Links
-          </NavLink>
+          {currentUser?.role === 'admin' && (
+            <NavLink
+              to="/app/smart-links"
+              className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
+            >
+              <SmartLinksIcon />
+              Smart Links
+            </NavLink>
+          )}
           <NavLink
             to="/app/smart-proxies"
             className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
@@ -629,14 +631,16 @@ export default function AppShell() {
             <IntegrationsIcon />
             Integraciones
           </NavLink>
-          <NavLink
-            to="/app/smart-links"
-            onClick={closeDrawer}
-            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
-          >
-            <SmartLinksIcon />
-            Smart Links
-          </NavLink>
+          {currentUser?.role === 'admin' && (
+            <NavLink
+              to="/app/smart-links"
+              onClick={closeDrawer}
+              className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
+            >
+              <SmartLinksIcon />
+              Smart Links
+            </NavLink>
+          )}
           <NavLink
             to="/app/smart-proxies"
             onClick={closeDrawer}

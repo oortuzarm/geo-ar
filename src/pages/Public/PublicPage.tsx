@@ -2279,7 +2279,7 @@ export default function PublicPage({
                 <p className="text-sm font-semibold text-gray-700 line-clamp-2 leading-snug">
                   {project.title}
                 </p>
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex flex-wrap items-center gap-2 mt-2">
                   <button
                     onClick={() => handleFilterChange('all')}
                     className={[
@@ -2309,6 +2309,36 @@ export default function PublicPage({
                     }`} />
                     {availablePoints.length} activas
                   </button>
+                  {userLocation && (
+                    <>
+                      <button
+                        onClick={() => setDistanceSortOrder('asc')}
+                        className={[
+                          'px-3.5 py-1.5 rounded-full text-[11px] font-semibold',
+                          'border transition-all duration-200 active:scale-[0.95]',
+                          'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
+                          distanceSortOrder === 'asc'
+                            ? 'bg-gray-900 text-white border-gray-700'
+                            : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
+                        ].join(' ')}
+                      >
+                        Más cercanas
+                      </button>
+                      <button
+                        onClick={() => setDistanceSortOrder('desc')}
+                        className={[
+                          'px-3.5 py-1.5 rounded-full text-[11px] font-semibold',
+                          'border transition-all duration-200 active:scale-[0.95]',
+                          'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
+                          distanceSortOrder === 'desc'
+                            ? 'bg-gray-900 text-white border-gray-700'
+                            : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
+                        ].join(' ')}
+                      >
+                        Más lejanas
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
               <button
@@ -2359,32 +2389,6 @@ export default function PublicPage({
                   ? 'calc(80px + env(safe-area-inset-bottom, 0px))'
                   : 'calc(40px + env(safe-area-inset-bottom, 0px))' }}
               >
-                {userLocation && (
-                  <div className="flex items-center gap-1.5 -mb-1">
-                    <button
-                      onClick={() => setDistanceSortOrder('asc')}
-                      className={[
-                        'px-3 py-1 rounded-full text-[11px] font-semibold border transition-all duration-150 active:scale-95',
-                        distanceSortOrder === 'asc'
-                          ? 'bg-gray-900 text-white border-gray-700'
-                          : 'bg-white text-gray-500 border-gray-300/80',
-                      ].join(' ')}
-                    >
-                      Más cercanas
-                    </button>
-                    <button
-                      onClick={() => setDistanceSortOrder('desc')}
-                      className={[
-                        'px-3 py-1 rounded-full text-[11px] font-semibold border transition-all duration-150 active:scale-95',
-                        distanceSortOrder === 'desc'
-                          ? 'bg-gray-900 text-white border-gray-700'
-                          : 'bg-white text-gray-500 border-gray-300/80',
-                      ].join(' ')}
-                    >
-                      Más lejanas
-                    </button>
-                  </div>
-                )}
                 {renderPoints(mobileCardRefs)}
               </div>
             </div>
@@ -2528,7 +2532,7 @@ export default function PublicPage({
           </button>
         </div>
 
-        <div className="flex items-center gap-2 mb-3 -mt-1">
+        <div className="flex flex-wrap items-center gap-2 mb-3 -mt-1">
           <button
             onClick={() => handleFilterChange('all')}
             className={[
@@ -2558,36 +2562,37 @@ export default function PublicPage({
             }`} />
             {availablePoints.length} activas
           </button>
+          {userLocation && (
+            <>
+              <button
+                onClick={() => setDistanceSortOrder('asc')}
+                className={[
+                  'px-3.5 py-1.5 rounded-full text-xs font-semibold',
+                  'border transition-all duration-200 active:scale-95',
+                  'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
+                  distanceSortOrder === 'asc'
+                    ? 'bg-gray-900 text-white border-gray-700'
+                    : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
+                ].join(' ')}
+              >
+                Más cercanas
+              </button>
+              <button
+                onClick={() => setDistanceSortOrder('desc')}
+                className={[
+                  'px-3.5 py-1.5 rounded-full text-xs font-semibold',
+                  'border transition-all duration-200 active:scale-95',
+                  'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
+                  distanceSortOrder === 'desc'
+                    ? 'bg-gray-900 text-white border-gray-700'
+                    : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
+                ].join(' ')}
+              >
+                Más lejanas
+              </button>
+            </>
+          )}
         </div>
-
-        {userLocation && (
-          <div className="flex items-center gap-1.5 mb-3 -mt-1">
-            <button
-              onClick={() => setDistanceSortOrder('asc')}
-              className={[
-                'px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 active:scale-95',
-                'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
-                distanceSortOrder === 'asc'
-                  ? 'bg-gray-900 text-white border-gray-700'
-                  : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
-              ].join(' ')}
-            >
-              Más cercanas
-            </button>
-            <button
-              onClick={() => setDistanceSortOrder('desc')}
-              className={[
-                'px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 active:scale-95',
-                'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
-                distanceSortOrder === 'desc'
-                  ? 'bg-gray-900 text-white border-gray-700'
-                  : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
-              ].join(' ')}
-            >
-              Más lejanas
-            </button>
-          </div>
-        )}
 
         <div className="space-y-2 pb-2">
           {renderPoints(cardRefs)}

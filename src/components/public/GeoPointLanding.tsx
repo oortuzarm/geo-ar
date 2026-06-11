@@ -792,9 +792,6 @@ export default function GeoPointLanding({
         {/* ── STATUS + MESSAGE ── */}
         <div className="px-4 pt-4 pb-1">
           <AvailabilityBadge validation={validation} />
-          {validation.phase === 'blocked' && (
-            <p className="mt-2 text-sm text-gray-500 leading-relaxed">Ingresa al área para desbloquear el contenido</p>
-          )}
           {validation.phase === 'location_error' && (
             <p className="mt-2 text-sm text-gray-500 leading-relaxed">
               Debes permitir el acceso a tu ubicación para continuar.

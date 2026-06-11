@@ -915,6 +915,7 @@ export default function PublicPage({
   // 'all'       → show every active point (regardless of schedule / quota)
   // 'available' → show only points currently accessible (schedule + quota pass)
   const [locationFilter, setLocationFilter] = useState<LocationFilter>('all')
+  const [distanceSortOrder, setDistanceSortOrder] = useState<'asc' | 'desc'>('asc')
 
   // ── Ghost-click suppression ───────────────────────────────────────────────
   // Mobile browsers fire a synthetic click ~300ms after touchend.  When the
@@ -1923,6 +1924,23 @@ export default function PublicPage({
     }
   }, [userLocation, landingValidation.phase, points]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Filter-derived point sets ──────────────────────────────────────────────
+  // `points`          = all admin-enabled points (the "ubicaciones" universe)
+  // `availablePoints` = subset currently accessible by schedule + quota rules
+  // `displayedPoints` = what actually renders on the map and in the list
+  const availablePoints = points.filter((p) => isPointAvailableNow(p, liveVisitCounts))
+  const displayedPoints = locationFilter === 'available' ? availablePoints : points
+
+  const sortedDisplayedPoints = useMemo(() => {
+    if (!userLocation) return displayedPoints
+    return [...displayedPoints].sort((a, b) => {
+      const da = distances[a.id]
+      const db = distances[b.id]
+      if (da == null || db == null) return 0
+      return distanceSortOrder === 'asc' ? da - db : db - da
+    })
+  }, [displayedPoints, distances, userLocation, distanceSortOrder])
+
   // ── Early returns ──────────────────────────────────────────────────────────
 
   if (loading) {
@@ -1974,24 +1992,6 @@ export default function PublicPage({
   const locationButtonReturnsToProject =
     (project.publicInitialViewMode ?? 'fit_points') !== 'user_location' &&
     shouldReturnToProjectView
-
-  // ── Filter-derived point sets ──────────────────────────────────────────────
-  // `points`          = all admin-enabled points (the "ubicaciones" universe)
-  // `availablePoints` = subset currently accessible by schedule + quota rules
-  // `displayedPoints` = what actually renders on the map and in the list
-  const availablePoints = points.filter((p) => isPointAvailableNow(p, liveVisitCounts))
-  const displayedPoints = locationFilter === 'available' ? availablePoints : points
-
-  const [distanceSortOrder, setDistanceSortOrder] = useState<'asc' | 'desc'>('asc')
-
-  const sortedDisplayedPoints = useMemo(() => {
-    if (!userLocation) return displayedPoints
-    return [...displayedPoints].sort((a, b) => {
-      const da = distances[a.id] ?? Infinity
-      const db = distances[b.id] ?? Infinity
-      return distanceSortOrder === 'asc' ? da - db : db - da
-    })
-  }, [displayedPoints, distances, distanceSortOrder, userLocation])
 
   function getDwellProgress(ptId: string, pt: GeoPoint): DwellProgress | undefined {
     if (!(pt.requiresDwellTime ?? false)) return undefined

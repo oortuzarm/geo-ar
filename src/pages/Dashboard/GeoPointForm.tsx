@@ -9,6 +9,7 @@ import { isVercelBlobUrl } from '../../lib/deleteMediaFile'
 import { useEditorMode } from '../../contexts/EditorModeContext'
 import { usePlanFeatures } from '../../hooks/usePlanFeatures'
 import { LogoField } from '../../components/ui/LogoField'
+import { detectVideoType, extractYouTubeId } from '../../lib/videoUtils'
 import { normalizeUrl, isValidUrl } from '../../lib/urlUtils'
 import type { PointImage } from '../../types'
 import UpgradeModal from '../../components/subscription/UpgradeModal'
@@ -387,6 +388,10 @@ export default function GeoPointForm({
   const [addressAuto,     setAddressAuto]     = useState<string | null>(null)
   const [addressFetching, setAddressFetching] = useState(false)
   const addressEditedRef = useRef(!!point.instructions)
+
+  // ── Video state ───────────────────────────────────────────────────────────
+  const [videoUrl,   setVideoUrl]   = useState(point.pointVideoUrl ?? '')
+  const [videoError, setVideoError] = useState<string | null>(null)
   const geoTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -1276,6 +1281,93 @@ export default function GeoPointForm({
               {description.length} / 300
             </p>
           </div>
+        </div>
+
+        {/* ── Video de presentación ─────────────────────────────────────── */}
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Video de presentación
+          </span>
+          <p className="text-xs text-gray-500 leading-snug">
+            Video opcional para complementar esta experiencia.
+          </p>
+
+          <div className="flex gap-2 items-center">
+            <input
+              type="url"
+              placeholder="https://youtu.be/... o URL de video .mp4"
+              value={videoUrl}
+              onChange={(e) => {
+                const val = e.target.value
+                setVideoUrl(val)
+                setVideoError(null)
+                if (!val.trim()) onChange({ pointVideoUrl: undefined, pointVideoType: undefined })
+              }}
+              onBlur={() => {
+                const trimmed = videoUrl.trim()
+                if (!trimmed) { onChange({ pointVideoUrl: undefined, pointVideoType: undefined }); return }
+                const type = detectVideoType(trimmed)
+                if (!type) { setVideoError('URL no válida. Usá YouTube o un archivo .mp4'); return }
+                setVideoError(null)
+                onChange({ pointVideoUrl: trimmed, pointVideoType: type })
+              }}
+              className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2
+                         text-sm text-gray-100 placeholder-gray-500
+                         focus:outline-none focus:border-brand-500 transition-colors"
+            />
+            {videoUrl && (
+              <button
+                type="button"
+                onClick={() => {
+                  setVideoUrl('')
+                  setVideoError(null)
+                  onChange({ pointVideoUrl: undefined, pointVideoType: undefined })
+                }}
+                className="p-2 text-gray-500 hover:text-red-400 transition-colors flex-shrink-0"
+                aria-label="Eliminar video"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {videoError && <p className="text-xs text-red-400">{videoError}</p>}
+
+          {/* YouTube preview */}
+          {(() => {
+            const type = detectVideoType(videoUrl.trim())
+            const ytId = type === 'youtube' ? extractYouTubeId(videoUrl.trim()) : null
+            if (type === 'youtube' && ytId) return (
+              <div className="relative rounded-xl overflow-hidden bg-black aspect-video">
+                <img
+                  src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`}
+                  alt=""
+                  className="w-full h-full object-cover opacity-80"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
+                    <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            )
+            if (type === 'mp4') return (
+              <div className="rounded-xl bg-gray-800 border border-gray-700 px-4 py-3 flex items-center gap-3">
+                <svg className="w-8 h-8 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-xs text-gray-400 truncate">{videoUrl.trim()}</span>
+              </div>
+            )
+            return null
+          })()}
         </div>
 
         {/* Dirección (auto-geocodificada) */}

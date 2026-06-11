@@ -28,5 +28,7 @@ export function normalizeGeoPoint(raw: Record<string, unknown>): GeoPoint {
     pointLogoZoom:       (raw.pointLogoZoom       ?? raw.point_logo_zoom)       as number | undefined,
     pointLogoPositionX:  (raw.pointLogoPositionX  ?? raw.point_logo_position_x) as number | undefined,
     pointLogoPositionY:  (raw.pointLogoPositionY  ?? raw.point_logo_position_y) as number | undefined,
+    pointVideoUrl:       (raw.pointVideoUrl       ?? raw.point_video_url)       as string | undefined,
+    pointVideoType:      (raw.pointVideoType      ?? raw.point_video_type)      as 'youtube' | 'mp4' | undefined,
   } as GeoPoint
 }

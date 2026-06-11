@@ -123,6 +123,8 @@ export interface GeoPoint {
   pointLogoZoom?: number
   pointLogoPositionX?: number
   pointLogoPositionY?: number
+  pointVideoUrl?: string
+  pointVideoType?: 'youtube' | 'mp4'
 }
 
 export type NominatimResult = {

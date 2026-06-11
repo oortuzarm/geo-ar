@@ -108,6 +108,8 @@ export class RemoteGeoRepository implements IGeoRepository {
       point_logo_zoom:       p.pointLogoZoom        ?? null,
       point_logo_position_x: p.pointLogoPositionX  ?? null,
       point_logo_position_y: p.pointLogoPositionY  ?? null,
+      point_video_url:       p.pointVideoUrl        ?? null,
+      point_video_type:      p.pointVideoType       ?? null,
     }))
     const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_projects/${id}/sync`), {
       method: 'PATCH',
@@ -157,6 +159,8 @@ export class RemoteGeoRepository implements IGeoRepository {
       ...('pointLogoZoom'      in data ? { point_logo_zoom:       data.pointLogoZoom      } : {}),
       ...('pointLogoPositionX' in data ? { point_logo_position_x: data.pointLogoPositionX } : {}),
       ...('pointLogoPositionY' in data ? { point_logo_position_y: data.pointLogoPositionY } : {}),
+      ...('pointVideoUrl'      in data ? { point_video_url:       data.pointVideoUrl      } : {}),
+      ...('pointVideoType'     in data ? { point_video_type:      data.pointVideoType     } : {}),
     }
     const raw = await apiFetch<Record<string, unknown>>(
       this.url(`/api/geo_projects/${data.geoProjectId}/geo_points`),
@@ -178,6 +182,8 @@ export class RemoteGeoRepository implements IGeoRepository {
       ...('pointLogoZoom'      in updates ? { point_logo_zoom:       updates.pointLogoZoom      } : {}),
       ...('pointLogoPositionX' in updates ? { point_logo_position_x: updates.pointLogoPositionX } : {}),
       ...('pointLogoPositionY' in updates ? { point_logo_position_y: updates.pointLogoPositionY } : {}),
+      ...('pointVideoUrl'      in updates ? { point_video_url:       updates.pointVideoUrl      } : {}),
+      ...('pointVideoType'     in updates ? { point_video_type:      updates.pointVideoType     } : {}),
     }
     const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_points/${id}`), {
       method: 'PUT',

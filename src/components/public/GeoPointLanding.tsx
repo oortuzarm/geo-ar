@@ -23,6 +23,7 @@ import RoutePolyline                             from '../map/RoutePolyline'
 import BaseMapLayer                              from '../map/BaseMapLayer'
 import { fetchWalkingRoute, formatDuration }     from '../../features/routing/orsClient'
 import { StatusChip, ScheduleDetail, QuotaDetail } from '../availability/AvailabilityChips'
+import { extractYouTubeId }                       from '../../lib/videoUtils'
 import type { GeoProject, GeoPoint }             from '../../types'
 
 // ── Validation state machine ──────────────────────────────────────────────────
@@ -769,6 +770,38 @@ export default function GeoPointLanding({
             <p className="mt-2 text-sm text-gray-700 leading-relaxed whitespace-pre-line">{selectedPoint.description}</p>
           )}
         </div>
+
+        {/* ── VIDEO DE PRESENTACIÓN ── */}
+        {selectedPoint?.pointVideoUrl && selectedPoint?.pointVideoType && (() => {
+          const { pointVideoUrl: url, pointVideoType: type } = selectedPoint
+          const ytId = type === 'youtube' ? extractYouTubeId(url) : null
+          if (type === 'youtube' && !ytId) return null
+          return (
+            <div className="px-4 pt-1 pb-4">
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">
+                Video de presentación
+              </p>
+              {type === 'youtube' ? (
+                <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black shadow-sm">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${ytId}?rel=0`}
+                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="absolute inset-0 w-full h-full"
+                    title="Video de presentación"
+                  />
+                </div>
+              ) : (
+                <video
+                  src={url}
+                  controls
+                  preload="metadata"
+                  className="w-full rounded-xl bg-black shadow-sm"
+                />
+              )}
+            </div>
+          )
+        })()}
 
         {/* ── LOCATION / AVAILABILITY DETAIL ── */}
         {selectedPoint && (

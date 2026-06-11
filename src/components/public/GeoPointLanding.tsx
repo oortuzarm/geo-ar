@@ -498,6 +498,12 @@ function CTAButton({
   const busy    = validation.phase === 'requesting' || validation.phase === 'validating'
   const ctaText = selectedPoint?.buttonText || 'Acceder al contenido'
 
+  const [shaking, setShaking] = useState(false)
+  const prefersReducedMotion  = useMemo(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    [],
+  )
+
   if (validation.phase === 'unlocked') {
     return (
       <button
@@ -514,10 +520,14 @@ function CTAButton({
   if (collectionBlocked || validation.phase === 'blocked') {
     return (
       <button
-        disabled
-        className="w-full py-4 bg-gray-100 text-gray-400 font-bold
-                   rounded-2xl text-[15px] border border-gray-200
-                   cursor-not-allowed shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+        aria-disabled="true"
+        onClick={() => { if (!prefersReducedMotion && !shaking) setShaking(true) }}
+        onAnimationEnd={(e) => { if (e.animationName === 'lockedShake') setShaking(false) }}
+        className={[
+          'w-full py-4 bg-gray-100 text-gray-400 font-bold rounded-2xl text-[15px]',
+          'border border-gray-200 cursor-not-allowed shadow-[0_1px_3px_rgba(0,0,0,0.06)]',
+          prefersReducedMotion ? '' : shaking ? 'animate-locked-shake' : 'animate-locked-pulse',
+        ].join(' ')}
       >
         🔒 Desbloquea este contenido
       </button>

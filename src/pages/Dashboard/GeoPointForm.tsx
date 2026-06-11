@@ -844,6 +844,50 @@ export default function GeoPointForm({
 
         </div>
 
+        {/* Coordenadas — dentro de sección colapsable */}
+        <div>
+          <button
+            type="button"
+            onClick={() => setAdvancedOpen((o) => !o)}
+            className="flex items-center gap-1.5 text-xs font-medium text-gray-500
+                       hover:text-gray-300 uppercase tracking-wide transition-colors w-full text-left"
+          >
+            <svg
+              className={`h-3 w-3 transition-transform ${advancedOpen ? 'rotate-90' : ''}`}
+              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            Configuración avanzada
+          </button>
+          {advancedOpen && (
+            <div className="mt-2 grid grid-cols-2 gap-3">
+              <Input
+                label="Latitud*"
+                type="number"
+                step="0.000001"
+                placeholder="-33.4489"
+                value={point.latitude}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value)
+                  if (!isNaN(val)) onChange({ latitude: val })
+                }}
+              />
+              <Input
+                label="Longitud*"
+                type="number"
+                step="0.000001"
+                placeholder="-70.6693"
+                value={point.longitude}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value)
+                  if (!isNaN(val)) onChange({ longitude: val })
+                }}
+              />
+            </div>
+          )}
+        </div>
+
         {/* ── Tipo de contenido ──────────────────────────────────────────── */}
         <div className="flex flex-col gap-2">
           <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
@@ -1144,50 +1188,6 @@ export default function GeoPointForm({
 
         </div>
 
-
-        {/* Coordenadas — dentro de sección colapsable */}
-        <div>
-          <button
-            type="button"
-            onClick={() => setAdvancedOpen((o) => !o)}
-            className="flex items-center gap-1.5 text-xs font-medium text-gray-500
-                       hover:text-gray-300 uppercase tracking-wide transition-colors w-full text-left"
-          >
-            <svg
-              className={`h-3 w-3 transition-transform ${advancedOpen ? 'rotate-90' : ''}`}
-              fill="none" stroke="currentColor" viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-            Configuración avanzada
-          </button>
-          {advancedOpen && (
-            <div className="mt-2 grid grid-cols-2 gap-3">
-              <Input
-                label="Latitud*"
-                type="number"
-                step="0.000001"
-                placeholder="-33.4489"
-                value={point.latitude}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value)
-                  if (!isNaN(val)) onChange({ latitude: val })
-                }}
-              />
-              <Input
-                label="Longitud*"
-                type="number"
-                step="0.000001"
-                placeholder="-70.6693"
-                value={point.longitude}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value)
-                  if (!isNaN(val)) onChange({ longitude: val })
-                }}
-              />
-            </div>
-          )}
-        </div>
 
         {/* ── Logo del punto GPS ────────────────────────────────────────── */}
         <div className="flex flex-col gap-2">

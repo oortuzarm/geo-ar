@@ -50,6 +50,12 @@ export function requestPointAccess(
   return repository.requestPointAccess(projectId, pointId, lat, lng, accessMode)
 }
 
+export function fetchSessionVisitedPoints(projectId: string, sessionId: string): Promise<string[]> {
+  return apiFetch<{ visited_point_ids: string[] }>(
+    `${API_BASE}/api/public/geo_projects/${projectId}/geo_points/session_visited_points?session_id=${encodeURIComponent(sessionId)}`
+  ).then((data) => data.visited_point_ids ?? [])
+}
+
 export function completeDwellTime(
   projectId: string,
   pointId: string,

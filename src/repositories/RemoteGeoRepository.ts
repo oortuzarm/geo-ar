@@ -110,6 +110,7 @@ export class RemoteGeoRepository implements IGeoRepository {
       point_logo_position_y: p.pointLogoPositionY  ?? null,
       point_video_url:       p.pointVideoUrl        ?? null,
       point_video_type:      p.pointVideoType       ?? null,
+      required_point_ids:    p.requiredPointIds     ?? [],
     }))
     const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_projects/${id}/sync`), {
       method: 'PATCH',
@@ -206,6 +207,13 @@ export class RemoteGeoRepository implements IGeoRepository {
     console.log('[RemoteGeoRepository] listPublicPoints — sample point dwell fields:',
       points[0] ? { requiresDwellTime: points[0].requiresDwellTime, dwellTimeSeconds: points[0].dwellTimeSeconds } : '(no points)')
     return points
+  }
+
+  async fetchSessionVisitedPoints(projectId: string, sessionId: string): Promise<string[]> {
+    const data = await apiFetch<{ visited_point_ids: string[] }>(
+      this.url(`/api/public/geo_projects/${projectId}/geo_points/session_visited_points?session_id=${encodeURIComponent(sessionId)}`)
+    )
+    return data.visited_point_ids ?? []
   }
 
   requestPointAccess(projectId: string, pointId: string, lat: number, lng: number, accessMode?: string): Promise<AccessResponse> {

@@ -125,6 +125,7 @@ export interface GeoPoint {
   pointLogoPositionY?: number
   pointVideoUrl?: string
   pointVideoType?: 'youtube' | 'mp4'
+  requiredPointIds?: string[]
 }
 
 export type NominatimResult = {

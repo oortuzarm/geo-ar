@@ -30,5 +30,6 @@ export function normalizeGeoPoint(raw: Record<string, unknown>): GeoPoint {
     pointLogoPositionY:  (raw.pointLogoPositionY  ?? raw.point_logo_position_y) as number | undefined,
     pointVideoUrl:       (raw.pointVideoUrl       ?? raw.point_video_url)       as string | undefined,
     pointVideoType:      (raw.pointVideoType      ?? raw.point_video_type)      as 'youtube' | 'mp4' | undefined,
+    requiredPointIds:    ((raw.requiredPointIds   ?? raw.required_point_ids)    as string[] | undefined) ?? [],
   } as GeoPoint
 }

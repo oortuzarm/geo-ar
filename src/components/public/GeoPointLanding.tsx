@@ -24,6 +24,8 @@ import BaseMapLayer                              from '../map/BaseMapLayer'
 import { fetchWalkingRoute, formatDuration }     from '../../features/routing/orsClient'
 import { StatusChip, ScheduleDetail, QuotaDetail } from '../availability/AvailabilityChips'
 import { extractYouTubeId }                       from '../../lib/videoUtils'
+import { getLiveVisitSessionId }                  from '../../utils/liveVisits'
+import { fetchSessionVisitedPoints }              from '../../services/geoPointsApi'
 import type { GeoProject, GeoPoint }             from '../../types'
 
 // ── Validation state machine ──────────────────────────────────────────────────
@@ -486,10 +488,12 @@ function CTAButton({
   validation,
   selectedPoint,
   onContinue,
+  collectionBlocked = false,
 }: {
-  validation:    ValidationState
-  selectedPoint: GeoPoint | null
-  onContinue:    () => void
+  validation:        ValidationState
+  selectedPoint:     GeoPoint | null
+  onContinue:        () => void
+  collectionBlocked?: boolean
 }) {
   const busy    = validation.phase === 'requesting' || validation.phase === 'validating'
   const ctaText = selectedPoint?.buttonText || 'Acceder al contenido'
@@ -501,6 +505,19 @@ function CTAButton({
         className="w-full py-4 bg-brand-600 hover:bg-brand-500 text-white font-bold
                    rounded-2xl text-[15px] transition-all active:scale-[0.98]
                    shadow-lg shadow-brand-900/30"
+      >
+        {ctaText}
+      </button>
+    )
+  }
+
+  if (collectionBlocked) {
+    return (
+      <button
+        disabled
+        className="w-full py-4 bg-gray-100 text-gray-400 font-bold
+                   rounded-2xl text-[15px] border border-gray-200
+                   cursor-not-allowed shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
       >
         {ctaText}
       </button>
@@ -623,6 +640,28 @@ export default function GeoPointLanding({
   const [routeLatLngs,           setRouteLatLngs]           = useState<[number, number][] | null>(null)
   const [walkingDistanceMeters,  setWalkingDistanceMeters]  = useState<number | undefined>(undefined)
   const [walkingDurationSeconds, setWalkingDurationSeconds] = useState<number | undefined>(undefined)
+
+  // ── Collection progress ───────────────────────────────────────────────────
+  const [visitedPointIds,  setVisitedPointIds]  = useState<string[]>([])
+  const [collectionLoaded, setCollectionLoaded] = useState(false)
+
+  const collectionRequired = (selectedPoint?.requiredPointIds?.length ?? 0) > 0
+  const collectionMet = !collectionRequired ||
+    (selectedPoint?.requiredPointIds ?? []).every((id) => visitedPointIds.includes(id))
+  const collectionNotMet = collectionLoaded && collectionRequired && !collectionMet
+
+  useEffect(() => {
+    if (!collectionRequired || !project?.id) {
+      setCollectionLoaded(true)
+      return
+    }
+    setCollectionLoaded(false)
+    const sessionId = getLiveVisitSessionId()
+    fetchSessionVisitedPoints(project.id, sessionId)
+      .then(setVisitedPointIds)
+      .catch(() => {})
+      .finally(() => setCollectionLoaded(true))
+  }, [selectedPoint?.id, project?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const userLat = userLocation?.latitude
   const userLng = userLocation?.longitude
@@ -803,6 +842,40 @@ export default function GeoPointLanding({
           )
         })()}
 
+        {/* ── COLECCIÓN ── */}
+        {collectionNotMet && selectedPoint && (
+          <div className="px-4 pb-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+              <p className="text-[11px] font-semibold text-amber-700 uppercase tracking-widest mb-2">
+                Contenido bloqueado
+              </p>
+              <p className="text-sm text-amber-800 mb-3">
+                Para desbloquear este contenido debes visitar:
+              </p>
+              <div className="space-y-2 mb-3">
+                {(selectedPoint.requiredPointIds ?? []).map((reqId) => {
+                  const reqPoint = points.find((p) => p.id === reqId)
+                  const visited  = visitedPointIds.includes(reqId)
+                  return (
+                    <div key={reqId} className="flex items-center gap-2">
+                      <span className={`text-base leading-none ${visited ? 'text-emerald-600' : 'text-amber-500'}`}>
+                        {visited ? '✓' : '□'}
+                      </span>
+                      <span className={`text-sm ${visited ? 'text-emerald-700 line-through' : 'text-amber-800'}`}>
+                        {reqPoint?.name ?? reqId}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+              <p className="text-xs text-amber-600 font-medium">
+                {(selectedPoint.requiredPointIds ?? []).filter((id) => visitedPointIds.includes(id)).length}
+                /{selectedPoint.requiredPointIds?.length ?? 0} completados
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* ── LOCATION / AVAILABILITY DETAIL ── */}
         {selectedPoint && (
           <div className="px-4 py-3 space-y-2.5">
@@ -976,6 +1049,7 @@ export default function GeoPointLanding({
           validation={validation}
           selectedPoint={selectedPoint}
           onContinue={onContinue}
+          collectionBlocked={collectionNotMet}
         />
 
         {hasDirections && mapsUrl && !busy && (

@@ -24,6 +24,7 @@ interface GeoPointFormProps {
   onSave: () => void
   onMediaOrphaned?: (url: string) => void
   hideHeader?: boolean
+  allPoints?: GeoPoint[]
   // ── Polygon drawing ──────────────────────────────────────────────────────
   polygonDrawMode?: PolygonDrawMode
   onRequestPolygonDraw?: () => void
@@ -337,7 +338,10 @@ export default function GeoPointForm({
   onStopPolygonEdit,
   onCancelPolygonDraw,
   onCancelPolygonEdit,
+  allPoints,
 }: GeoPointFormProps) {
+  const otherPoints = (allPoints ?? []).filter((p) => p.id !== point.id)
+
   const editorMode = useEditorMode()
   const { canUseContentType, canUseScheduleAvailability, canUseQuotaAvailability, canUseDwellTime, canUseLiveVisits } = usePlanFeatures()
   const mediaFileRef   = useRef<HTMLInputElement>(null)
@@ -1050,9 +1054,51 @@ export default function GeoPointForm({
             )}
           </div>
 
+          {/* ── Colección ── */}
+          <div className="bg-gray-800/50 border border-gray-800 rounded-lg p-3 space-y-3">
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-medium text-gray-300">Colección</span>
+                <InfoTooltip text="Selecciona las ubicaciones que deben visitarse antes de desbloquear este contenido." />
+              </div>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Selecciona las ubicaciones que deben visitarse antes de desbloquear este contenido.
+              </p>
+            </div>
+            {otherPoints.length === 0 ? (
+              <p className="text-xs text-gray-600 italic">No hay otros puntos en este proyecto.</p>
+            ) : (
+              <div className="space-y-1.5">
+                {otherPoints.map((p) => {
+                  const selected = (point.requiredPointIds ?? []).includes(p.id)
+                  return (
+                    <label key={p.id} className="flex items-center gap-2.5 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={() => {
+                          const current = point.requiredPointIds ?? []
+                          const next    = selected
+                            ? current.filter((id) => id !== p.id)
+                            : [...current, p.id]
+                          onChange({ requiredPointIds: next })
+                        }}
+                        className="h-4 w-4 rounded border-gray-600 bg-gray-700
+                                   accent-brand-500 cursor-pointer flex-shrink-0"
+                      />
+                      <span className="text-sm text-gray-400 group-hover:text-gray-200
+                                       transition-colors truncate">
+                        {p.name}
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
           {/* Placeholder rules — not yet implemented */}
           {([
-            { label: 'Colección',    tooltip: 'Agrupa puntos que deben activarse en conjunto para desbloquear un contenido o experiencia especial.' },
             { label: 'Temporalidad', tooltip: 'Combina reglas de fecha, horario y zona horaria para controles de acceso complejos.' },
           ] as { label: string; tooltip: string }[]).map(({ label, tooltip }) => (
             <div key={label} className="bg-gray-800/50 border border-gray-800 rounded-lg p-3">

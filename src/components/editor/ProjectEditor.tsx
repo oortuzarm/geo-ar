@@ -1503,6 +1503,7 @@ export default function ProjectEditor({
                   setPointFormOpen(false)
                 }}
                 onMediaOrphaned={onMediaOrphaned}
+                allPoints={points}
                 polygonDrawMode={polygonDrawMode}
                 onRequestPolygonDraw={handleRequestPolygonDraw}
                 onRequestPolygonEdit={handleRequestPolygonEdit}
@@ -1643,6 +1644,7 @@ export default function ProjectEditor({
               }}
               onMediaOrphaned={onMediaOrphaned}
               hideHeader
+              allPoints={points}
               polygonDrawMode={polygonDrawMode}
               onRequestPolygonDraw={handleRequestPolygonDraw}
               onRequestPolygonEdit={handleRequestPolygonEdit}

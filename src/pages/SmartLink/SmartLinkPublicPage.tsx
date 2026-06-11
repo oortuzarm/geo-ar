@@ -44,8 +44,10 @@ async function slFetchProject(id: string): Promise<GeoProject | null> {
     return {
       ...raw,
       coverImage:     (raw.coverImage     ?? raw.cover_image)     as string | undefined,
-      projectLogoUrl:  (raw.projectLogoUrl  ?? raw.project_logo_url  ?? raw.logo_url)  as string | undefined,
-      projectLogoZoom: (raw.projectLogoZoom ?? raw.project_logo_zoom)                   as number | undefined,
+      projectLogoUrl:       (raw.projectLogoUrl       ?? raw.project_logo_url  ?? raw.logo_url) as string | undefined,
+      projectLogoZoom:      (raw.projectLogoZoom      ?? raw.project_logo_zoom)                  as number | undefined,
+      projectLogoPositionX: (raw.projectLogoPositionX ?? raw.project_logo_position_x)            as number | undefined,
+      projectLogoPositionY: (raw.projectLogoPositionY ?? raw.project_logo_position_y)            as number | undefined,
       shareText:      (raw.shareText      ?? raw.share_text)      as string | undefined,
       geoPointIds:    ((raw.geoPointIds   ?? raw.geo_point_ids    ?? []) as string[]),
       createdAt:      (raw.createdAt      ?? raw.created_at)      as string,

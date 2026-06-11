@@ -130,23 +130,29 @@ function ImageField({ value, label, description, onUpload, onRemove, blocked }: 
   )
 }
 
-// ── Logo field (circular preview + zoom) ─────────────────────────────────────
+// ── Logo field (circular preview + zoom + drag-to-pan) ───────────────────────
 
 interface LogoFieldProps {
   value: string | undefined
   zoom: number
+  posX: number
+  posY: number
   label: string
   description: string
   onUpload: (url: string) => void
   onRemove: () => void
   onZoomChange: (zoom: number) => void
+  onPositionChange: (x: number, y: number) => void
   blocked?: boolean
 }
 
-function LogoField({ value, zoom, label, description, onUpload, onRemove, onZoomChange, blocked }: LogoFieldProps) {
+function LogoField({ value, zoom, posX, posY, label, description, onUpload, onRemove, onZoomChange, onPositionChange, blocked }: LogoFieldProps) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [blockedClicked, setBlockedClicked] = useState(false)
+  const [dragging, setDragging] = useState(false)
+  const dragStartRef = useRef<{ x: number; y: number; posX: number; posY: number } | null>(null)
+  const didDragRef = useRef(false)
   const { addToast } = useGeoStore()
   const editorMode = useEditorMode()
 
@@ -165,10 +171,34 @@ function LogoField({ value, zoom, label, description, onUpload, onRemove, onZoom
     }
   }
 
+  function handlePointerDown(e: React.PointerEvent<HTMLButtonElement>) {
+    if (!value || blocked) return
+    didDragRef.current = false
+    dragStartRef.current = { x: e.clientX, y: e.clientY, posX, posY }
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    setDragging(true)
+  }
+
+  function handlePointerMove(e: React.PointerEvent<HTMLButtonElement>) {
+    if (!dragStartRef.current) return
+    const { x: sx, y: sy, posX: spx, posY: spy } = dragStartRef.current
+    if (Math.abs(e.clientX - sx) > 3 || Math.abs(e.clientY - sy) > 3) didDragRef.current = true
+    const size = e.currentTarget.getBoundingClientRect().width
+    onPositionChange(spx + (e.clientX - sx) / size * 100, spy + (e.clientY - sy) / size * 100)
+  }
+
+  function handlePointerUp() {
+    setDragging(false)
+    dragStartRef.current = null
+  }
+
   function handleClick() {
+    if (didDragRef.current) { didDragRef.current = false; return }
     if (blocked) { setBlockedClicked(true); return }
     fileRef.current?.click()
   }
+
+  const hasNonDefaultPosition = posX !== 0 || posY !== 0
 
   return (
     <div>
@@ -176,14 +206,22 @@ function LogoField({ value, zoom, label, description, onUpload, onRemove, onZoom
 
       <div className="flex flex-col items-center gap-3">
 
-        {/* Circular preview / upload trigger */}
+        {/* Circular preview / drag / upload trigger */}
         <button
           type="button"
           onClick={handleClick}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
           disabled={uploading}
-          className="relative w-24 h-24 rounded-full overflow-hidden bg-white
-                     border-2 border-dashed border-gray-700
-                     hover:border-brand-500/50 transition-colors group disabled:opacity-60"
+          className={[
+            'relative w-24 h-24 rounded-full overflow-hidden bg-white',
+            'border-2 border-dashed border-gray-700',
+            'hover:border-brand-500/50 transition-colors disabled:opacity-60',
+            value && !blocked ? (dragging ? 'cursor-grabbing' : 'cursor-grab') : '',
+          ].join(' ')}
+          style={{ touchAction: 'none' }}
           aria-label={label}
         >
           {uploading ? (
@@ -197,18 +235,13 @@ function LogoField({ value, zoom, label, description, onUpload, onRemove, onZoom
               </span>
             </div>
           ) : value ? (
-            <>
-              <img
-                src={value}
-                alt=""
-                className="absolute inset-0 w-full h-full object-contain"
-                style={{ transform: `scale(${zoom})` }}
-              />
-              <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100
-                              transition-opacity flex items-center justify-center">
-                <span className="text-[10px] text-white font-medium">Cambiar</span>
-              </div>
-            </>
+            <img
+              src={value}
+              alt=""
+              className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none"
+              style={{ transform: `translate(${posX}%, ${posY}%) scale(${zoom})` }}
+              draggable={false}
+            />
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
               <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,6 +270,17 @@ function LogoField({ value, zoom, label, description, onUpload, onRemove, onZoom
               className="w-full accent-brand-500 cursor-pointer"
             />
           </div>
+        )}
+
+        {/* Reset position — only shown when dragged away from center */}
+        {value && !blocked && hasNonDefaultPosition && (
+          <button
+            type="button"
+            onClick={() => onPositionChange(0, 0)}
+            className="text-xs text-gray-500 hover:text-brand-400 transition-colors"
+          >
+            Restablecer posición
+          </button>
         )}
 
         {/* Remove */}
@@ -419,11 +463,19 @@ export default function ProjectPanel({ onMarkUnsaved }: ProjectPanelProps) {
             <LogoField
               value={project.projectLogoUrl}
               zoom={project.projectLogoZoom ?? 1}
+              posX={project.projectLogoPositionX ?? 0}
+              posY={project.projectLogoPositionY ?? 0}
               label="Logo del proyecto"
               description="Este logo representa la identidad visual del proyecto y podrá mostrarse en las páginas públicas."
               onUpload={(url) => field('projectLogoUrl', url)}
-              onRemove={() => { field('projectLogoUrl', undefined); field('projectLogoZoom', undefined) }}
+              onRemove={() => {
+                field('projectLogoUrl', undefined)
+                field('projectLogoZoom', undefined)
+                field('projectLogoPositionX', undefined)
+                field('projectLogoPositionY', undefined)
+              }}
               onZoomChange={(z) => field('projectLogoZoom', z)}
+              onPositionChange={(x, y) => { field('projectLogoPositionX', x); field('projectLogoPositionY', y) }}
               blocked={imagesBlocked}
             />
           </div>

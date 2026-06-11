@@ -914,7 +914,7 @@ export default function PublicPage({
   // ── Point list / map filter ────────────────────────────────────────────────
   // 'all'       → show every active point (regardless of schedule / quota)
   // 'available' → show only points currently accessible (schedule + quota pass)
-  const [locationFilter, setLocationFilter] = useState<LocationFilter>('all')
+  const [locationFilter] = useState<LocationFilter>('all')
   const [distanceSortOrder, setDistanceSortOrder] = useState<'asc' | 'desc'>('asc')
 
   // ── Ghost-click suppression ───────────────────────────────────────────────
@@ -1596,16 +1596,6 @@ export default function PublicPage({
     }
   }
 
-  function handleFilterChange(next: LocationFilter) {
-    if (next === locationFilter) return
-    setLocationFilter(next)
-    // Clear any active selection so the UI stays consistent when a selected
-    // point is hidden by the new filter.
-    setSelectedPointId(null)
-    setAccessError(null)
-    setMobileState('clean')
-  }
-
   async function handleShare() {
     const url = window.location.href
     const title = project?.title ?? 'Experiencia Ubyca'
@@ -2279,63 +2269,23 @@ export default function PublicPage({
                 <p className="text-sm font-semibold text-gray-700 line-clamp-2 leading-snug">
                   {project.title}
                 </p>
-                <div className="flex flex-wrap items-center gap-2 mt-2">
-                  <button
-                    onClick={() => handleFilterChange('all')}
-                    className={[
-                      'px-3.5 py-1.5 rounded-full text-[11px] font-semibold',
-                      'border transition-all duration-200 active:scale-[0.95]',
-                      'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
-                      locationFilter === 'all'
-                        ? 'bg-gray-900 text-white border-gray-700'
-                        : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
-                    ].join(' ')}
-                  >
-                    {points.length} ubicaciones
-                  </button>
-                  <button
-                    onClick={() => handleFilterChange('available')}
-                    className={[
-                      'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold',
-                      'border transition-all duration-200 active:scale-[0.95]',
-                      'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
-                      locationFilter === 'available'
-                        ? 'bg-gray-900 text-white border-gray-700'
-                        : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
-                    ].join(' ')}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                      locationFilter === 'available' ? 'bg-emerald-400' : 'bg-emerald-500/50'
-                    }`} />
-                    {availablePoints.length} activas
-                  </button>
+                <div className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5 mt-1">
+                  <span className="text-[11px] text-gray-500">
+                    {points.length} ubicaciones • {availablePoints.length} activas
+                  </span>
                   {userLocation && (
                     <>
+                      <span className="text-[11px] text-gray-400">•</span>
                       <button
-                        onClick={() => setDistanceSortOrder('asc')}
-                        className={[
-                          'px-3.5 py-1.5 rounded-full text-[11px] font-semibold',
-                          'border transition-all duration-200 active:scale-[0.95]',
-                          'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
-                          distanceSortOrder === 'asc'
-                            ? 'bg-gray-900 text-white border-gray-700'
-                            : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
-                        ].join(' ')}
+                        onClick={() => setDistanceSortOrder(distanceSortOrder === 'asc' ? 'desc' : 'asc')}
+                        className="flex items-center gap-0.5 text-[11px] text-gray-600 font-medium
+                                   hover:text-gray-800 transition-colors active:scale-95"
                       >
-                        Más cercanas
-                      </button>
-                      <button
-                        onClick={() => setDistanceSortOrder('desc')}
-                        className={[
-                          'px-3.5 py-1.5 rounded-full text-[11px] font-semibold',
-                          'border transition-all duration-200 active:scale-[0.95]',
-                          'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
-                          distanceSortOrder === 'desc'
-                            ? 'bg-gray-900 text-white border-gray-700'
-                            : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
-                        ].join(' ')}
-                      >
-                        Más lejanas
+                        {distanceSortOrder === 'asc' ? 'Más cercanas' : 'Más lejanas'}
+                        <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                            d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" />
+                        </svg>
                       </button>
                     </>
                   )}
@@ -2532,63 +2482,23 @@ export default function PublicPage({
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 mb-3 -mt-1">
-          <button
-            onClick={() => handleFilterChange('all')}
-            className={[
-              'px-3.5 py-1.5 rounded-full text-xs font-semibold',
-              'border transition-all duration-200 active:scale-95',
-              'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
-              locationFilter === 'all'
-                ? 'bg-gray-900 text-white border-gray-700'
-                : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
-            ].join(' ')}
-          >
-            {points.length} ubicaciones
-          </button>
-          <button
-            onClick={() => handleFilterChange('available')}
-            className={[
-              'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold',
-              'border transition-all duration-200 active:scale-95',
-              'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
-              locationFilter === 'available'
-                ? 'bg-gray-900 text-white border-gray-700'
-                : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
-            ].join(' ')}
-          >
-            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-              locationFilter === 'available' ? 'bg-emerald-400' : 'bg-emerald-500/50'
-            }`} />
-            {availablePoints.length} activas
-          </button>
+        <div className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5 mb-3 -mt-1">
+          <span className="text-xs text-gray-500">
+            {points.length} ubicaciones • {availablePoints.length} activas
+          </span>
           {userLocation && (
             <>
+              <span className="text-xs text-gray-400">•</span>
               <button
-                onClick={() => setDistanceSortOrder('asc')}
-                className={[
-                  'px-3.5 py-1.5 rounded-full text-xs font-semibold',
-                  'border transition-all duration-200 active:scale-95',
-                  'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
-                  distanceSortOrder === 'asc'
-                    ? 'bg-gray-900 text-white border-gray-700'
-                    : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
-                ].join(' ')}
+                onClick={() => setDistanceSortOrder(distanceSortOrder === 'asc' ? 'desc' : 'asc')}
+                className="flex items-center gap-0.5 text-xs text-gray-600 font-medium
+                           hover:text-gray-800 transition-colors active:scale-95"
               >
-                Más cercanas
-              </button>
-              <button
-                onClick={() => setDistanceSortOrder('desc')}
-                className={[
-                  'px-3.5 py-1.5 rounded-full text-xs font-semibold',
-                  'border transition-all duration-200 active:scale-95',
-                  'shadow-[0_2px_10px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.07)]',
-                  distanceSortOrder === 'desc'
-                    ? 'bg-gray-900 text-white border-gray-700'
-                    : 'bg-white text-gray-600 border-gray-300/80 hover:text-gray-800 hover:border-gray-400/70',
-                ].join(' ')}
-              >
-                Más lejanas
+                {distanceSortOrder === 'asc' ? 'Más cercanas' : 'Más lejanas'}
+                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                    d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
               </button>
             </>
           )}

@@ -511,7 +511,7 @@ function CTAButton({
     )
   }
 
-  if (collectionBlocked) {
+  if (collectionBlocked || validation.phase === 'blocked') {
     return (
       <button
         disabled
@@ -519,20 +519,7 @@ function CTAButton({
                    rounded-2xl text-[15px] border border-gray-200
                    cursor-not-allowed shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
       >
-        {ctaText}
-      </button>
-    )
-  }
-
-  if (validation.phase === 'blocked') {
-    return (
-      <button
-        disabled
-        className="w-full py-4 bg-gray-100 text-gray-400 font-bold
-                   rounded-2xl text-[15px] border border-gray-200
-                   cursor-not-allowed shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
-      >
-        {ctaText}
+        🔒 Desbloquea este contenido
       </button>
     )
   }

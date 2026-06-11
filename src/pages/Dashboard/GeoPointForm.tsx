@@ -669,167 +669,6 @@ export default function GeoPointForm({
           {nameError && <p className="text-xs text-red-400">{nameError}</p>}
         </div>
 
-        {/* ── Tipo de contenido ──────────────────────────────────────────── */}
-        <div className="flex flex-col gap-2">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Tipo de contenido *
-          </span>
-          <div className="grid grid-cols-2 gap-2">
-            {CONTENT_TYPES.map(({ type, label, icon }) => {
-              const allowed = canUseContentType(type)
-              return (
-                <button
-                  key={type}
-                  type="button"
-                  disabled={!allowed}
-                  onClick={() => allowed && handleContentTypeChange(type)}
-                  title={allowed ? undefined : 'Esta función no está disponible en tu plan actual.'}
-                  className={[
-                    'flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all',
-                    !allowed
-                      ? 'border-gray-800 bg-gray-800/30 text-gray-600 cursor-not-allowed'
-                      : contentType === type
-                        ? 'border-brand-500 bg-brand-500/10 text-brand-400'
-                        : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:border-gray-600 hover:text-gray-300',
-                  ].join(' ')}
-                >
-                  <span className="text-base leading-none">{allowed ? icon : '🔒'}</span>
-                  <span className="truncate">{label}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* ── Contenido: URL ──────────────────────────────────────────────── */}
-        {contentType === 'url' && (
-          <>
-            <div className="flex flex-col gap-1">
-              <Input
-                label="URL del contenido*"
-                placeholder="Ej: https://tusitio.com"
-                value={lookiarUrl}
-                onChange={(e) => { setLookiarUrl(e.target.value); setUrlError(null) }}
-                onBlur={() => {
-                  const normalized = validateUrl()
-                  if (normalized !== null) {
-                    onChange({ lookiarUrl: normalized, contentData: { url: normalized } })
-                  }
-                }}
-                hint={urlError ? undefined : 'Agrega cualquier enlace: experiencias, promociones o contenido digital.'}
-              />
-              {urlError && <p className="text-xs text-red-400">{urlError}</p>}
-            </div>
-
-            {/* ── Categoría del destino ──────────────────────────────────── */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                Categoría del destino
-              </label>
-              <select
-                value={destinationCategory ?? ''}
-                onChange={(e) => {
-                  const val = e.target.value as DestinationCategory | ''
-                  const next = val === '' ? undefined : val
-                  setDestinationCategory(next)
-                  onChange({ destinationCategory: next })
-                }}
-                className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2
-                           text-sm text-gray-200 focus:border-brand-500 focus:outline-none
-                           focus:ring-1 focus:ring-brand-500 transition-colors"
-              >
-                <option value="">Sin categoría</option>
-                {DESTINATION_CATEGORIES.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-500">
-                Opcional. Clasifica el destino para analytics.
-              </p>
-            </div>
-          </>
-        )}
-
-        {/* ── Contenido: Video / Audio / Archivo ─────────────────────────── */}
-        {(contentType === 'video' || contentType === 'audio' || contentType === 'file') && (() => {
-          const cfg = FILE_CONFIG[contentType]
-          return (
-            <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                {contentType === 'video' ? 'Video del contenido*'
-                  : contentType === 'audio' ? 'Audio del contenido*'
-                  : 'Archivo descargable*'}
-              </span>
-
-              {/* Idle / Error: click to upload */}
-              {(uploadState === 'idle' || uploadState === 'error') && !mediaFile && (
-                <div
-                  className="border-2 border-dashed border-gray-700 rounded-lg p-4 text-center
-                             hover:border-gray-600 transition-colors cursor-pointer"
-                  onClick={() => mediaFileRef.current?.click()}
-                >
-                  <p className="text-xs text-gray-400">{cfg.hint}</p>
-                  <p className="text-xs text-gray-600 mt-0.5">{cfg.maxLabel}</p>
-                  {uploadError && (
-                    <p className="text-xs text-red-400 mt-2">{uploadError}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Uploading */}
-              {uploadState === 'uploading' && (
-                <div className="border border-gray-700 rounded-lg px-4 py-3 flex items-center gap-3">
-                  <svg className="h-4 w-4 text-brand-400 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                  <span className="text-xs text-gray-400">Subiendo archivo…</span>
-                </div>
-              )}
-
-              {/* Done: show file info */}
-              {mediaFile && uploadState !== 'uploading' && (
-                <div className="border border-gray-700 rounded-lg px-3 py-2.5 flex items-start gap-2.5">
-                  <span className="text-base flex-shrink-0 mt-0.5">
-                    {contentType === 'video' ? '🎬' : contentType === 'audio' ? '🎵' : '📄'}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-200 truncate">{mediaFile.fileName}</p>
-                    {mediaFile.size > 0 && (
-                      <p className="text-xs text-gray-500">{formatFileSize(mediaFile.size)}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => mediaFileRef.current?.click()}
-                      className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
-                    >
-                      Reemplazar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleMediaRemove}
-                      className="text-xs text-gray-600 hover:text-red-400 transition-colors"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <input
-                ref={mediaFileRef}
-                type="file"
-                accept={cfg.accept}
-                className="hidden"
-                onChange={handleMediaFileSelect}
-              />
-              {contentError && <p className="text-xs text-red-400">{contentError}</p>}
-            </div>
-          )
-        })()}
-
         {/* ── Acceso ────────────────────────────────────────────────────── */}
         <div className="space-y-2">
           <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
@@ -1004,6 +843,167 @@ export default function GeoPointForm({
           })()}
 
         </div>
+
+        {/* ── Tipo de contenido ──────────────────────────────────────────── */}
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Tipo de contenido *
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            {CONTENT_TYPES.map(({ type, label, icon }) => {
+              const allowed = canUseContentType(type)
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  disabled={!allowed}
+                  onClick={() => allowed && handleContentTypeChange(type)}
+                  title={allowed ? undefined : 'Esta función no está disponible en tu plan actual.'}
+                  className={[
+                    'flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all',
+                    !allowed
+                      ? 'border-gray-800 bg-gray-800/30 text-gray-600 cursor-not-allowed'
+                      : contentType === type
+                        ? 'border-brand-500 bg-brand-500/10 text-brand-400'
+                        : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:border-gray-600 hover:text-gray-300',
+                  ].join(' ')}
+                >
+                  <span className="text-base leading-none">{allowed ? icon : '🔒'}</span>
+                  <span className="truncate">{label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* ── Contenido: URL ──────────────────────────────────────────────── */}
+        {contentType === 'url' && (
+          <>
+            <div className="flex flex-col gap-1">
+              <Input
+                label="URL del contenido*"
+                placeholder="Ej: https://tusitio.com"
+                value={lookiarUrl}
+                onChange={(e) => { setLookiarUrl(e.target.value); setUrlError(null) }}
+                onBlur={() => {
+                  const normalized = validateUrl()
+                  if (normalized !== null) {
+                    onChange({ lookiarUrl: normalized, contentData: { url: normalized } })
+                  }
+                }}
+                hint={urlError ? undefined : 'Agrega cualquier enlace: experiencias, promociones o contenido digital.'}
+              />
+              {urlError && <p className="text-xs text-red-400">{urlError}</p>}
+            </div>
+
+            {/* ── Categoría del destino ──────────────────────────────────── */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                Categoría del destino
+              </label>
+              <select
+                value={destinationCategory ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value as DestinationCategory | ''
+                  const next = val === '' ? undefined : val
+                  setDestinationCategory(next)
+                  onChange({ destinationCategory: next })
+                }}
+                className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2
+                           text-sm text-gray-200 focus:border-brand-500 focus:outline-none
+                           focus:ring-1 focus:ring-brand-500 transition-colors"
+              >
+                <option value="">Sin categoría</option>
+                {DESTINATION_CATEGORIES.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500">
+                Opcional. Clasifica el destino para analytics.
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* ── Contenido: Video / Audio / Archivo ─────────────────────────── */}
+        {(contentType === 'video' || contentType === 'audio' || contentType === 'file') && (() => {
+          const cfg = FILE_CONFIG[contentType]
+          return (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                {contentType === 'video' ? 'Video del contenido*'
+                  : contentType === 'audio' ? 'Audio del contenido*'
+                  : 'Archivo descargable*'}
+              </span>
+
+              {/* Idle / Error: click to upload */}
+              {(uploadState === 'idle' || uploadState === 'error') && !mediaFile && (
+                <div
+                  className="border-2 border-dashed border-gray-700 rounded-lg p-4 text-center
+                             hover:border-gray-600 transition-colors cursor-pointer"
+                  onClick={() => mediaFileRef.current?.click()}
+                >
+                  <p className="text-xs text-gray-400">{cfg.hint}</p>
+                  <p className="text-xs text-gray-600 mt-0.5">{cfg.maxLabel}</p>
+                  {uploadError && (
+                    <p className="text-xs text-red-400 mt-2">{uploadError}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Uploading */}
+              {uploadState === 'uploading' && (
+                <div className="border border-gray-700 rounded-lg px-4 py-3 flex items-center gap-3">
+                  <svg className="h-4 w-4 text-brand-400 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  <span className="text-xs text-gray-400">Subiendo archivo…</span>
+                </div>
+              )}
+
+              {/* Done: show file info */}
+              {mediaFile && uploadState !== 'uploading' && (
+                <div className="border border-gray-700 rounded-lg px-3 py-2.5 flex items-start gap-2.5">
+                  <span className="text-base flex-shrink-0 mt-0.5">
+                    {contentType === 'video' ? '🎬' : contentType === 'audio' ? '🎵' : '📄'}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-gray-200 truncate">{mediaFile.fileName}</p>
+                    {mediaFile.size > 0 && (
+                      <p className="text-xs text-gray-500">{formatFileSize(mediaFile.size)}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => mediaFileRef.current?.click()}
+                      className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+                    >
+                      Reemplazar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleMediaRemove}
+                      className="text-xs text-gray-600 hover:text-red-400 transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <input
+                ref={mediaFileRef}
+                type="file"
+                accept={cfg.accept}
+                className="hidden"
+                onChange={handleMediaFileSelect}
+              />
+              {contentError && <p className="text-xs text-red-400">{contentError}</p>}
+            </div>
+          )
+        })()}
 
         {/* ── Disponibilidad ─────────────────────────────────────────────── */}
         <div className="space-y-2">

@@ -719,7 +719,7 @@ export default function GeoPointLanding({
             <div className="flex items-end gap-3">
               {project?.projectLogoUrl && (
                 <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0
-                                bg-white/10 backdrop-blur-sm ring-1 ring-white/25 mb-0.5">
+                                bg-white ring-1 ring-black/10 mb-0.5">
                   <img
                     src={project.projectLogoUrl}
                     alt={project.title}

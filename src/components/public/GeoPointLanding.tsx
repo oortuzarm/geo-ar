@@ -805,10 +805,48 @@ export default function GeoPointLanding({
               Esta experiencia requiere verificar tu ubicación.
             </p>
           )}
-          {selectedPoint?.description && (
-            <p className="mt-2 text-sm text-gray-700 leading-relaxed whitespace-pre-line">{selectedPoint.description}</p>
-          )}
         </div>
+
+        {/* ── COLECCIÓN ── */}
+        {collectionNotMet && selectedPoint && (
+          <div className="px-4 pb-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+              <p className="text-[11px] font-semibold text-amber-700 uppercase tracking-widest mb-2">
+                Contenido bloqueado
+              </p>
+              <p className="text-sm text-amber-800 mb-3">
+                Para desbloquear este contenido debes visitar:
+              </p>
+              <div className="space-y-2 mb-3">
+                {(selectedPoint.requiredPointIds ?? []).map((reqId) => {
+                  const reqPoint = points.find((p) => p.id === reqId)
+                  const visited  = visitedPointIds.includes(reqId)
+                  return (
+                    <div key={reqId} className="flex items-center gap-2">
+                      <span className={`text-base leading-none ${visited ? 'text-emerald-600' : 'text-amber-500'}`}>
+                        {visited ? '✓' : '□'}
+                      </span>
+                      <span className={`text-sm ${visited ? 'text-emerald-700 line-through' : 'text-amber-800'}`}>
+                        {reqPoint?.name ?? reqId}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+              <p className="text-xs text-amber-600 font-medium">
+                {(selectedPoint.requiredPointIds ?? []).filter((id) => visitedPointIds.includes(id)).length}
+                /{selectedPoint.requiredPointIds?.length ?? 0} completados
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ── DESCRIPCIÓN ── */}
+        {selectedPoint?.description && (
+          <div className="px-4 pt-1 pb-1">
+            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{selectedPoint.description}</p>
+          </div>
+        )}
 
         {/* ── DIRECCIÓN ── */}
         {selectedPoint?.instructions && (
@@ -858,40 +896,6 @@ export default function GeoPointLanding({
             </div>
           )
         })()}
-
-        {/* ── COLECCIÓN ── */}
-        {collectionNotMet && selectedPoint && (
-          <div className="px-4 pb-4">
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-              <p className="text-[11px] font-semibold text-amber-700 uppercase tracking-widest mb-2">
-                Contenido bloqueado
-              </p>
-              <p className="text-sm text-amber-800 mb-3">
-                Para desbloquear este contenido debes visitar:
-              </p>
-              <div className="space-y-2 mb-3">
-                {(selectedPoint.requiredPointIds ?? []).map((reqId) => {
-                  const reqPoint = points.find((p) => p.id === reqId)
-                  const visited  = visitedPointIds.includes(reqId)
-                  return (
-                    <div key={reqId} className="flex items-center gap-2">
-                      <span className={`text-base leading-none ${visited ? 'text-emerald-600' : 'text-amber-500'}`}>
-                        {visited ? '✓' : '□'}
-                      </span>
-                      <span className={`text-sm ${visited ? 'text-emerald-700 line-through' : 'text-amber-800'}`}>
-                        {reqPoint?.name ?? reqId}
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
-              <p className="text-xs text-amber-600 font-medium">
-                {(selectedPoint.requiredPointIds ?? []).filter((id) => visitedPointIds.includes(id)).length}
-                /{selectedPoint.requiredPointIds?.length ?? 0} completados
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* ── LOCATION / AVAILABILITY DETAIL ── */}
         {selectedPoint && (

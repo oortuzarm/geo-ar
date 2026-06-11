@@ -142,6 +142,7 @@ function AvailabilityRules({
   canUseQuota      = true,
   canUseLiveVisits = true,
   onUpgradeClick,
+  showHeader       = true,
 }: {
   availability:      GeoPointAvailability | undefined
   onChange:          (updates: Partial<GeoPointAvailability>) => void
@@ -149,6 +150,7 @@ function AvailabilityRules({
   canUseQuota?:      boolean
   canUseLiveVisits?: boolean
   onUpgradeClick?:   () => void
+  showHeader?:       boolean
 }) {
   const scheduleEnabled = availability?.scheduleEnabled ?? false
   const scheduleDays    = availability?.scheduleDays ?? []
@@ -168,9 +170,11 @@ function AvailabilityRules({
 
   return (
     <div className="space-y-2">
-      <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-        Disponibilidad
-      </span>
+      {showHeader && (
+        <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+          Disponibilidad
+        </span>
+      )}
 
       {/* ── Schedule rule ── */}
       <div
@@ -999,6 +1003,14 @@ export default function GeoPointForm({
             )
           })()}
 
+        </div>
+
+        {/* ── Disponibilidad ─────────────────────────────────────────────── */}
+        <div className="space-y-2">
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Disponibilidad
+          </span>
+
           {/* Permanencia — always visible; locked when plan excludes the feature */}
           <div
             className={`bg-gray-800/50 border rounded-lg p-3 space-y-3 ${
@@ -1126,17 +1138,17 @@ export default function GeoPointForm({
             )
           })()}
 
-        </div>
+          <AvailabilityRules
+            showHeader={false}
+            availability={point.availability}
+            onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
+            canUseSchedule={canUseScheduleAvailability}
+            canUseQuota={canUseQuotaAvailability}
+            canUseLiveVisits={canUseLiveVisits}
+            onUpgradeClick={() => setUpgradeOpen(true)}
+          />
 
-        {/* ── Disponibilidad ─────────────────────────────────────────────── */}
-        <AvailabilityRules
-          availability={point.availability}
-          onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
-          canUseSchedule={canUseScheduleAvailability}
-          canUseQuota={canUseQuotaAvailability}
-          canUseLiveVisits={canUseLiveVisits}
-          onUpgradeClick={() => setUpgradeOpen(true)}
-        />
+        </div>
 
 
         {/* Coordenadas — dentro de sección colapsable */}

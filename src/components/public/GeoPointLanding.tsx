@@ -587,6 +587,12 @@ export default function GeoPointLanding({
     [points, selectedPointId],
   )
 
+  const effectiveLogo = selectedPoint?.pointLogoUrl
+    ? { url: selectedPoint.pointLogoUrl, zoom: selectedPoint.pointLogoZoom ?? 1, posX: selectedPoint.pointLogoPositionX ?? 0, posY: selectedPoint.pointLogoPositionY ?? 0 }
+    : project?.projectLogoUrl
+    ? { url: project.projectLogoUrl, zoom: project.projectLogoZoom ?? 1, posX: project.projectLogoPositionX ?? 0, posY: project.projectLogoPositionY ?? 0 }
+    : null
+
   const heroImages = useMemo(
     () => (selectedPoint ? getPointGalleryImages(selectedPoint) : []),
     [selectedPoint],
@@ -717,14 +723,14 @@ export default function GeoPointLanding({
           </div>
           <div className="absolute inset-x-0 bottom-0 px-4 pb-4 pointer-events-none">
             <div className="flex items-end gap-3">
-              {project?.projectLogoUrl && (
+              {effectiveLogo && (
                 <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0
                                 bg-white ring-1 ring-black/10 mb-0.5">
                   <img
-                    src={project.projectLogoUrl}
-                    alt={project.title}
+                    src={effectiveLogo.url}
+                    alt={project?.title}
                     className="w-full h-full object-contain"
-                    style={{ transform: `translate(${project.projectLogoPositionX ?? 0}%, ${project.projectLogoPositionY ?? 0}%) scale(${project.projectLogoZoom ?? 1})` }}
+                    style={{ transform: `translate(${effectiveLogo.posX}%, ${effectiveLogo.posY}%) scale(${effectiveLogo.zoom})` }}
                   />
                 </div>
               )}

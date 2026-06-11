@@ -100,10 +100,14 @@ export class RemoteGeoRepository implements IGeoRepository {
     // regardless of whether the backend has camelCase param conversion configured.
     const serializedPoints = points.map((p) => ({
       ...p,
-      requires_dwell_time: p.requiresDwellTime,
-      dwell_time_seconds:  p.dwellTimeSeconds,
-      activation_mode:     p.activationMode,
-      activation_polygon:  p.activationPolygon,
+      requires_dwell_time:   p.requiresDwellTime,
+      dwell_time_seconds:    p.dwellTimeSeconds,
+      activation_mode:       p.activationMode,
+      activation_polygon:    p.activationPolygon,
+      point_logo_url:        p.pointLogoUrl,
+      point_logo_zoom:       p.pointLogoZoom,
+      point_logo_position_x: p.pointLogoPositionX,
+      point_logo_position_y: p.pointLogoPositionY,
     }))
     const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_projects/${id}/sync`), {
       method: 'PATCH',
@@ -145,10 +149,14 @@ export class RemoteGeoRepository implements IGeoRepository {
   async createPoint(data: Partial<GeoPoint> & { geoProjectId: string }): Promise<GeoPoint> {
     const body = {
       ...data,
-      ...('requiresDwellTime' in data ? { requires_dwell_time: data.requiresDwellTime } : {}),
-      ...('dwellTimeSeconds'  in data ? { dwell_time_seconds:  data.dwellTimeSeconds  } : {}),
-      ...('activationMode'    in data ? { activation_mode:     data.activationMode    } : {}),
-      ...('activationPolygon' in data ? { activation_polygon:  data.activationPolygon } : {}),
+      ...('requiresDwellTime'  in data ? { requires_dwell_time:   data.requiresDwellTime  } : {}),
+      ...('dwellTimeSeconds'   in data ? { dwell_time_seconds:    data.dwellTimeSeconds   } : {}),
+      ...('activationMode'     in data ? { activation_mode:       data.activationMode     } : {}),
+      ...('activationPolygon'  in data ? { activation_polygon:    data.activationPolygon  } : {}),
+      ...('pointLogoUrl'       in data ? { point_logo_url:        data.pointLogoUrl       } : {}),
+      ...('pointLogoZoom'      in data ? { point_logo_zoom:       data.pointLogoZoom      } : {}),
+      ...('pointLogoPositionX' in data ? { point_logo_position_x: data.pointLogoPositionX } : {}),
+      ...('pointLogoPositionY' in data ? { point_logo_position_y: data.pointLogoPositionY } : {}),
     }
     const raw = await apiFetch<Record<string, unknown>>(
       this.url(`/api/geo_projects/${data.geoProjectId}/geo_points`),
@@ -162,10 +170,14 @@ export class RemoteGeoRepository implements IGeoRepository {
     const hasImage = typeof updates.image === 'string' && updates.image.startsWith('data:')
     const body = {
       ...updates,
-      ...('requiresDwellTime' in updates ? { requires_dwell_time: updates.requiresDwellTime } : {}),
-      ...('dwellTimeSeconds'  in updates ? { dwell_time_seconds:  updates.dwellTimeSeconds  } : {}),
-      ...('activationMode'    in updates ? { activation_mode:     updates.activationMode    } : {}),
-      ...('activationPolygon' in updates ? { activation_polygon:  updates.activationPolygon } : {}),
+      ...('requiresDwellTime'  in updates ? { requires_dwell_time:   updates.requiresDwellTime  } : {}),
+      ...('dwellTimeSeconds'   in updates ? { dwell_time_seconds:    updates.dwellTimeSeconds   } : {}),
+      ...('activationMode'     in updates ? { activation_mode:       updates.activationMode     } : {}),
+      ...('activationPolygon'  in updates ? { activation_polygon:    updates.activationPolygon  } : {}),
+      ...('pointLogoUrl'       in updates ? { point_logo_url:        updates.pointLogoUrl       } : {}),
+      ...('pointLogoZoom'      in updates ? { point_logo_zoom:       updates.pointLogoZoom      } : {}),
+      ...('pointLogoPositionX' in updates ? { point_logo_position_x: updates.pointLogoPositionX } : {}),
+      ...('pointLogoPositionY' in updates ? { point_logo_position_y: updates.pointLogoPositionY } : {}),
     }
     const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_points/${id}`), {
       method: 'PUT',

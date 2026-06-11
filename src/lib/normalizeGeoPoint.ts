@@ -22,7 +22,11 @@ export function normalizeGeoPoint(raw: Record<string, unknown>): GeoPoint {
     requiresDwellTime: requiresDwellTime != null ? Boolean(requiresDwellTime) : undefined,
     dwellTimeSeconds:  dwellTimeSeconds  != null ? Number(dwellTimeSeconds)   : undefined,
     createdAt:         (raw.createdAt         ?? raw.created_at)         as string | undefined,
-    activationMode:    (raw.activationMode    ?? raw.activation_mode)    as string | undefined,
-    activationPolygon: (raw.activationPolygon ?? raw.activation_polygon) as unknown,
+    activationMode:      (raw.activationMode      ?? raw.activation_mode)       as string | undefined,
+    activationPolygon:   (raw.activationPolygon   ?? raw.activation_polygon)    as unknown,
+    pointLogoUrl:        (raw.pointLogoUrl        ?? raw.point_logo_url)        as string | undefined,
+    pointLogoZoom:       (raw.pointLogoZoom       ?? raw.point_logo_zoom)       as number | undefined,
+    pointLogoPositionX:  (raw.pointLogoPositionX  ?? raw.point_logo_position_x) as number | undefined,
+    pointLogoPositionY:  (raw.pointLogoPositionY  ?? raw.point_logo_position_y) as number | undefined,
   } as GeoPoint
 }

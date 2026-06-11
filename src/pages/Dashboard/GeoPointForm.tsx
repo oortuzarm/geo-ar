@@ -8,6 +8,7 @@ import { uploadImage } from '../../lib/uploadImage'
 import { isVercelBlobUrl } from '../../lib/deleteMediaFile'
 import { useEditorMode } from '../../contexts/EditorModeContext'
 import { usePlanFeatures } from '../../hooks/usePlanFeatures'
+import { LogoField } from '../../components/ui/LogoField'
 import { normalizeUrl, isValidUrl } from '../../lib/urlUtils'
 import type { PointImage } from '../../types'
 import UpgradeModal from '../../components/subscription/UpgradeModal'
@@ -1114,6 +1115,26 @@ export default function GeoPointForm({
               />
             </div>
           )}
+        </div>
+
+        {/* ── Logo del punto GPS ────────────────────────────────────────── */}
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Logo del punto
+          </span>
+          <LogoField
+            value={point.pointLogoUrl}
+            zoom={point.pointLogoZoom ?? 1}
+            posX={point.pointLogoPositionX ?? 0}
+            posY={point.pointLogoPositionY ?? 0}
+            label="Logo del punto"
+            description="Este logo se mostrará junto al contenido y la información de esta ubicación."
+            onUpload={(url) => onChange({ pointLogoUrl: url })}
+            onRemove={() => onChange({ pointLogoUrl: undefined, pointLogoZoom: undefined, pointLogoPositionX: undefined, pointLogoPositionY: undefined })}
+            onZoomChange={(z) => onChange({ pointLogoZoom: z })}
+            onPositionChange={(x, y) => onChange({ pointLogoPositionX: x, pointLogoPositionY: y })}
+            blocked={editorMode === 'demo'}
+          />
         </div>
 
         {/* ── Galería del punto ─────────────────────────────────────────── */}

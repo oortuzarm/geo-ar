@@ -119,6 +119,10 @@ export interface GeoPoint {
   activationMode?: ActivationMode
   /** GeoJSON Feature defining the activation zone. Only relevant when activationMode === 'polygon'. */
   activationPolygon?: ActivationPolygon
+  pointLogoUrl?: string
+  pointLogoZoom?: number
+  pointLogoPositionX?: number
+  pointLogoPositionY?: number
 }
 
 export type NominatimResult = {

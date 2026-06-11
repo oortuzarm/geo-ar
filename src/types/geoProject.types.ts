@@ -15,6 +15,7 @@ export interface GeoProject {
   description?: string
   coverImage?: string
   projectLogoUrl?: string
+  projectLogoZoom?: number
   shareText?: string
   markerImage?: string
   howToGet?: string

@@ -12,6 +12,7 @@ function normalizeProject(raw: Record<string, unknown>): GeoProject {
     userId:                   (raw.userId                  ?? raw.user_id                  ?? null) as string | null,
     coverImage:               raw.coverImage               ?? raw.cover_image,
     projectLogoUrl:           raw.projectLogoUrl           ?? raw.project_logo_url ?? raw.logo_url,
+    projectLogoZoom:          raw.projectLogoZoom          ?? raw.project_logo_zoom,
     shareText:                raw.shareText                ?? raw.share_text,
     markerImage:              raw.markerImage              ?? raw.marker_image,
     howToGet:                 raw.howToGet                 ?? raw.how_to_get,
@@ -106,7 +107,8 @@ export class RemoteGeoRepository implements IGeoRepository {
       method: 'PATCH',
       body: JSON.stringify({
         ...project,
-        project_logo_url: project.projectLogoUrl,
+        project_logo_url:  project.projectLogoUrl,
+        project_logo_zoom: project.projectLogoZoom,
         geoPoints: serializedPoints,
       }),
       timeout: hasImage ? 60_000 : 30_000,

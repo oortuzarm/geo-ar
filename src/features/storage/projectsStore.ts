@@ -22,6 +22,7 @@ export async function createProject(data: Partial<GeoProject> = {}): Promise<Geo
     description: data.description,
     coverImage: data.coverImage,
     projectLogoUrl: data.projectLogoUrl,
+    projectLogoZoom: data.projectLogoZoom,
     howToGet: data.howToGet,
     status: data.status ?? 'draft',
     createdAt: now,

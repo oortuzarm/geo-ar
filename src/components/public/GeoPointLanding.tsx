@@ -724,6 +724,7 @@ export default function GeoPointLanding({
                     src={project.projectLogoUrl}
                     alt={project.title}
                     className="w-full h-full object-contain"
+                    style={{ transform: `scale(${project.projectLogoZoom ?? 1})` }}
                   />
                 </div>
               )}

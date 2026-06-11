@@ -1020,10 +1020,7 @@ export default function GeoPointForm({
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                  canUseDwellTime && (point.requiresDwellTime ?? false) ? 'bg-brand-500' : 'bg-gray-600'
-                }`} />
-                <span className={`text-sm ${canUseDwellTime ? ((point.requiresDwellTime ?? false) ? 'text-gray-300' : 'text-gray-400') : 'text-gray-600'}`}>
+                <span className={`text-sm ${canUseDwellTime ? 'text-gray-300' : 'text-gray-600'}`}>
                   Permanencia
                 </span>
                 <InfoTooltip text="El usuario debe permanecer dentro del área durante un tiempo mínimo para activar la experiencia." />
@@ -1080,10 +1077,7 @@ export default function GeoPointForm({
               }`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                      collectionEnabled ? 'bg-brand-500' : 'bg-gray-600'
-                    }`} />
-                    <span className={`text-sm ${collectionEnabled ? 'text-gray-300' : 'text-gray-400'}`}>
+                    <span className="text-sm text-gray-300">
                       Colección
                     </span>
                     <InfoTooltip text="Selecciona las ubicaciones que deben visitarse antes de desbloquear este contenido." />

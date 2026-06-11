@@ -1126,20 +1126,6 @@ export default function GeoPointForm({
             )
           })()}
 
-          {/* Placeholder rules — not yet implemented */}
-          {([
-            { label: 'Temporalidad', tooltip: 'Combina reglas de fecha, horario y zona horaria para controles de acceso complejos.' },
-          ] as { label: string; tooltip: string }[]).map(({ label, tooltip }) => (
-            <div key={label} className="bg-gray-800/50 border border-gray-800 rounded-lg p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm text-gray-600">{label}</span>
-                  <InfoTooltip text={tooltip} />
-                </div>
-                <span className="text-xs text-gray-600">Próximamente</span>
-              </div>
-            </div>
-          ))}
         </div>
 
         {/* ── Disponibilidad ─────────────────────────────────────────────── */}

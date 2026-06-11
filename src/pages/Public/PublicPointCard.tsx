@@ -436,18 +436,27 @@ export default function PublicPointCard({
           </div>
         )}
 
-        {/* Distance from user */}
+        {/* Distance from user to activation area edge (0 = inside) */}
         {distance !== null && (
-          <div className={`flex items-center gap-1.5 ${isDetail ? 'mt-2' : 'mt-1.5'}`}>
-            <svg className={`flex-shrink-0 ${isDetail ? 'h-4 w-4 text-gray-400' : 'h-3.5 w-3.5 text-gray-400'}`}
-              fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-            </svg>
-            <p className={`font-medium ${isDetail ? 'text-sm text-gray-500' : 'text-xs text-gray-500'}`}>
-              {formatDistance(distance)}
-            </p>
-          </div>
+          distance === 0 ? (
+            <div className={`flex items-center gap-1.5 ${isDetail ? 'mt-2' : 'mt-1.5'}`}>
+              <PinIcon />
+              <p className={`font-medium ${isDetail ? 'text-sm text-emerald-600' : 'text-xs text-emerald-600'}`}>
+                Estás aquí
+              </p>
+            </div>
+          ) : (
+            <div className={`flex items-center gap-1.5 ${isDetail ? 'mt-2' : 'mt-1.5'}`}>
+              <svg className={`flex-shrink-0 ${isDetail ? 'h-4 w-4 text-gray-400' : 'h-3.5 w-3.5 text-gray-400'}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              <p className={`font-medium ${isDetail ? 'text-sm text-gray-500' : 'text-xs text-gray-500'}`}>
+                {formatDistance(distance)}
+              </p>
+            </div>
+          )
         )}
 
         {/* Address — auto-resolved via reverse geocoding; falls back to legacy instructions */}

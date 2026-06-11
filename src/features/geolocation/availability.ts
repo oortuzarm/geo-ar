@@ -101,6 +101,38 @@ export function isInsideActivationArea(
   return dist <= point.activationRadius
 }
 
+/**
+ * Distance in metres from the user to the nearest point on the activation area.
+ * Returns 0 when the user is already inside the area.
+ *
+ * Radius mode outside: max(0, dist_to_centre − activationRadius)
+ * Polygon mode outside: distance to nearest outer-ring vertex (approximation)
+ */
+export function distanceToArea(
+  point: GeoPoint,
+  userLat: number,
+  userLng: number,
+): number {
+  if (point.activationMode === 'polygon' && point.activationPolygon) {
+    if (isInsideActivationArea(point, userLat, userLng)) return 0
+    const geom = point.activationPolygon.geometry
+    const rings =
+      geom.type === 'MultiPolygon'
+        ? geom.coordinates.flatMap((poly) => poly)
+        : geom.coordinates
+    let min = Infinity
+    for (const ring of rings) {
+      for (const coord of ring) {
+        const d = haversineDistance(userLat, userLng, coord[1], coord[0])
+        if (d < min) min = d
+      }
+    }
+    return min === Infinity ? 0 : min
+  }
+  const d = haversineDistance(userLat, userLng, point.latitude, point.longitude)
+  return Math.max(0, d - point.activationRadius)
+}
+
 // ── Core computation ──────────────────────────────────────────────────────────
 
 /**

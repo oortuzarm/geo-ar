@@ -9,7 +9,7 @@ import { geoProjectsApi, geoPointsApi } from '../../services'
 import { ApiError } from '../../lib/apiFetch'
 
 import { haversineDistance } from '../../features/geolocation/haversine'
-import { isInsideActivationArea } from '../../features/geolocation/availability'
+import { isInsideActivationArea, distanceToArea } from '../../features/geolocation/availability'
 import { reverseGeocode } from '../../features/geolocation/geocoding'
 import { trackRadiusEnter, trackPointClick, trackDwellStarted, trackDwellCompleted, trackDwellCancelled } from '../../lib/analytics'
 import { getLiveVisitSessionId } from '../../utils/liveVisits'
@@ -1254,10 +1254,7 @@ export default function PublicPage({
     if (!userLocation) return
     const newDist: Record<string, number> = {}
     for (const pt of points) {
-      newDist[pt.id] = haversineDistance(
-        userLocation.latitude, userLocation.longitude,
-        pt.latitude, pt.longitude,
-      )
+      newDist[pt.id] = distanceToArea(pt, userLocation.latitude, userLocation.longitude)
     }
     setDistances(newDist)
   }, [userLocation, points])

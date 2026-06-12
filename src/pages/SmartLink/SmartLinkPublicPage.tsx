@@ -20,6 +20,7 @@ import { useParams }                             from 'react-router-dom'
 import { ApiError, apiFetch }                   from '../../lib/apiFetch'
 import { normalizeGeoPoint }                    from '../../lib/normalizeGeoPoint'
 import { markPointUnlocked }                    from '../../lib/unlockedPoints'
+import { trackPointClick }                      from '../../lib/analytics'
 import { useGeoStore }                          from '../../store/geoStore'
 import { useGeolocation, getCurrentPosition }   from '../../hooks/useGeolocation'
 import { sendHeartbeat, sendProjectHeartbeat }  from '../../services/liveVisitsApi'
@@ -271,6 +272,10 @@ export default function SmartLinkPublicPage() {
       const point = primaryPoint
       setLocationActive(true)
       const onActivate = () => {
+        trackPointClick(point.geoProjectId, point.id, {
+          contentType:         point.contentType ?? 'info',
+          destinationCategory: point.destinationCategory ?? null,
+        })
         if (point.updatedAt) markPointUnlocked(point.geoProjectId, point.id, point.updatedAt)
         if (!point.contentType || point.contentType === 'url') {
           const cd = point.contentData as Record<string, unknown> | undefined

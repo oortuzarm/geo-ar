@@ -1833,6 +1833,10 @@ export default function PublicPage({
     if (point.pointMode === 'informative') {
       setLocationActive(true)
       const onActivate = () => {
+        trackPointClick(id!, point.id, {
+          contentType:         point.contentType ?? 'info',
+          destinationCategory: point.destinationCategory ?? null,
+        })
         if (point.updatedAt) markPointUnlocked(point.geoProjectId, point.id, point.updatedAt)
         if (!point.contentType || point.contentType === 'url') {
           const cd = point.contentData as Record<string, unknown> | undefined

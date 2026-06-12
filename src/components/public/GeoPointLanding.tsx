@@ -15,7 +15,7 @@ import type { ReactNode }                        from 'react'
 import { MapContainer, Marker, Circle, Polygon, useMap } from 'react-leaflet'
 import L                                         from 'leaflet'
 import { haversineDistance, formatDistance }     from '../../features/geolocation/haversine'
-import { computePointAvailability }              from '../../features/geolocation/availability'
+import { computePointAvailability, type BlockedReason } from '../../features/geolocation/availability'
 import { getPointGalleryImages }                 from '../../lib/pointImageUtils'
 import PointImageCarousel                        from './PointImageCarousel'
 import PublicPointMarker                         from '../map/PublicPointMarker'
@@ -49,7 +49,7 @@ function Spin({ size = 'md' }: { size?: 'sm' | 'md' }) {
 
 // ── Availability badge ────────────────────────────────────────────────────────
 
-function AvailabilityBadge({ validation }: { validation: ValidationState }) {
+function AvailabilityBadge({ validation, blockedReason }: { validation: ValidationState; blockedReason?: BlockedReason | null }) {
   if (validation.phase === 'unlocked') {
     return (
       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
@@ -60,11 +60,14 @@ function AvailabilityBadge({ validation }: { validation: ValidationState }) {
     )
   }
   if (validation.phase === 'blocked') {
+    const isTemporalBlock = blockedReason === 'schedule'
     return (
       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                        bg-amber-50 border border-amber-200">
         <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
-        <span className="text-xs font-semibold text-amber-700">Aún no desbloqueado</span>
+        <span className="text-xs font-semibold text-amber-700">
+          {isTemporalBlock ? 'No disponible' : 'Aún no desbloqueado'}
+        </span>
       </span>
     )
   }
@@ -788,7 +791,7 @@ export default function GeoPointLanding({
 
         {/* ── STATUS + MESSAGE ── */}
         <div className="px-4 pt-4 pb-1">
-          <AvailabilityBadge validation={validation} />
+          <AvailabilityBadge validation={validation} blockedReason={avail?.blockedReason} />
           {validation.phase === 'location_error' && (
             <p className="mt-2 text-sm text-gray-500 leading-relaxed">
               Debes permitir el acceso a tu ubicación para continuar.

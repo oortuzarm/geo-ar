@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Input, Textarea } from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
-import type { ContentType, DestinationCategory, GeoPoint, GeoPointAvailability, MediaContentData } from '../../types'
+import type { ContentData, ContentType, DestinationCategory, GeoPoint, GeoPointAvailability, MediaContentData } from '../../types'
 import { reverseGeocode } from '../../features/geolocation/geocoding'
 import { uploadFile, formatFileSize } from '../../lib/uploadFile'
 import { uploadImage } from '../../lib/uploadImage'
@@ -593,23 +593,51 @@ export default function GeoPointForm({
         buttonText:          buttonText     || undefined,
       })
     } else {
-      // Informative mode: only name + coordinates required; content is optional
+      // Informative mode: name required; content optional — validate only when configured
       setDescriptionError(null)
-      setContentError(null)
-      setUrlError(null)
+
+      let resolvedContentType: typeof contentType | undefined
+      let resolvedContentData: ContentData | undefined
+      let resolvedLookiarUrl:  string | undefined
+      let resolvedDestCat:     DestinationCategory | undefined
+
+      if (contentType === 'url') {
+        if (lookiarUrl.trim()) {
+          const normalizedUrl = validateUrl()
+          if (normalizedUrl === null) valid = false
+          else {
+            resolvedContentType = 'url'
+            resolvedContentData = { url: normalizedUrl }
+            resolvedLookiarUrl  = normalizedUrl
+            resolvedDestCat     = destinationCategory ?? undefined
+          }
+        } else {
+          setUrlError(null)
+        }
+      } else if (mediaFile) {
+        setContentError(null)
+        resolvedContentType = contentType
+        resolvedContentData = {
+          file_url:  mediaFile.url,
+          file_name: mediaFile.fileName,
+          mime_type: mediaFile.mimeType,
+        }
+      } else {
+        setContentError(null)
+      }
 
       if (!valid) return false
 
       onChange({
         name,
         pointMode,
-        contentType:         undefined,
-        contentData:         undefined,
-        lookiarUrl:          undefined,
-        destinationCategory: undefined,
-        description:         description    || undefined,
-        instructions:        addressCustom  || undefined,
-        buttonText:          buttonText     || undefined,
+        contentType:         resolvedContentType,
+        contentData:         resolvedContentData,
+        lookiarUrl:          resolvedLookiarUrl,
+        destinationCategory: resolvedDestCat,
+        description:         description || undefined,
+        instructions:        addressCustom || undefined,
+        buttonText:          buttonText || undefined,
       })
     }
 
@@ -960,10 +988,10 @@ export default function GeoPointForm({
           )}
         </div>
 
-        {/* ── Tipo de contenido (solo modo unlock) ───────────────────────── */}
-        {pointMode === 'unlock' && <div className="flex flex-col gap-2">
+        {/* ── Tipo de contenido ──────────────────────────────────────────── */}
+        <div className="flex flex-col gap-2">
           <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Tipo de contenido *
+            {pointMode === 'informative' ? 'Tipo de contenido' : 'Tipo de contenido *'}
           </span>
           <div className="grid grid-cols-2 gap-2">
             {CONTENT_TYPES.map(({ type, label, icon }) => {
@@ -990,14 +1018,14 @@ export default function GeoPointForm({
               )
             })}
           </div>
-        </div>}
+        </div>
 
-        {/* ── Contenido: URL (solo modo unlock) ──────────────────────────── */}
-        {pointMode === 'unlock' && contentType === 'url' && (
+        {/* ── Contenido: URL ─────────────────────────────────────────────── */}
+        {contentType === 'url' && (
           <>
             <div className="flex flex-col gap-1">
               <Input
-                label="URL del contenido*"
+                label={pointMode === 'informative' ? 'URL del contenido' : 'URL del contenido*'}
                 placeholder="Ej: https://tusitio.com"
                 value={lookiarUrl}
                 onChange={(e) => { setLookiarUrl(e.target.value); setUrlError(null) }}
@@ -1007,7 +1035,9 @@ export default function GeoPointForm({
                     onChange({ lookiarUrl: normalized, contentData: { url: normalized } })
                   }
                 }}
-                hint={urlError ? undefined : 'Agrega cualquier enlace: experiencias, promociones o contenido digital.'}
+                hint={urlError ? undefined : pointMode === 'informative'
+                  ? 'Opcional. Si se configura, el CTA aparecerá activo para el visitante.'
+                  : 'Agrega cualquier enlace: experiencias, promociones o contenido digital.'}
               />
               {urlError && <p className="text-xs text-red-400">{urlError}</p>}
             </div>
@@ -1041,15 +1071,18 @@ export default function GeoPointForm({
           </>
         )}
 
-        {/* ── Contenido: Video / Audio / Archivo (solo modo unlock) ─────── */}
-        {pointMode === 'unlock' && (contentType === 'video' || contentType === 'audio' || contentType === 'file') && (() => {
+        {/* ── Contenido: Video / Audio / Archivo ─────────────────────────── */}
+        {(contentType === 'video' || contentType === 'audio' || contentType === 'file') && (() => {
           const cfg = FILE_CONFIG[contentType]
+          const isRequired = pointMode !== 'informative'
           return (
             <div className="flex flex-col gap-1.5">
               <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                {contentType === 'video' ? 'Video del contenido*'
-                  : contentType === 'audio' ? 'Audio del contenido*'
-                  : 'Archivo descargable*'}
+                {contentType === 'video'
+                  ? (isRequired ? 'Video del contenido*' : 'Video del contenido')
+                  : contentType === 'audio'
+                    ? (isRequired ? 'Audio del contenido*' : 'Audio del contenido')
+                    : (isRequired ? 'Archivo descargable*' : 'Archivo descargable')}
               </span>
 
               {/* Idle / Error: click to upload */}

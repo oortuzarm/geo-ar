@@ -37,7 +37,7 @@ interface GeoPointFormProps {
 }
 
 const RADIUS_TOOLTIP =
-  'El radio de activación define la distancia máxima desde el punto geolocalizado dentro de la cual esta experiencia puede activarse. Si el usuario está fuera de este radio, la experiencia no se mostrará.'
+  'Define la ubicación física asociada a este punto.\n\nPara puntos interactivos, esta área controla dónde se puede desbloquear el contenido.\n\nPara puntos informativos, esta área se utiliza para medir visitas presenciales y generar analítica geográfica, pero no restringe el acceso al contenido.'
 
 const WEEK_DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
@@ -125,7 +125,7 @@ function InfoTooltip({ text }: { text: string }) {
           className="fixed z-[9999] w-64 max-w-[260px]
                      bg-gray-800 border border-gray-700
                      text-xs text-gray-300 p-3 rounded-lg shadow-xl pointer-events-none
-                     whitespace-normal break-words"
+                     whitespace-pre-line break-words"
           style={{ top: pos.top, right: pos.right }}
         >
           {text}
@@ -743,8 +743,8 @@ export default function GeoPointForm({
           </span>
           <div className="grid grid-cols-2 gap-2">
             {([
-              { value: 'unlock',      label: 'Interactivo',   desc: 'Requiere desbloqueo' },
-              { value: 'informative', label: 'Informativo',   desc: 'Siempre visible' },
+              { value: 'unlock',      label: 'Interactivo',   desc: 'Requiere cumplir reglas de acceso' },
+              { value: 'informative', label: 'Informativo',   desc: 'Visible desde cualquier lugar. No requiere desbloqueo.' },
             ] as { value: 'informative' | 'unlock'; label: string; desc: string }[]).map(({ value, label, desc }) => (
               <button
                 key={value}
@@ -790,7 +790,9 @@ export default function GeoPointForm({
                     <span className="text-sm text-gray-300">Zona de activación</span>
                     <InfoTooltip text={RADIUS_TOOLTIP} />
                   </div>
-                  <span className="text-xs text-brand-400 font-medium">Siempre activo</span>
+                  <span className="text-xs text-brand-400 font-medium">
+                    {pointMode === 'informative' ? 'Siempre visible' : 'Siempre activo'}
+                  </span>
                 </div>
 
                 {/* Mode selector */}

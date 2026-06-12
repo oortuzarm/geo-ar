@@ -47,7 +47,7 @@ function TagIcon() {
 // ─── Badge system types ───────────────────────────────────────────────────────
 
 /** Operational badge rendered on each card (max 1 at a time). */
-type OpBadge = 'available' | 'last-slots' | 'every-day' | 'tomorrow' | 'unavailable' | null
+type OpBadge = 'available' | 'last-slots' | 'every-day' | 'tomorrow' | 'unavailable' | 'not-unlocked' | null
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 
@@ -121,7 +121,6 @@ export default function PublicPointCard({
     (avail.scheduleActive && !avail.scheduleAvailable) ||
     (avail.quotaActive && !avail.quotaAvailable)
 
-  const isAvailableNow = !contentUnavailableOnArrival
   const hasCoverBanner = !hideImage && Boolean(getPointCoverImage(point))
 
   // ── Badge computation ───────────────────────────────────────────────────────
@@ -130,28 +129,37 @@ export default function PublicPointCard({
     pointCreatedAt &&
     Date.now() - new Date(pointCreatedAt).getTime() < 7 * 24 * 60 * 60 * 1000,
   )
+  // True only when all locally-checkable rules are satisfied:
+  // location granted + inside activation area + schedule ok + quota ok + live visits ok + dwell completed.
+  // Note: collection requires an async API fetch and cannot be verified here.
+  const isFullyAvailable =
+    avail.canAccess &&
+    !getDwellAccessState(point, distance, dwellProgress?.state, dwellProgress?.elapsed).blocksAccess
+
   // Operational (max 1, evaluated in priority order):
-  //   1. available    — schedule + quota pass right now
-  //   2. last-slots   — quota still open but ≤ 10 remaining
-  //   3. every-day    — schedule enabled and available all 7 days
-  //   4. tomorrow     — schedule blocks today; tomorrow's day passes
-  //   5. unavailable  — schedule blocks and no friendly alternative applies
+  //   1. available     — all local rules pass right now (user can access)
+  //   2. unavailable   — schedule/day blocks (temporal; user cannot resolve by moving)
+  //   3. every-day     — schedule covers all 7 days (friendly reassurance)
+  //   4. tomorrow      — schedule blocks today but available tomorrow
+  //   5. last-slots    — quota still open but ≤ 10 remaining (urgency signal)
+  //   6. not-unlocked  — blocked by location/area/quota/dwell/live-visits
   const opBadge: OpBadge = (() => {
-    if (isAvailableNow) return 'available'
+    if (isFullyAvailable) return 'available'
+    if (avail.scheduleActive && !avail.scheduleAvailable) {
+      const av = point.availability
+      if (av?.scheduleEnabled) {
+        const days = av.scheduleDays ?? []
+        if (days.length === 0 || days.length === 7) return 'every-day'
+        const d    = new Date(); d.setDate(d.getDate() + 1)
+        const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'] as const
+        if (days.includes(DAYS[d.getDay()])) return 'tomorrow'
+      }
+      return 'unavailable'
+    }
     if (avail.quotaActive && avail.quotaAvailable &&
         avail.quotaRemaining !== undefined && avail.quotaRemaining <= 10)
       return 'last-slots'
-    const av = point.availability
-    if (av?.scheduleEnabled && (!avail.quotaActive || avail.quotaAvailable)) {
-      const days = av.scheduleDays ?? []
-      if (days.length === 0 || days.length === 7) return 'every-day'
-      const d    = new Date(); d.setDate(d.getDate() + 1)
-      const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'] as const
-      const dayOk = days.includes(DAYS[d.getDay()])
-      if (dayOk) return 'tomorrow'
-    }
-    if (avail.scheduleActive && !avail.scheduleAvailable) return 'unavailable'
-    return null
+    return 'not-unlocked'
   })()
 
   function openMaps() {
@@ -285,6 +293,14 @@ export default function PublicPointCard({
               <span className="text-[12px] font-semibold text-white leading-none">No disponible</span>
             </span>
           )}
+          {opBadge === 'not-unlocked' && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                             bg-black/[0.65] backdrop-blur-md border border-white/[0.28]
+                             shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+              <span className="text-[12px] font-semibold text-white leading-none">Aún no desbloqueado</span>
+            </span>
+          )}
         </div>
       )}
       {/* Cover image — hidden when caller renders a full carousel above the card */}
@@ -352,6 +368,14 @@ export default function PublicPointCard({
                                  shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
                   <span className="text-[12px] font-semibold text-white leading-none">No disponible</span>
+                </span>
+              )}
+              {opBadge === 'not-unlocked' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                                 bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
+                                 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                  <span className="text-[12px] font-semibold text-white leading-none">Aún no desbloqueado</span>
                 </span>
               )}
             </div>
@@ -427,6 +451,13 @@ export default function PublicPointCard({
                                bg-black/[0.3] border border-white/[0.15]">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
                 <span className="text-[12px] font-semibold text-white leading-none">No disponible</span>
+              </span>
+            )}
+            {opBadge === 'not-unlocked' && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
+                               bg-black/[0.3] border border-white/[0.15]">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                <span className="text-[12px] font-semibold text-white leading-none">Aún no desbloqueado</span>
               </span>
             )}
           </div>

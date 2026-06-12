@@ -376,6 +376,9 @@ export default function GeoPointForm({
   const [description, setDescription] = useState(point.description ?? '')
   const [buttonText,  setButtonText]  = useState(point.buttonText ?? '')
 
+  // ── Point mode ────────────────────────────────────────────────────────────
+  const [pointMode, setPointMode] = useState<'informative' | 'unlock'>(point.pointMode ?? 'unlock')
+
   // ── Content type + destination category state ────────────────────────────
   const [contentType,         setContentType]         = useState<ContentType>(point.contentType ?? 'url')
   const [destinationCategory, setDestinationCategory] = useState<DestinationCategory | undefined>(point.destinationCategory)
@@ -536,46 +539,69 @@ export default function GeoPointForm({
       setNameError(null)
     }
 
-    if (!description.trim()) {
-      setDescriptionError('La descripción es obligatoria.')
-      valid = false
+    if (pointMode === 'unlock') {
+      if (!description.trim()) {
+        setDescriptionError('La descripción es obligatoria.')
+        valid = false
+      } else {
+        setDescriptionError(null)
+      }
+
+      const normalizedUrl = validateUrl()
+      if (normalizedUrl === null) valid = false
+
+      if (contentType !== 'url' && !mediaFile) {
+        setContentError(
+          contentType === 'video' ? 'El video del contenido es obligatorio.'
+          : contentType === 'audio' ? 'El audio del contenido es obligatorio.'
+          : 'El archivo descargable es obligatorio.'
+        )
+        valid = false
+      } else if (contentType !== 'url') {
+        setContentError(null)
+      }
+
+      if (!valid) return false
+
+      const contentData =
+        contentType === 'url'
+          ? { url: normalizedUrl as string }
+          : mediaFile
+            ? { file_url: mediaFile.url, file_name: mediaFile.fileName, mime_type: mediaFile.mimeType }
+            : { file_url: '', file_name: '', mime_type: '' }
+
+      onChange({
+        name,
+        pointMode,
+        contentType,
+        contentData,
+        lookiarUrl:          contentType === 'url' ? normalizedUrl as string : undefined,
+        destinationCategory: contentType === 'url' ? destinationCategory : undefined,
+        description:         description    || undefined,
+        instructions:        addressCustom  || undefined,
+        buttonText:          buttonText     || undefined,
+      })
     } else {
+      // Informative mode: only name + coordinates required; content is optional
       setDescriptionError(null)
-    }
-
-    const normalizedUrl = validateUrl()
-    if (normalizedUrl === null) valid = false
-
-    if (contentType !== 'url' && !mediaFile) {
-      setContentError(
-        contentType === 'video' ? 'El video del contenido es obligatorio.'
-        : contentType === 'audio' ? 'El audio del contenido es obligatorio.'
-        : 'El archivo descargable es obligatorio.'
-      )
-      valid = false
-    } else if (contentType !== 'url') {
       setContentError(null)
+      setUrlError(null)
+
+      if (!valid) return false
+
+      onChange({
+        name,
+        pointMode,
+        contentType:         undefined,
+        contentData:         undefined,
+        lookiarUrl:          undefined,
+        destinationCategory: undefined,
+        description:         description    || undefined,
+        instructions:        addressCustom  || undefined,
+        buttonText:          buttonText     || undefined,
+      })
     }
 
-    if (!valid) return false
-
-    const contentData =
-      contentType === 'url'
-        ? { url: normalizedUrl as string }
-        : mediaFile
-          ? { file_url: mediaFile.url, file_name: mediaFile.fileName, mime_type: mediaFile.mimeType }
-          : { file_url: '', file_name: '', mime_type: '' }
-
-    onChange({
-      name,
-      contentType,
-      contentData,
-      lookiarUrl:          contentType === 'url' ? normalizedUrl as string : undefined,
-      destinationCategory: contentType === 'url' ? destinationCategory : undefined,
-      description:         description    || undefined,
-      instructions:        addressCustom  || undefined,
-      buttonText:          buttonText     || undefined,
-    })
     return true
   }
 
@@ -667,6 +693,41 @@ export default function GeoPointForm({
             onBlur={() => onChange({ name })}
           />
           {nameError && <p className="text-xs text-red-400">{nameError}</p>}
+        </div>
+
+        {/* ── Modo del punto ────────────────────────────────────────────── */}
+        <div className="space-y-2">
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Modo del punto
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              { value: 'unlock',      label: 'Interactivo',   desc: 'Requiere desbloqueo' },
+              { value: 'informative', label: 'Informativo',   desc: 'Siempre visible' },
+            ] as { value: 'informative' | 'unlock'; label: string; desc: string }[]).map(({ value, label, desc }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  setPointMode(value)
+                  onChange({ pointMode: value })
+                }}
+                className={[
+                  'flex flex-col items-start px-3 py-2.5 rounded-lg border text-left transition-all',
+                  pointMode === value
+                    ? 'border-brand-500 bg-brand-500/10'
+                    : 'border-gray-700 bg-gray-800/50 hover:border-gray-600',
+                ].join(' ')}
+              >
+                <span className={`text-sm font-medium ${pointMode === value ? 'text-brand-400' : 'text-gray-300'}`}>
+                  {label}
+                </span>
+                <span className={`text-xs mt-0.5 ${pointMode === value ? 'text-brand-500/70' : 'text-gray-600'}`}>
+                  {desc}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* ── Acceso ────────────────────────────────────────────────────── */}
@@ -888,8 +949,8 @@ export default function GeoPointForm({
           )}
         </div>
 
-        {/* ── Tipo de contenido ──────────────────────────────────────────── */}
-        <div className="flex flex-col gap-2">
+        {/* ── Tipo de contenido (solo modo unlock) ───────────────────────── */}
+        {pointMode === 'unlock' && <div className="flex flex-col gap-2">
           <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
             Tipo de contenido *
           </span>
@@ -918,10 +979,10 @@ export default function GeoPointForm({
               )
             })}
           </div>
-        </div>
+        </div>}
 
-        {/* ── Contenido: URL ──────────────────────────────────────────────── */}
-        {contentType === 'url' && (
+        {/* ── Contenido: URL (solo modo unlock) ──────────────────────────── */}
+        {pointMode === 'unlock' && contentType === 'url' && (
           <>
             <div className="flex flex-col gap-1">
               <Input
@@ -969,8 +1030,8 @@ export default function GeoPointForm({
           </>
         )}
 
-        {/* ── Contenido: Video / Audio / Archivo ─────────────────────────── */}
-        {(contentType === 'video' || contentType === 'audio' || contentType === 'file') && (() => {
+        {/* ── Contenido: Video / Audio / Archivo (solo modo unlock) ─────── */}
+        {pointMode === 'unlock' && (contentType === 'video' || contentType === 'audio' || contentType === 'file') && (() => {
           const cfg = FILE_CONFIG[contentType]
           return (
             <div className="flex flex-col gap-1.5">
@@ -1049,8 +1110,8 @@ export default function GeoPointForm({
           )
         })()}
 
-        {/* ── Disponibilidad ─────────────────────────────────────────────── */}
-        <div className="space-y-2">
+        {/* ── Disponibilidad (solo modo unlock) ──────────────────────────── */}
+        {pointMode === 'unlock' && <div className="space-y-2">
           <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
             Disponibilidad
           </span>
@@ -1186,7 +1247,7 @@ export default function GeoPointForm({
             onUpgradeClick={() => setUpgradeOpen(true)}
           />
 
-        </div>
+        </div>}
 
 
         {/* ── Logo del punto GPS ────────────────────────────────────────── */}
@@ -1330,7 +1391,7 @@ export default function GeoPointForm({
         {/* Descripción */}
         <div>
           <Textarea
-            label="Descripción *"
+            label={pointMode === 'informative' ? 'Descripción' : 'Descripción *'}
             placeholder="Qué verá el usuario en esta experiencia"
             value={description}
             onChange={(e) => { setDescription(e.target.value); setDescriptionError(null) }}

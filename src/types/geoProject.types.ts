@@ -112,6 +112,7 @@ export interface GeoPoint {
   order: number
   availability?: GeoPointAvailability
   accessMode?: 'restricted' | 'open'
+  pointMode?: 'informative' | 'unlock'
   requiresDwellTime?: boolean
   dwellTimeSeconds?: number
   createdAt?: string

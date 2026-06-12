@@ -19,6 +19,7 @@ export function normalizeGeoPoint(raw: Record<string, unknown>): GeoPoint {
     activationRadius:  Number(raw.activationRadius ?? raw.activation_radius ?? 50),
     buttonText:        (raw.buttonText        ?? raw.button_text)        as string | undefined,
     accessMode:        (raw.accessMode        ?? raw.access_mode)        as string | undefined,
+    pointMode:         (raw.pointMode         ?? raw.point_mode)         as 'informative' | 'unlock' | undefined,
     requiresDwellTime: requiresDwellTime != null ? Boolean(requiresDwellTime) : undefined,
     dwellTimeSeconds:  dwellTimeSeconds  != null ? Number(dwellTimeSeconds)   : undefined,
     createdAt:         (raw.createdAt         ?? raw.created_at)         as string | undefined,

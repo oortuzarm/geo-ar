@@ -157,6 +157,7 @@ type LocationFilter = 'all' | 'available'
  * liveVisitCounts: current active visitor counts from heartbeat responses.
  */
 function isPointAvailableNow(point: GeoPoint, liveVisitCounts: Record<string, number>): boolean {
+  if (point.pointMode === 'informative') return true  // no schedule/quota restrictions
   const avail = point.availability
   if (!avail) return true
 
@@ -1678,6 +1679,33 @@ export default function PublicPage({
     }
     // ── End prefetched mode ───────────────────────────────────────────────────
 
+    // ── Informative points: content embedded in point data, no API call needed ─
+    if (point.pointMode === 'informative') {
+      trackPointClick(id!, point.id, {
+        contentType:         point.contentType ?? 'info',
+        destinationCategory: point.destinationCategory ?? null,
+      })
+      if (!point.contentType || point.contentType === 'url') {
+        const cd = point.contentData as Record<string, unknown> | undefined
+        const url = point.lookiarUrl || (cd && typeof cd['url'] === 'string' ? cd['url'] : '')
+        if (url && url.startsWith('http')) { window.location.href = url; return }
+        return
+      }
+      const cd = point.contentData as Record<string, unknown> | undefined
+      const fileUrl = cd && typeof cd['file_url'] === 'string' ? cd['file_url'] : ''
+      if (fileUrl && fileUrl.startsWith('http')) {
+        setUnlockedContent({
+          success: true,
+          content_type: point.contentType as 'video' | 'audio' | 'file',
+          file_url: fileUrl,
+          file_name: typeof cd!['file_name'] === 'string' ? cd!['file_name'] : '',
+          mime_type: typeof cd!['mime_type'] === 'string' ? cd!['mime_type'] : '',
+        })
+      }
+      return
+    }
+    // ── End informative bypass ────────────────────────────────────────────────
+
     if (!userLocation) {
       if (isOpen && point.lookiarUrl && (!point.contentType || point.contentType === 'url')) {
         trackPointClick(id!, point.id, {
@@ -1801,6 +1829,34 @@ export default function PublicPage({
     const point = points.find((p) => p.id === pointId)
     if (!point) return
 
+    // Informative: always unlocked, no GPS or API call needed.
+    if (point.pointMode === 'informative') {
+      setLocationActive(true)
+      const onActivate = () => {
+        if (point.updatedAt) markPointUnlocked(point.geoProjectId, point.id, point.updatedAt)
+        if (!point.contentType || point.contentType === 'url') {
+          const cd = point.contentData as Record<string, unknown> | undefined
+          const url = point.lookiarUrl || (cd && typeof cd['url'] === 'string' ? cd['url'] : '')
+          if (url && url.startsWith('http')) { window.location.href = url; return }
+        } else {
+          const cd = point.contentData as Record<string, unknown> | undefined
+          const fileUrl = cd && typeof cd['file_url'] === 'string' ? cd['file_url'] : ''
+          if (fileUrl && fileUrl.startsWith('http')) {
+            setUnlockedContent({
+              success: true,
+              content_type: point.contentType as 'video' | 'audio' | 'file',
+              file_url: fileUrl,
+              file_name: typeof cd!['file_name'] === 'string' ? cd!['file_name'] : '',
+              mime_type: typeof cd!['mime_type'] === 'string' ? cd!['mime_type'] : '',
+            })
+          }
+        }
+      }
+      landingUnlockedStateRef.current = { onActivate, matchedGeoPointId: point.id }
+      setLandingValidation({ phase: 'unlocked', matchedGeoPointId: point.id, onActivate })
+      return
+    }
+
     setLandingValidation({ phase: 'requesting' })
 
     let loc = userLocationRef.current
@@ -1879,12 +1935,20 @@ export default function PublicPage({
 
   // Auto-trigger landing validation when GPS permission is already granted (avoids re-prompting
   // the user after navigating from the map back to a GeoPoint landing on a fresh page load).
+  // Informative points trigger immediately — no GPS check needed.
   useEffect(() => {
     if (landingAutoStartedRef.current) return
     if (!deepLinkedPointIdRef.current) return
-    if (!points.some((p) => p.id === deepLinkedPointIdRef.current)) return
-    if (!navigator.permissions) return
+    const point = points.find((p) => p.id === deepLinkedPointIdRef.current)
+    if (!point) return
 
+    if (point.pointMode === 'informative') {
+      landingAutoStartedRef.current = true
+      void handleLandingContinue()
+      return
+    }
+
+    if (!navigator.permissions) return
     navigator.permissions
       .query({ name: 'geolocation' as PermissionName })
       .then((result) => {
@@ -1898,6 +1962,7 @@ export default function PublicPage({
 
   // Keep landing unlocked/blocked in sync with the user's physical position.
   // Runs whenever GPS position updates while the landing is active.
+  // Informative points are always accessible — skip the proximity check entirely.
   useEffect(() => {
     if (!deepLinkedPointIdRef.current) return
     if (!userLocation) return
@@ -1907,6 +1972,8 @@ export default function PublicPage({
 
     const point = points.find((p) => p.id === deepLinkedPointIdRef.current)
     if (!point) return
+
+    if (point.pointMode === 'informative') return
 
     const inside = isInsideActivationArea(point, userLocation.latitude, userLocation.longitude)
 

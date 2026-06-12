@@ -819,6 +819,8 @@ export default function GeoPointLanding({
         </div>
 
         {/* ── STATUS + MESSAGE ── */}
+        {/* Informative points have no unlock lifecycle — suppress the availability badge and idle prompt. */}
+        {selectedPoint?.pointMode !== 'informative' && (
         <div className="px-4 pt-4 pb-1">
           <AvailabilityBadge validation={validation} blockedReason={avail?.blockedReason} isUnlocked={pointIsUnlocked} />
           {validation.phase === 'location_error' && (
@@ -832,6 +834,7 @@ export default function GeoPointLanding({
             </p>
           )}
         </div>
+        )}
 
         {/* ── DESCRIPCIÓN ── */}
         {selectedPoint?.description && (
@@ -890,7 +893,7 @@ export default function GeoPointLanding({
         })()}
 
         {/* ── COLECCIÓN ── */}
-        {collectionNotMet && selectedPoint && (
+        {collectionNotMet && selectedPoint && selectedPoint.pointMode !== 'informative' && (
           <div className="px-4 pb-4">
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
               <p className="text-[11px] font-semibold text-amber-700 uppercase tracking-widest mb-2">
@@ -924,7 +927,8 @@ export default function GeoPointLanding({
         )}
 
         {/* ── LOCATION / AVAILABILITY DETAIL ── */}
-        {selectedPoint && (
+        {/* Informative: no geo-restriction or schedule rules — suppress the detail panel. */}
+        {selectedPoint && selectedPoint.pointMode !== 'informative' && (
           <div className="px-4 py-3 space-y-2.5">
             {hasAvailabilityDetail && (
               <>
@@ -1078,12 +1082,15 @@ export default function GeoPointLanding({
                    shadow-[0_-4px_24px_rgba(0,0,0,0.07)]"
         style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}
       >
-        <CTAButton
-          validation={validation}
-          selectedPoint={selectedPoint}
-          onContinue={onContinue}
-          collectionBlocked={collectionNotMet}
-        />
+        {/* Informative with no content: hide the CTA button entirely. */}
+        {!(selectedPoint?.pointMode === 'informative' && !selectedPoint?.lookiarUrl && !selectedPoint?.contentData) && (
+          <CTAButton
+            validation={validation}
+            selectedPoint={selectedPoint}
+            onContinue={onContinue}
+            collectionBlocked={collectionNotMet}
+          />
+        )}
 
         {hasDirections && mapsUrl && !busy && (
           <button

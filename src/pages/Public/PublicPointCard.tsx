@@ -145,7 +145,9 @@ export default function PublicPointCard({
   //   4. tomorrow      — schedule blocks today but available tomorrow
   //   5. last-slots    — quota still open but ≤ 10 remaining (urgency signal)
   //   6. not-unlocked  — blocked by location/area/quota/dwell/live-visits
+  // Informative points have no unlock lifecycle — no badge shown.
   const opBadge: OpBadge = (() => {
+    if (point.pointMode === 'informative') return null
     if (isPointUnlocked(point.geoProjectId, point.id, point.updatedAt)) return 'unlocked'
     if (isFullyAvailable) return 'available'
     if (avail.scheduleActive && !avail.scheduleAvailable) {
@@ -191,7 +193,8 @@ export default function PublicPointCard({
   const dwellBlocking  = dwell.blocksAccess
   const dwellCompleted = dwell.isCompleted
 
-  const isCtaBlocked = !avail.canAccess || dwellBlocking
+  // Informative points are always accessible regardless of location or dwell.
+  const isCtaBlocked = point.pointMode !== 'informative' && (!avail.canAccess || dwellBlocking)
   console.log('[DwellDebug][card] point:', point.id,
     '| requiresDwellTime:', point.requiresDwellTime,
     '| dwellTimeSeconds:', point.dwellTimeSeconds,
@@ -559,14 +562,16 @@ export default function PublicPointCard({
         {isSelected && (
           <div className={`space-y-1.5 ${isDetail ? 'mt-6 pt-5 border-t border-gray-200' : 'mt-3'}`}>
 
-            {/* Location */}
-            <StatusChip
-              icon={<PinIcon />}
-              label={locationLabel}
-              variant={locationVariant}
-              expandLabel={locationDetail != null ? 'Ver ruta' : undefined}
-              detail={locationDetail}
-            />
+            {/* Location chip — unlock only; informative has no geographic restriction */}
+            {point.pointMode !== 'informative' && (
+              <StatusChip
+                icon={<PinIcon />}
+                label={locationLabel}
+                variant={locationVariant}
+                expandLabel={locationDetail != null ? 'Ver ruta' : undefined}
+                detail={locationDetail}
+              />
+            )}
 
             {/* Schedule chip — only when a schedule is configured on this point */}
             {avail.scheduleActive && (
@@ -618,8 +623,8 @@ export default function PublicPointCard({
               />
             )}
 
-            {/* Dwell chip — shows context when permanence is required */}
-            {dwellRequired && avail.insideArea && dwellState === 'idle' && (
+            {/* Dwell chips — unlock only; informative has no dwell requirement */}
+            {point.pointMode !== 'informative' && dwellRequired && avail.insideArea && dwellState === 'idle' && (
               <div className="rounded-xl border px-3 py-2.5 bg-amber-50 border-amber-200">
                 <div className="flex items-center gap-2">
                   <span className="text-amber-700 text-sm">⏳</span>
@@ -631,22 +636,26 @@ export default function PublicPointCard({
                 </div>
               </div>
             )}
-            {dwellRequired && dwellCompleted && (
+            {point.pointMode !== 'informative' && dwellRequired && dwellCompleted && (
               <StatusChip
                 icon={<span className="text-sm">✅</span>}
                 label="Experiencia desbloqueada"
                 variant="ok"
               />
             )}
-            {dwellRequired && dwellProgress?.showResetMessage && (
+            {point.pointMode !== 'informative' && dwellRequired && dwellProgress?.showResetMessage && (
               <p className="text-xs text-amber-600 text-center px-1 leading-snug">
                 Saliste del área. El tiempo se reinició.
               </p>
             )}
 
-            {/* CTA button — enabled iff avail.canAccess and dwell not blocking */}
+            {/* CTA button area.
+                - Informative with no content: omit the whole block.
+                - Unlock: always render (active or disabled depending on availability).
+                - "Cómo llegar" shows for unlock when outside the area. */}
+            {(point.pointMode !== 'informative' || point.lookiarUrl || point.contentData) && (
             <div className={`space-y-2 ${isDetail ? 'pt-2' : 'pt-0.5'}`}>
-              {!avail.insideArea && (
+              {point.pointMode !== 'informative' && !avail.insideArea && (
                 <button
                   onClick={handleNavigate}
                   className={[
@@ -664,7 +673,7 @@ export default function PublicPointCard({
                   Cómo llegar
                 </button>
               )}
-              {avail.canAccess && !dwellBlocking ? (
+              {!isCtaBlocked ? (
                 <button
                   onClick={(e) => { e.stopPropagation(); onActivate() }}
                   disabled={isActivating}
@@ -735,6 +744,7 @@ export default function PublicPointCard({
                 )
               )}
             </div>
+            )}
 
           </div>
         )}

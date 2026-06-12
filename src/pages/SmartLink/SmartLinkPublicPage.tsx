@@ -251,8 +251,41 @@ export default function SmartLinkPublicPage() {
     return () => clearInterval(timer)
   }, [smartLink?.projectId]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Auto-trigger for informative SmartLink points ────────────────────────
+  // Informative points don't need GPS — bypass immediately when displayPoints load.
+  const autoStartedRef = useRef(false)
+  useEffect(() => {
+    if (autoStartedRef.current) return
+    if (!displayPoints.length) return
+    const primary = displayPoints[0]
+    if (primary?.pointMode !== 'informative') return
+    autoStartedRef.current = true
+    void handleContinue()
+  }, [displayPoints]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Continuar handler ─────────────────────────────────────────────────────
   async function handleContinue() {
+    // Informative points: content is embedded in point data, no GPS or API call needed.
+    const primaryPoint = displayPoints[0]
+    if (primaryPoint?.pointMode === 'informative') {
+      const point = primaryPoint
+      setLocationActive(true)
+      const onActivate = () => {
+        if (point.updatedAt) markPointUnlocked(point.geoProjectId, point.id, point.updatedAt)
+        if (!point.contentType || point.contentType === 'url') {
+          const cd = point.contentData as Record<string, unknown> | undefined
+          const url = point.lookiarUrl || (cd && typeof cd['url'] === 'string' ? cd['url'] : '')
+          if (url && url.startsWith('http')) { window.open(url, '_blank', 'noopener,noreferrer'); return }
+        } else {
+          const cd = point.contentData as Record<string, unknown> | undefined
+          const fileUrl = cd && typeof cd['file_url'] === 'string' ? cd['file_url'] : ''
+          if (fileUrl && fileUrl.startsWith('http')) window.open(fileUrl, '_blank', 'noopener,noreferrer')
+        }
+      }
+      setValidation({ phase: 'unlocked', matchedGeoPointId: point.id, onActivate })
+      return
+    }
+
     setValidation({ phase: 'requesting' })
 
     let loc = locationRef.current

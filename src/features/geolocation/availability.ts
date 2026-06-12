@@ -155,6 +155,34 @@ export function computePointAvailability(
   liveVisitsCount?: number,
 ): PointAvailability {
 
+  // ── Informative points: no access restrictions, always open ───────────────
+  if (point.pointMode === 'informative') {
+    const isPolygonMode = point.activationMode === 'polygon' && Boolean(point.activationPolygon)
+    let insideArea: boolean
+    let distanceToEdge: number | null
+
+    if (isPolygonMode) {
+      insideArea    = userLocation != null
+        ? isInsideActivationArea(point, userLocation.latitude, userLocation.longitude)
+        : false
+      distanceToEdge = null
+    } else {
+      insideArea    = distance !== null && distance <= point.activationRadius
+      distanceToEdge = distance !== null ? Math.max(0, distance - point.activationRadius) : null
+    }
+
+    return {
+      canAccess: true, blockedReason: null,
+      insideArea, distanceToEdge,
+      scheduleActive: false, scheduleAvailable: true, scheduleLabel: '',
+      scheduleDays: [], scheduleStartTime: undefined, scheduleEndTime: undefined,
+      quotaActive: false, quotaAvailable: true, quotaLabel: '',
+      quotaRemaining: undefined, quotaTotal: undefined,
+      liveVisitsActive: false, liveVisitsAvailable: true, liveVisitsLabel: '',
+      liveVisitsCurrent: undefined, liveVisitsMinimum: undefined, liveVisitsRemaining: undefined,
+    }
+  }
+
   // ── Area check (radius or polygon) ────────────────────────────────────────
   const isPolygonMode = point.activationMode === 'polygon' && Boolean(point.activationPolygon)
 

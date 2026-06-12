@@ -1089,7 +1089,7 @@ export default function GeoPointLanding({
         style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}
       >
         {/* Informative with no content: hide the CTA button entirely. */}
-        {!(selectedPoint?.pointMode === 'informative' && !selectedPoint?.lookiarUrl && !selectedPoint?.contentData) && (
+        {!(selectedPoint?.pointMode === 'informative' && !selectedPoint?.lookiarUrl && !selectedPoint?.contentType) && (
           <CTAButton
             validation={validation}
             selectedPoint={selectedPoint}

@@ -653,7 +653,7 @@ export default function PublicPointCard({
                 - Informative with no content: omit the whole block.
                 - Unlock: always render (active or disabled depending on availability).
                 - "Cómo llegar" shows for unlock when outside the area. */}
-            {(point.pointMode !== 'informative' || point.lookiarUrl || point.contentData) && (
+            {(point.pointMode !== 'informative' || point.lookiarUrl || point.contentType) && (
             <div className={`space-y-2 ${isDetail ? 'pt-2' : 'pt-0.5'}`}>
               {point.pointMode !== 'informative' && !avail.insideArea && (
                 <button

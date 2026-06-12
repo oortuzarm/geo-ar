@@ -527,6 +527,8 @@ export default function GeoPointForm({
     const normalized = normalizeUrl(lookiarUrl)
     if (normalized !== lookiarUrl) setLookiarUrl(normalized)
     if (!normalized) {
+      // Informative: URL is optional — no error when left empty
+      if (pointMode === 'informative') { setUrlError(null); return '' }
       setUrlError('La URL del contenido es obligatoria.')
       return null
     }

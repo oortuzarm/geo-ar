@@ -289,7 +289,7 @@ export default function PublicPointCard({
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                              bg-black/[0.65] backdrop-blur-md border border-white/[0.28]
                              shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
               <span className="text-[12px] font-semibold text-white leading-none">No disponible</span>
             </span>
           )}
@@ -366,7 +366,7 @@ export default function PublicPointCard({
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                                  bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
                                  shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
                   <span className="text-[12px] font-semibold text-white leading-none">No disponible</span>
                 </span>
               )}
@@ -449,7 +449,7 @@ export default function PublicPointCard({
             {opBadge === 'unavailable' && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
                                bg-black/[0.3] border border-white/[0.15]">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
                 <span className="text-[12px] font-semibold text-white leading-none">No disponible</span>
               </span>
             )}

@@ -62,10 +62,17 @@ function AvailabilityBadge({ validation, blockedReason }: { validation: Validati
   if (validation.phase === 'blocked') {
     const isTemporalBlock = blockedReason === 'schedule'
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                       bg-amber-50 border border-amber-200">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
-        <span className="text-xs font-semibold text-amber-700">
+      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${
+        isTemporalBlock
+          ? 'bg-red-50 border border-red-200'
+          : 'bg-amber-50 border border-amber-200'
+      }`}>
+        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+          isTemporalBlock ? 'bg-red-500' : 'bg-amber-500'
+        }`} />
+        <span className={`text-xs font-semibold ${
+          isTemporalBlock ? 'text-red-700' : 'text-amber-700'
+        }`}>
           {isTemporalBlock ? 'No disponible' : 'Aún no desbloqueado'}
         </span>
       </span>

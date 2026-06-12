@@ -403,6 +403,17 @@ export default function GeoPointForm({
   // ── Video state ───────────────────────────────────────────────────────────
   const [videoUrl,   setVideoUrl]   = useState(point.pointVideoUrl ?? '')
   const [videoError, setVideoError] = useState<string | null>(null)
+
+  // ── Collection state — must live here (not inside JSX) to obey Rules of Hooks ──
+  // Previously lived in an IIFE inside the Disponibilidad section; moved here so it
+  // is always called unconditionally regardless of pointMode.
+  const [collectionEnabled, setCollectionEnabled] = useState(
+    () => (point.requiredPointIds?.length ?? 0) > 0,
+  )
+  useEffect(() => {
+    setCollectionEnabled((point.requiredPointIds?.length ?? 0) > 0)
+  }, [point.id])
+
   const geoTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -1169,73 +1180,63 @@ export default function GeoPointForm({
           </div>
 
           {/* ── Colección ── */}
-          {(() => {
-            const [collectionEnabled, setCollectionEnabled] = useState(
-              () => (point.requiredPointIds?.length ?? 0) > 0,
-            )
-            useEffect(() => {
-              setCollectionEnabled((point.requiredPointIds?.length ?? 0) > 0)
-            }, [point.id])
-            return (
-              <div className={`bg-gray-800/50 border rounded-lg p-3 space-y-3 ${
-                collectionEnabled ? 'border-brand-500/30' : 'border-gray-800'
-              }`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm text-gray-300">
-                      Colección
-                    </span>
-                    <InfoTooltip text="Selecciona las ubicaciones que deben visitarse antes de desbloquear este contenido." />
-                  </div>
-                  <Toggle
-                    enabled={collectionEnabled}
-                    onToggle={() => {
-                      const next = !collectionEnabled
-                      setCollectionEnabled(next)
-                      if (!next) onChange({ requiredPointIds: [] })
-                    }}
-                  />
-                </div>
-                {collectionEnabled && (
-                  <>
-                    <p className="text-xs text-gray-500">
-                      Selecciona las ubicaciones que deben visitarse antes de desbloquear este contenido.
-                    </p>
-                    {otherPoints.length === 0 ? (
-                      <p className="text-xs text-gray-600 italic">No hay otros puntos en este proyecto.</p>
-                    ) : (
-                      <div className="space-y-1.5">
-                        {otherPoints.map((p) => {
-                          const selected = (point.requiredPointIds ?? []).includes(p.id)
-                          return (
-                            <label key={p.id} className="flex items-center gap-2.5 cursor-pointer group">
-                              <input
-                                type="checkbox"
-                                checked={selected}
-                                onChange={() => {
-                                  const current = point.requiredPointIds ?? []
-                                  const next    = selected
-                                    ? current.filter((id) => id !== p.id)
-                                    : [...current, p.id]
-                                  onChange({ requiredPointIds: next })
-                                }}
-                                className="h-4 w-4 rounded border-gray-600 bg-gray-700
-                                           accent-brand-500 cursor-pointer flex-shrink-0"
-                              />
-                              <span className="text-sm text-gray-400 group-hover:text-gray-200
-                                               transition-colors truncate">
-                                {p.name}
-                              </span>
-                            </label>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </>
-                )}
+          <div className={`bg-gray-800/50 border rounded-lg p-3 space-y-3 ${
+            collectionEnabled ? 'border-brand-500/30' : 'border-gray-800'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm text-gray-300">
+                  Colección
+                </span>
+                <InfoTooltip text="Selecciona las ubicaciones que deben visitarse antes de desbloquear este contenido." />
               </div>
-            )
-          })()}
+              <Toggle
+                enabled={collectionEnabled}
+                onToggle={() => {
+                  const next = !collectionEnabled
+                  setCollectionEnabled(next)
+                  if (!next) onChange({ requiredPointIds: [] })
+                }}
+              />
+            </div>
+            {collectionEnabled && (
+              <>
+                <p className="text-xs text-gray-500">
+                  Selecciona las ubicaciones que deben visitarse antes de desbloquear este contenido.
+                </p>
+                {otherPoints.length === 0 ? (
+                  <p className="text-xs text-gray-600 italic">No hay otros puntos en este proyecto.</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {otherPoints.map((p) => {
+                      const selected = (point.requiredPointIds ?? []).includes(p.id)
+                      return (
+                        <label key={p.id} className="flex items-center gap-2.5 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={selected}
+                            onChange={() => {
+                              const current = point.requiredPointIds ?? []
+                              const next    = selected
+                                ? current.filter((id) => id !== p.id)
+                                : [...current, p.id]
+                              onChange({ requiredPointIds: next })
+                            }}
+                            className="h-4 w-4 rounded border-gray-600 bg-gray-700
+                                       accent-brand-500 cursor-pointer flex-shrink-0"
+                          />
+                          <span className="text-sm text-gray-400 group-hover:text-gray-200
+                                           transition-colors truncate">
+                            {p.name}
+                          </span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
 
           <AvailabilityRules
             showHeader={false}

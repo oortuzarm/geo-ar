@@ -19,6 +19,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams }                             from 'react-router-dom'
 import { ApiError, apiFetch }                   from '../../lib/apiFetch'
 import { normalizeGeoPoint }                    from '../../lib/normalizeGeoPoint'
+import { markPointUnlocked }                    from '../../lib/unlockedPoints'
 import { useGeoStore }                          from '../../store/geoStore'
 import { useGeolocation, getCurrentPosition }   from '../../hooks/useGeolocation'
 import { sendHeartbeat, sendProjectHeartbeat }  from '../../services/liveVisitsApi'
@@ -286,11 +287,16 @@ export default function SmartLinkPublicPage() {
 
       if (result.allowed && result.destinationUrl && result.matchedGeoPointId) {
         setLocationActive(true)
-        const destUrl = result.destinationUrl
+        const destUrl       = result.destinationUrl
+        const matchedPoint  = points.find((p) => p.id === result.matchedGeoPointId)
         setValidation({
           phase:             'unlocked',
           matchedGeoPointId: result.matchedGeoPointId,
-          onActivate:        () => window.open(destUrl, '_blank', 'noopener,noreferrer'),
+          onActivate:        () => {
+            if (matchedPoint?.updatedAt)
+              markPointUnlocked(matchedPoint.geoProjectId, matchedPoint.id, matchedPoint.updatedAt)
+            window.open(destUrl, '_blank', 'noopener,noreferrer')
+          },
         })
       } else {
         setValidation({

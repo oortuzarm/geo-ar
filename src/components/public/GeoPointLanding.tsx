@@ -16,6 +16,7 @@ import { MapContainer, Marker, Circle, Polygon, useMap } from 'react-leaflet'
 import L                                         from 'leaflet'
 import { haversineDistance, formatDistance }     from '../../features/geolocation/haversine'
 import { computePointAvailability, type BlockedReason } from '../../features/geolocation/availability'
+import { isPointUnlocked }                             from '../../lib/unlockedPoints'
 import { getPointGalleryImages }                 from '../../lib/pointImageUtils'
 import PointImageCarousel                        from './PointImageCarousel'
 import PublicPointMarker                         from '../map/PublicPointMarker'
@@ -49,7 +50,22 @@ function Spin({ size = 'md' }: { size?: 'sm' | 'md' }) {
 
 // ── Availability badge ────────────────────────────────────────────────────────
 
-function AvailabilityBadge({ validation, blockedReason }: { validation: ValidationState; blockedReason?: BlockedReason | null }) {
+function AvailabilityBadge({
+  validation, blockedReason, isUnlocked,
+}: {
+  validation:    ValidationState
+  blockedReason?: BlockedReason | null
+  isUnlocked?:   boolean
+}) {
+  if (isUnlocked && (validation.phase === 'idle' || validation.phase === 'unlocked')) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                       bg-emerald-50 border border-emerald-200">
+        <span className="text-sm leading-none">🏆</span>
+        <span className="text-xs font-semibold text-emerald-700">Desbloqueado</span>
+      </span>
+    )
+  }
   if (validation.phase === 'unlocked') {
     return (
       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
@@ -749,6 +765,12 @@ export default function GeoPointLanding({
     Boolean(selectedPoint?.requiresDwellTime && selectedPoint.dwellTimeSeconds)
   )
 
+  const pointIsUnlocked = selectedPoint != null && isPointUnlocked(
+    selectedPoint.geoProjectId,
+    selectedPoint.id,
+    selectedPoint.updatedAt,
+  )
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
 
@@ -798,7 +820,7 @@ export default function GeoPointLanding({
 
         {/* ── STATUS + MESSAGE ── */}
         <div className="px-4 pt-4 pb-1">
-          <AvailabilityBadge validation={validation} blockedReason={avail?.blockedReason} />
+          <AvailabilityBadge validation={validation} blockedReason={avail?.blockedReason} isUnlocked={pointIsUnlocked} />
           {validation.phase === 'location_error' && (
             <p className="mt-2 text-sm text-gray-500 leading-relaxed">
               Debes permitir el acceso a tu ubicación para continuar.

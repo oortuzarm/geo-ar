@@ -22,6 +22,7 @@ export function normalizeGeoPoint(raw: Record<string, unknown>): GeoPoint {
     requiresDwellTime: requiresDwellTime != null ? Boolean(requiresDwellTime) : undefined,
     dwellTimeSeconds:  dwellTimeSeconds  != null ? Number(dwellTimeSeconds)   : undefined,
     createdAt:         (raw.createdAt         ?? raw.created_at)         as string | undefined,
+    updatedAt:         (raw.updatedAt         ?? raw.updated_at)         as string | undefined,
     activationMode:      (raw.activationMode      ?? raw.activation_mode)       as string | undefined,
     activationPolygon:   (raw.activationPolygon   ?? raw.activation_polygon)    as unknown,
     pointLogoUrl:        (raw.pointLogoUrl        ?? raw.point_logo_url)        as string | undefined,

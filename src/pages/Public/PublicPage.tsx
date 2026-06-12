@@ -33,6 +33,7 @@ import Spinner from '../../components/ui/Spinner'
 import ToastContainer from '../../components/ui/Toast'
 import type { GeoProject, GeoPoint, LocationStatus, UserLocation, AccessResponse } from '../../types'
 import GeoPointLanding, { type ValidationState } from '../../components/public/GeoPointLanding'
+import { markPointUnlocked } from '../../lib/unlockedPoints'
 
 /** Minimum distance in meters the user must move before recalculating the route */
 const ROUTE_RECALC_THRESHOLD_M = 15
@@ -1833,7 +1834,10 @@ export default function PublicPage({
         if (!fileUrl || !fileUrl.startsWith('http')) {
           setLandingValidation({ phase: 'blocked', message: 'No se encontró el archivo para esta experiencia.' })
         } else {
-          const onActivate = () => setUnlockedContent(raw as AccessResponse)
+          const onActivate = () => {
+            if (point.updatedAt) markPointUnlocked(point.geoProjectId, point.id, point.updatedAt)
+            setUnlockedContent(raw as AccessResponse)
+          }
           landingUnlockedStateRef.current = { onActivate, matchedGeoPointId: point.id }
           setLandingValidation({ phase: 'unlocked', matchedGeoPointId: point.id, onActivate })
         }
@@ -1846,7 +1850,10 @@ export default function PublicPage({
         if (!resolvedUrl || !resolvedUrl.startsWith('http')) {
           setLandingValidation({ phase: 'blocked', message: 'No se encontró una URL válida para esta experiencia.' })
         } else {
-          const onActivate = () => { window.location.href = resolvedUrl }
+          const onActivate = () => {
+            if (point.updatedAt) markPointUnlocked(point.geoProjectId, point.id, point.updatedAt)
+            window.location.href = resolvedUrl
+          }
           landingUnlockedStateRef.current = { onActivate, matchedGeoPointId: point.id }
           setLandingValidation({ phase: 'unlocked', matchedGeoPointId: point.id, onActivate })
         }

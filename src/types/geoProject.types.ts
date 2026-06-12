@@ -115,6 +115,7 @@ export interface GeoPoint {
   requiresDwellTime?: boolean
   dwellTimeSeconds?: number
   createdAt?: string
+  updatedAt?: string
   /** Determines whether activation is based on a circular radius or a drawn polygon. Defaults to 'radius'. */
   activationMode?: ActivationMode
   /** GeoJSON Feature defining the activation zone. Only relevant when activationMode === 'polygon'. */

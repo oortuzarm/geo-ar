@@ -9,6 +9,7 @@ import Modal from '../../components/ui/Modal'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
 import { getDwellAccessState } from '../../lib/dwellAccess'
 import { StatusChip, ScheduleDetail, QuotaDetail, type ChipVariant } from '../../components/availability/AvailabilityChips'
+import { isPointUnlocked } from '../../lib/unlockedPoints'
 
 const DESCRIPTION_LIMIT = 140
 
@@ -47,7 +48,7 @@ function TagIcon() {
 // ─── Badge system types ───────────────────────────────────────────────────────
 
 /** Operational badge rendered on each card (max 1 at a time). */
-type OpBadge = 'available' | 'last-slots' | 'every-day' | 'tomorrow' | 'unavailable' | 'not-unlocked' | null
+type OpBadge = 'unlocked' | 'available' | 'last-slots' | 'every-day' | 'tomorrow' | 'unavailable' | 'not-unlocked' | null
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 
@@ -137,6 +138,7 @@ export default function PublicPointCard({
     !getDwellAccessState(point, distance, dwellProgress?.state, dwellProgress?.elapsed).blocksAccess
 
   // Operational (max 1, evaluated in priority order):
+  //   0. unlocked      — user previously accessed this point (localStorage record matches updatedAt)
   //   1. available     — all local rules pass right now (user can access)
   //   2. unavailable   — schedule/day blocks (temporal; user cannot resolve by moving)
   //   3. every-day     — schedule covers all 7 days (friendly reassurance)
@@ -144,6 +146,7 @@ export default function PublicPointCard({
   //   5. last-slots    — quota still open but ≤ 10 remaining (urgency signal)
   //   6. not-unlocked  — blocked by location/area/quota/dwell/live-visits
   const opBadge: OpBadge = (() => {
+    if (isPointUnlocked(point.geoProjectId, point.id, point.updatedAt)) return 'unlocked'
     if (isFullyAvailable) return 'available'
     if (avail.scheduleActive && !avail.scheduleAvailable) {
       const av = point.availability
@@ -253,6 +256,14 @@ export default function PublicPointCard({
               <span className="text-[11px] font-medium text-amber-200 leading-none">Nuevo</span>
             </span>
           )}
+          {opBadge === 'unlocked' && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                             bg-black/[0.65] backdrop-blur-md border border-white/[0.28]
+                             shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+              <span className="text-[10px] leading-none">🏆</span>
+              <span className="text-[12px] font-semibold text-white leading-none">Desbloqueado</span>
+            </span>
+          )}
           {opBadge === 'available' && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                              bg-black/[0.65] backdrop-blur-md border border-white/[0.28]
@@ -330,6 +341,14 @@ export default function PublicPointCard({
                 </span>
               )}
               {/* Operational — more opaque, larger, higher contrast */}
+              {opBadge === 'unlocked' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                                 bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
+                                 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+                  <span className="text-[10px] leading-none">🏆</span>
+                  <span className="text-[12px] font-semibold text-white leading-none">Desbloqueado</span>
+                </span>
+              )}
               {opBadge === 'available' && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                                  bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
@@ -418,6 +437,13 @@ export default function PublicPointCard({
               </span>
             )}
             {/* Operational — more prominent */}
+            {opBadge === 'unlocked' && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
+                               bg-black/[0.3] border border-white/[0.15]">
+                <span className="text-[10px] leading-none">🏆</span>
+                <span className="text-[12px] font-semibold text-white leading-none">Desbloqueado</span>
+              </span>
+            )}
             {opBadge === 'available' && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
                                bg-black/[0.3] border border-white/[0.15]">

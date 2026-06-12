@@ -64,7 +64,7 @@ function AvailabilityBadge({ validation }: { validation: ValidationState }) {
       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                        bg-amber-50 border border-amber-200">
         <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
-        <span className="text-xs font-semibold text-amber-700">No disponible</span>
+        <span className="text-xs font-semibold text-amber-700">Aún no desbloqueado</span>
       </span>
     )
   }

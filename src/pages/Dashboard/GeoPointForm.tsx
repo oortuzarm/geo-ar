@@ -400,6 +400,38 @@ export default function GeoPointForm({
   const [addressFetching, setAddressFetching] = useState(false)
   const addressEditedRef = useRef(!!point.instructions)
 
+  // ── Social links state ────────────────────────────────────────────────────
+  const sl = point.socialLinks ?? {}
+  const [socialPhone,     setSocialPhone]     = useState(sl.phone     ?? '')
+  const [socialWhatsapp,  setSocialWhatsapp]  = useState(sl.whatsapp  ?? '')
+  const [socialWebsite,   setSocialWebsite]   = useState(sl.website   ?? '')
+  const [socialInstagram, setSocialInstagram] = useState(sl.instagram ?? '')
+  const [socialFacebook,  setSocialFacebook]  = useState(sl.facebook  ?? '')
+  const [socialTiktok,    setSocialTiktok]    = useState(sl.tiktok    ?? '')
+  const [socialPinterest, setSocialPinterest] = useState(sl.pinterest ?? '')
+
+  function buildSocialLinks(overrides: Record<string, string> = {}) {
+    const links: Record<string, string> = {}
+    const s = {
+      phone:     socialPhone,
+      whatsapp:  socialWhatsapp,
+      website:   socialWebsite,
+      instagram: socialInstagram,
+      facebook:  socialFacebook,
+      tiktok:    socialTiktok,
+      pinterest: socialPinterest,
+      ...overrides,
+    }
+    for (const [k, v] of Object.entries(s)) {
+      if (v.trim()) links[k] = v.trim()
+    }
+    return Object.keys(links).length > 0 ? links : undefined
+  }
+
+  function flushSocialLinks(overrides: Record<string, string> = {}) {
+    onChange({ socialLinks: buildSocialLinks(overrides) })
+  }
+
   // ── Video state ───────────────────────────────────────────────────────────
   const [videoUrl,   setVideoUrl]   = useState(point.pointVideoUrl ?? '')
   const [videoError, setVideoError] = useState<string | null>(null)
@@ -593,6 +625,7 @@ export default function GeoPointForm({
         description:         description    || undefined,
         instructions:        addressCustom  || undefined,
         buttonText:          buttonText     || undefined,
+        socialLinks:         buildSocialLinks(),
       })
     } else {
       // Informative mode: name required; content optional — validate only when configured
@@ -640,6 +673,7 @@ export default function GeoPointForm({
         description:         description || undefined,
         instructions:        addressCustom || undefined,
         buttonText:          buttonText || undefined,
+        socialLinks:         buildSocialLinks(),
       })
     }
 
@@ -1424,6 +1458,72 @@ export default function GeoPointForm({
             className="hidden"
             onChange={handleGalleryFileSelect}
           />
+        </div>
+
+        {/* ── Contacto y Redes Sociales ──────────────────────────────── */}
+        <div className="space-y-3">
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Contacto y Redes Sociales
+          </span>
+
+          {/* CONTACTO */}
+          <div className="space-y-2">
+            <span className="text-[11px] text-gray-600 uppercase tracking-wide">Contacto</span>
+            <Input
+              label="Teléfono"
+              placeholder="+56223456789"
+              value={socialPhone}
+              onChange={(e) => setSocialPhone(e.target.value)}
+              onBlur={() => flushSocialLinks({ phone: socialPhone })}
+            />
+            <Input
+              label="WhatsApp"
+              placeholder="+56912345678"
+              value={socialWhatsapp}
+              onChange={(e) => setSocialWhatsapp(e.target.value)}
+              onBlur={() => flushSocialLinks({ whatsapp: socialWhatsapp })}
+            />
+          </div>
+
+          {/* REDES SOCIALES */}
+          <div className="space-y-2">
+            <span className="text-[11px] text-gray-600 uppercase tracking-wide">Redes Sociales</span>
+            <Input
+              label="Sitio web"
+              placeholder="https://empresa.cl"
+              value={socialWebsite}
+              onChange={(e) => setSocialWebsite(e.target.value)}
+              onBlur={() => flushSocialLinks({ website: socialWebsite })}
+            />
+            <Input
+              label="Instagram"
+              placeholder="https://instagram.com/empresa"
+              value={socialInstagram}
+              onChange={(e) => setSocialInstagram(e.target.value)}
+              onBlur={() => flushSocialLinks({ instagram: socialInstagram })}
+            />
+            <Input
+              label="Facebook"
+              placeholder="https://facebook.com/empresa"
+              value={socialFacebook}
+              onChange={(e) => setSocialFacebook(e.target.value)}
+              onBlur={() => flushSocialLinks({ facebook: socialFacebook })}
+            />
+            <Input
+              label="TikTok"
+              placeholder="https://tiktok.com/@empresa"
+              value={socialTiktok}
+              onChange={(e) => setSocialTiktok(e.target.value)}
+              onBlur={() => flushSocialLinks({ tiktok: socialTiktok })}
+            />
+            <Input
+              label="Pinterest"
+              placeholder="https://pinterest.com/empresa"
+              value={socialPinterest}
+              onChange={(e) => setSocialPinterest(e.target.value)}
+              onBlur={() => flushSocialLinks({ pinterest: socialPinterest })}
+            />
+          </div>
         </div>
 
         {/* Descripción */}

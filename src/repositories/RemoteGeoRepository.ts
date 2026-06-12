@@ -101,6 +101,7 @@ export class RemoteGeoRepository implements IGeoRepository {
     const serializedPoints = points.map((p) => ({
       ...p,
       point_mode:            p.pointMode            ?? 'unlock',
+      social_links:          p.socialLinks          ?? {},
       requires_dwell_time:   p.requiresDwellTime,
       dwell_time_seconds:    p.dwellTimeSeconds,
       activation_mode:       p.activationMode,

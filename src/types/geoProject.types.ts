@@ -90,6 +90,18 @@ export interface PointImage {
   position: number
 }
 
+// ── SocialLinks ───────────────────────────────────────────────────────────────
+
+export interface SocialLinks {
+  website?: string
+  instagram?: string
+  facebook?: string
+  tiktok?: string
+  pinterest?: string
+  whatsapp?: string
+  phone?: string
+}
+
 // ── GeoPoint ──────────────────────────────────────────────────────────────────
 
 export interface GeoPoint {
@@ -128,6 +140,7 @@ export interface GeoPoint {
   pointVideoUrl?: string
   pointVideoType?: 'youtube' | 'mp4'
   requiredPointIds?: string[]
+  socialLinks?: SocialLinks
 }
 
 export type NominatimResult = {

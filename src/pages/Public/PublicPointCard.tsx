@@ -10,6 +10,7 @@ import { getPointCoverImage } from '../../lib/pointImageUtils'
 import { getDwellAccessState } from '../../lib/dwellAccess'
 import { StatusChip, ScheduleDetail, QuotaDetail, type ChipVariant } from '../../components/availability/AvailabilityChips'
 import { isPointUnlocked } from '../../lib/unlockedPoints'
+import { hasPointContent } from '../../lib/pointContent'
 
 const DESCRIPTION_LIMIT = 140
 
@@ -653,7 +654,7 @@ export default function PublicPointCard({
                 - Informative with no content: omit the whole block.
                 - Unlock: always render (active or disabled depending on availability).
                 - "Cómo llegar" shows for unlock when outside the area. */}
-            {(point.pointMode !== 'informative' || point.lookiarUrl || point.contentType) && (
+            {(point.pointMode !== 'informative' || hasPointContent(point)) && (
             <div className={`space-y-2 ${isDetail ? 'pt-2' : 'pt-0.5'}`}>
               {point.pointMode !== 'informative' && !avail.insideArea && (
                 <button

@@ -17,6 +17,7 @@ import L                                         from 'leaflet'
 import { haversineDistance, formatDistance }     from '../../features/geolocation/haversine'
 import { computePointAvailability, type BlockedReason } from '../../features/geolocation/availability'
 import { isPointUnlocked }                             from '../../lib/unlockedPoints'
+import { hasPointContent }                             from '../../lib/pointContent'
 import { getPointGalleryImages }                 from '../../lib/pointImageUtils'
 import PointImageCarousel                        from './PointImageCarousel'
 import PublicPointMarker                         from '../map/PublicPointMarker'
@@ -1089,7 +1090,7 @@ export default function GeoPointLanding({
         style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}
       >
         {/* Informative with no content: hide the CTA button entirely. */}
-        {!(selectedPoint?.pointMode === 'informative' && !selectedPoint?.lookiarUrl && !selectedPoint?.contentType) && (
+        {!(selectedPoint?.pointMode === 'informative' && (!selectedPoint || !hasPointContent(selectedPoint))) && (
           <CTAButton
             validation={validation}
             selectedPoint={selectedPoint}

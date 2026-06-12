@@ -34,6 +34,7 @@ import ToastContainer from '../../components/ui/Toast'
 import type { GeoProject, GeoPoint, LocationStatus, UserLocation, AccessResponse } from '../../types'
 import GeoPointLanding, { type ValidationState } from '../../components/public/GeoPointLanding'
 import { markPointUnlocked } from '../../lib/unlockedPoints'
+import { hasPointContent }   from '../../lib/pointContent'
 
 /** Minimum distance in meters the user must move before recalculating the route */
 const ROUTE_RECALC_THRESHOLD_M = 15
@@ -1947,6 +1948,7 @@ export default function PublicPage({
     if (!point) return
 
     if (point.pointMode === 'informative') {
+      if (!hasPointContent(point)) return  // no real content — nothing to auto-open
       landingAutoStartedRef.current = true
       void handleLandingContinue()
       return

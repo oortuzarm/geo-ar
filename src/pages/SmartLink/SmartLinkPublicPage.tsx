@@ -21,6 +21,7 @@ import { ApiError, apiFetch }                   from '../../lib/apiFetch'
 import { normalizeGeoPoint }                    from '../../lib/normalizeGeoPoint'
 import { markPointUnlocked }                    from '../../lib/unlockedPoints'
 import { trackPointClick }                      from '../../lib/analytics'
+import { hasPointContent }                      from '../../lib/pointContent'
 import { useGeoStore }                          from '../../store/geoStore'
 import { useGeolocation, getCurrentPosition }   from '../../hooks/useGeolocation'
 import { sendHeartbeat, sendProjectHeartbeat }  from '../../services/liveVisitsApi'
@@ -260,6 +261,7 @@ export default function SmartLinkPublicPage() {
     if (!displayPoints.length) return
     const primary = displayPoints[0]
     if (primary?.pointMode !== 'informative') return
+    if (!hasPointContent(primary)) return  // no real content — nothing to auto-open
     autoStartedRef.current = true
     void handleContinue()
   }, [displayPoints]) // eslint-disable-line react-hooks/exhaustive-deps

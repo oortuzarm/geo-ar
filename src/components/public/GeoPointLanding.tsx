@@ -628,6 +628,12 @@ export default function GeoPointLanding({
     [points, selectedPointId],
   )
 
+  // [TMP-LOG] Confirm pointMode propagation in public view
+  useEffect(() => {
+    if (!selectedPoint) return
+    console.log('[PointMode][landing] id:', selectedPoint.id, '| name:', selectedPoint.name, '| pointMode:', selectedPoint.pointMode)
+  }, [selectedPoint])
+
   const effectiveLogo = selectedPoint?.pointLogoUrl
     ? { url: selectedPoint.pointLogoUrl, zoom: selectedPoint.pointLogoZoom ?? 1, posX: selectedPoint.pointLogoPositionX ?? 0, posY: selectedPoint.pointLogoPositionY ?? 0 }
     : project?.projectLogoUrl

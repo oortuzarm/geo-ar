@@ -10,6 +10,9 @@ export function normalizeGeoPoint(raw: Record<string, unknown>): GeoPoint {
   const requiresDwellTime = raw.requiresDwellTime ?? raw.requires_dwell_time
   const dwellTimeSeconds  = raw.dwellTimeSeconds  ?? raw.dwell_time_seconds
 
+  // [TMP-LOG] Confirm raw point_mode received from API
+  console.log('[PointMode][normalize] id:', raw.id, '| name:', raw.name, '| raw.point_mode:', raw.point_mode, '| raw.pointMode:', raw.pointMode)
+
   return {
     ...raw,
     geoProjectId:      (raw.geoProjectId     ?? raw.geo_project_id)     as string,

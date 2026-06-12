@@ -100,6 +100,7 @@ export class RemoteGeoRepository implements IGeoRepository {
     // regardless of whether the backend has camelCase param conversion configured.
     const serializedPoints = points.map((p) => ({
       ...p,
+      point_mode:            p.pointMode            ?? 'unlock',
       requires_dwell_time:   p.requiresDwellTime,
       dwell_time_seconds:    p.dwellTimeSeconds,
       activation_mode:       p.activationMode,

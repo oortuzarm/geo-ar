@@ -28,7 +28,7 @@ import { StatusChip, ScheduleDetail, QuotaDetail } from '../availability/Availab
 import { extractYouTubeId }                       from '../../lib/videoUtils'
 import { getLiveVisitSessionId }                  from '../../utils/liveVisits'
 import { fetchSessionVisitedPoints }              from '../../services/geoPointsApi'
-import type { GeoProject, GeoPoint }             from '../../types'
+import type { GeoProject, GeoPoint, GeoPointAvailability } from '../../types'
 
 // ── Validation state machine ──────────────────────────────────────────────────
 
@@ -593,6 +593,65 @@ function CTAButton({
   )
 }
 
+// ── Informative schedule panel ────────────────────────────────────────────────
+
+const LANDING_WEEK_DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+const DAY_FULL: Record<string, string> = {
+  Lun: 'Lunes', Mar: 'Martes', Mié: 'Miércoles',
+  Jue: 'Jueves', Vie: 'Viernes', Sáb: 'Sábado', Dom: 'Domingo',
+}
+const JS_DAY_TO_KEY: Record<number, string> = {
+  0: 'Dom', 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb',
+}
+
+function isScheduleOpenNow(av: GeoPointAvailability): boolean {
+  const days  = av.scheduleDays ?? []
+  const today = JS_DAY_TO_KEY[new Date().getDay()]
+  if (!days.includes(today)) return false
+  const start = av.scheduleStartTime
+  const end   = av.scheduleEndTime
+  if (!start || !end) return true
+  const now = new Date()
+  const cur = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+  return cur >= start && cur < end
+}
+
+function InformativeSchedulePanel({ availability }: { availability: GeoPointAvailability }) {
+  const days      = availability.scheduleDays ?? []
+  const startTime = availability.scheduleStartTime
+  const endTime   = availability.scheduleEndTime
+  const isOpen    = isScheduleOpenNow(availability)
+  const timeLabel = startTime && endTime ? `${startTime} – ${endTime}` : 'Todo el día'
+
+  return (
+    <div className="px-4 pt-1 pb-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">
+          Horario
+        </p>
+        <span className={`text-[11px] font-semibold px-2 py-1 rounded-full border ${
+          isOpen
+            ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+            : 'text-gray-500 bg-gray-100 border-gray-200'
+        }`}>
+          {isOpen ? 'Abierto ahora' : 'Cerrado ahora'}
+        </span>
+      </div>
+      <div className="space-y-1.5">
+        {LANDING_WEEK_DAYS.map((day) => {
+          const open = days.includes(day)
+          return (
+            <div key={day} className="flex items-center justify-between text-sm">
+              <span className={open ? 'text-gray-700 font-medium' : 'text-gray-400'}>{DAY_FULL[day]}</span>
+              <span className={open ? 'text-gray-700' : 'text-gray-400'}>{open ? timeLabel : 'Cerrado'}</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ── GeoPointLanding ───────────────────────────────────────────────────────────
 
 export interface GeoPointLandingProps {
@@ -944,6 +1003,13 @@ export default function GeoPointLanding({
             </div>
           )
         })()}
+
+        {/* ── HORARIO (informativo) ── */}
+        {selectedPoint?.pointMode === 'informative' &&
+         selectedPoint?.availability?.scheduleEnabled &&
+         (selectedPoint.availability.scheduleDays?.length ?? 0) > 0 && (
+          <InformativeSchedulePanel availability={selectedPoint.availability} />
+        )}
 
         {/* ── COLECCIÓN ── */}
         {collectionNotMet && selectedPoint && selectedPoint.pointMode !== 'informative' && (

@@ -143,6 +143,8 @@ function AvailabilityRules({
   canUseLiveVisits = true,
   onUpgradeClick,
   showHeader       = true,
+  scheduleOnly     = false,
+  scheduleLabel    = 'Disponible por horario',
 }: {
   availability:      GeoPointAvailability | undefined
   onChange:          (updates: Partial<GeoPointAvailability>) => void
@@ -151,6 +153,10 @@ function AvailabilityRules({
   canUseLiveVisits?: boolean
   onUpgradeClick?:   () => void
   showHeader?:       boolean
+  /** When true, only the schedule section is rendered (quota and live visits are hidden). */
+  scheduleOnly?:     boolean
+  /** Override the label on the schedule toggle row. Default: 'Disponible por horario'. */
+  scheduleLabel?:    string
 }) {
   const scheduleEnabled = availability?.scheduleEnabled ?? false
   const scheduleDays    = availability?.scheduleDays ?? []
@@ -182,7 +188,7 @@ function AvailabilityRules({
         onClick={!canUseSchedule ? onUpgradeClick : undefined}
       >
         <div className="flex items-center justify-between">
-          <span className={`text-sm ${canUseSchedule ? 'text-gray-300' : 'text-gray-600'}`}>Disponible por horario</span>
+          <span className={`text-sm ${canUseSchedule ? 'text-gray-300' : 'text-gray-600'}`}>{scheduleLabel}</span>
           {canUseSchedule
             ? <Toggle enabled={scheduleEnabled} onToggle={() => onChange({ scheduleEnabled: !scheduleEnabled })} />
             : <span className="text-xs text-gray-600" title="Esta función no está disponible en tu plan actual.">🔒 No disponible</span>
@@ -242,7 +248,7 @@ function AvailabilityRules({
       </div>
 
       {/* ── Quota rule ── */}
-      <div
+      {!scheduleOnly && <div
         className={`bg-gray-800/50 border border-gray-800 rounded-lg p-3 space-y-3 ${!canUseQuota ? 'cursor-pointer' : ''}`}
         onClick={!canUseQuota ? onUpgradeClick : undefined}
       >
@@ -278,10 +284,10 @@ function AvailabilityRules({
             </p>
           </>
         )}
-      </div>
+      </div>}
 
       {/* ── Live visits rule ── */}
-      <div
+      {!scheduleOnly && <div
         className={`bg-gray-800/50 border border-gray-800 rounded-lg p-3 space-y-3 ${!canUseLiveVisits ? 'cursor-pointer' : ''}`}
         onClick={!canUseLiveVisits ? onUpgradeClick : undefined}
       >
@@ -323,7 +329,7 @@ function AvailabilityRules({
             </p>
           </>
         )}
-      </div>
+      </div>}
     </div>
   )
 }
@@ -1601,7 +1607,7 @@ export default function GeoPointForm({
 
           {videoError && <p className="text-xs text-red-400">{videoError}</p>}
 
-          {/* YouTube preview */}
+          {/* YouTube preview — only when a URL is entered */}
           {(() => {
             const type = detectVideoType(videoUrl.trim())
             const ytId = type === 'youtube' ? extractYouTubeId(videoUrl.trim()) : null
@@ -1635,6 +1641,27 @@ export default function GeoPointForm({
             return null
           })()}
         </div>
+
+        {/* ── HORARIO (solo modo informativo) ──────────────────────────── */}
+        {pointMode === 'informative' && (
+          <div className="space-y-2">
+            <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              Horario
+            </span>
+            <p className="text-xs text-gray-500 leading-snug">
+              Horario visible públicamente. No restringe el acceso al contenido.
+            </p>
+            <AvailabilityRules
+              scheduleOnly
+              scheduleLabel="Horario de atención"
+              showHeader={false}
+              availability={point.availability}
+              onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
+              canUseSchedule={canUseScheduleAvailability}
+              onUpgradeClick={() => setUpgradeOpen(true)}
+            />
+          </div>
+        )}
 
         {/* Dirección (auto-geocodificada) */}
         <Input

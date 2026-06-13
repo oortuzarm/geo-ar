@@ -353,6 +353,35 @@ export default function LiveVisitsPage() {
           <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
         </div>
 
+        {/* ── Filtro de período — solo en modo Histórico ───────────────────────── */}
+        {intensityMode === 'historical' && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wide flex-shrink-0">
+              Período:
+            </span>
+            <input
+              type="date"
+              value={hsDates.from}
+              max={hsDates.to}
+              onChange={e => setHsDates(d => ({ ...d, from: e.target.value }))}
+              className="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg px-2 py-1
+                         text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-orange-500
+                         focus:border-transparent transition-colors"
+            />
+            <span className="text-gray-600 text-xs">→</span>
+            <input
+              type="date"
+              value={hsDates.to}
+              min={hsDates.from}
+              max={todayISO()}
+              onChange={e => setHsDates(d => ({ ...d, to: e.target.value }))}
+              className="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg px-2 py-1
+                         text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-orange-500
+                         focus:border-transparent transition-colors"
+            />
+          </div>
+        )}
+
         {/* ── 1. General — solo en modo En vivo ─────────────────────────────────── */}
         {intensityMode === 'live' && (
         <section className="space-y-3">
@@ -568,36 +597,8 @@ export default function LiveVisitsPage() {
             </div>
           )}
 
-          {/* ── Secondary controls: Período (if historical) + Ocultar puntos/mapa ── */}
+          {/* ── Secondary controls: Ocultar puntos/mapa ─────────────────────────── */}
           <div className="flex items-center gap-2 flex-wrap">
-            {intensityMode === 'historical' && (
-              <>
-                <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wide flex-shrink-0">
-                  Período:
-                </span>
-                <input
-                  type="date"
-                  value={hsDates.from}
-                  max={hsDates.to}
-                  onChange={e => setHsDates(d => ({ ...d, from: e.target.value }))}
-                  className="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg px-2 py-1
-                             text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-orange-500
-                             focus:border-transparent transition-colors"
-                />
-                <span className="text-gray-600 text-xs">→</span>
-                <input
-                  type="date"
-                  value={hsDates.to}
-                  min={hsDates.from}
-                  max={todayISO()}
-                  onChange={e => setHsDates(d => ({ ...d, to: e.target.value }))}
-                  className="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg px-2 py-1
-                             text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-orange-500
-                             focus:border-transparent transition-colors"
-                />
-                <span className="text-gray-800 text-xs flex-shrink-0">·</span>
-              </>
-            )}
             <button
               onClick={handleGpsPointsToggle}
               className="text-xs text-gray-500 hover:text-gray-300 transition-colors whitespace-nowrap"

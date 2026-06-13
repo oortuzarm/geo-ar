@@ -349,7 +349,8 @@ export default function LiveVisitsPage() {
           </div>
         </div>
 
-        {/* ── 1. General ─────────────────────────────────────────────────────── */}
+        {/* ── 1. General — solo en modo En vivo ─────────────────────────────────── */}
+        {intensityMode === 'live' && (
         <section className="space-y-3">
           <SectionLabel>General</SectionLabel>
 
@@ -409,8 +410,10 @@ export default function LiveVisitsPage() {
             Una sesión permanece activa hasta 45 segundos después del último heartbeat recibido.
           </p>
         </section>
+        )}
 
-        {/* ── 2. Resumen del período ─────────────────────────────────────────── */}
+        {/* ── 2. Resumen del período — solo en modo Histórico ──────────────────── */}
+        {intensityMode === 'historical' && (
         <section className="space-y-3">
           <div className="flex items-baseline gap-2">
             <SectionLabel>Resumen del período</SectionLabel>
@@ -440,6 +443,7 @@ export default function LiveVisitsPage() {
             />
           </div>
         </section>
+        )}
 
         {/* ── 3. Actividad Espacial ──────────────────────────────────────────── */}
         <section className="space-y-4">

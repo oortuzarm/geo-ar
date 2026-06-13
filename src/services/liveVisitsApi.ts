@@ -3,12 +3,14 @@ import { apiFetch } from '../lib/apiFetch'
 const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/$/, '')
 
 export interface LiveVisitPoint {
-  id:           string
-  name:         string
-  lat:          number
-  lng:          number
-  radiusMeters: number
-  activeNow:    number
+  id:                   string
+  name:                 string
+  lat:                  number
+  lng:                  number
+  radiusMeters:         number
+  activeNow:            number
+  lastHourDeltaPercent: number | null
+  peakToday:            { label: string; count: number } | null
 }
 
 export interface LiveVisitsResponse {

@@ -14,7 +14,6 @@ import { fetchProjectAnalyticsByPoint } from '../../lib/analytics'
 import type { PeriodParams } from '../../lib/analytics'
 import { fetchHotspots, fetchOutsideAreasHotspots } from '../../services/hotspotApi'
 import type { HotspotPoint } from '../../services/hotspotApi'
-import { intensityFromCount } from '../../utils/liveVisits'
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 
@@ -52,13 +51,6 @@ function isPointInPeriod(
   // historical: active is irrelevant — only existence during the period matters
   if (!endDate || !point.createdAt) return true
   return point.createdAt.slice(0, 10) <= endDate
-}
-
-// vsLastHour remains mocked until the backend provides trend data.
-function mockVsLastHour(pointId: string): string {
-  const sum = pointId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
-  const pct = 10 + (sum % 45)
-  return sum % 4 === 0 ? `-${pct}%` : `+${pct}%`
 }
 
 // ── Shared components ─────────────────────────────────────────────────────────
@@ -102,11 +94,6 @@ function StatTile({
 
 // ── Intensity badge (for live-mode ranked list) ───────────────────────────────
 
-const INTENSITY_BADGE: Record<IntensityLevel, string> = {
-  low:    'bg-green-500/10  text-green-400  border-green-500/20',
-  medium: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-  high:   'bg-red-500/10   text-red-400    border-red-500/20',
-}
 const INTENSITY_LABEL: Record<IntensityLevel, string> = {
   low: 'Baja', medium: 'Media', high: 'Alta',
 }
@@ -305,11 +292,17 @@ export default function LiveVisitsPage() {
     : visiblePoints.filter(p => selectedPointIds.has(p.id))
   const filteredIds    = new Set(filteredPoints.map(p => p.id))
 
-  // Build per-point activeNow map — restricted to filtered (selected) points only.
+  // Build per-point maps — restricted to filtered (selected) points only.
   const activeNowMap: Record<string, number> = {}
+  const deltaMap: Record<string, number | null> = {}
+  const peakMap: Record<string, { label: string; count: number } | null> = {}
   liveData?.points
     .filter(p => filteredIds.has(p.id))
-    .forEach((p) => { activeNowMap[p.id] = p.activeNow })
+    .forEach((p) => {
+      activeNowMap[p.id] = p.activeNow
+      deltaMap[p.id]     = p.lastHourDeltaPercent
+      peakMap[p.id]      = p.peakToday
+    })
 
   // Which data drives the map depends on the current mode.
   const mapActiveNow: Record<string, number> = intensityMode === 'live'
@@ -318,15 +311,14 @@ export default function LiveVisitsPage() {
 
   const ranked = filteredPoints
     .map((p) => ({
-      point:      p,
-      people:     activeNowMap[p.id] ?? 0,
-      vsLastHour: mockVsLastHour(p.id),
-      intensity:  intensityFromCount(activeNowMap[p.id] ?? 0),
+      point:                p,
+      people:               activeNowMap[p.id] ?? 0,
+      lastHourDeltaPercent: deltaMap[p.id] ?? null,
+      peakToday:            peakMap[p.id] ?? null,
     }))
     .sort((a, b) => b.people - a.people)
 
   const activeRanked = ranked.filter((r) => r.people > 0)
-  const top          = activeRanked[0] ?? null
 
   const peakLabel = liveData?.peakToday?.label ?? null
   const peakHint  = liveData?.peakToday != null ? `${liveData.peakToday.count} registros` : undefined
@@ -448,64 +440,6 @@ export default function LiveVisitsPage() {
             />
           </div>
         </section>
-
-        {/* ── 3. Punto GPS más activo (solo cuando hay visitantes) ───────────── */}
-        {top && (
-          <section className="space-y-3">
-            <SectionLabel>Punto GPS más activo</SectionLabel>
-            <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl p-5 space-y-4">
-
-              {/* Point name + intensity badge */}
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center
-                                 text-[10px] font-bold bg-brand-500/20 border border-brand-500/30 text-brand-400">
-                  1
-                </span>
-                <p className="text-base font-semibold text-gray-100 truncate flex-1">
-                  {top.point.name || 'Sin nombre'}
-                </p>
-                <span className={`flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full
-                                  border text-[10px] font-medium ${INTENSITY_BADGE[top.intensity]}`}>
-                  {INTENSITY_LABEL[top.intensity]} actividad
-                </span>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="bg-gray-800/60 border border-white/[0.04] rounded-xl px-4 py-3 flex flex-col gap-1.5">
-                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide leading-none">
-                    Personas en área
-                  </p>
-                  <p className="text-2xl font-bold tabular-nums text-emerald-400 leading-none">
-                    {top.people}
-                  </p>
-                </div>
-                <div className="bg-gray-800/60 border border-white/[0.04] rounded-xl px-4 py-3 flex flex-col gap-1.5">
-                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide leading-none">
-                    Vs última hora
-                  </p>
-                  <p className={`text-2xl font-bold tabular-nums leading-none ${
-                    top.vsLastHour.startsWith('-') ? 'text-red-400' : 'text-brand-400'
-                  }`}>
-                    {top.vsLastHour}
-                  </p>
-                </div>
-                <div className="bg-gray-800/60 border border-white/[0.04] rounded-xl px-4 py-3 flex flex-col gap-1.5">
-                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide leading-none">
-                    Horas más activas
-                  </p>
-                  <p className={`text-base font-bold tabular-nums leading-none ${peakLabel ? 'text-gray-200' : 'text-gray-600'}`}>
-                    {peakLabel ?? 'Sin datos todavía'}
-                  </p>
-                  {peakHint && (
-                    <p className="text-[10px] text-gray-600 leading-none">{peakHint}</p>
-                  )}
-                </div>
-              </div>
-
-            </div>
-          </section>
-        )}
 
         {/* ── 3. Actividad Espacial ──────────────────────────────────────────── */}
         <section className="space-y-4">
@@ -775,7 +709,7 @@ export default function LiveVisitsPage() {
 
                   {activeRanked.length > 0 ? (
                     <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl overflow-hidden">
-                      {activeRanked.map(({ point, people }, idx) => (
+                      {activeRanked.map(({ point, people, lastHourDeltaPercent, peakToday }, idx) => (
                         <div
                           key={point.id}
                           className={`flex items-center gap-3 sm:gap-4 px-4 py-3 ${
@@ -790,9 +724,26 @@ export default function LiveVisitsPage() {
                           }`}>
                             {idx + 1}
                           </span>
-                          <span className="flex-1 text-sm font-medium text-gray-200 truncate min-w-0">
-                            {point.name || 'Sin nombre'}
-                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-200 truncate">
+                              {point.name || 'Sin nombre'}
+                            </p>
+                            <p className="text-[10px] leading-none mt-0.5 tabular-nums">
+                              <span className={
+                                lastHourDeltaPercent == null ? 'text-gray-600' :
+                                lastHourDeltaPercent  >  0  ? 'text-brand-400' :
+                                lastHourDeltaPercent  <  0  ? 'text-red-400'   : 'text-gray-500'
+                              }>
+                                {lastHourDeltaPercent != null
+                                  ? `${lastHourDeltaPercent > 0 ? '+' : ''}${lastHourDeltaPercent}%`
+                                  : '—'}
+                              </span>
+                              <span className="hidden sm:inline text-gray-500">
+                                <span className="text-gray-700 mx-1">·</span>
+                                {peakToday?.label ?? 'Sin datos todavía'}
+                              </span>
+                            </p>
+                          </div>
                           <span className="hidden sm:inline text-[11px] text-gray-600 tabular-nums flex-shrink-0">
                             {point.activationRadius} m
                           </span>

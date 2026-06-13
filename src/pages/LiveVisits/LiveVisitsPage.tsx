@@ -334,6 +334,9 @@ export default function LiveVisitsPage() {
           <span className="hidden sm:inline text-xs text-gray-600">
             Actualización cada 15 s
           </span>
+          <div className="ml-auto">
+            <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
+          </div>
         </div>
       </header>
 
@@ -343,10 +346,11 @@ export default function LiveVisitsPage() {
         {/* ── Mobile page header ─────────────────────────────────────────────── */}
         <div className="md:hidden flex items-center gap-2.5 pb-2">
           <LiveDot />
-          <div>
+          <div className="flex-1">
             <h1 className="text-lg font-bold text-gray-100">Visitas en Vivo</h1>
             <p className="text-xs text-gray-500 mt-0.5">Actividad en tiempo real</p>
           </div>
+          <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
         </div>
 
         {/* ── 1. General — solo en modo En vivo ─────────────────────────────────── */}
@@ -451,7 +455,6 @@ export default function LiveVisitsPage() {
           <div className="flex flex-wrap items-center justify-between gap-y-2 min-w-0">
             <SectionLabel>Actividad Espacial</SectionLabel>
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Layer toggles: Intensidad GPS + Zonas Calientes (combinables) */}
               <VisualizationSelector
                 showGpsIntensity={showGpsIntensity}
                 showHotspots={showHotspots}
@@ -460,8 +463,6 @@ export default function LiveVisitsPage() {
                 onToggleHotspots={handleToggleHotspots}
                 onToggleOutsideAreas={handleToggleOutsideAreas}
               />
-              {/* Temporal toggle: En Vivo | Histórica */}
-              <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
               {editorUrl && (
                 <button
                   onClick={() => navigate(editorUrl)}

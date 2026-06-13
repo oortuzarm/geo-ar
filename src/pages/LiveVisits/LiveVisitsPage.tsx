@@ -11,7 +11,7 @@ import Spinner from '../../components/ui/Spinner'
 import { fetchLiveVisits } from '../../services/liveVisitsApi'
 import type { LiveVisitsResponse } from '../../services/liveVisitsApi'
 import { fetchProjectAnalyticsByPoint } from '../../lib/analytics'
-import type { PeriodParams } from '../../lib/analytics'
+import type { PeriodParams, PointAnalytics } from '../../lib/analytics'
 import { fetchHotspots, fetchOutsideAreasHotspots } from '../../services/hotspotApi'
 import type { HotspotPoint } from '../../services/hotspotApi'
 
@@ -115,6 +115,7 @@ export default function LiveVisitsPage() {
   const [intensityMode, setIntensityMode] = useState<IntensityMode>('live')
   const [historicalMap, setHistoricalMap] = useState<Record<string, number> | null>(null)
   const [historicalLoading, setHistoricalLoading] = useState(false)
+  const [historicalPoints, setHistoricalPoints] = useState<PointAnalytics[] | null>(null)
 
   // ── Layer state ──────────────────────────────────────────────────────────────
   const [showGpsIntensity, setShowGpsIntensity] = useState(true)
@@ -204,7 +205,11 @@ export default function LiveVisitsPage() {
   // Uses analytics_by_point (supports from/to) instead of historical_intensity
   // (no date filter — always returns all-time counts regardless of params).
   useEffect(() => {
-    if (!project?.id || intensityMode !== 'historical') { setHistoricalMap(null); return }
+    if (!project?.id || intensityMode !== 'historical') {
+      setHistoricalMap(null)
+      setHistoricalPoints(null)
+      return
+    }
     let cancelled = false
     setHistoricalLoading(true)
 
@@ -217,6 +222,7 @@ export default function LiveVisitsPage() {
         const map: Record<string, number> = {}
         pts.forEach((p) => { map[p.pointId] = p.radiusEntries })
         setHistoricalMap(map)
+        setHistoricalPoints(pts)
       })
       .catch(() => { /* keep null on error */ })
       .finally(() => { if (!cancelled) setHistoricalLoading(false) })
@@ -709,7 +715,8 @@ export default function LiveVisitsPage() {
                 </>
               )}
 
-              {/* ── 4a. Ranking de zonas activas (Intensidad GPS) ──────────── */}
+              {/* ── 4a. Ranking — En vivo: zonas activas / Histórico: por período ── */}
+              {intensityMode === 'live' ? (
               <div className="space-y-2">
                   <SectionLabel>Ranking de zonas activas</SectionLabel>
 
@@ -775,6 +782,57 @@ export default function LiveVisitsPage() {
                     </div>
                   ) : null}
                 </div>
+              ) : (
+              <div className="space-y-2">
+                <SectionLabel>Ranking del período</SectionLabel>
+
+                {historicalLoading && !historicalPoints ? (
+                  <div className="flex justify-center py-8"><Spinner size="md" /></div>
+                ) : historicalPoints && historicalPoints.length > 0 ? (
+                  <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl overflow-hidden">
+                    {[...historicalPoints]
+                      .sort((a, b) => b.radiusEntries - a.radiusEntries)
+                      .map((p, idx, arr) => (
+                        <div
+                          key={p.pointId}
+                          className={`flex items-center gap-3 sm:gap-4 px-4 py-3 ${
+                            idx < arr.length - 1 ? 'border-b border-gray-800/60' : ''
+                          }`}
+                        >
+                          <span className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center
+                                            text-[10px] font-bold border ${
+                            idx === 0
+                              ? 'bg-brand-500/20 border-brand-500/30 text-brand-400'
+                              : 'bg-gray-800 border-gray-700/60 text-gray-500'
+                          }`}>
+                            {idx + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-200 truncate">
+                              {p.pointName || 'Sin nombre'}
+                            </p>
+                            {p.clicks > 0 && (
+                              <p className="hidden sm:block text-[10px] text-gray-500 leading-none mt-0.5 tabular-nums">
+                                {p.clicks} clics · {p.conversion}% conv.
+                              </p>
+                            )}
+                          </div>
+                          <span className="text-sm font-semibold text-gray-200 tabular-nums flex-shrink-0">
+                            {p.radiusEntries} visitas
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                ) : historicalPoints !== null ? (
+                  <div className="bg-gray-900/50 border border-gray-800 rounded-2xl px-6 py-10 text-center space-y-2">
+                    <p className="text-sm text-gray-500">Sin datos para el período seleccionado.</p>
+                    <p className="text-xs text-gray-600">
+                      Ajustá el rango de fechas para ver registros históricos.
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+              )}
 
               {/* ── 4b. Zonas Más Activas (Hotspots) ─────────────────────────── */}
               {showHotspots && (

@@ -93,7 +93,7 @@ function LocateControl() {
   if (!portalTarget) return null
 
   return createPortal(
-    <div className="flex flex-col items-start gap-1 mb-2 ml-2">
+    <div className="flex flex-col items-start gap-1 mb-6 sm:mb-2 ml-2">
       {errorMsg && (
         <span className="bg-gray-900/95 border border-red-800/60 text-red-400
                          text-[10px] px-2 py-1 rounded-lg whitespace-nowrap shadow-lg">

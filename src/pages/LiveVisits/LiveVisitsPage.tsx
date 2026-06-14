@@ -569,18 +569,24 @@ export default function LiveVisitsPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <StatTile
               label="Personas en ubicaciones"
               value={liveData === null ? '—' : (liveData.periodPeopleInsideAreas ?? 0)}
               valueClass="text-2xl text-emerald-400"
-              hint="Personas únicas que ingresaron a una ubicación durante el período."
+              hint="Personas que ingresaron al menos una vez a una ubicación durante el período."
             />
             <StatTile
-              label="Personas fuera de ubicaciones"
+              label="Personas exclusivamente fuera"
               value={liveData === null ? '—' : (liveData.periodPeopleOutsideAreas ?? 0)}
               valueClass="text-2xl text-blue-400"
-              hint="Personas únicas detectadas fuera de todas las ubicaciones durante el período."
+              hint="Personas detectadas durante el período que nunca ingresaron a ninguna ubicación."
+            />
+            <StatTile
+              label="Personas con presencia dentro y fuera"
+              value={liveData === null ? '—' : (liveData.periodPeopleMixed ?? 0)}
+              valueClass="text-2xl text-violet-400"
+              hint="Personas que estuvieron tanto dentro como fuera de ubicaciones durante el período."
             />
             <StatTile
               label="Personas totales"

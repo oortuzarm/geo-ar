@@ -20,6 +20,7 @@ export interface LiveVisitsResponse {
   liveVisitsTotal:         number
   periodPeopleInsideAreas:  number
   periodPeopleOutsideAreas: number
+  periodPeopleMixed:        number
   periodPeopleTotal:        number
   mostActivePoint:         LiveVisitPoint | null
   points:                  LiveVisitPoint[]

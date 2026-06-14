@@ -28,7 +28,7 @@ export default function VisualizationSelector({
   onToggleOutsideAreas,
 }: Props) {
   return (
-    <div className="inline-flex items-center bg-gray-900 border border-gray-700/60 rounded-xl p-[3px] gap-[2px]">
+    <div className="inline-flex flex-nowrap min-w-max whitespace-nowrap items-center bg-gray-900 border border-gray-700/60 rounded-xl p-[3px] gap-[2px]">
 
       {/* Label */}
       <span className="text-[10px] font-medium text-gray-600 uppercase tracking-wide px-2 flex-shrink-0 select-none">

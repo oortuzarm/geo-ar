@@ -597,8 +597,8 @@ export default function LiveVisitsPage() {
 
           <div className="flex flex-wrap items-center justify-between gap-y-2 min-w-0">
             <SectionLabel>Actividad Espacial</SectionLabel>
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="w-full overflow-x-auto sm:w-auto">
+            <div className="flex items-center gap-2 flex-wrap min-w-0 max-w-full">
+              <div className="w-full max-w-full min-w-0 overflow-x-auto pb-1 sm:w-auto sm:pb-0">
                 <VisualizationSelector
                   showGpsIntensity={showGpsIntensity}
                   showHotspots={showHotspots}

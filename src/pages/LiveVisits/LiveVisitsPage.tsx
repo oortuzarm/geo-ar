@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWorkspace } from '../../hooks/useWorkspace'
@@ -14,6 +14,7 @@ import { fetchProjectAnalyticsByPoint } from '../../lib/analytics'
 import type { PeriodParams, PointAnalytics } from '../../lib/analytics'
 import { fetchHotspots, fetchOutsideAreasHotspots } from '../../services/hotspotApi'
 import type { HotspotPoint } from '../../services/hotspotApi'
+import type { GeoPoint } from '../../types'
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 
@@ -102,6 +103,116 @@ const INTENSITY_DOT: Record<IntensityLevel, string> = {
   low:    'bg-emerald-200',
   medium: 'bg-emerald-400',
   high:   'bg-green-400',
+}
+
+// ── Location filter dropdown ──────────────────────────────────────────────────
+
+function PointFilterDropdown({
+  points,
+  selectedId,
+  onSelect,
+}: {
+  points:     GeoPoint[]
+  selectedId: string | null
+  onSelect:   (id: string | null) => void
+}) {
+  const [open, setOpen]   = useState(false)
+  const [query, setQuery] = useState('')
+  const wrapperRef        = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handleOutside(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false)
+        setQuery('')
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [open])
+
+  const filtered = query.trim()
+    ? points.filter(p => (p.name ?? '').toLowerCase().includes(query.toLowerCase()))
+    : points
+
+  const selectedName = points.find(p => p.id === selectedId)?.name ?? 'Sin nombre'
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="flex items-center gap-1.5 bg-gray-800 border border-gray-700/60
+                   hover:border-gray-600 rounded-lg px-3 py-1.5 text-[11px] font-medium
+                   text-gray-300 hover:text-gray-200 transition-colors"
+      >
+        <span className="max-w-[200px] truncate">
+          {selectedId ? selectedName : 'Todas las ubicaciones'}
+        </span>
+        <svg
+          className={`w-3 h-3 text-gray-500 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full mt-1 z-50 w-64
+                        bg-gray-900 border border-gray-700/60 rounded-xl shadow-xl overflow-hidden">
+          {/* Search */}
+          <div className="p-2 border-b border-gray-800">
+            <input
+              autoFocus
+              type="text"
+              placeholder="Buscar ubicación..."
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-1.5
+                         text-xs text-gray-300 placeholder-gray-600
+                         focus:outline-none focus:ring-1 focus:ring-brand-500
+                         focus:border-transparent transition-colors"
+            />
+          </div>
+
+          {/* Options */}
+          <div className="overflow-y-auto max-h-48 py-1">
+            <button
+              type="button"
+              onClick={() => { onSelect(null); setOpen(false); setQuery('') }}
+              className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                !selectedId
+                  ? 'text-brand-300 bg-brand-900/30'
+                  : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+              }`}
+            >
+              Todas las ubicaciones
+            </button>
+
+            {filtered.map(p => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => { onSelect(p.id); setOpen(false); setQuery('') }}
+                className={`w-full text-left px-3 py-2 text-xs transition-colors truncate ${
+                  selectedId === p.id
+                    ? 'text-brand-300 bg-brand-900/30'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                }`}
+              >
+                {p.name || 'Sin nombre'}
+              </button>
+            ))}
+
+            {filtered.length === 0 && (
+              <p className="py-4 text-center text-xs text-gray-600">Sin resultados</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -551,52 +662,17 @@ export default function LiveVisitsPage() {
             </div>
           )}
 
-          {/* ── Location selector — visible for per-location layers (intensity + hotspots) ── */}
+          {/* ── Location selector ──────────────────────────────────────────── */}
           {(showGpsIntensity || showHotspots) && visiblePoints.length > 1 && (
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
               <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wide flex-shrink-0">
                 Ubicación:
               </span>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {visiblePoints.map((p) => {
-                  // Empty Set = all selected (sentinel); otherwise check membership.
-                  const isSelected = selectedPointIds.size === 0 || selectedPointIds.has(p.id)
-                  return (
-                    <button
-                      key={p.id}
-                      onClick={() => {
-                        const allIds = new Set(visiblePoints.map(v => v.id))
-                        setSelectedPointIds(prev => {
-                          if (prev.size === 0) {
-                            // All selected — deselect just this one
-                            const next = new Set(allIds)
-                            next.delete(p.id)
-                            return next.size > 0 ? next : new Set()
-                          }
-                          const next = new Set(prev)
-                          if (next.has(p.id)) {
-                            next.delete(p.id)
-                            // If now empty → reset to "all selected"
-                            return next.size > 0 ? next : new Set()
-                          } else {
-                            next.add(p.id)
-                            // If all are now selected → reset to sentinel
-                            return next.size >= allIds.size ? new Set() : next
-                          }
-                        })
-                      }}
-                      className={[
-                        'px-3 py-1 rounded-full text-[11px] font-medium transition-all whitespace-nowrap',
-                        isSelected
-                          ? 'bg-brand-900/50 border border-brand-600/40 text-brand-300'
-                          : 'border border-gray-700/60 text-gray-600 line-through opacity-50 hover:opacity-70',
-                      ].join(' ')}
-                    >
-                      {p.name || 'Sin nombre'}
-                    </button>
-                  )
-                })}
-              </div>
+              <PointFilterDropdown
+                points={visiblePoints}
+                selectedId={selectedPointIds.size === 1 ? Array.from(selectedPointIds)[0] : null}
+                onSelect={id => setSelectedPointIds(id ? new Set([id]) : new Set())}
+              />
             </div>
           )}
 

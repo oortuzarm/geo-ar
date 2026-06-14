@@ -327,7 +327,6 @@ export default function LiveVisitsPage() {
   const activeRanked = ranked.filter((r) => r.people > 0)
 
   const peakLabel = liveData?.peakToday?.label ?? null
-  const peakHint  = liveData?.peakToday != null ? `${liveData.peakToday.count} registros` : undefined
 
   return (
     <div className="text-gray-100 overflow-x-hidden">
@@ -399,19 +398,19 @@ export default function LiveVisitsPage() {
               label="En ubicaciones"
               value={liveData === null ? '—' : (liveData.liveVisitsInsideAreas ?? 0)}
               valueClass="text-2xl text-emerald-400"
-              hint="Personas activas dentro de ubicaciones activas."
+              hint="Personas actualmente dentro de alguna ubicación activa."
             />
             <StatTile
               label="Fuera de ubicaciones"
               value={liveData === null ? '—' : (liveData.liveVisitsOutsideAreas ?? 0)}
               valueClass="text-2xl text-blue-400"
-              hint="Personas activas fuera de ubicaciones activas."
+              hint="Personas actualmente fuera de todas las ubicaciones activas."
             />
             <StatTile
               label="Total en vivo"
               value={liveData === null ? '—' : (liveData.liveVisitsTotal ?? 0)}
               valueClass="text-2xl text-gray-100"
-              hint="Suma de visitas dentro y fuera de ubicaciones."
+              hint="Suma de personas en ubicaciones y fuera de ubicaciones."
             />
           </div>
 
@@ -430,12 +429,13 @@ export default function LiveVisitsPage() {
                 liveData.lastHourDeltaPercent  <  0     ? 'text-red-400'   :
                                                           'text-gray-400'
               }`}
+              hint="Variación respecto al mismo indicador hace una hora."
             />
             <StatTile
               label="Hora más activa"
               value={peakLabel ?? 'Sin datos todavía'}
               valueClass={`text-base ${peakLabel ? 'text-gray-200' : 'text-gray-600'}`}
-              hint={peakHint}
+              hint="Hora con mayor cantidad de personas activas durante el día."
             />
           </div>
 
@@ -444,9 +444,8 @@ export default function LiveVisitsPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            "En ubicaciones" cuenta sesiones activas dentro de ubicaciones activas.
-            "Fuera de ubicaciones" cuenta sesiones activas fuera de todas las ubicaciones activas.
-            Una sesión permanece activa hasta 45 segundos después del último heartbeat recibido.
+            Las métricas en vivo muestran personas activas durante los últimos 45 segundos.
+            Una persona se considera activa hasta 45 segundos después del último heartbeat recibido.
           </p>
         </section>
         )}
@@ -466,19 +465,19 @@ export default function LiveVisitsPage() {
               label="Personas en ubicaciones"
               value={liveData === null ? '—' : (liveData.periodPeopleInsideAreas ?? 0)}
               valueClass="text-2xl text-emerald-400"
-              hint="Personas únicas registradas dentro de ubicaciones activas durante el período."
+              hint="Personas únicas que ingresaron a una ubicación durante el período."
             />
             <StatTile
               label="Personas fuera de ubicaciones"
               value={liveData === null ? '—' : (liveData.periodPeopleOutsideAreas ?? 0)}
               valueClass="text-2xl text-blue-400"
-              hint="Personas únicas registradas fuera de ubicaciones activas durante el período."
+              hint="Personas únicas detectadas fuera de todas las ubicaciones durante el período."
             />
             <StatTile
               label="Personas totales"
               value={liveData === null ? '—' : (liveData.periodPeopleTotal ?? 0)}
               valueClass="text-2xl text-gray-100"
-              hint="Total de personas únicas registradas durante el período."
+              hint="Total de personas únicas detectadas durante el período."
             />
           </div>
         </section>

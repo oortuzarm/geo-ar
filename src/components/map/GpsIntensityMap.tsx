@@ -1,6 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { MapContainer, Marker, useMap } from 'react-leaflet'
+import L from 'leaflet'
 import { createGeoIcon } from './createGeoIcon'
+import { getCurrentPosition } from '../../hooks/useGeolocation'
 import { getPointCoverImage } from '../../lib/pointImageUtils'
 import IntensityLayer from './IntensityLayer'
 import BaseMapLayer from './BaseMapLayer'
@@ -48,6 +51,84 @@ export function mockPointIntensity(pointId: string): 'low' | 'medium' | 'high' {
 function mockCount(pointId: string): number {
   const level = mockPointIntensity(pointId)
   return level === 'high' ? 100 : level === 'medium' ? 50 : 0
+}
+
+// ── Locate control ─────────────────────────────────────────────────────────────
+
+function LocateControl() {
+  const map = useMap()
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null)
+  const [loading, setLoading]           = useState(false)
+  const [errorMsg, setErrorMsg]         = useState<string | null>(null)
+
+  useEffect(() => {
+    const div = L.DomUtil.create('div')
+    const ctl = new (class extends L.Control {
+      onAdd() { return div }
+    })({ position: 'bottomleft' })
+    ctl.addTo(map)
+    L.DomEvent.disableClickPropagation(div)
+    L.DomEvent.disableScrollPropagation(div)
+    setPortalTarget(div)
+    return () => { ctl.remove() }
+  }, [map])
+
+  async function handleLocate() {
+    if (loading) return
+    setLoading(true)
+    setErrorMsg(null)
+    try {
+      const pos = await getCurrentPosition()
+      map.setView([pos.coords.latitude, pos.coords.longitude], 16, { animate: true })
+    } catch (err: unknown) {
+      const geo = err as GeolocationPositionError
+      const msg = geo?.code === 1 ? 'Permiso denegado' : 'No se pudo obtener ubicación'
+      setErrorMsg(msg)
+      setTimeout(() => setErrorMsg(null), 3000)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!portalTarget) return null
+
+  return createPortal(
+    <div className="flex flex-col items-start gap-1 mb-2 ml-2">
+      {errorMsg && (
+        <span className="bg-gray-900/95 border border-red-800/60 text-red-400
+                         text-[10px] px-2 py-1 rounded-lg whitespace-nowrap shadow-lg">
+          {errorMsg}
+        </span>
+      )}
+      <button
+        onClick={handleLocate}
+        disabled={loading}
+        title="Mi ubicación"
+        className="flex items-center gap-1.5 bg-gray-900/90 hover:bg-gray-800
+                   border border-white/[0.1] text-gray-300 hover:text-white
+                   text-xs font-medium px-3 py-2 rounded-xl shadow-lg
+                   transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading ? (
+          <svg className="w-3.5 h-3.5 animate-spin text-gray-400" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10"
+                    stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+        ) : (
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        )}
+        Mi ubicación
+      </button>
+    </div>,
+    portalTarget,
+  )
 }
 
 // ── Map internals ─────────────────────────────────────────────────────────────
@@ -108,6 +189,7 @@ export default function GpsIntensityMap({
       <CreatePane name="outsideAreasPane" zIndex={415} />
       <CreatePane name="hotspotsPane"     zIndex={420} />
       <FitBounds points={points} />
+      <LocateControl />
       {showIntensity && (
         <IntensityLayer points={points} activeNow={resolvedActiveNow} pane="intensityPane" />
       )}

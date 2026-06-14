@@ -12,6 +12,8 @@ import { fetchLiveVisits } from '../../services/liveVisitsApi'
 import type { LiveVisitsResponse } from '../../services/liveVisitsApi'
 import { fetchProjectAnalyticsByPoint } from '../../lib/analytics'
 import type { PeriodParams, PointAnalytics } from '../../lib/analytics'
+import { fetchHotspots, fetchOutsideAreasHotspots } from '../../services/hotspotApi'
+import type { HotspotPoint } from '../../services/hotspotApi'
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 
@@ -117,13 +119,31 @@ export default function LiveVisitsPage() {
 
   // ── Layer state ──────────────────────────────────────────────────────────────
   const [showGpsIntensity, setShowGpsIntensity] = useState(true)
+  const [showHotspots,     setShowHotspots]     = useState(false)
+  const [showOutsideAreas, setShowOutsideAreas] = useState(false)
 
+  // At least one layer must stay active.
   function handleToggleIntensity() {
+    if (showGpsIntensity && !showHotspots && !showOutsideAreas) return
     setShowGpsIntensity(v => !v)
+  }
+  function handleToggleHotspots() {
+    if (showHotspots && !showGpsIntensity && !showOutsideAreas) return
+    setShowHotspots(v => !v)
+  }
+  function handleToggleOutsideAreas() {
+    if (showOutsideAreas && !showGpsIntensity && !showHotspots) return
+    setShowOutsideAreas(v => !v)
   }
 
   // Empty Set = all visible points selected (sentinel for "no filter active").
   const [selectedPointIds, setSelectedPointIds] = useState<Set<string>>(new Set())
+  const [hotspots,              setHotspots]              = useState<HotspotPoint[] | null>(null)
+  const [hotspotsLoading,       setHotspotsLoading]       = useState(false)
+  const [hotspotsError,         setHotspotsError]         = useState(false)
+  const [outsideAreasHotspots,  setOutsideAreasHotspots]  = useState<HotspotPoint[] | null>(null)
+  const [outsideAreasLoading,   setOutsideAreasLoading]   = useState(false)
+  const [outsideAreasError,     setOutsideAreasError]     = useState(false)
   const [hsDates, setHsDates] = useState<{ from: string; to: string }>(() => ({
     from: subtractDays(6),
     to:   todayISO(),
@@ -210,6 +230,55 @@ export default function LiveVisitsPage() {
     return () => { cancelled = true }
   }, [project?.id, intensityMode, hsDates.from, hsDates.to]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Hotspots: fetch for every filtered point in parallel, merge results.
+  // Re-fetches when selection, mode, period dates, or point pool changes.
+  useEffect(() => {
+    const periodPoints = points.filter(p => isPointInPeriod(p, intensityMode, hsDates.to))
+    const targets = selectedPointIds.size === 0
+      ? periodPoints
+      : periodPoints.filter(p => selectedPointIds.has(p.id))
+
+    if (!showHotspots || targets.length === 0) { setHotspots(null); return }
+
+    let cancelled = false
+    setHotspotsLoading(true)
+    setHotspotsError(false)
+
+    const mode = intensityMode === 'live' ? 'live' : 'historical'
+    const dateParams = mode === 'historical' ? { startDate: hsDates.from, endDate: hsDates.to } : {}
+
+    Promise.all(
+      targets.map(p =>
+        fetchHotspots({ locationId: p.id, mode, ...dateParams })
+          .then(res => res.data.hotspots)
+          .catch(() => [] as HotspotPoint[])
+      )
+    )
+      .then(results => { if (!cancelled) setHotspots(results.flat()) })
+      .catch(() => { if (!cancelled) setHotspotsError(true) })
+      .finally(() => { if (!cancelled) setHotspotsLoading(false) })
+
+    return () => { cancelled = true }
+  }, [showHotspots, selectedPointIds, points, intensityMode, hsDates.from, hsDates.to]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Outside areas: single project-level call (not per-location).
+  // Fetches GPS clusters outside all configured GeoPoints for the current project.
+  useEffect(() => {
+    if (!project?.id || !showOutsideAreas) { setOutsideAreasHotspots(null); return }
+    let cancelled = false
+    setOutsideAreasLoading(true)
+    setOutsideAreasError(false)
+
+    const mode = intensityMode === 'live' ? 'live' : 'historical'
+    const dateParams = mode === 'historical' ? { startDate: hsDates.from, endDate: hsDates.to } : {}
+
+    fetchOutsideAreasHotspots({ projectId: project.id, mode, ...dateParams })
+      .then(res => { if (!cancelled) setOutsideAreasHotspots(res.data.hotspots) })
+      .catch(() => { if (!cancelled) setOutsideAreasError(true) })
+      .finally(() => { if (!cancelled) setOutsideAreasLoading(false) })
+
+    return () => { cancelled = true }
+  }, [showOutsideAreas, project?.id, intensityMode, hsDates.from, hsDates.to]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
@@ -422,7 +491,11 @@ export default function LiveVisitsPage() {
             <div className="flex items-center gap-2 flex-wrap">
               <VisualizationSelector
                 showGpsIntensity={showGpsIntensity}
+                showHotspots={showHotspots}
+                showOutsideAreas={showOutsideAreas}
                 onToggleIntensity={handleToggleIntensity}
+                onToggleHotspots={handleToggleHotspots}
+                onToggleOutsideAreas={handleToggleOutsideAreas}
               />
               {editorUrl && (
                 <button
@@ -440,22 +513,48 @@ export default function LiveVisitsPage() {
             </div>
           </div>
 
-          {/* ── Layer description ────────────────────────────────────────────── */}
-          {showGpsIntensity && (
-            <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/70 flex-shrink-0 mt-[3px]" />
-              <span>
-                <span className="font-medium text-gray-400">Intensidad GPS</span>
-                {' — '}
-                {intensityMode === 'live'
-                  ? 'Usuarios conectados y activos en este momento.'
-                  : 'Usuarios que accedieron a tus áreas.'}
-              </span>
-            </p>
+          {/* ── Layer descriptions ───────────────────────────────────────────── */}
+          {(showGpsIntensity || showHotspots || showOutsideAreas) && (
+            <div className="flex flex-col gap-1">
+              {showGpsIntensity && (
+                <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/70 flex-shrink-0 mt-[3px]" />
+                  <span>
+                    <span className="font-medium text-gray-400">Intensidad GPS</span>
+                    {' — '}
+                    {intensityMode === 'live'
+                      ? 'Usuarios conectados y activos en este momento.'
+                      : 'Usuarios que accedieron a tus áreas.'}
+                  </span>
+                </p>
+              )}
+              {showHotspots && (
+                <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400/70 flex-shrink-0 mt-[3px]" />
+                  <span>
+                    <span className="font-medium text-gray-400">Zonas Calientes</span>
+                    {' — '}
+                    {intensityMode === 'live'
+                      ? 'Sectores donde se están registrando más accesos en este momento.'
+                      : 'Sectores donde se registraron más accesos.'}
+                  </span>
+                </p>
+              )}
+              {showOutsideAreas && (
+                <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400/70 flex-shrink-0 mt-[3px]" />
+                  <span>
+                    <span className="font-medium text-gray-400">Actividad Fuera de Áreas</span>
+                    {' — '}
+                    Interacciones registradas fuera de los GeoPoints configurados. Permite descubrir zonas con actividad que actualmente no están siendo monitoreadas.
+                  </span>
+                </p>
+              )}
+            </div>
           )}
 
-          {/* ── Location selector ──────────────────────────────────────────── */}
-          {showGpsIntensity && visiblePoints.length > 1 && (
+          {/* ── Location selector — visible for per-location layers (intensity + hotspots) ── */}
+          {(showGpsIntensity || showHotspots) && visiblePoints.length > 1 && (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wide flex-shrink-0">
                 Ubicación:
@@ -529,32 +628,89 @@ export default function LiveVisitsPage() {
                       activeNow={mapActiveNow}
                       showPoints={showGpsPoints}
                       showIntensity={showGpsIntensity}
+                      hotspots={showHotspots && hotspots ? hotspots : undefined}
+                      outsideAreasHotspots={showOutsideAreas && outsideAreasHotspots ? outsideAreasHotspots : undefined}
                     />
                     {/* Loading overlay */}
-                    {intensityMode === 'historical' && historicalLoading && showGpsIntensity && (
+                    {((intensityMode === 'historical' && historicalLoading && showGpsIntensity) ||
+                      (showHotspots && hotspotsLoading) ||
+                      (showOutsideAreas && outsideAreasLoading)) && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-950/70 backdrop-blur-sm">
                         <Spinner size="lg" />
                       </div>
                     )}
+                    {/* Hotspot empty state overlay — only when hotspots is the sole active layer */}
+                    {showHotspots && !showGpsIntensity && !showOutsideAreas && !hotspotsLoading && !hotspotsError && hotspots !== null && hotspots.length === 0 && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-950/60 backdrop-blur-sm">
+                        <div className="text-center px-6 space-y-1">
+                          <p className="text-sm text-gray-400">Sin zonas calientes detectadas</p>
+                          <p className="text-xs text-gray-600">No hay datos de posición para el período seleccionado.</p>
+                        </div>
+                      </div>
+                    )}
+                    {/* Error overlay */}
+                    {showHotspots && hotspotsError && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-950/60 backdrop-blur-sm">
+                        <p className="text-sm text-red-400">No se pudieron cargar las zonas calientes.</p>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Legend */}
-                  {showGpsIntensity && (
-                    <div className="flex items-center gap-5 flex-wrap">
-                      <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
-                        Intensidad:
-                      </span>
-                      {(['low', 'medium', 'high'] as IntensityLevel[]).map((level) => (
-                        <span key={level} className="flex items-center gap-1.5 text-xs text-gray-400">
-                          <span className={`w-3 h-3 rounded-full ${INTENSITY_DOT[level]} opacity-80 flex-shrink-0`} />
-                          {INTENSITY_LABEL[level]}
+                  {/* Legends — each shown independently when layer is active */}
+                  <div className="space-y-1.5">
+                    {showGpsIntensity && (
+                      <div className="flex items-center gap-5 flex-wrap">
+                        <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
+                          Intensidad:
                         </span>
-                      ))}
-                      <span className="text-[11px] text-gray-600 ml-auto">
-                        {intensityMode === 'historical' ? 'Acumulado histórico · relativa al máximo' : 'Radio máx. 1.000 m por zona'}
-                      </span>
-                    </div>
-                  )}
+                        {(['low', 'medium', 'high'] as IntensityLevel[]).map((level) => (
+                          <span key={level} className="flex items-center gap-1.5 text-xs text-gray-400">
+                            <span className={`w-3 h-3 rounded-full ${INTENSITY_DOT[level]} opacity-80 flex-shrink-0`} />
+                            {INTENSITY_LABEL[level]}
+                          </span>
+                        ))}
+                        <span className="text-[11px] text-gray-600 ml-auto">
+                          {intensityMode === 'historical' ? 'Acumulado histórico · relativa al máximo' : 'Radio máx. 1.000 m por zona'}
+                        </span>
+                      </div>
+                    )}
+                    {showHotspots && (
+                      <div className="flex items-center gap-5 flex-wrap">
+                        <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
+                          Zonas Calientes:
+                        </span>
+                        {[
+                          { color: 'bg-orange-500', label: 'Baja'     },
+                          { color: 'bg-green-500',  label: 'Media'    },
+                          { color: 'bg-yellow-500', label: 'Alta'     },
+                          { color: 'bg-red-500',    label: 'Muy alta' },
+                        ].map(({ color, label }) => (
+                          <span key={label} className="flex items-center gap-1.5 text-xs text-gray-400">
+                            <span className={`w-3 h-3 rounded-full ${color} opacity-80 flex-shrink-0`} />
+                            {label}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {showOutsideAreas && (
+                      <div className="flex items-center gap-5 flex-wrap">
+                        <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
+                          Fuera de Áreas:
+                        </span>
+                        {[
+                          { color: 'bg-blue-300', label: 'Baja'     },
+                          { color: 'bg-blue-400', label: 'Media'    },
+                          { color: 'bg-blue-500', label: 'Alta'     },
+                          { color: 'bg-blue-700', label: 'Muy alta' },
+                        ].map(({ color, label }) => (
+                          <span key={label} className="flex items-center gap-1.5 text-xs text-gray-400">
+                            <span className={`w-3 h-3 rounded-full ${color} opacity-80 flex-shrink-0`} />
+                            {label}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
 
@@ -677,6 +833,148 @@ export default function LiveVisitsPage() {
               </div>
               )}
 
+              {/* ── 4b. Zonas Más Activas (Hotspots) ─────────────────────────── */}
+              {showHotspots && (
+                <div className="space-y-2">
+                  <SectionLabel>Zonas Más Activas</SectionLabel>
+
+                  {hotspotsLoading ? (
+                    <div className="flex justify-center py-8"><Spinner size="md" /></div>
+                  ) : hotspotsError ? (
+                    <div className="bg-gray-900/50 border border-gray-800 rounded-2xl px-6 py-8 text-center">
+                      <p className="text-sm text-red-400">Error al cargar las zonas calientes.</p>
+                    </div>
+                  ) : hotspots && hotspots.length > 0 ? (
+                    <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl overflow-hidden">
+                      {[...hotspots]
+                        .sort((a, b) => b.intensity - a.intensity)
+                        .slice(0, 5)
+                        .map((hs, idx) => {
+                          const pct = Math.round(hs.intensity * 100)
+                          const barColor =
+                            hs.intensity >= 0.75 ? 'bg-red-500' :
+                            hs.intensity >= 0.50 ? 'bg-yellow-500' :
+                            hs.intensity >= 0.25 ? 'bg-green-500' : 'bg-orange-500'
+                          return (
+                            <div
+                              key={idx}
+                              className={`flex items-center gap-3 sm:gap-4 px-4 py-3 ${
+                                idx < Math.min(hotspots.length, 5) - 1 ? 'border-b border-gray-800/60' : ''
+                              }`}
+                            >
+                              {/* Rank badge */}
+                              <span className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center
+                                                text-[10px] font-bold border ${
+                                idx === 0
+                                  ? 'bg-orange-900/40 border-orange-700/40 text-orange-400'
+                                  : 'bg-gray-800 border-gray-700/60 text-gray-500'
+                              }`}>
+                                {idx + 1}
+                              </span>
+
+                              {/* Label */}
+                              <span className="flex-1 text-sm font-medium text-gray-300 min-w-0">
+                                Zona #{idx + 1}
+                              </span>
+
+                              {/* Intensity bar */}
+                              <div className="hidden sm:flex items-center gap-2 w-28 flex-shrink-0">
+                                <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${barColor}`}
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Percentage */}
+                              <span className="text-sm font-semibold tabular-nums text-gray-200 flex-shrink-0 w-10 text-right">
+                                {pct}%
+                              </span>
+                            </div>
+                          )
+                        })}
+                    </div>
+                  ) : hotspots !== null ? (
+                    <div className="bg-gray-900/50 border border-gray-800 rounded-2xl px-6 py-10 text-center space-y-2">
+                      <p className="text-sm text-gray-500">Sin datos de zonas calientes.</p>
+                      <p className="text-xs text-gray-600">
+                        {intensityMode === 'live'
+                          ? 'No se detectaron posiciones GPS activas en esta ubicación.'
+                          : 'Probá ajustando el rango de fechas o seleccionando otra ubicación.'}
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+
+              {/* ── 4c. Actividad Fuera de Áreas ──────────────────────────── */}
+              {showOutsideAreas && (
+                <div className="space-y-2">
+                  <SectionLabel>Actividad Fuera de Áreas</SectionLabel>
+
+                  {outsideAreasLoading ? (
+                    <div className="flex justify-center py-8"><Spinner size="md" /></div>
+                  ) : outsideAreasError ? (
+                    <div className="bg-gray-900/50 border border-gray-800 rounded-2xl px-6 py-8 text-center">
+                      <p className="text-sm text-red-400">Error al cargar la actividad fuera de áreas.</p>
+                    </div>
+                  ) : outsideAreasHotspots && outsideAreasHotspots.length > 0 ? (
+                    <div className="bg-gray-900/70 border border-white/[0.07] rounded-2xl overflow-hidden">
+                      {[...outsideAreasHotspots]
+                        .sort((a, b) => b.intensity - a.intensity)
+                        .slice(0, 5)
+                        .map((hs, idx) => {
+                          const pct = Math.round(hs.intensity * 100)
+                          const barColor =
+                            hs.intensity >= 0.75 ? 'bg-blue-700' :
+                            hs.intensity >= 0.50 ? 'bg-blue-500' :
+                            hs.intensity >= 0.25 ? 'bg-blue-400' : 'bg-blue-300'
+                          return (
+                            <div
+                              key={idx}
+                              className={`flex items-center gap-3 sm:gap-4 px-4 py-3 ${
+                                idx < Math.min(outsideAreasHotspots.length, 5) - 1 ? 'border-b border-gray-800/60' : ''
+                              }`}
+                            >
+                              <span className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center
+                                                text-[10px] font-bold border ${
+                                idx === 0
+                                  ? 'bg-blue-900/40 border-blue-700/40 text-blue-400'
+                                  : 'bg-gray-800 border-gray-700/60 text-gray-500'
+                              }`}>
+                                {idx + 1}
+                              </span>
+                              <span className="flex-1 text-sm font-medium text-gray-300 min-w-0">
+                                Zona #{idx + 1}
+                              </span>
+                              <div className="hidden sm:flex items-center gap-2 w-28 flex-shrink-0">
+                                <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${barColor}`}
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                              </div>
+                              <span className="text-sm font-semibold tabular-nums text-gray-200 flex-shrink-0 w-10 text-right">
+                                {pct}%
+                              </span>
+                            </div>
+                          )
+                        })}
+                    </div>
+                  ) : outsideAreasHotspots !== null ? (
+                    <div className="bg-gray-900/50 border border-gray-800 rounded-2xl px-6 py-10 text-center space-y-2">
+                      <p className="text-sm text-gray-500">Sin actividad fuera de áreas detectada.</p>
+                      <p className="text-xs text-gray-600">
+                        {intensityMode === 'live'
+                          ? 'No se registró actividad GPS fuera de las áreas configuradas.'
+                          : 'Probá ajustando el rango de fechas.'}
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              )}
             </>
           ) : (
             <div className="rounded-2xl border border-gray-800 bg-gray-900/50 flex flex-col

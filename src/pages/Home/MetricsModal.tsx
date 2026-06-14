@@ -213,7 +213,7 @@ export default function MetricsModal({ projectId, projectTitle, isOpen, onClose 
                               Clics
                             </th>
                             <th className="text-right text-xs font-medium text-gray-500 px-4 py-3 whitespace-nowrap">
-                              Conv.
+                              Conversión
                             </th>
                           </tr>
                         </thead>

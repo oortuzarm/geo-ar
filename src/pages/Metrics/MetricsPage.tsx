@@ -921,8 +921,8 @@ function UbicacionesSection({
           style={{ gridTemplateColumns: '1fr 80px 80px 80px 80px' }}>
           <span>Ubicación</span>
           <span className="text-right">Entradas</span>
-          <span className="text-right">Convs.</span>
-          <span className="text-right">Tasa cv.</span>
+          <span className="text-right">Clics</span>
+          <span className="text-right">Conversión</span>
           <span className="text-right">Participación</span>
         </div>
 
@@ -1037,7 +1037,7 @@ function ConversionSection({
 
         <div className="space-y-4">
           <FunnelStep
-            label="Entradas al radio"
+            label="Entradas"
             count={summary.radiusEntries}
             pct={100}
             mounted={mounted}
@@ -1057,7 +1057,7 @@ function ConversionSection({
           </div>
 
           <FunnelStep
-            label="Clics en destino"
+            label="Clics"
             count={summary.clicks}
             pct={convPct}
             mounted={mounted}
@@ -1067,7 +1067,7 @@ function ConversionSection({
 
         {/* Conversion rate summary */}
         <div className="mt-6 pt-5 border-t border-white/[0.06] flex items-center justify-between">
-          <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">Tasa de conversión</span>
+          <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">Conversión</span>
           <div className="flex items-baseline gap-2">
             <span className={`text-2xl font-bold tabular-nums ${qualityColor}`}>
               {summary.conversion}%
@@ -1576,12 +1576,12 @@ export default function MetricsPage() {
                     {/* KPI cards */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                       <KPICard
-                        label="Entradas al radio"
+                        label="Entradas"
                         value={displaySummary!.radiusEntries}
                         sub="veces que un usuario entró al área de activación"
                       />
                       <KPICard
-                        label="Clics en experiencia"
+                        label="Clics"
                         value={displaySummary!.clicks}
                         sub='activaciones del botón "Ir a experiencia"'
                       />

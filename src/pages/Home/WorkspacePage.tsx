@@ -470,7 +470,7 @@ export default function WorkspacePage() {
             </div>
 
             <KPICard
-              label="Clics en experiencia"
+              label="Clics"
               value={totalClicks ?? 0}
               sub="en total"
             />

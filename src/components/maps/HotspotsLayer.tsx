@@ -1,14 +1,14 @@
 import { Circle } from 'react-leaflet'
 import type { HotspotPoint } from '../../services/hotspotApi'
 
-// 'hot' = warm ramp (Zonas Calientes):  orange → green → yellow → red
-// 'cold' = blue ramp (Actividad Fuera de Áreas): blue-300 → blue-400 → blue-500 → blue-700
+// 'hot'  = warm ramp (Zonas Calientes):   orange → green → yellow → red
+// 'cold' = violet ramp (Dentro y Fuera): violet-300 → violet-400 → violet-500 → violet-700
 function hotspotColor(intensity: number, variant: 'hot' | 'cold'): string {
   if (variant === 'cold') {
-    if (intensity >= 0.75) return '#1d4ed8'  // blue-700
-    if (intensity >= 0.50) return '#3b82f6'  // blue-500
-    if (intensity >= 0.25) return '#60a5fa'  // blue-400
-    return '#93c5fd'                          // blue-300
+    if (intensity >= 0.75) return '#6d28d9'  // violet-700
+    if (intensity >= 0.50) return '#8b5cf6'  // violet-500
+    if (intensity >= 0.25) return '#a78bfa'  // violet-400
+    return '#c4b5fd'                          // violet-300
   }
   if (intensity >= 0.75) return '#ef4444'   // red-500
   if (intensity >= 0.50) return '#eab308'   // yellow-500

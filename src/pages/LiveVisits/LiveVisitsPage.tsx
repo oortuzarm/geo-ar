@@ -668,7 +668,7 @@ export default function LiveVisitsPage() {
               )}
               {showOutsideAreas && (
                 <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400/70 flex-shrink-0 mt-[3px]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400/70 flex-shrink-0 mt-[3px]" />
                   <span>
                     <span className="font-medium text-gray-400">Actividad Dentro y Fuera</span>
                     {' — '}
@@ -789,10 +789,10 @@ export default function LiveVisitsPage() {
                           Dentro y Fuera:
                         </span>
                         {[
-                          { color: 'bg-blue-300', label: 'Baja'     },
-                          { color: 'bg-blue-400', label: 'Media'    },
-                          { color: 'bg-blue-500', label: 'Alta'     },
-                          { color: 'bg-blue-700', label: 'Muy alta' },
+                          { color: 'bg-violet-300', label: 'Baja'     },
+                          { color: 'bg-violet-400', label: 'Media'    },
+                          { color: 'bg-violet-500', label: 'Alta'     },
+                          { color: 'bg-violet-700', label: 'Muy alta' },
                         ].map(({ color, label }) => (
                           <span key={label} className="flex items-center gap-1.5 text-xs text-gray-400">
                             <span className={`w-3 h-3 rounded-full ${color} opacity-80 flex-shrink-0`} />

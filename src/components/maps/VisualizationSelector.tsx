@@ -7,6 +7,8 @@ interface Props {
   onToggleOutsideAreas:           () => void
   showExclusivelyOutside?:        boolean
   onToggleExclusivelyOutside?:    () => void
+  showLiveOutside?:               boolean
+  onToggleLiveOutside?:           () => void
 }
 
 function LayerDot({ active, color }: { active: boolean; color: 'amber' | 'orange' | 'violet' | 'blue' }) {
@@ -31,6 +33,8 @@ export default function VisualizationSelector({
   onToggleOutsideAreas,
   showExclusivelyOutside,
   onToggleExclusivelyOutside,
+  showLiveOutside,
+  onToggleLiveOutside,
 }: Props) {
   return (
     <div className="inline-flex flex-nowrap min-w-max whitespace-nowrap items-center bg-gray-900 border border-gray-700/60 rounded-xl p-[3px] gap-[2px]">
@@ -105,6 +109,32 @@ export default function VisualizationSelector({
         </svg>
         Dentro y Fuera
       </button>
+
+      {/* Fuera de Ubicaciones — solo en modo en vivo (prop opcional) */}
+      {onToggleLiveOutside !== undefined && (
+        <>
+          <div className="w-px h-3.5 bg-gray-700/60 flex-shrink-0" />
+          <button
+            type="button"
+            onClick={onToggleLiveOutside}
+            title={(showLiveOutside ?? false) ? 'Desactivar Fuera de Ubicaciones' : 'Activar Fuera de Ubicaciones'}
+            className={[
+              'flex items-center gap-1.5 px-2.5 h-[26px] rounded-lg text-[11px] font-medium',
+              'transition-all whitespace-nowrap',
+              (showLiveOutside ?? false)
+                ? 'bg-blue-900/50 border border-blue-700/40 text-blue-300 shadow-sm'
+                : 'text-gray-500 hover:text-gray-400',
+            ].join(' ')}
+          >
+            <LayerDot active={showLiveOutside ?? false} color="blue" />
+            <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Fuera de Ubic.
+          </button>
+        </>
+      )}
 
       {/* Personas Exclusivamente Fuera — solo en modo histórico (prop opcional) */}
       {onToggleExclusivelyOutside !== undefined && (

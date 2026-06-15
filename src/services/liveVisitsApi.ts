@@ -42,6 +42,12 @@ export interface ExclusivelyOutsideResponse {
   positions: { lat: number; lng: number }[]
 }
 
+export function fetchLiveOutsidePositions(projectId: string): Promise<ExclusivelyOutsideResponse> {
+  return apiFetch<ExclusivelyOutsideResponse>(
+    `${API_BASE}/api/geo_projects/${projectId}/live_outside_positions`,
+  )
+}
+
 export function fetchOutsideSessions(
   projectId: string,
   params?: { from?: string; to?: string },

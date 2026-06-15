@@ -160,7 +160,8 @@ export interface GpsIntensityMapProps {
   showIntensity?:               boolean                       // render IntensityLayer; default true
   hotspots?:                    HotspotPoint[]                // if provided, renders HotspotsLayer (warm ramp)
   outsideAreasHotspots?:        HotspotPoint[]                // if provided, renders outside-areas layer (violet ramp)
-  exclusivelyOutsidePositions?: { lat: number; lng: number }[] // one marker per exclusively-outside person
+  exclusivelyOutsidePositions?: { lat: number; lng: number }[] // one marker per exclusively-outside person (historical)
+  liveOutsidePositions?:        { lat: number; lng: number }[] // one marker per active person outside areas (live)
 }
 
 export default function GpsIntensityMap({
@@ -171,6 +172,7 @@ export default function GpsIntensityMap({
   hotspots,
   outsideAreasHotspots,
   exclusivelyOutsidePositions,
+  liveOutsidePositions,
 }: GpsIntensityMapProps) {
   const resolvedActiveNow: Record<string, number> = {}
   points.forEach((p) => {
@@ -200,6 +202,9 @@ export default function GpsIntensityMap({
       )}
       {exclusivelyOutsidePositions && exclusivelyOutsidePositions.length > 0 && (
         <ExclusivelyOutsideLayer positions={exclusivelyOutsidePositions} pane="exclusivelyOutsidePane" />
+      )}
+      {liveOutsidePositions && liveOutsidePositions.length > 0 && (
+        <ExclusivelyOutsideLayer positions={liveOutsidePositions} pane="exclusivelyOutsidePane" />
       )}
       {outsideAreasHotspots && outsideAreasHotspots.length > 0 && (
         <HotspotsLayer hotspots={outsideAreasHotspots} pane="outsideAreasPane" variant="cold" />

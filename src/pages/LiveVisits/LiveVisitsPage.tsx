@@ -646,11 +646,11 @@ export default function LiveVisitsPage() {
                 <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/70 flex-shrink-0 mt-[3px]" />
                   <span>
-                    <span className="font-medium text-gray-400">Intensidad GPS</span>
+                    <span className="font-medium text-gray-400">Actividad en Ubicaciones</span>
                     {' — '}
                     {intensityMode === 'live'
                       ? 'Usuarios conectados y activos en este momento.'
-                      : 'Usuarios que accedieron a tus áreas.'}
+                      : 'Visualiza dónde se concentró la actividad dentro de las ubicaciones configuradas durante el período.'}
                   </span>
                 </p>
               )}
@@ -752,7 +752,7 @@ export default function LiveVisitsPage() {
                     {showGpsIntensity && (
                       <div className="flex items-center gap-5 flex-wrap">
                         <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
-                          Intensidad:
+                          Actividad en Ubicaciones:
                         </span>
                         {(['low', 'medium', 'high'] as IntensityLevel[]).map((level) => (
                           <span key={level} className="flex items-center gap-1.5 text-xs text-gray-400">

@@ -64,6 +64,25 @@ export type DestinationCategory =
   | 'coupon'
   | 'custom'
 
+// ── Point categories — physical/functional nature of the place ────────────────
+
+export type PointCategory =
+  | 'gastronomy'
+  | 'retail'
+  | 'health'
+  | 'tourism'
+  | 'culture'
+  | 'education'
+  | 'services'
+  | 'events'
+  | 'entertainment'
+  | 'transport'
+  | 'accommodation'
+  | 'sport'
+  | 'real_estate'
+  | 'corporate'
+  | 'other'
+
 export interface UrlContentData {
   url: string
 }
@@ -112,6 +131,7 @@ export interface GeoPoint {
   contentType?: ContentType
   contentData?: ContentData     // excluded from public API; only returned after /access
   destinationCategory?: DestinationCategory  // only set when contentType === 'url'
+  pointCategory?: PointCategory              // physical/functional nature of the place
   latitude: number
   longitude: number
   activationRadius: number

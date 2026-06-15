@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Input, Textarea } from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
-import type { ContentData, ContentType, DestinationCategory, GeoPoint, GeoPointAvailability, MediaContentData } from '../../types'
+import type { ContentData, ContentType, DestinationCategory, GeoPoint, GeoPointAvailability, MediaContentData, PointCategory } from '../../types'
 import { reverseGeocode } from '../../features/geolocation/geocoding'
 import { uploadFile, formatFileSize } from '../../lib/uploadFile'
 import { uploadImage } from '../../lib/uploadImage'
@@ -50,6 +50,26 @@ const CONTENT_TYPES: { type: ContentType; label: string; icon: string }[] = [
   { type: 'video', label: 'Video',              icon: '🎬' },
   { type: 'audio', label: 'Audio',              icon: '🎵' },
   { type: 'file',  label: 'Archivo descargable', icon: '📄' },
+]
+
+// ─── Point category config ────────────────────────────────────────────────────
+
+const POINT_CATEGORIES: { value: PointCategory; label: string }[] = [
+  { value: 'gastronomy',     label: 'Gastronomía'    },
+  { value: 'retail',         label: 'Retail'         },
+  { value: 'health',         label: 'Salud'          },
+  { value: 'tourism',        label: 'Turismo'        },
+  { value: 'culture',        label: 'Cultura'        },
+  { value: 'education',      label: 'Educación'      },
+  { value: 'services',       label: 'Servicios'      },
+  { value: 'events',         label: 'Eventos'        },
+  { value: 'entertainment',  label: 'Entretenimiento' },
+  { value: 'transport',      label: 'Transporte'     },
+  { value: 'accommodation',  label: 'Alojamiento'    },
+  { value: 'sport',          label: 'Deporte'        },
+  { value: 'real_estate',    label: 'Inmobiliaria'   },
+  { value: 'corporate',      label: 'Corporativo'    },
+  { value: 'other',          label: 'Otro'           },
 ]
 
 // ─── Destination category config (only shown when content type is URL) ────────
@@ -384,6 +404,9 @@ export default function GeoPointForm({
 
   // ── Point mode ────────────────────────────────────────────────────────────
   const [pointMode, setPointMode] = useState<'informative' | 'unlock'>(point.pointMode ?? 'unlock')
+
+  // ── Point category ────────────────────────────────────────────────────────
+  const [pointCategory, setPointCategory] = useState<PointCategory | undefined>(point.pointCategory)
 
   // ── Content type + destination category state ────────────────────────────
   const [contentType,         setContentType]         = useState<ContentType>(point.contentType ?? 'url')
@@ -774,6 +797,28 @@ export default function GeoPointForm({
             onBlur={() => onChange({ name })}
           />
           {nameError && <p className="text-xs text-red-400">{nameError}</p>}
+        </div>
+
+        {/* ── Categoría del punto ──────────────────────────────────────── */}
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            Categoría del punto
+          </span>
+          <select
+            value={pointCategory ?? ''}
+            onChange={(e) => {
+              const val = e.target.value as PointCategory | ''
+              const next = val === '' ? undefined : val
+              setPointCategory(next)
+              onChange({ pointCategory: next })
+            }}
+            className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          >
+            <option value="">Sin categoría</option>
+            {POINT_CATEGORIES.map(({ value, label }) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
         </div>
 
         {/* ── Modo del punto ────────────────────────────────────────────── */}

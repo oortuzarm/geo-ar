@@ -29,6 +29,7 @@ export function normalizeGeoPoint(raw: Record<string, unknown>): GeoPoint {
     contentType:         (raw.contentType         ?? raw.content_type)         as GeoPoint['contentType'],
     contentData:         (raw.contentData         ?? raw.content_data)         as GeoPoint['contentData'],
     destinationCategory: (raw.destinationCategory ?? raw.destination_category) as GeoPoint['destinationCategory'],
+    pointCategory:       (raw.pointCategory       ?? raw.point_category)       as GeoPoint['pointCategory'],
     buttonText:          (raw.buttonText          ?? raw.button_text)          as GeoPoint['buttonText'],
 
     // ── Description / meta ────────────────────────────────────────────────

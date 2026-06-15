@@ -8,7 +8,7 @@ import IntensityModeSelector from '../../components/map/IntensityModeSelector'
 import type { IntensityMode } from '../../components/map/IntensityModeSelector'
 import VisualizationSelector from '../../components/maps/VisualizationSelector'
 import Spinner from '../../components/ui/Spinner'
-import { fetchLiveVisits, fetchOutsideSessions, fetchLiveOutsidePositions, fetchLiveInsidePositions, fetchInsideOnlySessions } from '../../services/liveVisitsApi'
+import { fetchLiveVisits, fetchOutsideSessions, fetchLiveOutsidePositions, fetchLiveInsidePositions, fetchLiveMixedPositions, fetchInsideOnlySessions } from '../../services/liveVisitsApi'
 import type { LiveVisitsResponse } from '../../services/liveVisitsApi'
 import { fetchProjectAnalyticsByPoint } from '../../lib/analytics'
 import type { PeriodParams, PointAnalytics } from '../../lib/analytics'
@@ -234,20 +234,21 @@ export default function LiveVisitsPage() {
   const [showOutsideAreas,       setShowOutsideAreas]       = useState(false)
   const [showExclusivelyOutside, setShowExclusivelyOutside] = useState(false)
   const [showLiveInside,         setShowLiveInside]         = useState(false)
+  const [showLiveMixed,          setShowLiveMixed]          = useState(false)
   const [showLiveOutside,        setShowLiveOutside]        = useState(false)
   const [showInsideOnly,         setShowInsideOnly]         = useState(false)
 
   // At least one layer must stay active.
   function handleToggleIntensity() {
-    if (showGpsIntensity && !showHotspots && !showOutsideAreas && !showExclusivelyOutside && !showLiveInside && !showLiveOutside) return
+    if (showGpsIntensity && !showHotspots && !showOutsideAreas && !showExclusivelyOutside && !showLiveInside && !showLiveMixed && !showLiveOutside) return
     setShowGpsIntensity(v => !v)
   }
   function handleToggleHotspots() {
-    if (showHotspots && !showGpsIntensity && !showOutsideAreas && !showExclusivelyOutside && !showLiveInside && !showLiveOutside) return
+    if (showHotspots && !showGpsIntensity && !showOutsideAreas && !showExclusivelyOutside && !showLiveInside && !showLiveMixed && !showLiveOutside) return
     setShowHotspots(v => !v)
   }
   function handleToggleOutsideAreas() {
-    if (showOutsideAreas && !showGpsIntensity && !showHotspots && !showExclusivelyOutside && !showLiveInside && !showLiveOutside) return
+    if (showOutsideAreas && !showGpsIntensity && !showHotspots && !showExclusivelyOutside && !showLiveInside && !showLiveMixed && !showLiveOutside) return
     setShowOutsideAreas(v => !v)
   }
   function handleToggleExclusivelyOutside() {
@@ -255,11 +256,15 @@ export default function LiveVisitsPage() {
     setShowExclusivelyOutside(v => !v)
   }
   function handleToggleLiveInside() {
-    if (showLiveInside && !showGpsIntensity && !showHotspots && !showOutsideAreas && !showLiveOutside) return
+    if (showLiveInside && !showGpsIntensity && !showHotspots && !showOutsideAreas && !showLiveMixed && !showLiveOutside) return
     setShowLiveInside(v => !v)
   }
+  function handleToggleLiveMixed() {
+    if (showLiveMixed && !showGpsIntensity && !showHotspots && !showOutsideAreas && !showLiveInside && !showLiveOutside) return
+    setShowLiveMixed(v => !v)
+  }
   function handleToggleLiveOutside() {
-    if (showLiveOutside && !showGpsIntensity && !showHotspots && !showOutsideAreas && !showLiveInside) return
+    if (showLiveOutside && !showGpsIntensity && !showHotspots && !showOutsideAreas && !showLiveInside && !showLiveMixed) return
     setShowLiveOutside(v => !v)
   }
   function handleToggleInsideOnly() {
@@ -278,6 +283,8 @@ export default function LiveVisitsPage() {
   const [exclusivelyOutsideLoading,   setExclusivelyOutsideLoading]   = useState(false)
   const [liveInsidePositions,         setLiveInsidePositions]         = useState<{ lat: number; lng: number }[] | null>(null)
   const [liveInsideLoading,           setLiveInsideLoading]           = useState(false)
+  const [liveMixedPositions,          setLiveMixedPositions]          = useState<{ lat: number; lng: number }[] | null>(null)
+  const [liveMixedLoading,            setLiveMixedLoading]            = useState(false)
   const [liveOutsidePositions,        setLiveOutsidePositions]        = useState<{ lat: number; lng: number }[] | null>(null)
   const [liveOutsideLoading,          setLiveOutsideLoading]          = useState(false)
   const [insideOnlyPositions,         setInsideOnlyPositions]         = useState<{ lat: number; lng: number }[] | null>(null)
@@ -476,6 +483,31 @@ export default function LiveVisitsPage() {
     return () => { cancelled = true; clearInterval(timer) }
   }, [showLiveInside, project?.id, intensityMode]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Live mixed persons: polls every 15 s, only in live mode.
+  useEffect(() => {
+    if (!project?.id || !showLiveMixed || intensityMode !== 'live') {
+      setLiveMixedPositions(null)
+      return
+    }
+    let cancelled = false
+
+    const load = async () => {
+      try {
+        const res = await fetchLiveMixedPositions(project!.id)
+        if (!cancelled) setLiveMixedPositions(res.positions)
+      } catch {
+        // silently keep previous data on error
+      } finally {
+        if (!cancelled) setLiveMixedLoading(false)
+      }
+    }
+
+    setLiveMixedLoading(true)
+    load()
+    const timer = setInterval(load, 15_000)
+    return () => { cancelled = true; clearInterval(timer) }
+  }, [showLiveMixed, project?.id, intensityMode]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Live outside persons: polls every 15 s, only in live mode.
   useEffect(() => {
     if (!project?.id || !showLiveOutside || intensityMode !== 'live') {
@@ -613,25 +645,31 @@ export default function LiveVisitsPage() {
         <section className="space-y-3">
           <SectionLabel>General</SectionLabel>
 
-          {/* Live visit breakdown: inside / outside / total */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Live visit breakdown: inside / outside / mixed / total */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <StatTile
-              label="En ubicaciones"
+              label="Personas solo en ubicaciones"
               value={liveData === null ? '—' : (liveData.liveVisitsInsideAreas ?? 0)}
               valueClass="text-2xl text-emerald-400"
-              hint="Personas actualmente dentro de alguna ubicación activa."
+              hint="Personas activas actualmente dentro de alguna ubicación activa."
             />
             <StatTile
-              label="Fuera de ubicaciones"
+              label="Personas exclusivamente fuera"
               value={liveData === null ? '—' : (liveData.liveVisitsOutsideAreas ?? 0)}
               valueClass="text-2xl text-blue-400"
-              hint="Personas actualmente fuera de todas las ubicaciones activas."
+              hint="Personas activas actualmente fuera de todas las ubicaciones activas."
             />
             <StatTile
-              label="Total en vivo"
+              label="Personas dentro y fuera"
+              value={liveData === null ? '—' : (liveData.liveVisitsMixed ?? 0)}
+              valueClass="text-2xl text-violet-400"
+              hint="Personas con presencia simultánea dentro y fuera de ubicaciones activas."
+            />
+            <StatTile
+              label="Personas totales"
               value={liveData === null ? '—' : (liveData.liveVisitsTotal ?? 0)}
               valueClass="text-2xl text-gray-100"
-              hint="Suma de personas en ubicaciones y fuera de ubicaciones."
+              hint="Total de personas activas en este momento."
             />
           </div>
 
@@ -736,6 +774,8 @@ export default function LiveVisitsPage() {
                   {...(intensityMode === 'live' ? {
                     showLiveInside,
                     onToggleLiveInside: handleToggleLiveInside,
+                    showLiveMixed,
+                    onToggleLiveMixed: handleToggleLiveMixed,
                     showLiveOutside,
                     onToggleLiveOutside: handleToggleLiveOutside,
                   } : {})}
@@ -764,7 +804,7 @@ export default function LiveVisitsPage() {
           </div>
 
           {/* ── Layer descriptions ───────────────────────────────────────────── */}
-          {(showGpsIntensity || showHotspots || showOutsideAreas || showExclusivelyOutside || showLiveInside || showLiveOutside || showInsideOnly) && (
+          {(showGpsIntensity || showHotspots || showOutsideAreas || showExclusivelyOutside || showLiveInside || showLiveMixed || showLiveOutside || showInsideOnly) && (
             <div className="flex flex-col gap-1">
               {showGpsIntensity && (
                 <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
@@ -807,6 +847,16 @@ export default function LiveVisitsPage() {
                     <span className="font-medium text-gray-400">Personas Exclusivamente Fuera</span>
                     {' — '}
                     Personas detectadas durante el período que nunca ingresaron a ninguna ubicación. Cada marcador representa una persona única.
+                  </span>
+                </p>
+              )}
+              {showLiveMixed && (
+                <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400/70 flex-shrink-0 mt-[3px]" />
+                  <span>
+                    <span className="font-medium text-gray-400">Dentro y Fuera</span>
+                    {' — '}
+                    Personas con presencia simultánea dentro y fuera de ubicaciones. Actualmente vacío: en modo En Vivo cada sesión tiene una única posición activa.
                   </span>
                 </p>
               )}
@@ -887,6 +937,7 @@ export default function LiveVisitsPage() {
                       outsideAreasHotspots={showOutsideAreas && outsideAreasHotspots ? outsideAreasHotspots : undefined}
                       exclusivelyOutsidePositions={showExclusivelyOutside && exclusivelyOutsidePositions ? exclusivelyOutsidePositions : undefined}
                       liveInsidePositions={showLiveInside && liveInsidePositions ? liveInsidePositions : undefined}
+                      liveMixedPositions={showLiveMixed && liveMixedPositions ? liveMixedPositions : undefined}
                       liveOutsidePositions={showLiveOutside && liveOutsidePositions ? liveOutsidePositions : undefined}
                       insideOnlyPositions={showInsideOnly && insideOnlyPositions ? insideOnlyPositions : undefined}
                     />
@@ -896,6 +947,7 @@ export default function LiveVisitsPage() {
                       (showOutsideAreas && outsideAreasLoading) ||
                       (showExclusivelyOutside && exclusivelyOutsideLoading) ||
                       (showLiveInside && liveInsideLoading) ||
+                      (showLiveMixed && liveMixedLoading) ||
                       (showLiveOutside && liveOutsideLoading) ||
                       (showInsideOnly && insideOnlyLoading)) && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-950/70 backdrop-blur-sm">
@@ -991,6 +1043,17 @@ export default function LiveVisitsPage() {
                         </span>
                         <span className="flex items-center gap-1.5 text-xs text-gray-400">
                           <span className="w-3 h-3 rounded-full bg-emerald-400 opacity-80 flex-shrink-0" />
+                          Persona activa
+                        </span>
+                      </div>
+                    )}
+                    {showLiveMixed && (
+                      <div className="flex items-center gap-5 flex-wrap">
+                        <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
+                          Dentro y Fuera:
+                        </span>
+                        <span className="flex items-center gap-1.5 text-xs text-gray-400">
+                          <span className="w-3 h-3 rounded-full bg-violet-400 opacity-80 flex-shrink-0" />
                           Persona activa
                         </span>
                       </div>

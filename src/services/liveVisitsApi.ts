@@ -17,6 +17,7 @@ export interface LiveVisitsResponse {
   activeNow:               number
   liveVisitsInsideAreas:   number
   liveVisitsOutsideAreas:  number
+  liveVisitsMixed:         number
   liveVisitsTotal:         number
   periodPeopleInsideAreas:  number
   periodPeopleOutsideAreas: number
@@ -55,6 +56,12 @@ export function fetchInsideOnlySessions(
 export function fetchLiveInsidePositions(projectId: string): Promise<ExclusivelyOutsideResponse> {
   return apiFetch<ExclusivelyOutsideResponse>(
     `${API_BASE}/api/geo_projects/${projectId}/live_inside_positions`,
+  )
+}
+
+export function fetchLiveMixedPositions(projectId: string): Promise<ExclusivelyOutsideResponse> {
+  return apiFetch<ExclusivelyOutsideResponse>(
+    `${API_BASE}/api/geo_projects/${projectId}/live_mixed_positions`,
   )
 }
 

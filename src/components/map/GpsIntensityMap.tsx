@@ -10,6 +10,7 @@ import BaseMapLayer from './BaseMapLayer'
 import HotspotsLayer from '../maps/HotspotsLayer'
 import ExclusivelyOutsideLayer from '../maps/ExclusivelyOutsideLayer'
 import InsideOnlyLayer from '../maps/InsideOnlyLayer'
+import MixedPositionsLayer from '../maps/MixedPositionsLayer'
 import type { GeoPoint } from '../../types'
 import type { HotspotPoint } from '../../services/hotspotApi'
 
@@ -165,6 +166,7 @@ export interface GpsIntensityMapProps {
   exclusivelyOutsidePositions?: { lat: number; lng: number }[] // one marker per exclusively-outside person (historical)
   liveOutsidePositions?:        { lat: number; lng: number }[] // one marker per active person outside areas (live)
   liveInsidePositions?:         { lat: number; lng: number }[] // one marker per active person inside areas (live)
+  liveMixedPositions?:          { lat: number; lng: number }[] // one marker per active person inside+outside (live, always empty)
   insideOnlyPositions?:         { lat: number; lng: number }[] // one marker per person exclusively inside (historical)
 }
 
@@ -178,6 +180,7 @@ export default function GpsIntensityMap({
   exclusivelyOutsidePositions,
   liveOutsidePositions,
   liveInsidePositions,
+  liveMixedPositions,
   insideOnlyPositions,
 }: GpsIntensityMapProps) {
   const resolvedActiveNow: Record<string, number> = {}
@@ -218,6 +221,9 @@ export default function GpsIntensityMap({
       )}
       {liveOutsidePositions && liveOutsidePositions.length > 0 && (
         <ExclusivelyOutsideLayer positions={liveOutsidePositions} pane="exclusivelyOutsidePane" />
+      )}
+      {liveMixedPositions && liveMixedPositions.length > 0 && (
+        <MixedPositionsLayer positions={liveMixedPositions} pane="outsideAreasPane" />
       )}
       {outsideAreasHotspots && outsideAreasHotspots.length > 0 && (
         <HotspotsLayer hotspots={outsideAreasHotspots} pane="outsideAreasPane" variant="cold" />

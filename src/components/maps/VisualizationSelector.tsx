@@ -7,6 +7,8 @@ interface Props {
   onToggleOutsideAreas:           () => void
   showExclusivelyOutside?:        boolean
   onToggleExclusivelyOutside?:    () => void
+  showLiveInside?:                boolean
+  onToggleLiveInside?:            () => void
   showLiveOutside?:               boolean
   onToggleLiveOutside?:           () => void
   showInsideOnly?:                boolean
@@ -36,6 +38,8 @@ export default function VisualizationSelector({
   onToggleOutsideAreas,
   showExclusivelyOutside,
   onToggleExclusivelyOutside,
+  showLiveInside,
+  onToggleLiveInside,
   showLiveOutside,
   onToggleLiveOutside,
   showInsideOnly,
@@ -114,6 +118,32 @@ export default function VisualizationSelector({
         </svg>
         Dentro y Fuera
       </button>
+
+      {/* En Ubicaciones — solo en modo en vivo (prop opcional) */}
+      {onToggleLiveInside !== undefined && (
+        <>
+          <div className="w-px h-3.5 bg-gray-700/60 flex-shrink-0" />
+          <button
+            type="button"
+            onClick={onToggleLiveInside}
+            title={(showLiveInside ?? false) ? 'Desactivar En Ubicaciones' : 'Activar En Ubicaciones'}
+            className={[
+              'flex items-center gap-1.5 px-2.5 h-[26px] rounded-lg text-[11px] font-medium',
+              'transition-all whitespace-nowrap',
+              (showLiveInside ?? false)
+                ? 'bg-emerald-900/50 border border-emerald-700/40 text-emerald-300 shadow-sm'
+                : 'text-gray-500 hover:text-gray-400',
+            ].join(' ')}
+          >
+            <LayerDot active={showLiveInside ?? false} color="emerald" />
+            <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            En Ubic.
+          </button>
+        </>
+      )}
 
       {/* Fuera de Ubicaciones — solo en modo en vivo (prop opcional) */}
       {onToggleLiveOutside !== undefined && (

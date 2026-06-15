@@ -8,7 +8,7 @@ import IntensityModeSelector from '../../components/map/IntensityModeSelector'
 import type { IntensityMode } from '../../components/map/IntensityModeSelector'
 import VisualizationSelector from '../../components/maps/VisualizationSelector'
 import Spinner from '../../components/ui/Spinner'
-import { fetchLiveVisits, fetchOutsideSessions, fetchLiveOutsidePositions, fetchInsideOnlySessions } from '../../services/liveVisitsApi'
+import { fetchLiveVisits, fetchOutsideSessions, fetchLiveOutsidePositions, fetchLiveInsidePositions, fetchInsideOnlySessions } from '../../services/liveVisitsApi'
 import type { LiveVisitsResponse } from '../../services/liveVisitsApi'
 import { fetchProjectAnalyticsByPoint } from '../../lib/analytics'
 import type { PeriodParams, PointAnalytics } from '../../lib/analytics'
@@ -233,28 +233,33 @@ export default function LiveVisitsPage() {
   const [showHotspots,           setShowHotspots]           = useState(false)
   const [showOutsideAreas,       setShowOutsideAreas]       = useState(false)
   const [showExclusivelyOutside, setShowExclusivelyOutside] = useState(false)
+  const [showLiveInside,         setShowLiveInside]         = useState(false)
   const [showLiveOutside,        setShowLiveOutside]        = useState(false)
   const [showInsideOnly,         setShowInsideOnly]         = useState(false)
 
   // At least one layer must stay active.
   function handleToggleIntensity() {
-    if (showGpsIntensity && !showHotspots && !showOutsideAreas && !showExclusivelyOutside && !showLiveOutside) return
+    if (showGpsIntensity && !showHotspots && !showOutsideAreas && !showExclusivelyOutside && !showLiveInside && !showLiveOutside) return
     setShowGpsIntensity(v => !v)
   }
   function handleToggleHotspots() {
-    if (showHotspots && !showGpsIntensity && !showOutsideAreas && !showExclusivelyOutside && !showLiveOutside) return
+    if (showHotspots && !showGpsIntensity && !showOutsideAreas && !showExclusivelyOutside && !showLiveInside && !showLiveOutside) return
     setShowHotspots(v => !v)
   }
   function handleToggleOutsideAreas() {
-    if (showOutsideAreas && !showGpsIntensity && !showHotspots && !showExclusivelyOutside && !showLiveOutside) return
+    if (showOutsideAreas && !showGpsIntensity && !showHotspots && !showExclusivelyOutside && !showLiveInside && !showLiveOutside) return
     setShowOutsideAreas(v => !v)
   }
   function handleToggleExclusivelyOutside() {
     if (showExclusivelyOutside && !showGpsIntensity && !showHotspots && !showOutsideAreas) return
     setShowExclusivelyOutside(v => !v)
   }
+  function handleToggleLiveInside() {
+    if (showLiveInside && !showGpsIntensity && !showHotspots && !showOutsideAreas && !showLiveOutside) return
+    setShowLiveInside(v => !v)
+  }
   function handleToggleLiveOutside() {
-    if (showLiveOutside && !showGpsIntensity && !showHotspots && !showOutsideAreas) return
+    if (showLiveOutside && !showGpsIntensity && !showHotspots && !showOutsideAreas && !showLiveInside) return
     setShowLiveOutside(v => !v)
   }
   function handleToggleInsideOnly() {
@@ -271,6 +276,8 @@ export default function LiveVisitsPage() {
   const [outsideAreasLoading,         setOutsideAreasLoading]         = useState(false)
   const [exclusivelyOutsidePositions, setExclusivelyOutsidePositions] = useState<{ lat: number; lng: number }[] | null>(null)
   const [exclusivelyOutsideLoading,   setExclusivelyOutsideLoading]   = useState(false)
+  const [liveInsidePositions,         setLiveInsidePositions]         = useState<{ lat: number; lng: number }[] | null>(null)
+  const [liveInsideLoading,           setLiveInsideLoading]           = useState(false)
   const [liveOutsidePositions,        setLiveOutsidePositions]        = useState<{ lat: number; lng: number }[] | null>(null)
   const [liveOutsideLoading,          setLiveOutsideLoading]          = useState(false)
   const [insideOnlyPositions,         setInsideOnlyPositions]         = useState<{ lat: number; lng: number }[] | null>(null)
@@ -443,6 +450,31 @@ export default function LiveVisitsPage() {
 
     return () => { cancelled = true }
   }, [showInsideOnly, project?.id, intensityMode, hsDates.from, hsDates.to]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Live inside persons: polls every 15 s, only in live mode.
+  useEffect(() => {
+    if (!project?.id || !showLiveInside || intensityMode !== 'live') {
+      setLiveInsidePositions(null)
+      return
+    }
+    let cancelled = false
+
+    const load = async () => {
+      try {
+        const res = await fetchLiveInsidePositions(project!.id)
+        if (!cancelled) setLiveInsidePositions(res.positions)
+      } catch {
+        // silently keep previous data on error
+      } finally {
+        if (!cancelled) setLiveInsideLoading(false)
+      }
+    }
+
+    setLiveInsideLoading(true)
+    load()
+    const timer = setInterval(load, 15_000)
+    return () => { cancelled = true; clearInterval(timer) }
+  }, [showLiveInside, project?.id, intensityMode]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Live outside persons: polls every 15 s, only in live mode.
   useEffect(() => {
@@ -702,6 +734,8 @@ export default function LiveVisitsPage() {
                   onToggleHotspots={handleToggleHotspots}
                   onToggleOutsideAreas={handleToggleOutsideAreas}
                   {...(intensityMode === 'live' ? {
+                    showLiveInside,
+                    onToggleLiveInside: handleToggleLiveInside,
                     showLiveOutside,
                     onToggleLiveOutside: handleToggleLiveOutside,
                   } : {})}
@@ -730,7 +764,7 @@ export default function LiveVisitsPage() {
           </div>
 
           {/* ── Layer descriptions ───────────────────────────────────────────── */}
-          {(showGpsIntensity || showHotspots || showOutsideAreas || showExclusivelyOutside || showLiveOutside || showInsideOnly) && (
+          {(showGpsIntensity || showHotspots || showOutsideAreas || showExclusivelyOutside || showLiveInside || showLiveOutside || showInsideOnly) && (
             <div className="flex flex-col gap-1">
               {showGpsIntensity && (
                 <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
@@ -773,6 +807,16 @@ export default function LiveVisitsPage() {
                     <span className="font-medium text-gray-400">Personas Exclusivamente Fuera</span>
                     {' — '}
                     Personas detectadas durante el período que nunca ingresaron a ninguna ubicación. Cada marcador representa una persona única.
+                  </span>
+                </p>
+              )}
+              {showLiveInside && (
+                <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/70 flex-shrink-0 mt-[3px]" />
+                  <span>
+                    <span className="font-medium text-gray-400">En Ubicaciones</span>
+                    {' — '}
+                    Personas activas actualmente dentro de una o más ubicaciones configuradas. Cada marcador representa una persona única.
                   </span>
                 </p>
               )}
@@ -842,6 +886,7 @@ export default function LiveVisitsPage() {
                       hotspots={showHotspots && hotspots ? hotspots : undefined}
                       outsideAreasHotspots={showOutsideAreas && outsideAreasHotspots ? outsideAreasHotspots : undefined}
                       exclusivelyOutsidePositions={showExclusivelyOutside && exclusivelyOutsidePositions ? exclusivelyOutsidePositions : undefined}
+                      liveInsidePositions={showLiveInside && liveInsidePositions ? liveInsidePositions : undefined}
                       liveOutsidePositions={showLiveOutside && liveOutsidePositions ? liveOutsidePositions : undefined}
                       insideOnlyPositions={showInsideOnly && insideOnlyPositions ? insideOnlyPositions : undefined}
                     />
@@ -850,6 +895,7 @@ export default function LiveVisitsPage() {
                       (showHotspots && hotspotsLoading) ||
                       (showOutsideAreas && outsideAreasLoading) ||
                       (showExclusivelyOutside && exclusivelyOutsideLoading) ||
+                      (showLiveInside && liveInsideLoading) ||
                       (showLiveOutside && liveOutsideLoading) ||
                       (showInsideOnly && insideOnlyLoading)) && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-950/70 backdrop-blur-sm">
@@ -935,6 +981,17 @@ export default function LiveVisitsPage() {
                         <span className="flex items-center gap-1.5 text-xs text-gray-400">
                           <span className="w-3 h-3 rounded-full bg-blue-400 opacity-80 flex-shrink-0" />
                           Persona única
+                        </span>
+                      </div>
+                    )}
+                    {showLiveInside && (
+                      <div className="flex items-center gap-5 flex-wrap">
+                        <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
+                          En Ubic.:
+                        </span>
+                        <span className="flex items-center gap-1.5 text-xs text-gray-400">
+                          <span className="w-3 h-3 rounded-full bg-emerald-400 opacity-80 flex-shrink-0" />
+                          Persona activa
                         </span>
                       </div>
                     )}

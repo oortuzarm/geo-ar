@@ -52,6 +52,12 @@ export function fetchInsideOnlySessions(
   return apiFetch<ExclusivelyOutsideResponse>(url.toString())
 }
 
+export function fetchLiveInsidePositions(projectId: string): Promise<ExclusivelyOutsideResponse> {
+  return apiFetch<ExclusivelyOutsideResponse>(
+    `${API_BASE}/api/geo_projects/${projectId}/live_inside_positions`,
+  )
+}
+
 export function fetchLiveOutsidePositions(projectId: string): Promise<ExclusivelyOutsideResponse> {
   return apiFetch<ExclusivelyOutsideResponse>(
     `${API_BASE}/api/geo_projects/${projectId}/live_outside_positions`,

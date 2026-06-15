@@ -29,6 +29,9 @@ function subtractDays(n: number): string {
 const periodFmt = new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'short' })
 function formatPeriodLabel(from: string, to: string): string {
   const parse = (iso: string) => new Date(`${iso}T12:00:00`)
+  if (!from && !to) return ''
+  if (!from) return `hasta ${periodFmt.format(parse(to))}`
+  if (!to)   return `desde ${periodFmt.format(parse(from))}`
   return from === to
     ? periodFmt.format(parse(from))
     : `${periodFmt.format(parse(from))} – ${periodFmt.format(parse(to))}`

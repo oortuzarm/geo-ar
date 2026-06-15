@@ -670,9 +670,9 @@ export default function LiveVisitsPage() {
                 <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-400/70 flex-shrink-0 mt-[3px]" />
                   <span>
-                    <span className="font-medium text-gray-400">Actividad Fuera de Áreas</span>
+                    <span className="font-medium text-gray-400">Actividad Dentro y Fuera</span>
                     {' — '}
-                    Interacciones registradas fuera de los GeoPoints configurados. Permite descubrir zonas con actividad que actualmente no están siendo monitoreadas.
+                    Interacciones registradas tanto dentro como fuera de los GeoPoints configurados durante el período. Permite identificar desplazamientos entre ubicaciones monitoreadas y zonas externas.
                   </span>
                 </p>
               )}
@@ -786,7 +786,7 @@ export default function LiveVisitsPage() {
                     {showOutsideAreas && (
                       <div className="flex items-center gap-5 flex-wrap">
                         <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
-                          Fuera de Áreas:
+                          Dentro y Fuera:
                         </span>
                         {[
                           { color: 'bg-blue-300', label: 'Baja'     },

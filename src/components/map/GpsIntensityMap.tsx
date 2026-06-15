@@ -8,6 +8,7 @@ import { getPointCoverImage } from '../../lib/pointImageUtils'
 import IntensityLayer from './IntensityLayer'
 import BaseMapLayer from './BaseMapLayer'
 import HotspotsLayer from '../maps/HotspotsLayer'
+import ExclusivelyOutsideLayer from '../maps/ExclusivelyOutsideLayer'
 import type { GeoPoint } from '../../types'
 import type { HotspotPoint } from '../../services/hotspotApi'
 
@@ -21,9 +22,10 @@ export type { IntensityLevel } from './IntensityLayer'
 // React re-renders. Custom panes with explicit z-indexes guarantee consistent
 // rendering order regardless of React re-renders.
 //
-//   intensityPane    → z-index 410  (base heatmap)
-//   outsideAreasPane → z-index 415  (outside-areas clusters, above intensity)
-//   hotspotsPane     → z-index 420  (hotspot clusters, topmost)
+//   intensityPane          → z-index 410  (base heatmap)
+//   exclusivelyOutsidePane → z-index 413  (individual person markers)
+//   outsideAreasPane       → z-index 415  (outside-areas clusters, above intensity)
+//   hotspotsPane           → z-index 420  (hotspot clusters, topmost)
 
 function CreatePane({ name, zIndex }: { name: string; zIndex: number }) {
   const map = useMap()
@@ -152,21 +154,23 @@ function FitBounds({ points }: { points: GeoPoint[] }) {
 // ── Public component ──────────────────────────────────────────────────────────
 
 export interface GpsIntensityMapProps {
-  points:                GeoPoint[]
-  activeNow?:            Record<string, number>  // pointId → active visitor count; omit to use mock
-  showPoints?:           boolean                 // render pin markers; default true
-  showIntensity?:        boolean                 // render IntensityLayer; default true
-  hotspots?:             HotspotPoint[]          // if provided, renders HotspotsLayer (warm ramp)
-  outsideAreasHotspots?: HotspotPoint[]          // if provided, renders outside-areas layer (blue ramp)
+  points:                       GeoPoint[]
+  activeNow?:                   Record<string, number>        // pointId → active visitor count; omit to use mock
+  showPoints?:                  boolean                       // render pin markers; default true
+  showIntensity?:               boolean                       // render IntensityLayer; default true
+  hotspots?:                    HotspotPoint[]                // if provided, renders HotspotsLayer (warm ramp)
+  outsideAreasHotspots?:        HotspotPoint[]                // if provided, renders outside-areas layer (violet ramp)
+  exclusivelyOutsidePositions?: { lat: number; lng: number }[] // one marker per exclusively-outside person
 }
 
 export default function GpsIntensityMap({
   points,
   activeNow,
-  showPoints           = true,
-  showIntensity        = true,
+  showPoints                 = true,
+  showIntensity              = true,
   hotspots,
   outsideAreasHotspots,
+  exclusivelyOutsidePositions,
 }: GpsIntensityMapProps) {
   const resolvedActiveNow: Record<string, number> = {}
   points.forEach((p) => {
@@ -185,13 +189,17 @@ export default function GpsIntensityMap({
       zoomControl
     >
       <BaseMapLayer styleId="toner" />
-      <CreatePane name="intensityPane"    zIndex={410} />
-      <CreatePane name="outsideAreasPane" zIndex={415} />
-      <CreatePane name="hotspotsPane"     zIndex={420} />
+      <CreatePane name="intensityPane"          zIndex={410} />
+      <CreatePane name="exclusivelyOutsidePane" zIndex={413} />
+      <CreatePane name="outsideAreasPane"       zIndex={415} />
+      <CreatePane name="hotspotsPane"           zIndex={420} />
       <FitBounds points={points} />
       <LocateControl />
       {showIntensity && (
         <IntensityLayer points={points} activeNow={resolvedActiveNow} pane="intensityPane" />
+      )}
+      {exclusivelyOutsidePositions && exclusivelyOutsidePositions.length > 0 && (
+        <ExclusivelyOutsideLayer positions={exclusivelyOutsidePositions} pane="exclusivelyOutsidePane" />
       )}
       {outsideAreasHotspots && outsideAreasHotspots.length > 0 && (
         <HotspotsLayer hotspots={outsideAreasHotspots} pane="outsideAreasPane" variant="cold" />

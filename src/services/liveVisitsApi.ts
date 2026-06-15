@@ -38,6 +38,20 @@ export function fetchLiveVisits(
   return apiFetch<LiveVisitsResponse>(url.toString())
 }
 
+export interface ExclusivelyOutsideResponse {
+  positions: { lat: number; lng: number }[]
+}
+
+export function fetchOutsideSessions(
+  projectId: string,
+  params?: { from?: string; to?: string },
+): Promise<ExclusivelyOutsideResponse> {
+  const url = new URL(`${API_BASE}/api/geo_projects/${projectId}/outside_sessions`)
+  if (params?.from) url.searchParams.set('from', params.from)
+  if (params?.to)   url.searchParams.set('to',   params.to)
+  return apiFetch<ExclusivelyOutsideResponse>(url.toString())
+}
+
 export interface HistoricalIntensityPoint {
   pointId: string   // geo_point UUID — serialized as pointId by the Rails API
   id?:     string   // fallback in case older API versions use id

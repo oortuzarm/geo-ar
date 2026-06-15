@@ -8,7 +8,7 @@ import IntensityModeSelector from '../../components/map/IntensityModeSelector'
 import type { IntensityMode } from '../../components/map/IntensityModeSelector'
 import VisualizationSelector from '../../components/maps/VisualizationSelector'
 import Spinner from '../../components/ui/Spinner'
-import { fetchLiveVisits } from '../../services/liveVisitsApi'
+import { fetchLiveVisits, fetchOutsideSessions } from '../../services/liveVisitsApi'
 import type { LiveVisitsResponse } from '../../services/liveVisitsApi'
 import { fetchProjectAnalyticsByPoint } from '../../lib/analytics'
 import type { PeriodParams, PointAnalytics } from '../../lib/analytics'
@@ -229,22 +229,27 @@ export default function LiveVisitsPage() {
   const [historicalPoints, setHistoricalPoints] = useState<PointAnalytics[] | null>(null)
 
   // ── Layer state ──────────────────────────────────────────────────────────────
-  const [showGpsIntensity, setShowGpsIntensity] = useState(true)
-  const [showHotspots,     setShowHotspots]     = useState(false)
-  const [showOutsideAreas, setShowOutsideAreas] = useState(false)
+  const [showGpsIntensity,      setShowGpsIntensity]      = useState(true)
+  const [showHotspots,          setShowHotspots]          = useState(false)
+  const [showOutsideAreas,      setShowOutsideAreas]      = useState(false)
+  const [showExclusivelyOutside, setShowExclusivelyOutside] = useState(false)
 
   // At least one layer must stay active.
   function handleToggleIntensity() {
-    if (showGpsIntensity && !showHotspots && !showOutsideAreas) return
+    if (showGpsIntensity && !showHotspots && !showOutsideAreas && !showExclusivelyOutside) return
     setShowGpsIntensity(v => !v)
   }
   function handleToggleHotspots() {
-    if (showHotspots && !showGpsIntensity && !showOutsideAreas) return
+    if (showHotspots && !showGpsIntensity && !showOutsideAreas && !showExclusivelyOutside) return
     setShowHotspots(v => !v)
   }
   function handleToggleOutsideAreas() {
-    if (showOutsideAreas && !showGpsIntensity && !showHotspots) return
+    if (showOutsideAreas && !showGpsIntensity && !showHotspots && !showExclusivelyOutside) return
     setShowOutsideAreas(v => !v)
+  }
+  function handleToggleExclusivelyOutside() {
+    if (showExclusivelyOutside && !showGpsIntensity && !showHotspots && !showOutsideAreas) return
+    setShowExclusivelyOutside(v => !v)
   }
 
   // Empty Set = all visible points selected (sentinel for "no filter active").
@@ -252,8 +257,10 @@ export default function LiveVisitsPage() {
   const [hotspots,              setHotspots]              = useState<HotspotPoint[] | null>(null)
   const [hotspotsLoading,       setHotspotsLoading]       = useState(false)
   const [hotspotsError,         setHotspotsError]         = useState(false)
-  const [outsideAreasHotspots,  setOutsideAreasHotspots]  = useState<HotspotPoint[] | null>(null)
-  const [outsideAreasLoading,   setOutsideAreasLoading]   = useState(false)
+  const [outsideAreasHotspots,        setOutsideAreasHotspots]        = useState<HotspotPoint[] | null>(null)
+  const [outsideAreasLoading,         setOutsideAreasLoading]         = useState(false)
+  const [exclusivelyOutsidePositions, setExclusivelyOutsidePositions] = useState<{ lat: number; lng: number }[] | null>(null)
+  const [exclusivelyOutsideLoading,   setExclusivelyOutsideLoading]   = useState(false)
   const [hsDates, setHsDates] = useState<{ from: string; to: string }>(() => ({
     from: subtractDays(6),
     to:   todayISO(),
@@ -388,6 +395,23 @@ export default function LiveVisitsPage() {
 
     return () => { cancelled = true }
   }, [showOutsideAreas, project?.id, intensityMode, hsDates.from, hsDates.to]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Exclusively-outside persons: only fetched in historical mode.
+  useEffect(() => {
+    if (!project?.id || !showExclusivelyOutside || intensityMode !== 'historical') {
+      setExclusivelyOutsidePositions(null)
+      return
+    }
+    let cancelled = false
+    setExclusivelyOutsideLoading(true)
+
+    fetchOutsideSessions(project.id, { from: hsDates.from, to: hsDates.to })
+      .then(res => { if (!cancelled) setExclusivelyOutsidePositions(res.positions) })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setExclusivelyOutsideLoading(false) })
+
+    return () => { cancelled = true }
+  }, [showExclusivelyOutside, project?.id, intensityMode, hsDates.from, hsDates.to]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
@@ -621,6 +645,10 @@ export default function LiveVisitsPage() {
                   onToggleIntensity={handleToggleIntensity}
                   onToggleHotspots={handleToggleHotspots}
                   onToggleOutsideAreas={handleToggleOutsideAreas}
+                  {...(intensityMode === 'historical' ? {
+                    showExclusivelyOutside,
+                    onToggleExclusivelyOutside: handleToggleExclusivelyOutside,
+                  } : {})}
                 />
               </div>
               {editorUrl && (
@@ -640,7 +668,7 @@ export default function LiveVisitsPage() {
           </div>
 
           {/* ── Layer descriptions ───────────────────────────────────────────── */}
-          {(showGpsIntensity || showHotspots || showOutsideAreas) && (
+          {(showGpsIntensity || showHotspots || showOutsideAreas || showExclusivelyOutside) && (
             <div className="flex flex-col gap-1">
               {showGpsIntensity && (
                 <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
@@ -673,6 +701,16 @@ export default function LiveVisitsPage() {
                     <span className="font-medium text-gray-400">Actividad Dentro y Fuera</span>
                     {' — '}
                     Interacciones registradas tanto dentro como fuera de los GeoPoints configurados durante el período. Permite identificar desplazamientos entre ubicaciones monitoreadas y zonas externas.
+                  </span>
+                </p>
+              )}
+              {showExclusivelyOutside && (
+                <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400/70 flex-shrink-0 mt-[3px]" />
+                  <span>
+                    <span className="font-medium text-gray-400">Personas Exclusivamente Fuera</span>
+                    {' — '}
+                    Personas detectadas durante el período que nunca ingresaron a ninguna ubicación. Cada marcador representa una persona única.
                   </span>
                 </p>
               )}
@@ -721,11 +759,13 @@ export default function LiveVisitsPage() {
                       showIntensity={showGpsIntensity}
                       hotspots={showHotspots && hotspots ? hotspots : undefined}
                       outsideAreasHotspots={showOutsideAreas && outsideAreasHotspots ? outsideAreasHotspots : undefined}
+                      exclusivelyOutsidePositions={showExclusivelyOutside && exclusivelyOutsidePositions ? exclusivelyOutsidePositions : undefined}
                     />
                     {/* Loading overlay */}
                     {((intensityMode === 'historical' && historicalLoading && showGpsIntensity) ||
                       (showHotspots && hotspotsLoading) ||
-                      (showOutsideAreas && outsideAreasLoading)) && (
+                      (showOutsideAreas && outsideAreasLoading) ||
+                      (showExclusivelyOutside && exclusivelyOutsideLoading)) && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-950/70 backdrop-blur-sm">
                         <Spinner size="lg" />
                       </div>
@@ -799,6 +839,17 @@ export default function LiveVisitsPage() {
                             {label}
                           </span>
                         ))}
+                      </div>
+                    )}
+                    {showExclusivelyOutside && (
+                      <div className="flex items-center gap-5 flex-wrap">
+                        <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
+                          Excl. Fuera:
+                        </span>
+                        <span className="flex items-center gap-1.5 text-xs text-gray-400">
+                          <span className="w-3 h-3 rounded-full bg-blue-400 opacity-80 flex-shrink-0" />
+                          Persona única
+                        </span>
                       </div>
                     )}
                   </div>

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { MetricTooltip } from '../../components/MetricTooltip'
 import { useSearchParams } from 'react-router-dom'
 import {
   fetchProjectAnalytics,
@@ -24,7 +23,7 @@ import PlanGate from '../../components/ui/PlanGate'
 
 type InsightTag = 'positive'  | 'warning'    | 'info'    | 'neutral'
 type Period     = '7d' | '30d' | '90d' | 'custom'
-type Section    = 'resumen' | 'ubicaciones' | 'conversion' | 'destinos'
+type Section    = 'resumen' | 'ubicaciones' | 'interacciones' | 'destinos'
 
 interface Insight { id: string; tag: InsightTag; text: string }
 
@@ -88,23 +87,24 @@ function deriveInsights(summary: ProjectAnalytics, byPoint: PointAnalytics[]): I
     })
   }
 
-  // Best conversion point
+  // Most active point by clicks
   const withClicks = byPoint.filter(p => p.clicks > 0)
   if (withClicks.length > 0) {
-    const best = [...withClicks].sort((a, b) => b.conversion - a.conversion)[0]
+    const best = [...withClicks].sort((a, b) => b.clicks - a.clicks)[0]
+    const n = best.clicks
     pool.push({
-      id: 'best-conv', tag: 'positive',
-      text: `"${best.pointName}" tiene la mejor conversión del proyecto — ${best.conversion}% de entradas activadas.`,
+      id: 'most-active', tag: 'positive',
+      text: `"${best.pointName}" es el punto más activo — generó ${n} interacción${n !== 1 ? 'es' : ''} digital${n !== 1 ? 'es' : ''}.`,
     })
   }
 
-  // Overall conversion quality
-  if (total > 0) {
-    const q = summary.conversion >= 30 ? 'excelente' : summary.conversion >= 15 ? 'saludable' : 'baja'
+  // Active points ratio
+  if (summary.clicks > 0 && byPoint.length > 1) {
+    const activeCount = withClicks.length
+    const pctActive   = Math.round((activeCount / byPoint.length) * 100)
     pool.push({
-      id: 'overall-conv',
-      tag: summary.conversion >= 15 ? 'positive' : 'warning',
-      text: `Conversión general ${q} — el ${summary.conversion}% de las entradas al radio resultaron en un clic.`,
+      id: 'active-ratio', tag: 'info',
+      text: `${activeCount} de ${byPoint.length} puntos (${pctActive}%) generaron interacciones digitales en el período.`,
     })
   }
 
@@ -670,19 +670,10 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
                           <div className="flex items-center justify-between gap-5">
                             <span className="text-gray-500 flex items-center gap-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                              Clics
+                              Interacciones
                             </span>
                             <span className="font-semibold text-gray-200 tabular-nums">
                               {pt.clicks}
-                            </span>
-                          </div>
-                          <div className="pt-1 mt-0.5 border-t border-gray-700 flex items-center justify-between gap-5">
-                            <span className="text-gray-500">Conversión</span>
-                            <span className={`font-bold ${
-                              pt.conversion >= 30 ? 'text-emerald-400' :
-                              pt.conversion >= 15 ? 'text-amber-400'   : 'text-gray-400'
-                            }`}>
-                              {pt.conversion}%
                             </span>
                           </div>
                         </div>
@@ -848,10 +839,10 @@ function PeriodSelector({
 // ── Analytics nav ─────────────────────────────────────────────────────────────
 
 const ANALYTICS_SECTIONS: { id: Section; label: string }[] = [
-  { id: 'resumen',     label: 'Resumen'     },
-  { id: 'ubicaciones', label: 'Ubicaciones' },
-  { id: 'conversion',  label: 'Conversión'  },
-  { id: 'destinos',    label: 'Destinos'    },
+  { id: 'resumen',        label: 'Resumen'       },
+  { id: 'ubicaciones',    label: 'Ubicaciones'   },
+  { id: 'interacciones',  label: 'Interacciones' },
+  { id: 'destinos',       label: 'Destinos'      },
 ]
 
 function AnalyticsNav({ value, onChange }: { value: Section; onChange: (s: Section) => void }) {
@@ -918,26 +909,22 @@ function UbicacionesSection({
         {/* Column headers — desktop only */}
         <div className="hidden sm:grid gap-4 px-5 sm:px-6 py-2.5 border-b border-white/[0.04]
                         text-[10px] text-gray-600 font-medium uppercase tracking-wider"
-          style={{ gridTemplateColumns: '1fr 80px 80px 80px 80px' }}>
+          style={{ gridTemplateColumns: '1fr 80px 80px 80px' }}>
           <span>Ubicación</span>
           <span className="text-right">Entradas</span>
-          <span className="text-right">Clics</span>
-          <span className="text-right">Conversión</span>
+          <span className="text-right">Interacciones</span>
           <span className="text-right">Participación</span>
         </div>
 
         <div className="divide-y divide-white/[0.04]">
           {sorted.map((pt, i) => {
-            const pct       = total > 0 ? Math.round((pt.radiusEntries / total) * 100) : 0
-            const convColor = pt.conversion >= 30 ? 'text-emerald-400'
-                            : pt.conversion >= 15 ? 'text-amber-400'
-                            : 'text-gray-500'
+            const pct = total > 0 ? Math.round((pt.radiusEntries / total) * 100) : 0
             return (
               <div
                 key={pt.pointId}
                 className="flex sm:grid gap-4 items-center px-5 sm:px-6 py-4
                            hover:bg-white/[0.02] transition-colors"
-                style={{ gridTemplateColumns: '1fr 80px 80px 80px 80px' }}
+                style={{ gridTemplateColumns: '1fr 80px 80px 80px' }}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="text-xs text-gray-700 w-4 text-right flex-shrink-0 tabular-nums">{i + 1}</span>
@@ -945,12 +932,11 @@ function UbicacionesSection({
                 </div>
                 <span className="hidden sm:block text-sm tabular-nums text-gray-400 text-right">{pt.radiusEntries}</span>
                 <span className="hidden sm:block text-sm tabular-nums text-gray-400 text-right">{pt.clicks}</span>
-                <span className={`hidden sm:block text-sm tabular-nums font-semibold text-right ${convColor}`}>{pt.conversion}%</span>
                 <span className="hidden sm:block text-sm tabular-nums text-gray-300 font-medium text-right">{pct}%</span>
                 {/* Mobile compact */}
                 <div className="sm:hidden flex items-center gap-2 text-xs flex-shrink-0 ml-auto">
                   <span className="text-gray-500">{pt.radiusEntries} ent.</span>
-                  <span className={`font-semibold ${convColor}`}>{pt.conversion}%</span>
+                  <span className="text-gray-400">{pt.clicks} int.</span>
                   <span className="text-gray-400">{pct}%</span>
                 </div>
               </div>
@@ -962,149 +948,172 @@ function UbicacionesSection({
   )
 }
 
-// ── Funnel step ───────────────────────────────────────────────────────────────
+// ── Interacciones section ─────────────────────────────────────────────────────
 
-function FunnelStep({
-  label, count, pct, mounted, accent = false,
-}: { label: string; count: number; pct: number; mounted: boolean; accent?: boolean }) {
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <span className={`text-sm ${accent ? 'text-gray-200 font-medium' : 'text-gray-400'}`}>{label}</span>
-        <div className="flex items-baseline gap-2">
-          <span className={`text-xl font-bold tabular-nums ${accent ? 'text-brand-300' : 'text-gray-100'}`}>
-            {count}
-          </span>
-          <span className="text-xs text-gray-600 tabular-nums w-9 text-right">{pct}%</span>
-        </div>
-      </div>
-      <div className="h-2.5 bg-gray-800 rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full ${
-            accent ? 'bg-gradient-to-r from-brand-600 to-brand-400' : 'bg-gray-600'
-          }`}
-          style={{
-            width: mounted ? `${Math.max(pct, count > 0 ? 2 : 0)}%` : '0%',
-            transition: 'width 0.65s cubic-bezier(0.4, 0, 0.2, 1) 120ms',
-          }}
-        />
-      </div>
-    </div>
-  )
-}
-
-// ── Conversion section ────────────────────────────────────────────────────────
-
-function ConversionSection({
-  summary,
-  convQuality,
+function InteraccionesSection({
+  projectId,
+  pointId,
   pointFilter,
+  params,
 }: {
-  summary: ProjectAnalytics
-  convQuality: string
+  projectId:   string
+  pointId?:    string
   pointFilter: PointAnalytics | null
+  params?:     PeriodParams
 }) {
+  const [data,    setData]    = useState<DestinationsData | null | undefined>(undefined)
+  const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
+
   useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 140)
-    return () => clearTimeout(t)
-  }, [])
+    setLoading(true); setMounted(false)
+    fetchProjectDestinations(projectId, pointId, params)
+      .then(setData)
+      .catch(() => setData(null))
+      .finally(() => setLoading(false))
+  }, [projectId, pointId, params?.from, params?.to])
 
-  const convPct = summary.radiusEntries > 0
-    ? Math.round((summary.clicks / summary.radiusEntries) * 100)
-    : 0
-  const dropPct = 100 - convPct
+  useEffect(() => {
+    if (!loading) {
+      const t = setTimeout(() => setMounted(true), 120)
+      return () => clearTimeout(t)
+    }
+  }, [loading])
 
-  const qualityColor = summary.conversion >= 30 ? 'text-emerald-400'
-                     : summary.conversion >= 15 ? 'text-amber-400'
-                     : 'text-gray-500'
+  const hasContextual = (data?.contextualClicks ?? 0) > 0
+  const topCat        = data?.byCategory[0]
+  const topTyp        = data?.byContentType[0]
 
   return (
     <div className="space-y-5 animate-fade-in">
       {pointFilter && (
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0" />
-          Mostrando datos para: <span className="text-brand-300 font-medium">{pointFilter.pointName}</span>
+          Mostrando datos para:{' '}
+          <span className="text-brand-300 font-medium">{pointFilter.pointName}</span>
         </div>
       )}
 
-      {/* ── Embudo ──────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-white/[0.07] bg-gray-900/70 px-5 sm:px-6 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-sm font-semibold text-gray-200">Embudo de conversión</h3>
-          <MetricTooltip content="Porcentaje de usuarios que pasan de entrar al radio de activación a hacer clic en la experiencia." />
-        </div>
-
-        <div className="space-y-4">
-          <FunnelStep
-            label="Entradas"
-            count={summary.radiusEntries}
-            pct={100}
-            mounted={mounted}
-          />
-
-          {/* Drop-off connector */}
-          <div className="flex items-center gap-3 py-0.5 pl-1">
-            <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
-              <div className="w-px h-2.5 bg-gray-700" />
-              <div className="w-px h-2.5 bg-gray-700" />
-            </div>
-            {summary.radiusEntries > 0 && dropPct > 0 && (
-              <span className="text-xs text-gray-600 tabular-nums">
-                {dropPct}% no continuó
-              </span>
-            )}
+      {loading ? (
+        <PageSkeleton />
+      ) : (
+        <>
+          {/* ── KPI cards ─────────────────────────────────────────── */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <KPICard
+              label="Interacciones"
+              value={fmtN(data?.totalClicks ?? 0)}
+              sub="acciones digitales generadas por el espacio físico"
+              accent
+            />
+            <KPICard
+              label="Tipo más frecuente"
+              value={topCat ? (CATEGORY_LABELS[topCat.category] ?? topCat.category) : '—'}
+              sub={topCat ? `${topCat.clicks} acciones · ${topCat.share}%` : 'sin datos aún'}
+              compact
+            />
           </div>
 
-          <FunnelStep
-            label="Clics"
-            count={summary.clicks}
-            pct={convPct}
-            mounted={mounted}
-            accent
-          />
-        </div>
-
-        {/* Conversion rate summary */}
-        <div className="mt-6 pt-5 border-t border-white/[0.06] flex items-center justify-between">
-          <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">Conversión</span>
-          <div className="flex items-baseline gap-2">
-            <span className={`text-2xl font-bold tabular-nums ${qualityColor}`}>
-              {summary.conversion}%
-            </span>
-            {convQuality !== '—' && (
-              <span className="text-xs text-gray-600">{convQuality}</span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Referencia de calidad ───────────────────────────────────── */}
-      <div className="rounded-2xl border border-white/[0.07] bg-gray-900/70 px-5 sm:px-6 py-5">
-        <h3 className="text-sm font-semibold text-gray-200 mb-4">¿Qué significa esta tasa?</h3>
-        <div className="space-y-1.5">
-          {[
-            { range: '≥ 30%', label: 'Excelente',  color: 'bg-emerald-500', active: summary.conversion >= 30 },
-            { range: '15–29%', label: 'Saludable', color: 'bg-amber-500',   active: summary.conversion >= 15 && summary.conversion < 30 },
-            { range: '< 15%',  label: 'Mejorable', color: 'bg-gray-600',    active: summary.conversion < 15 && summary.radiusEntries > 5 },
-          ].map(tier => (
-            <div
-              key={tier.label}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${
-                tier.active ? 'bg-white/[0.04]' : ''
-              }`}
-            >
-              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${tier.color} ${tier.active ? 'opacity-100' : 'opacity-25'}`} />
-              <span className={`text-sm flex-1 ${tier.active ? 'text-gray-200 font-medium' : 'text-gray-600'}`}>
-                {tier.label}
-              </span>
-              <span className={`text-xs tabular-nums ${tier.active ? 'text-gray-400' : 'text-gray-700'}`}>
-                {tier.range}
-              </span>
+          {!hasContextual ? (
+            /* ── Empty state ──────────────────────────────────────── */
+            <div className="rounded-2xl border border-white/[0.06] bg-gray-900/40 px-6 py-12
+                            flex flex-col items-center gap-3 text-center">
+              <p className="text-sm font-semibold text-gray-300">Sin datos de interacciones aún</p>
+              <p className="text-xs text-gray-500 max-w-sm leading-relaxed">
+                {(data?.totalClicks ?? 0) > 0
+                  ? 'Los clics existentes son anteriores al tracking detallado. Los nuevos comenzarán a clasificarse automáticamente.'
+                  : 'Las interacciones digitales aparecerán a medida que los usuarios activen experiencias desde tus ubicaciones.'}
+              </p>
             </div>
-          ))}
-        </div>
-      </div>
+          ) : (
+            <>
+              {/* ── Por tipo de acción ────────────────────────────── */}
+              {data!.byCategory.length > 0 && (
+                <div className="rounded-2xl border border-white/[0.06] bg-gray-900/40 px-5 py-5">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
+                    Por tipo de acción
+                  </p>
+                  <div className="space-y-3">
+                    {data!.byCategory.map((cat, i) => (
+                      <BarRow
+                        key={cat.category}
+                        label={CATEGORY_LABELS[cat.category] ?? cat.category}
+                        value={cat.clicks}
+                        maxValue={data!.byCategory[0].clicks}
+                        displayValue={`${cat.share}%`}
+                        mounted={mounted}
+                        delay={i * 55}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Por tipo de contenido ─────────────────────────── */}
+              {data!.byContentType.length > 0 && (
+                <div className="rounded-2xl border border-white/[0.06] bg-gray-900/40 px-5 py-5">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
+                    Por tipo de contenido
+                  </p>
+                  <div className="space-y-3">
+                    {data!.byContentType.map((ct, i) => (
+                      <BarRow
+                        key={ct.contentType}
+                        label={CONTENT_TYPE_LABELS[ct.contentType] ?? ct.contentType}
+                        value={ct.clicks}
+                        maxValue={data!.byContentType[0].clicks}
+                        displayValue={`${ct.share}%`}
+                        mounted={mounted}
+                        delay={i * 55}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Por ubicación ─────────────────────────────────── */}
+              {data!.byLocation.length > 0 && (
+                <div className="rounded-2xl border border-white/[0.06] bg-gray-900/40 px-5 py-5">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
+                    Interacciones por ubicación
+                  </p>
+                  <div className="space-y-3">
+                    {data!.byLocation.map((loc, i) => (
+                      <BarRow
+                        key={loc.pointId}
+                        label={loc.pointName}
+                        value={loc.totalClicks}
+                        maxValue={data!.byLocation[0].totalClicks}
+                        displayValue={String(loc.totalClicks)}
+                        mounted={mounted}
+                        delay={i * 55}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Insights ──────────────────────────────────────── */}
+              {(topCat || topTyp) && (
+                <div className="rounded-2xl border border-white/[0.06] bg-gray-900/40 px-5 py-5">
+                  <div className="space-y-2">
+                    {topCat && (
+                      <WidgetInsight
+                        text={`La acción más frecuente fue "${CATEGORY_LABELS[topCat.category] ?? topCat.category}" · representa el ${topCat.share}% de las interacciones.`}
+                      />
+                    )}
+                    {topTyp && (
+                      <WidgetInsight
+                        text={`El contenido de tipo ${CONTENT_TYPE_LABELS[topTyp.contentType] ?? topTyp.contentType} generó ${topTyp.clicks} interacción${topTyp.clicks !== 1 ? 'es' : ''}.`}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </>
+      )}
     </div>
   )
 }
@@ -1435,12 +1444,7 @@ export default function MetricsPage() {
     setSearchParams({})
   }
 
-  const convQuality = displaySummary
-    ? displaySummary.conversion >= 30 ? 'Excelente'
-    : displaySummary.conversion >= 15 ? 'Saludable'
-    : displaySummary.radiusEntries > 5 ? 'Mejorable'
-    : '—'
-    : ''
+  const activePoints = byPoint ? byPoint.filter(p => p.clicks > 0).length : null
 
   if (!canUseAnalytics) {
     return (
@@ -1502,7 +1506,7 @@ export default function MetricsPage() {
           </div>
         )}
 
-        {/* ── Secciones que no requieren datos ──────────────────────────── */}
+        {/* ── Secciones con carga propia ─────────────────────────────────── */}
 
         {section === 'destinos' && (
           selectedId ? (
@@ -1519,9 +1523,24 @@ export default function MetricsPage() {
           )
         )}
 
-        {/* ── Secciones que requieren datos ─────────────────────────────── */}
+        {section === 'interacciones' && (
+          selectedId ? (
+            <InteraccionesSection
+              projectId={selectedId}
+              pointId={pointId || undefined}
+              pointFilter={pointFilter}
+              params={periodParams}
+            />
+          ) : (
+            <div className="flex items-center justify-center py-20">
+              <p className="text-sm text-gray-500">Selecciona un proyecto para ver interacciones.</p>
+            </div>
+          )
+        )}
 
-        {['resumen', 'ubicaciones', 'conversion'].includes(section) && (
+        {/* ── Secciones que requieren datos del resumen ──────────────────── */}
+
+        {['resumen', 'ubicaciones'].includes(section) && (
           <>
             {/* Loading */}
             {(workspaceLoading || dataLoading) && <PageSkeleton />}
@@ -1574,27 +1593,29 @@ export default function MetricsPage() {
                     )}
 
                     {/* KPI cards */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${!pointFilter ? 'sm:grid-cols-3' : ''}`}>
                       <KPICard
                         label="Entradas"
                         value={displaySummary!.radiusEntries}
-                        sub="veces que un usuario entró al área de activación"
+                        sub="exposición geográfica al radio de activación"
                       />
                       <KPICard
-                        label="Clics"
+                        label="Acciones digitales"
                         value={displaySummary!.clicks}
-                        sub='activaciones del botón "Ir a experiencia"'
-                      />
-                      <KPICard
-                        label="Conversión"
-                        value={`${displaySummary!.conversion}%`}
-                        sub={`${convQuality} · entrada → clic`}
+                        sub="interacciones generadas por el espacio físico"
                         accent
-                        className="col-span-2 sm:col-span-1"
                       />
+                      {!pointFilter && activePoints !== null && (
+                        <KPICard
+                          label="Puntos activos"
+                          value={activePoints}
+                          sub={`de ${byPoint!.length} ubicación${byPoint!.length !== 1 ? 'es' : ''} generaron interacciones`}
+                          className="col-span-2 sm:col-span-1"
+                        />
+                      )}
                     </div>
 
-                    {/* Entradas vs Conversiones — full-width chart */}
+                    {/* Entradas vs Acciones digitales — full-width chart */}
                     <div className="rounded-2xl border border-white/[0.07] bg-gray-900/70 px-5 pt-5 pb-4 min-h-[220px]">
                       {displayByPoint && displayByPoint.length > 0
                         ? <RightChart byPoint={displayByPoint} />
@@ -1631,15 +1652,6 @@ export default function MetricsPage() {
                   <UbicacionesSection
                     byPoint={displayByPoint ?? []}
                     summary={displaySummary!}
-                    pointFilter={pointFilter}
-                  />
-                )}
-
-                {/* ── Conversión ──────────────────────────────── */}
-                {section === 'conversion' && (
-                  <ConversionSection
-                    summary={displaySummary!}
-                    convQuality={convQuality}
                     pointFilter={pointFilter}
                   />
                 )}

@@ -31,13 +31,80 @@ import PublicPointPreviewCard from './PublicPointPreviewCard'
 import PublicPointDetailSheet from './PublicPointDetailSheet'
 import Spinner from '../../components/ui/Spinner'
 import ToastContainer from '../../components/ui/Toast'
-import type { GeoProject, GeoPoint, LocationStatus, UserLocation, AccessResponse } from '../../types'
+import type { GeoProject, GeoPoint, LocationStatus, UserLocation, AccessResponse, PointCategory } from '../../types'
 import GeoPointLanding, { type ValidationState } from '../../components/public/GeoPointLanding'
 import { markPointUnlocked } from '../../lib/unlockedPoints'
 import { hasPointContent }   from '../../lib/pointContent'
 
 /** Minimum distance in meters the user must move before recalculating the route */
 const ROUTE_RECALC_THRESHOLD_M = 15
+
+// ── Point category labels (Spanish) ──────────────────────────────────────────
+
+const POINT_CATEGORY_LABELS: Record<PointCategory, string> = {
+  gastronomy:    'Gastronomía',
+  retail:        'Comercio',
+  health:        'Salud',
+  tourism:       'Turismo',
+  culture:       'Cultura',
+  education:     'Educación',
+  services:      'Servicios',
+  events:        'Eventos',
+  entertainment: 'Entretenimiento',
+  transport:     'Transporte',
+  accommodation: 'Alojamiento',
+  sport:         'Deporte',
+  real_estate:   'Inmuebles',
+  corporate:     'Corporativo',
+  other:         'Otro',
+}
+
+// ── Category filter chips ─────────────────────────────────────────────────────
+
+function CategoryChips({
+  categories,
+  selected,
+  onSelect,
+}: {
+  categories: PointCategory[]
+  selected:   PointCategory | null
+  onSelect:   (cat: PointCategory | null) => void
+}) {
+  return (
+    <div
+      className="flex gap-1.5 overflow-x-auto"
+      style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+    >
+      <button
+        onClick={() => onSelect(null)}
+        className={[
+          'flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium',
+          'transition-all duration-150 active:scale-95',
+          selected === null
+            ? 'bg-gray-900 text-white shadow-sm'
+            : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+        ].join(' ')}
+      >
+        Todas
+      </button>
+      {categories.map(cat => (
+        <button
+          key={cat}
+          onClick={() => onSelect(cat)}
+          className={[
+            'flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium',
+            'transition-all duration-150 active:scale-95',
+            selected === cat
+              ? 'bg-gray-900 text-white shadow-sm'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+          ].join(' ')}
+        >
+          {POINT_CATEGORY_LABELS[cat]}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // NOTE: Dynamic meta tags work for Web Share API previews inside the browser.
@@ -919,6 +986,23 @@ export default function PublicPage({
   // 'available' → show only points currently accessible (schedule + quota pass)
   const [locationFilter] = useState<LocationFilter>('all')
   const [distanceSortOrder, setDistanceSortOrder] = useState<'asc' | 'desc'>('asc')
+  // null = "Todas" (no category filter applied)
+  const [categoryFilter, setCategoryFilter] = useState<PointCategory | null>(null)
+
+  // Categories present in this project's points, sorted alphabetically.
+  // Computed once when points load; never re-sorted on each render.
+  const availableCategories = useMemo(() => {
+    const seen = new Set<PointCategory>()
+    for (const p of points) {
+      if (p.pointCategory) seen.add(p.pointCategory)
+    }
+    return [...seen].sort((a, b) =>
+      POINT_CATEGORY_LABELS[a].localeCompare(POINT_CATEGORY_LABELS[b], 'es')
+    )
+  }, [points])
+
+  // Only render the filter when the project has points from multiple categories.
+  const showCategoryFilter = availableCategories.length > 1
 
   // ── Ghost-click suppression ───────────────────────────────────────────────
   // Mobile browsers fire a synthetic click ~300ms after touchend.  When the
@@ -1992,21 +2076,33 @@ export default function PublicPage({
   }, [userLocation, landingValidation.phase, points]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Filter-derived point sets ──────────────────────────────────────────────
-  // `points`          = all admin-enabled points (the "ubicaciones" universe)
-  // `availablePoints` = subset currently accessible by schedule + quota rules
-  // `displayedPoints` = what actually renders on the map and in the list
-  const availablePoints = points.filter((p) => isPointAvailableNow(p, liveVisitCounts))
-  const displayedPoints = locationFilter === 'available' ? availablePoints : points
+  // `points`                 = all admin-enabled points (the "ubicaciones" universe)
+  // `availablePoints`        = subset currently accessible by schedule + quota rules
+  // `displayedPoints`        = after locationFilter ('all' | 'available')
+  // `categoryFilteredPoints` = after categoryFilter (null = Todas)
+  const availablePoints        = points.filter((p) => isPointAvailableNow(p, liveVisitCounts))
+  const displayedPoints        = locationFilter === 'available' ? availablePoints : points
+  const categoryFilteredPoints = categoryFilter
+    ? displayedPoints.filter((p) => p.pointCategory === categoryFilter)
+    : displayedPoints
 
   const sortedDisplayedPoints = useMemo(() => {
-    if (!userLocation) return displayedPoints
-    return [...displayedPoints].sort((a, b) => {
+    if (!userLocation) return categoryFilteredPoints
+    return [...categoryFilteredPoints].sort((a, b) => {
       const da = distances[a.id]
       const db = distances[b.id]
       if (da == null || db == null) return 0
       return distanceSortOrder === 'asc' ? da - db : db - da
     })
-  }, [displayedPoints, distances, userLocation, distanceSortOrder])
+  }, [categoryFilteredPoints, distances, userLocation, distanceSortOrder])
+
+  // Clear selected point when the category filter changes so a point from a
+  // different category does not remain highlighted on the map or in sheets.
+  useEffect(() => {
+    setSelectedPointId(null)
+    setMobileState('clean')
+    setAccessError(null)
+  }, [categoryFilter]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Early returns ──────────────────────────────────────────────────────────
 
@@ -2081,9 +2177,11 @@ export default function PublicPage({
     if (sortedDisplayedPoints.length === 0) {
       return (
         <p className="text-sm text-gray-500 text-center py-6 px-4">
-          {locationFilter === 'available'
-            ? 'No hay experiencias activas en este momento.'
-            : 'Este proyecto no tiene puntos activos aún.'}
+          {categoryFilter
+            ? `No hay ubicaciones en la categoría "${POINT_CATEGORY_LABELS[categoryFilter]}".`
+            : locationFilter === 'available'
+              ? 'No hay experiencias activas en este momento.'
+              : 'Este proyecto no tiene puntos activos aún.'}
         </p>
       )
     }
@@ -2143,7 +2241,7 @@ export default function PublicPage({
             <UserLocationMarker lat={userLocation.latitude} lng={userLocation.longitude} />
           )}
           <MapClusterLayer
-            points={displayedPoints}
+            points={categoryFilteredPoints}
             selectedPointId={selectedPointId}
             onPointClick={handlePointClick}
           />
@@ -2391,6 +2489,17 @@ export default function PublicPage({
             </div>
           </div>
 
+          {/* Category chips — only when project has multiple categories */}
+          {showCategoryFilter && (
+            <div className="flex-shrink-0 px-4 pb-2 pt-0.5">
+              <CategoryChips
+                categories={availableCategories}
+                selected={categoryFilter}
+                onSelect={setCategoryFilter}
+              />
+            </div>
+          )}
+
           {/* Gesture capture layer — non-scrolling wrapper that owns the touch
               listeners. Keeping this separate from the scroll container prevents
               the browser from entering "scroll mode" before preventDefault fires.
@@ -2583,6 +2692,16 @@ export default function PublicPage({
             </>
           )}
         </div>
+
+        {showCategoryFilter && (
+          <div className="mb-3">
+            <CategoryChips
+              categories={availableCategories}
+              selected={categoryFilter}
+              onSelect={setCategoryFilter}
+            />
+          </div>
+        )}
 
         <div className="space-y-2 pb-2">
           {renderPoints(cardRefs)}

@@ -215,6 +215,13 @@ function PointFilterDropdown({
   )
 }
 
+// ── Feature flags ─────────────────────────────────────────────────────────────
+//
+// Enable when ProjectLiveVisit stores multiple GPS positions per session so a
+// single session can hold coordinates both inside and outside a boundary.
+// Until then, liveVisitsMixed is always 0 and the layer would always be empty.
+const LIVE_MIXED_ENABLED = false
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function LiveVisitsPage() {
@@ -774,8 +781,7 @@ export default function LiveVisitsPage() {
                   {...(intensityMode === 'live' ? {
                     showLiveInside,
                     onToggleLiveInside: handleToggleLiveInside,
-                    showLiveMixed,
-                    onToggleLiveMixed: handleToggleLiveMixed,
+                    ...(LIVE_MIXED_ENABLED ? { showLiveMixed, onToggleLiveMixed: handleToggleLiveMixed } : {}),
                     showLiveOutside,
                     onToggleLiveOutside: handleToggleLiveOutside,
                   } : {})}

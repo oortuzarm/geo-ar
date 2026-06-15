@@ -9,15 +9,18 @@ interface Props {
   onToggleExclusivelyOutside?:    () => void
   showLiveOutside?:               boolean
   onToggleLiveOutside?:           () => void
+  showInsideOnly?:                boolean
+  onToggleInsideOnly?:            () => void
 }
 
-function LayerDot({ active, color }: { active: boolean; color: 'amber' | 'orange' | 'violet' | 'blue' }) {
+function LayerDot({ active, color }: { active: boolean; color: 'amber' | 'orange' | 'violet' | 'blue' | 'emerald' }) {
   return (
     <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${
       active
-        ? color === 'amber'  ? 'bg-amber-400'
-        : color === 'orange' ? 'bg-orange-400'
-        : color === 'violet' ? 'bg-violet-400'
+        ? color === 'amber'   ? 'bg-amber-400'
+        : color === 'orange'  ? 'bg-orange-400'
+        : color === 'violet'  ? 'bg-violet-400'
+        : color === 'emerald' ? 'bg-emerald-400'
         : 'bg-blue-400'
         : 'bg-gray-600'
     }`} />
@@ -35,6 +38,8 @@ export default function VisualizationSelector({
   onToggleExclusivelyOutside,
   showLiveOutside,
   onToggleLiveOutside,
+  showInsideOnly,
+  onToggleInsideOnly,
 }: Props) {
   return (
     <div className="inline-flex flex-nowrap min-w-max whitespace-nowrap items-center bg-gray-900 border border-gray-700/60 rounded-xl p-[3px] gap-[2px]">
@@ -132,6 +137,32 @@ export default function VisualizationSelector({
                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
             Fuera de Ubic.
+          </button>
+        </>
+      )}
+
+      {/* Personas Solo en Ubicaciones — solo en modo histórico (prop opcional) */}
+      {onToggleInsideOnly !== undefined && (
+        <>
+          <div className="w-px h-3.5 bg-gray-700/60 flex-shrink-0" />
+          <button
+            type="button"
+            onClick={onToggleInsideOnly}
+            title={(showInsideOnly ?? false) ? 'Desactivar Personas Solo en Ubicaciones' : 'Activar Personas Solo en Ubicaciones'}
+            className={[
+              'flex items-center gap-1.5 px-2.5 h-[26px] rounded-lg text-[11px] font-medium',
+              'transition-all whitespace-nowrap',
+              (showInsideOnly ?? false)
+                ? 'bg-emerald-900/50 border border-emerald-700/40 text-emerald-300 shadow-sm'
+                : 'text-gray-500 hover:text-gray-400',
+            ].join(' ')}
+          >
+            <LayerDot active={showInsideOnly ?? false} color="emerald" />
+            <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Solo Ubic.
           </button>
         </>
       )}

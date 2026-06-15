@@ -9,6 +9,7 @@ import IntensityLayer from './IntensityLayer'
 import BaseMapLayer from './BaseMapLayer'
 import HotspotsLayer from '../maps/HotspotsLayer'
 import ExclusivelyOutsideLayer from '../maps/ExclusivelyOutsideLayer'
+import InsideOnlyLayer from '../maps/InsideOnlyLayer'
 import type { GeoPoint } from '../../types'
 import type { HotspotPoint } from '../../services/hotspotApi'
 
@@ -23,7 +24,8 @@ export type { IntensityLevel } from './IntensityLayer'
 // rendering order regardless of React re-renders.
 //
 //   intensityPane          → z-index 410  (base heatmap)
-//   exclusivelyOutsidePane → z-index 413  (individual person markers)
+//   insideOnlyPane         → z-index 412  (solo-inside person markers)
+//   exclusivelyOutsidePane → z-index 413  (exclusively-outside / live-outside person markers)
 //   outsideAreasPane       → z-index 415  (outside-areas clusters, above intensity)
 //   hotspotsPane           → z-index 420  (hotspot clusters, topmost)
 
@@ -162,6 +164,7 @@ export interface GpsIntensityMapProps {
   outsideAreasHotspots?:        HotspotPoint[]                // if provided, renders outside-areas layer (violet ramp)
   exclusivelyOutsidePositions?: { lat: number; lng: number }[] // one marker per exclusively-outside person (historical)
   liveOutsidePositions?:        { lat: number; lng: number }[] // one marker per active person outside areas (live)
+  insideOnlyPositions?:         { lat: number; lng: number }[] // one marker per person exclusively inside (historical)
 }
 
 export default function GpsIntensityMap({
@@ -173,6 +176,7 @@ export default function GpsIntensityMap({
   outsideAreasHotspots,
   exclusivelyOutsidePositions,
   liveOutsidePositions,
+  insideOnlyPositions,
 }: GpsIntensityMapProps) {
   const resolvedActiveNow: Record<string, number> = {}
   points.forEach((p) => {
@@ -192,6 +196,7 @@ export default function GpsIntensityMap({
     >
       <BaseMapLayer styleId="toner" />
       <CreatePane name="intensityPane"          zIndex={410} />
+      <CreatePane name="insideOnlyPane"         zIndex={412} />
       <CreatePane name="exclusivelyOutsidePane" zIndex={413} />
       <CreatePane name="outsideAreasPane"       zIndex={415} />
       <CreatePane name="hotspotsPane"           zIndex={420} />
@@ -199,6 +204,9 @@ export default function GpsIntensityMap({
       <LocateControl />
       {showIntensity && (
         <IntensityLayer points={points} activeNow={resolvedActiveNow} pane="intensityPane" />
+      )}
+      {insideOnlyPositions && insideOnlyPositions.length > 0 && (
+        <InsideOnlyLayer positions={insideOnlyPositions} pane="insideOnlyPane" />
       )}
       {exclusivelyOutsidePositions && exclusivelyOutsidePositions.length > 0 && (
         <ExclusivelyOutsideLayer positions={exclusivelyOutsidePositions} pane="exclusivelyOutsidePane" />

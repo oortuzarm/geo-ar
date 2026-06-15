@@ -8,7 +8,7 @@ import IntensityModeSelector from '../../components/map/IntensityModeSelector'
 import type { IntensityMode } from '../../components/map/IntensityModeSelector'
 import VisualizationSelector from '../../components/maps/VisualizationSelector'
 import Spinner from '../../components/ui/Spinner'
-import { fetchLiveVisits, fetchOutsideSessions, fetchLiveOutsidePositions } from '../../services/liveVisitsApi'
+import { fetchLiveVisits, fetchOutsideSessions, fetchLiveOutsidePositions, fetchInsideOnlySessions } from '../../services/liveVisitsApi'
 import type { LiveVisitsResponse } from '../../services/liveVisitsApi'
 import { fetchProjectAnalyticsByPoint } from '../../lib/analytics'
 import type { PeriodParams, PointAnalytics } from '../../lib/analytics'
@@ -234,6 +234,7 @@ export default function LiveVisitsPage() {
   const [showOutsideAreas,       setShowOutsideAreas]       = useState(false)
   const [showExclusivelyOutside, setShowExclusivelyOutside] = useState(false)
   const [showLiveOutside,        setShowLiveOutside]        = useState(false)
+  const [showInsideOnly,         setShowInsideOnly]         = useState(false)
 
   // At least one layer must stay active.
   function handleToggleIntensity() {
@@ -256,6 +257,10 @@ export default function LiveVisitsPage() {
     if (showLiveOutside && !showGpsIntensity && !showHotspots && !showOutsideAreas) return
     setShowLiveOutside(v => !v)
   }
+  function handleToggleInsideOnly() {
+    if (showInsideOnly && !showGpsIntensity && !showHotspots && !showOutsideAreas && !showExclusivelyOutside) return
+    setShowInsideOnly(v => !v)
+  }
 
   // Empty Set = all visible points selected (sentinel for "no filter active").
   const [selectedPointIds, setSelectedPointIds] = useState<Set<string>>(new Set())
@@ -268,6 +273,8 @@ export default function LiveVisitsPage() {
   const [exclusivelyOutsideLoading,   setExclusivelyOutsideLoading]   = useState(false)
   const [liveOutsidePositions,        setLiveOutsidePositions]        = useState<{ lat: number; lng: number }[] | null>(null)
   const [liveOutsideLoading,          setLiveOutsideLoading]          = useState(false)
+  const [insideOnlyPositions,         setInsideOnlyPositions]         = useState<{ lat: number; lng: number }[] | null>(null)
+  const [insideOnlyLoading,           setInsideOnlyLoading]           = useState(false)
   const [hsDates, setHsDates] = useState<{ from: string; to: string }>(() => ({
     from: subtractDays(6),
     to:   todayISO(),
@@ -419,6 +426,23 @@ export default function LiveVisitsPage() {
 
     return () => { cancelled = true }
   }, [showExclusivelyOutside, project?.id, intensityMode, hsDates.from, hsDates.to]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Inside-only persons: fetched once per period change, only in historical mode.
+  useEffect(() => {
+    if (!project?.id || !showInsideOnly || intensityMode !== 'historical') {
+      setInsideOnlyPositions(null)
+      return
+    }
+    let cancelled = false
+    setInsideOnlyLoading(true)
+
+    fetchInsideOnlySessions(project.id, { from: hsDates.from, to: hsDates.to })
+      .then(res => { if (!cancelled) setInsideOnlyPositions(res.positions) })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setInsideOnlyLoading(false) })
+
+    return () => { cancelled = true }
+  }, [showInsideOnly, project?.id, intensityMode, hsDates.from, hsDates.to]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Live outside persons: polls every 15 s, only in live mode.
   useEffect(() => {
@@ -682,6 +706,8 @@ export default function LiveVisitsPage() {
                     onToggleLiveOutside: handleToggleLiveOutside,
                   } : {})}
                   {...(intensityMode === 'historical' ? {
+                    showInsideOnly,
+                    onToggleInsideOnly: handleToggleInsideOnly,
                     showExclusivelyOutside,
                     onToggleExclusivelyOutside: handleToggleExclusivelyOutside,
                   } : {})}
@@ -704,7 +730,7 @@ export default function LiveVisitsPage() {
           </div>
 
           {/* ── Layer descriptions ───────────────────────────────────────────── */}
-          {(showGpsIntensity || showHotspots || showOutsideAreas || showExclusivelyOutside || showLiveOutside) && (
+          {(showGpsIntensity || showHotspots || showOutsideAreas || showExclusivelyOutside || showLiveOutside || showInsideOnly) && (
             <div className="flex flex-col gap-1">
               {showGpsIntensity && (
                 <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
@@ -760,6 +786,16 @@ export default function LiveVisitsPage() {
                   </span>
                 </p>
               )}
+              {showInsideOnly && (
+                <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/70 flex-shrink-0 mt-[3px]" />
+                  <span>
+                    <span className="font-medium text-gray-400">Personas Solo en Ubicaciones</span>
+                    {' — '}
+                    Personas detectadas durante el período que permanecieron siempre dentro de las ubicaciones configuradas. Cada marcador representa una persona única.
+                  </span>
+                </p>
+              )}
             </div>
           )}
 
@@ -807,13 +843,15 @@ export default function LiveVisitsPage() {
                       outsideAreasHotspots={showOutsideAreas && outsideAreasHotspots ? outsideAreasHotspots : undefined}
                       exclusivelyOutsidePositions={showExclusivelyOutside && exclusivelyOutsidePositions ? exclusivelyOutsidePositions : undefined}
                       liveOutsidePositions={showLiveOutside && liveOutsidePositions ? liveOutsidePositions : undefined}
+                      insideOnlyPositions={showInsideOnly && insideOnlyPositions ? insideOnlyPositions : undefined}
                     />
                     {/* Loading overlay */}
                     {((intensityMode === 'historical' && historicalLoading && showGpsIntensity) ||
                       (showHotspots && hotspotsLoading) ||
                       (showOutsideAreas && outsideAreasLoading) ||
                       (showExclusivelyOutside && exclusivelyOutsideLoading) ||
-                      (showLiveOutside && liveOutsideLoading)) && (
+                      (showLiveOutside && liveOutsideLoading) ||
+                      (showInsideOnly && insideOnlyLoading)) && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-950/70 backdrop-blur-sm">
                         <Spinner size="lg" />
                       </div>
@@ -908,6 +946,17 @@ export default function LiveVisitsPage() {
                         <span className="flex items-center gap-1.5 text-xs text-gray-400">
                           <span className="w-3 h-3 rounded-full bg-blue-400 opacity-80 flex-shrink-0" />
                           Persona activa
+                        </span>
+                      </div>
+                    )}
+                    {showInsideOnly && (
+                      <div className="flex items-center gap-5 flex-wrap">
+                        <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wide">
+                          Solo Ubic.:
+                        </span>
+                        <span className="flex items-center gap-1.5 text-xs text-gray-400">
+                          <span className="w-3 h-3 rounded-full bg-emerald-400 opacity-80 flex-shrink-0" />
+                          Persona única
                         </span>
                       </div>
                     )}

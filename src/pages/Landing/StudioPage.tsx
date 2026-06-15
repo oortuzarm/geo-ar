@@ -617,7 +617,7 @@ function LiveVisitsSection() {
       <div className="max-w-6xl mx-auto">
 
         <Reveal className="text-center mb-14">
-          <SectionLabel>Live Visits</SectionLabel>
+          <SectionLabel>Inteligencia Espacial</SectionLabel>
           <h2 className="text-3xl sm:text-4xl font-black text-white">
             Visualiza la actividad en tiempo real.
           </h2>

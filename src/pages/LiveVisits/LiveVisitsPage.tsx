@@ -588,7 +588,7 @@ export default function LiveVisitsPage() {
       <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10 hidden md:block">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center gap-3">
           <LiveDot />
-          <h1 className="font-bold text-gray-100">Visitas en Vivo</h1>
+          <h1 className="font-bold text-gray-100">Inteligencia Espacial</h1>
           <span className="hidden sm:inline text-xs text-gray-600">
             Actualización cada 15 s
           </span>
@@ -605,8 +605,8 @@ export default function LiveVisitsPage() {
         <div className="md:hidden flex items-center gap-2.5 pb-2">
           <LiveDot />
           <div className="flex-1">
-            <h1 className="text-lg font-bold text-gray-100">Visitas en Vivo</h1>
-            <p className="text-xs text-gray-500 mt-0.5">Actividad en tiempo real</p>
+            <h1 className="text-lg font-bold text-gray-100">Inteligencia Espacial</h1>
+            <p className="text-xs text-gray-500 mt-0.5">Análisis e inteligencia espacial</p>
           </div>
           <IntensityModeSelector mode={intensityMode} onChange={setIntensityMode} />
         </div>

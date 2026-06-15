@@ -466,7 +466,7 @@ export default function AppShell() {
             className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
           >
             <LiveVisitsIcon />
-            Visitas en Vivo
+            Inteligencia Espacial
           </NavLink>
           <NavLink
             to="/app" end
@@ -597,7 +597,7 @@ export default function AppShell() {
             className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
           >
             <LiveVisitsIcon />
-            Visitas en Vivo
+            Inteligencia Espacial
           </NavLink>
           <NavLink
             to="/app" end

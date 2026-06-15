@@ -1,9 +1,7 @@
 /**
  * GeoPointLanding — shared full-page landing experience for a single GeoPoint.
  *
- * Used by:
- *   • SmartLinkPublicPage (go.ubyca.com)  — validation via validatePublicSmartLink
- *   • PublicPage (/public/:id?point=:id)  — validation via requestPointAccess
+ * Used by PublicPage (/public/:id?point=:id) — validation via requestPointAccess.
  *
  * The parent page owns the validation logic; this component only renders it.
  * ValidationState.unlocked carries an onActivate callback so each page can

@@ -649,7 +649,7 @@ export default function LiveVisitsPage() {
                     <span className="font-medium text-gray-400">Actividad en Ubicaciones</span>
                     {' — '}
                     {intensityMode === 'live'
-                      ? 'Usuarios conectados y activos en este momento.'
+                      ? 'Concentración de actividad GPS dentro de las ubicaciones monitoreadas.'
                       : 'Visualiza dónde se concentró la actividad dentro de las ubicaciones configuradas durante el período.'}
                   </span>
                 </p>

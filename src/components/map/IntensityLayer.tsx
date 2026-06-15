@@ -92,13 +92,13 @@ interface Palette {
 
 const LIVE: Palette = {
   inactive: {
-    fillColor: '#a7f3d0', fillOpacity: 0.08,
-    color: '#6ee7b7', weight: 0.5, opacity: 0.20, interactive: false,
+    fillColor: '#fde68a', fillOpacity: 0.08,
+    color: '#fcd34d', weight: 0.5, opacity: 0.20, interactive: false,
   },
   core: {
-    low:    { fillColor: '#6ee7b7', fillOpacity: 0.18, color: '#34d399', weight: 1.5, opacity: 0.55 },
-    medium: { fillColor: '#34d399', fillOpacity: 0.35, color: '#10b981', weight: 2,   opacity: 0.75 },
-    high:   { fillColor: '#86efac', fillOpacity: 0.55, color: '#4ade80', weight: 2.5, opacity: 0.95 },
+    low:    { fillColor: '#fcd34d', fillOpacity: 0.18, color: '#fbbf24', weight: 1.5, opacity: 0.55 },
+    medium: { fillColor: '#fbbf24', fillOpacity: 0.35, color: '#f59e0b', weight: 2,   opacity: 0.75 },
+    high:   { fillColor: '#fde68a', fillOpacity: 0.55, color: '#fb923c', weight: 2.5, opacity: 0.95 },
   },
 }
 
@@ -109,13 +109,13 @@ const LIVE: Palette = {
 
 const HISTORICAL: Palette = {
   inactive: {
-    fillColor: '#a7f3d0', fillOpacity: 0.06,
-    color: '#6ee7b7', weight: 0.5, opacity: 0.20, interactive: false,
+    fillColor: '#fde68a', fillOpacity: 0.06,
+    color: '#fcd34d', weight: 0.5, opacity: 0.20, interactive: false,
   },
   core: {
-    low:    { fillColor: '#6ee7b7', fillOpacity: 0.22, color: '#34d399', weight: 1.5, opacity: 0.60 },
-    medium: { fillColor: '#34d399', fillOpacity: 0.52, color: '#10b981', weight: 3,   opacity: 0.90 },
-    high:   { fillColor: '#bbf7d0', fillOpacity: 0.88, color: '#22c55e', weight: 5,   opacity: 1.0  },
+    low:    { fillColor: '#fcd34d', fillOpacity: 0.22, color: '#fbbf24', weight: 1.5, opacity: 0.60 },
+    medium: { fillColor: '#fbbf24', fillOpacity: 0.52, color: '#f59e0b', weight: 3,   opacity: 0.90 },
+    high:   { fillColor: '#fef3c7', fillOpacity: 0.88, color: '#f59e0b', weight: 5,   opacity: 1.0  },
   },
 }
 

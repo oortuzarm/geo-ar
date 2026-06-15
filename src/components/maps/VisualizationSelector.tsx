@@ -7,12 +7,12 @@ interface Props {
   onToggleOutsideAreas: () => void
 }
 
-function LayerDot({ active, color }: { active: boolean; color: 'emerald' | 'orange' | 'violet' }) {
+function LayerDot({ active, color }: { active: boolean; color: 'amber' | 'orange' | 'violet' }) {
   return (
     <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${
       active
-        ? color === 'emerald' ? 'bg-emerald-400'
-        : color === 'orange'  ? 'bg-orange-400'
+        ? color === 'amber'  ? 'bg-amber-400'
+        : color === 'orange' ? 'bg-orange-400'
         : 'bg-violet-400'
         : 'bg-gray-600'
     }`} />
@@ -45,11 +45,11 @@ export default function VisualizationSelector({
           'flex items-center gap-1.5 px-2.5 h-[26px] rounded-lg text-[11px] font-medium',
           'transition-all whitespace-nowrap',
           showGpsIntensity
-            ? 'bg-gray-700/80 text-gray-200 shadow-sm'
+            ? 'bg-amber-900/50 border border-amber-700/40 text-amber-300 shadow-sm'
             : 'text-gray-500 hover:text-gray-400',
         ].join(' ')}
       >
-        <LayerDot active={showGpsIntensity} color="emerald" />
+        <LayerDot active={showGpsIntensity} color="amber" />
         <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
             d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m2-2v-4a2 2 0 012-2h2a2 2 0 012 2v4" />

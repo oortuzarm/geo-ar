@@ -98,11 +98,11 @@ function StatTile({
 const INTENSITY_LABEL: Record<IntensityLevel, string> = {
   low: 'Baja', medium: 'Media', high: 'Alta',
 }
-// Legend dot colors mirror the IntensityLayer green ramp.
+// Legend dot colors mirror the IntensityLayer amber ramp.
 const INTENSITY_DOT: Record<IntensityLevel, string> = {
-  low:    'bg-emerald-200',
-  medium: 'bg-emerald-400',
-  high:   'bg-green-400',
+  low:    'bg-amber-200',
+  medium: 'bg-amber-400',
+  high:   'bg-amber-500',
 }
 
 // ── Location filter dropdown ──────────────────────────────────────────────────
@@ -644,7 +644,7 @@ export default function LiveVisitsPage() {
             <div className="flex flex-col gap-1">
               {showGpsIntensity && (
                 <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/70 flex-shrink-0 mt-[3px]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400/70 flex-shrink-0 mt-[3px]" />
                   <span>
                     <span className="font-medium text-gray-400">Actividad en Ubicaciones</span>
                     {' — '}

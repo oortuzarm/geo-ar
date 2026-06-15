@@ -569,32 +569,41 @@ export default function LiveVisitsPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatTile
-              label="Personas en ubicaciones"
-              value={liveData === null ? '—' : (liveData.periodPeopleInsideAreas ?? 0)}
-              valueClass="text-2xl text-emerald-400"
-              hint="Personas que ingresaron al menos una vez a una ubicación durante el período."
-            />
-            <StatTile
-              label="Personas exclusivamente fuera"
-              value={liveData === null ? '—' : (liveData.periodPeopleOutsideAreas ?? 0)}
-              valueClass="text-2xl text-blue-400"
-              hint="Personas detectadas durante el período que nunca ingresaron a ninguna ubicación."
-            />
-            <StatTile
-              label="Personas con presencia dentro y fuera"
-              value={liveData === null ? '—' : (liveData.periodPeopleMixed ?? 0)}
-              valueClass="text-2xl text-violet-400"
-              hint="Personas que estuvieron tanto dentro como fuera de ubicaciones durante el período."
-            />
-            <StatTile
-              label="Personas totales"
-              value={liveData === null ? '—' : (liveData.periodPeopleTotal ?? 0)}
-              valueClass="text-2xl text-gray-100"
-              hint="Total de personas únicas detectadas durante el período."
-            />
-          </div>
+          {(() => {
+            const inside  = liveData?.periodPeopleInsideAreas ?? 0
+            const mixed   = liveData?.periodPeopleMixed       ?? 0
+            const outside = liveData?.periodPeopleOutsideAreas ?? 0
+            const total   = liveData?.periodPeopleTotal        ?? 0
+            const onlyInside = inside - mixed
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <StatTile
+                  label="Personas solo en ubicaciones"
+                  value={liveData === null ? '—' : onlyInside}
+                  valueClass="text-2xl text-emerald-400"
+                  hint="Personas que estuvieron dentro de ubicaciones y nunca fueron detectadas fuera."
+                />
+                <StatTile
+                  label="Personas exclusivamente fuera"
+                  value={liveData === null ? '—' : outside}
+                  valueClass="text-2xl text-blue-400"
+                  hint="Personas detectadas durante el período que nunca ingresaron a ninguna ubicación."
+                />
+                <StatTile
+                  label="Personas dentro y fuera"
+                  value={liveData === null ? '—' : mixed}
+                  valueClass="text-2xl text-violet-400"
+                  hint="Personas que estuvieron tanto dentro como fuera de ubicaciones durante el período."
+                />
+                <StatTile
+                  label="Personas totales"
+                  value={liveData === null ? '—' : total}
+                  valueClass="text-2xl text-gray-100"
+                  hint="Total de personas únicas detectadas durante el período. Igual a la suma de las tres categorías anteriores."
+                />
+              </div>
+            )
+          })()}
         </section>
         )}
 

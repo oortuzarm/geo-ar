@@ -2342,7 +2342,7 @@ export default function PublicPage({
 
         {/* Map style toggle — left on mobile, right on desktop.
             On mobile, the preview badge stacks above the toggle via flex-col. */}
-        <div className="absolute bottom-8 left-4 z-[600] md:left-auto md:right-4 md:z-[400]
+        <div className="absolute bottom-12 md:bottom-8 left-4 z-[600] md:left-auto md:right-4 md:z-[400]
                         flex flex-col items-start gap-2">
           {isTemporaryPreview && (
             <div className="pointer-events-none md:hidden">
@@ -2655,7 +2655,7 @@ export default function PublicPage({
       {sheetState === 'hidden' && mobileState !== 'detail' && (
         <div
           className={`${isEmbed ? '' : 'md:hidden '}absolute right-4 z-[1100]`}
-          style={{ bottom: 'calc(32px + env(safe-area-inset-bottom, 0px))' }}
+          style={{ bottom: 'calc(48px + env(safe-area-inset-bottom, 0px))' }}
         >
           <button
             onClick={() => {

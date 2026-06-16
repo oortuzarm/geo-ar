@@ -570,7 +570,7 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
   const data   = byPoint.slice(0, 8)
   const maxVal = Math.max(...data.flatMap(p => [p.radiusEntries, p.clicks]), 1)
   const LEVELS = 4
-  const BAR_H  = 160
+  const BAR_H  = 240
 
   if (data.length === 0) {
     return (
@@ -1618,7 +1618,7 @@ export default function MetricsPage() {
                     </div>
 
                     {/* Entradas vs Acciones digitales — full-width chart */}
-                    <div className="rounded-2xl border border-white/[0.07] bg-gray-900/70 px-5 pt-5 pb-4 min-h-[220px]">
+                    <div className="rounded-2xl border border-white/[0.07] bg-gray-900/70 px-5 pt-5 pb-4 min-h-[340px]">
                       {displayByPoint && displayByPoint.length > 0
                         ? <RightChart byPoint={displayByPoint} />
                         : (

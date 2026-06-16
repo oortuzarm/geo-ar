@@ -670,7 +670,7 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
                           <div className="flex items-center justify-between gap-5">
                             <span className="text-gray-500 flex items-center gap-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                              Interacciones
+                              Clics en CTA
                             </span>
                             <span className="font-semibold text-gray-200 tabular-nums">
                               {pt.clicks}
@@ -735,8 +735,8 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
 
 // ── KPI card (LookiAR style) ──────────────────────────────────────────────────
 
-function KPICard({ label, value, sub, accent, compact, className = '' }: {
-  label: string; value: string | number; sub?: string; accent?: boolean; compact?: boolean; className?: string
+function KPICard({ label, value, sub, accent, compact, className = '', valueColor }: {
+  label: string; value: string | number; sub?: string; accent?: boolean; compact?: boolean; className?: string; valueColor?: string
 }) {
   return (
     <div className={[
@@ -755,7 +755,7 @@ function KPICard({ label, value, sub, accent, compact, className = '' }: {
         compact
           ? 'text-xl sm:text-2xl leading-snug line-clamp-2 break-words'
           : 'text-3xl sm:text-[2.625rem] tabular-nums leading-none break-all',
-        accent ? 'text-brand-300' : 'text-gray-100',
+        valueColor ?? (accent ? 'text-brand-300' : 'text-gray-100'),
       ].join(' ')}>
         {value}
       </p>
@@ -1598,12 +1598,14 @@ export default function MetricsPage() {
                         label="Entradas"
                         value={displaySummary!.radiusEntries}
                         sub="exposición geográfica al radio de activación"
+                        valueColor="text-brand-400"
                       />
                       <KPICard
                         label="Clics en CTA"
                         value={displaySummary!.clicks}
                         sub="Interacciones con el botón principal del punto."
                         accent
+                        valueColor="text-emerald-400"
                       />
                       {!pointFilter && activePoints !== null && (
                         <KPICard

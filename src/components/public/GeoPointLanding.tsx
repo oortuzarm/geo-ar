@@ -50,11 +50,12 @@ function Spin({ size = 'md' }: { size?: 'sm' | 'md' }) {
 // ── Availability badge ────────────────────────────────────────────────────────
 
 function AvailabilityBadge({
-  validation, blockedReason, isUnlocked,
+  validation, blockedReason, isUnlocked, isSimpleLocationOnly,
 }: {
-  validation:    ValidationState
-  blockedReason?: BlockedReason | null
-  isUnlocked?:   boolean
+  validation:            ValidationState
+  blockedReason?:        BlockedReason | null
+  isUnlocked?:           boolean
+  isSimpleLocationOnly?: boolean
 }) {
   if (isUnlocked && (validation.phase === 'idle' || validation.phase === 'unlocked')) {
     return (
@@ -84,11 +85,17 @@ function AvailabilityBadge({
       }`}>
         {isTemporalBlock
           ? <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
-          : '🔒'}
+          : isSimpleLocationOnly
+            ? <span className="text-sm leading-none">📍</span>
+            : '🔒'}
         <span className={`text-xs font-semibold ${
           isTemporalBlock ? 'text-red-700' : 'text-amber-700'
         }`}>
-          {isTemporalBlock ? 'No disponible' : 'Aún no desbloqueado'}
+          {isTemporalBlock
+            ? 'No disponible'
+            : isSimpleLocationOnly
+              ? 'Acércate para desbloquear'
+              : 'Aún no desbloqueado'}
         </span>
       </span>
     )
@@ -835,6 +842,21 @@ export default function GeoPointLanding({
     selectedPoint.updatedAt,
   )
 
+  // True only when the sole unlock requirement is physical proximity (radius or polygon),
+  // with no schedule, quota, live-visits, or dwell-time rules configured.
+  const isSimpleLocationOnly = useMemo(() => {
+    if (validation.phase !== 'blocked') return false
+    if (!avail || !selectedPoint) return false
+    if (selectedPoint.pointMode === 'informative') return false
+    if (selectedPoint.activationMode !== 'radius' && selectedPoint.activationMode !== 'polygon') return false
+    if (avail.insideArea) return false
+    if (avail.scheduleActive) return false
+    if (avail.quotaActive) return false
+    if (avail.liveVisitsActive) return false
+    if (selectedPoint.requiresDwellTime && selectedPoint.dwellTimeSeconds) return false
+    return true
+  }, [validation.phase, avail, selectedPoint])
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
 
@@ -886,7 +908,7 @@ export default function GeoPointLanding({
         {/* Informative points have no unlock lifecycle — suppress the availability badge and idle prompt. */}
         {selectedPoint?.pointMode !== 'informative' && (
         <div className="px-4 pt-4 pb-1">
-          <AvailabilityBadge validation={validation} blockedReason={avail?.blockedReason} isUnlocked={pointIsUnlocked} />
+          <AvailabilityBadge validation={validation} blockedReason={avail?.blockedReason} isUnlocked={pointIsUnlocked} isSimpleLocationOnly={isSimpleLocationOnly} />
           {validation.phase === 'location_error' && (
             <p className="mt-2 text-sm text-gray-500 leading-relaxed">
               Debes permitir el acceso a tu ubicación para continuar.

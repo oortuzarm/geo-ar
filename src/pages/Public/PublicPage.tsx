@@ -2728,6 +2728,7 @@ export default function PublicPage({
             onViewDetail={handleViewDetail}
             onClose={handleExitSelectedPoint}
             liveVisitsCount={liveVisitCounts[selectedPoint.id]}
+            projectLogoUrl={project?.projectLogoUrl}
           />
         </div>
       )}

@@ -604,11 +604,11 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
       </div>
 
       {/* Chart body */}
-      <div className="flex-1 flex gap-2 min-h-0">
+      <div className="flex-1 flex gap-1.5 min-h-0">
 
         {/* Y-axis labels */}
         <div
-          className="flex flex-col justify-between shrink-0 w-8 text-right"
+          className="flex flex-col justify-between shrink-0 w-6 text-right"
           style={{ paddingBottom: '26px' }}
         >
           {[...Array(LEVELS + 1)].map((_, i) => (
@@ -634,7 +634,7 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
             ))}
 
             {/* Bar columns */}
-            <div className="absolute inset-0 flex items-end gap-1.5">
+            <div className="absolute inset-0 flex items-end gap-1">
               {data.map((pt, i) => {
                 const ePct = (pt.radiusEntries / maxVal) * 100
                 const cPct = (pt.clicks        / maxVal) * 100
@@ -718,7 +718,7 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
           </div>
 
           {/* X labels */}
-          <div className="flex gap-1.5 mt-2 shrink-0" style={{ height: '24px' }}>
+          <div className="flex gap-1 mt-2 shrink-0" style={{ height: '24px' }}>
             {data.map(pt => (
               <div key={pt.pointId} className="flex-1 overflow-hidden">
                 <p className="text-[9px] text-gray-600 truncate text-center leading-tight">

@@ -567,7 +567,7 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
     return () => clearTimeout(t)
   }, [])
 
-  const data   = byPoint.slice(0, 8)
+  const data   = byPoint.slice(0, 5)
   const maxVal = Math.max(...data.flatMap(p => [p.radiusEntries, p.clicks]), 1)
   const LEVELS = 4
   const BAR_H  = 160
@@ -643,7 +643,7 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
                 return (
                   <div
                     key={pt.pointId}
-                    className="flex-1 flex items-end gap-0.5 h-full relative group cursor-default"
+                    className="flex-1 flex items-end gap-1.5 h-full relative group cursor-default"
                     onMouseEnter={() => setHovered(i)}
                     onMouseLeave={() => setHovered(null)}
                   >

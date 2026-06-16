@@ -2167,11 +2167,6 @@ export default function PublicPage({
     return sorted.slice(0, 5)
   }, [points, distances])
 
-  // Set<id> for O(1) availability check inside FeaturedPointCards.
-  const availableIdsSet = useMemo(
-    () => new Set(availablePoints.map((p) => p.id)),
-    [points, liveVisitCounts], // eslint-disable-line react-hooks/exhaustive-deps
-  )
 
   // Clear selected point when any filter changes so stale highlights don't persist.
   useEffect(() => {
@@ -2499,7 +2494,6 @@ export default function PublicPage({
                   <FeaturedPointCards
                     points={featuredPoints}
                     distances={distances}
-                    availableIds={availableIdsSet}
                     selectedPointId={selectedPointId}
                     onCardClick={handlePointClick}
                   />
@@ -2510,7 +2504,6 @@ export default function PublicPage({
               <FeaturedPointCards
                 points={featuredPoints}
                 distances={distances}
-                availableIds={availableIdsSet}
                 selectedPointId={selectedPointId}
                 onCardClick={handlePointClick}
               />

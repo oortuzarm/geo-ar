@@ -26,7 +26,6 @@ function fmtDistance(m: number): string {
 interface Props {
   points:          GeoPoint[]
   distances:       Record<string, number>
-  availableIds:    Set<string>
   selectedPointId: string | null
   onCardClick:     (point: GeoPoint) => void
 }
@@ -34,7 +33,6 @@ interface Props {
 export default function FeaturedPointCards({
   points,
   distances,
-  availableIds,
   selectedPointId,
   onCardClick,
 }: Props) {
@@ -46,12 +44,10 @@ export default function FeaturedPointCards({
       style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
     >
       {points.map((point) => {
-        const thumb        = getPointCoverImage(point)
-        const dist         = distances[point.id]
-        const isAvailable  = availableIds.has(point.id)
-        const isInformative = point.pointMode === 'informative'
-        const isSelected   = selectedPointId === point.id
-        const catLabel     = point.pointCategory ? CATEGORY_LABELS[point.pointCategory] : null
+        const thumb    = getPointCoverImage(point)
+        const dist     = distances[point.id]
+        const isSelected = selectedPointId === point.id
+        const catLabel = point.pointCategory ? CATEGORY_LABELS[point.pointCategory] : null
 
         return (
           <button
@@ -95,20 +91,11 @@ export default function FeaturedPointCards({
                   {catLabel}
                 </span>
               )}
-              <div className="flex items-center gap-1.5 mt-0.5">
-                {/* Status dot */}
-                <span className={[
-                  'w-1.5 h-1.5 rounded-full flex-shrink-0',
-                  isInformative ? 'bg-blue-400'
-                    : isAvailable ? 'bg-emerald-400'
-                    : 'bg-amber-400',
-                ].join(' ')} />
-                {dist != null && (
-                  <span className="text-[11px] text-gray-400 leading-none">
-                    {fmtDistance(dist)}
-                  </span>
-                )}
-              </div>
+              {dist != null && (
+                <span className="text-[11px] text-gray-400 leading-none mt-0.5">
+                  {fmtDistance(dist)}
+                </span>
+              )}
             </div>
           </button>
         )

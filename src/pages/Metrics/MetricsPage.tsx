@@ -567,10 +567,11 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
     return () => clearTimeout(t)
   }, [])
 
-  const data   = byPoint.slice(0, 8)
-  const maxVal = Math.max(...data.flatMap(p => [p.radiusEntries, p.clicks]), 1)
-  const LEVELS = 4
-  const BAR_H  = 160
+  const data        = byPoint
+  const maxVal      = Math.max(...data.flatMap(p => [p.radiusEntries, p.clicks]), 1)
+  const LEVELS      = 4
+  const BAR_H       = 160
+  const POINT_MIN_W = 56
 
   if (data.length === 0) {
     return (
@@ -618,11 +619,12 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
           ))}
         </div>
 
-        {/* Bars + grid */}
-        <div className="flex-1 flex flex-col min-h-0">
+        {/* Bars + grid — horizontally scrollable when many points */}
+        <div className="flex-1 overflow-x-auto overflow-y-visible min-w-0">
+          <div style={{ minWidth: `${data.length * POINT_MIN_W}px`, height: `${BAR_H + 32}px` }}>
 
           {/* Bars area */}
-          <div className="relative flex-1" style={{ height: `${BAR_H}px` }}>
+          <div className="relative" style={{ height: `${BAR_H}px` }}>
 
             {/* Gridlines */}
             {[...Array(LEVELS + 1)].map((_, i) => (
@@ -718,17 +720,19 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
           </div>
 
           {/* X labels */}
-          <div className="flex gap-1 mt-2 shrink-0" style={{ height: '24px' }}>
+          <div className="flex gap-1 mt-2" style={{ height: '24px' }}>
             {data.map(pt => (
-              <div key={pt.pointId} className="flex-1 overflow-hidden">
+              <div key={pt.pointId} className="flex-1 min-w-0 overflow-hidden">
                 <p className="text-[9px] text-gray-600 truncate text-center leading-tight">
                   {pt.pointName.split(' ')[0]}
                 </p>
               </div>
             ))}
           </div>
-        </div>
-      </div>
+
+          </div>{/* end inner scroll content */}
+        </div>{/* end overflow-x-auto */}
+      </div>{/* end chart body */}
     </div>
   )
 }

@@ -540,7 +540,7 @@ function CTAButton({
     return (
       <button
         onClick={validation.onActivate}
-        className="w-full py-4 bg-brand-600 hover:bg-brand-500 text-white font-bold
+        className="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold
                    rounded-2xl text-[15px] transition-all active:scale-[0.98]
                    shadow-lg shadow-brand-900/30"
       >
@@ -556,7 +556,7 @@ function CTAButton({
         onClick={() => { if (!prefersReducedMotion && !shaking) setShaking(true) }}
         onAnimationEnd={(e) => { if (e.animationName === 'lockedShake') setShaking(false) }}
         className={[
-          'w-full py-4 bg-gray-100 text-gray-400 font-bold rounded-2xl text-[15px]',
+          'w-full py-3 bg-gray-100 text-gray-400 font-bold rounded-2xl text-[15px]',
           'border border-gray-200 cursor-not-allowed shadow-[0_1px_3px_rgba(0,0,0,0.06)]',
           prefersReducedMotion ? '' : shaking ? 'animate-locked-shake' : 'animate-locked-pulse',
         ].join(' ')}
@@ -570,7 +570,7 @@ function CTAButton({
     return (
       <button
         onClick={onContinue}
-        className="w-full py-4 bg-brand-600 hover:bg-brand-500 text-white font-bold
+        className="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold
                    rounded-2xl text-[15px] transition-all active:scale-[0.98]"
       >
         Reintentar ubicación
@@ -587,7 +587,7 @@ function CTAButton({
     <button
       onClick={onContinue}
       disabled={busy}
-      className="w-full py-4 bg-brand-600 hover:bg-brand-500 text-white font-bold
+      className="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold
                  rounded-2xl text-[15px] transition-all active:scale-[0.98]
                  disabled:opacity-70 disabled:cursor-not-allowed
                  flex items-center justify-center gap-2.5"
@@ -1217,7 +1217,7 @@ export default function GeoPointLanding({
       {/* ── Sticky CTA bar ── */}
       <div
         className="fixed inset-x-0 bottom-0 z-[1001] bg-white/95 backdrop-blur-md
-                   border-t border-gray-100 px-4 pt-3 space-y-2
+                   border-t border-gray-100 px-4 pt-2 space-y-1.5
                    shadow-[0_-4px_24px_rgba(0,0,0,0.07)]"
         style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}
       >
@@ -1234,7 +1234,7 @@ export default function GeoPointLanding({
         {hasDirections && mapsUrl && !busy && (
           <button
             onClick={() => window.open(mapsUrl, '_blank', 'noopener,noreferrer')}
-            className="w-full py-3 flex items-center justify-center gap-2
+            className="w-full py-2 flex items-center justify-center gap-2
                        rounded-xl text-sm font-semibold text-gray-600
                        bg-gray-50 border border-gray-200
                        hover:bg-gray-100 active:scale-[0.98] transition-all"
@@ -1249,7 +1249,7 @@ export default function GeoPointLanding({
 
         <button
           onClick={() => { window.location.href = project?.id ? `/public/${project.id}` : '/public' }}
-          className="w-full py-2 flex items-center justify-center gap-1.5
+          className="w-full py-1.5 flex items-center justify-center gap-1.5
                      text-sm text-gray-400 hover:text-gray-500 active:scale-[0.98]
                      transition-all"
         >

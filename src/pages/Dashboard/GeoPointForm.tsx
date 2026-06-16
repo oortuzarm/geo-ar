@@ -403,7 +403,7 @@ export default function GeoPointForm({
   const [buttonText,  setButtonText]  = useState(point.buttonText ?? '')
 
   // ── Point mode ────────────────────────────────────────────────────────────
-  const [pointMode, setPointMode] = useState<'informative' | 'unlock'>(point.pointMode ?? 'unlock')
+  const [pointMode, setPointMode] = useState<'informative' | 'unlock'>(point.pointMode ?? 'informative')
 
   // ── Point category ────────────────────────────────────────────────────────
   const [pointCategory, setPointCategory] = useState<PointCategory | undefined>(point.pointCategory)
@@ -843,8 +843,8 @@ export default function GeoPointForm({
           </span>
           <div className="grid grid-cols-2 gap-2">
             {([
-              { value: 'unlock',      label: 'Interactivo',   desc: 'Requiere cumplir reglas de acceso' },
               { value: 'informative', label: 'Informativo',   desc: 'Visible desde cualquier lugar. No requiere desbloqueo.' },
+              { value: 'unlock',      label: 'Interactivo',   desc: 'Requiere cumplir reglas de acceso' },
             ] as { value: 'informative' | 'unlock'; label: string; desc: string }[]).map(({ value, label, desc }) => (
               <button
                 key={value}

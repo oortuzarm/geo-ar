@@ -110,38 +110,38 @@ function CategoryChips({
   )
 }
 
-// ── Mode filter chips ─────────────────────────────────────────────────────────
+// ── Mode filter selector (compact, secondary) ─────────────────────────────────
 
-function ModeChips({
+function ModeSelector({
   selected,
   onSelect,
 }: {
   selected: PointModeFilter
   onSelect: (mode: PointModeFilter) => void
 }) {
-  const chip = (mode: PointModeFilter, label: string) => (
-    <button
-      key={mode}
-      onClick={() => onSelect(mode)}
-      className={[
-        'flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium',
-        'transition-all duration-150 active:scale-95',
-        selected === mode
-          ? 'bg-gray-700 text-white shadow-sm'
-          : 'bg-gray-100 text-gray-500 hover:bg-gray-200',
-      ].join(' ')}
-    >
-      {label}
-    </button>
-  )
   return (
-    <div
-      className="flex gap-1.5 overflow-x-auto"
-      style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
-    >
-      {chip('all',         'Todos')}
-      {chip('interactive', 'Interactivos')}
-      {chip('informative', 'Informativos')}
+    <div className="flex items-center gap-1.5">
+      <span className="text-[11px] font-medium text-gray-400 select-none">Modo:</span>
+      <div className="relative inline-flex items-center">
+        <select
+          value={selected}
+          onChange={(e) => onSelect(e.target.value as PointModeFilter)}
+          className="text-[11px] font-semibold text-gray-600 bg-transparent border-0
+                     appearance-none pl-0 pr-3.5 py-0 cursor-pointer focus:outline-none"
+        >
+          <option value="all">Todos</option>
+          <option value="interactive">Interactivos</option>
+          <option value="informative">Informativos</option>
+        </select>
+        <svg
+          className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-gray-400 pointer-events-none"
+          viewBox="0 0 20 20" fill="currentColor"
+        >
+          <path fillRule="evenodd" clipRule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+          />
+        </svg>
+      </div>
     </div>
   )
 }
@@ -2555,10 +2555,10 @@ export default function PublicPage({
             </div>
           )}
 
-          {/* Mode chips — shown only when the project has both interactive and informative points */}
+          {/* Mode selector — compact, secondary; only when both types exist */}
           {showModeFilter && (
-            <div className={`flex-shrink-0 px-4 pb-2 ${showCategoryFilter ? 'pt-0 border-t border-gray-100' : 'pt-0.5'}`}>
-              <ModeChips selected={pointModeFilter} onSelect={setPointModeFilter} />
+            <div className="flex-shrink-0 px-4 pb-2">
+              <ModeSelector selected={pointModeFilter} onSelect={setPointModeFilter} />
             </div>
           )}
 
@@ -2766,8 +2766,8 @@ export default function PublicPage({
         )}
 
         {showModeFilter && (
-          <div className={`mb-3 ${showCategoryFilter ? 'pt-2 border-t border-gray-100' : ''}`}>
-            <ModeChips selected={pointModeFilter} onSelect={setPointModeFilter} />
+          <div className="mb-3">
+            <ModeSelector selected={pointModeFilter} onSelect={setPointModeFilter} />
           </div>
         )}
 

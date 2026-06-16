@@ -238,6 +238,13 @@ export default function DashboardPage() {
     upsertPoint(updated)
   }
 
+  function handleToggleFeatured(id: string) {
+    const pt = useGeoStore.getState().points.find((p) => p.id === id)
+    if (!pt) return
+    upsertPoint({ ...pt, featured: !pt.featured })
+    setHasUnsavedChanges(true)
+  }
+
   async function handleDeletePoint(id: string) {
     const ptToDelete = useGeoStore.getState().points.find((p) => p.id === id)
     const deletedCd  = ptToDelete?.contentData as MediaContentData | undefined
@@ -329,6 +336,7 @@ export default function DashboardPage() {
       onCreatePoint={handleCreatePoint}
       onSavePointCoords={handleSavePointCoords}
       onToggleActive={handleToggleActive}
+      onToggleFeatured={handleToggleFeatured}
       onDeletePoint={handleDeletePoint}
       onBulkDelete={handleBulkDelete}
       onBulkActivate={handleBulkActivate}

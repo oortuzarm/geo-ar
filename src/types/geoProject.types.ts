@@ -142,6 +142,7 @@ export interface GeoPoint {
   buttonText?: string
   active: boolean
   order: number
+  featured?: boolean
   availability?: GeoPointAvailability
   accessMode?: 'restricted' | 'open'
   pointMode?: 'informative' | 'unlock'

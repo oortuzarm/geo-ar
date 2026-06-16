@@ -58,6 +58,7 @@ export interface ProjectEditorProps {
   onCreatePoint: (lat: number, lng: number, name?: string) => Promise<GeoPoint>
   onSavePointCoords: (id: string, lat: number, lng: number) => Promise<void>
   onToggleActive: (id: string) => void | Promise<void>
+  onToggleFeatured: (id: string) => void
   onDeletePoint: (id: string) => Promise<void>
   onBulkDelete: (ids: string[]) => Promise<void>
   onBulkActivate: (ids: string[]) => Promise<void>
@@ -89,6 +90,7 @@ export default function ProjectEditor({
   onCreatePoint,
   onSavePointCoords,
   onToggleActive,
+  onToggleFeatured,
   onDeletePoint,
   onBulkDelete,
   onBulkActivate,
@@ -1068,6 +1070,7 @@ export default function ProjectEditor({
                   onSelect={handleSelectPoint}
                   onAdd={handleAddPoint}
                   onToggleActive={handleToggleActive}
+                  onToggleFeatured={onToggleFeatured}
                   onBulkActivate={handleBulkActivate}
                   onBulkDeactivate={handleBulkDeactivate}
                   onBulkDelete={handleBulkDelete}
@@ -1527,6 +1530,7 @@ export default function ProjectEditor({
                 onSelect={(id) => { handleSelectPoint(id); setListDrawerOpen(false) }}
                 onAdd={() => { void handleAddPoint(); setListDrawerOpen(false) }}
                 onToggleActive={handleToggleActive}
+                onToggleFeatured={onToggleFeatured}
                 onBulkActivate={handleBulkActivate}
                 onBulkDeactivate={handleBulkDeactivate}
                 onBulkDelete={handleBulkDelete}

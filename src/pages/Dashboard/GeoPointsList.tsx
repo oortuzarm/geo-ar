@@ -4,6 +4,7 @@ import { getPointCoverImage } from '../../lib/pointImageUtils'
 import { fetchProjectAnalyticsByPoint, type PointAnalytics } from '../../lib/analytics'
 import type { GeoPoint } from '../../types'
 import GeoPointShareModal from './GeoPointShareModal'
+import { useGeoStore } from '../../store/geoStore'
 
 function urlDomain(url: string): string {
   try { return new URL(url).hostname.replace('www.', '') }
@@ -62,12 +63,15 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'clicks',  label: 'Clics'    },
 ]
 
+const FEATURED_LIMIT = 5
+
 interface GeoPointsListProps {
   points: GeoPoint[]
   selectedId: string | null
   onSelect: (id: string) => void
   onAdd: () => void
   onToggleActive: (id: string) => void
+  onToggleFeatured: (id: string) => void
   onBulkDelete: (ids: string[]) => Promise<void>
   onBulkActivate: (ids: string[]) => Promise<void>
   onBulkDeactivate: (ids: string[]) => Promise<void>
@@ -85,6 +89,7 @@ export default function GeoPointsList({
   onSelect,
   onAdd,
   onToggleActive,
+  onToggleFeatured,
   onBulkDelete,
   onBulkActivate,
   onBulkDeactivate,
@@ -92,11 +97,23 @@ export default function GeoPointsList({
   hideIdleTitle = false,
   projectId,
 }: GeoPointsListProps) {
+  const { addToast } = useGeoStore()
   const [selectionMode, setSelectionMode] = useState(false)
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set())
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [isWorking, setIsWorking] = useState(false)
   const [sharePoint, setSharePoint] = useState<GeoPoint | null>(null)
+
+  const featuredCount = points.filter((p) => p.featured).length
+
+  function handleToggleFeatured(e: React.MouseEvent, point: GeoPoint) {
+    e.stopPropagation()
+    if (!point.featured && featuredCount >= FEATURED_LIMIT) {
+      addToast(`Puedes destacar hasta ${FEATURED_LIMIT} puntos GPS.`, 'info')
+      return
+    }
+    onToggleFeatured(point.id)
+  }
 
   // ── Sort ────────────────────────────────────────────────────────────────────
   const [sortKey, setSortKey] = useState<SortKey>('name')
@@ -236,19 +253,29 @@ export default function GeoPointsList({
           </button>
         )}
 
-        {/* Title */}
-        <h2 className="flex-1 text-sm font-semibold min-w-0">
-          {selectionMode && checkedCount > 0 ? (
-            <span className="text-brand-400">
-              {checkedCount} seleccionado{checkedCount !== 1 ? 's' : ''}
-            </span>
-          ) : !hideIdleTitle ? (
-            <span className="text-gray-100">
-              Puntos GPS{' '}
-              <span className="text-xs font-normal text-gray-500">({points.length})</span>
-            </span>
-          ) : null}
-        </h2>
+        {/* Title + featured counter */}
+        <div className="flex-1 min-w-0">
+          <h2 className="text-sm font-semibold">
+            {selectionMode && checkedCount > 0 ? (
+              <span className="text-brand-400">
+                {checkedCount} seleccionado{checkedCount !== 1 ? 's' : ''}
+              </span>
+            ) : !hideIdleTitle ? (
+              <span className="text-gray-100">
+                Puntos GPS{' '}
+                <span className="text-xs font-normal text-gray-500">({points.length})</span>
+              </span>
+            ) : null}
+          </h2>
+          {!selectionMode && points.length > 0 && (
+            <p className="text-[11px] text-gray-500 leading-none mt-0.5">
+              Destacados:{' '}
+              <span className={featuredCount > 0 ? 'text-amber-400 font-medium' : ''}>
+                {featuredCount}/{FEATURED_LIMIT}
+              </span>
+            </p>
+          )}
+        </div>
 
         {/* Right actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -489,6 +516,27 @@ export default function GeoPointsList({
                           <circle cx="18" cy="19" r="3" />
                           <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
                           <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                        </svg>
+                      </button>
+                    )}
+
+                    {/* Destacar — star toggle */}
+                    {!selectionMode && (
+                      <button
+                        onClick={(e) => handleToggleFeatured(e, point)}
+                        className={[
+                          'flex-shrink-0 w-6 h-6 flex items-center justify-center rounded transition-colors',
+                          point.featured
+                            ? 'text-amber-400 hover:text-amber-300'
+                            : 'text-gray-600 hover:text-gray-300 hover:bg-gray-700/60',
+                        ].join(' ')}
+                        title={point.featured ? 'Quitar destacado' : 'Destacar punto'}
+                      >
+                        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24"
+                          fill={point.featured ? 'currentColor' : 'none'}
+                          stroke="currentColor" strokeWidth={2}
+                          strokeLinecap="round" strokeLinejoin="round">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                         </svg>
                       </button>
                     )}

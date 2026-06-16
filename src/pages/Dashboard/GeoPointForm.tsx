@@ -418,8 +418,9 @@ export default function GeoPointForm({
   const [mediaFile,     setMediaFile]     = useState<{ url: string; fileName: string; mimeType: string; size: number } | null>(initialMedia)
   const [uploadState,   setUploadState]   = useState<'idle' | 'uploading' | 'done' | 'error'>('idle')
   const [uploadError,   setUploadError]   = useState<string | null>(null)
-  const [urlError,      setUrlError]      = useState<string | null>(null)
+  const [urlError,         setUrlError]         = useState<string | null>(null)
   const [nameError,        setNameError]        = useState<string | null>(null)
+  const [categoryError,    setCategoryError]    = useState<string | null>(null)
   const [descriptionError, setDescriptionError] = useState<string | null>(null)
   const [contentError,     setContentError]     = useState<string | null>(null)
 
@@ -613,6 +614,13 @@ export default function GeoPointForm({
       setNameError(null)
     }
 
+    if (!pointCategory) {
+      setCategoryError('Debes seleccionar una categoría.')
+      valid = false
+    } else {
+      setCategoryError(null)
+    }
+
     if (pointMode === 'unlock') {
       if (!description.trim()) {
         setDescriptionError('La descripción es obligatoria.')
@@ -804,7 +812,7 @@ export default function GeoPointForm({
         {/* ── Categoría del punto ──────────────────────────────────────── */}
         <div className="flex flex-col gap-1">
           <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Categoría del punto
+            Categoría del punto <span className="text-red-400">*</span>
           </span>
           <select
             value={pointCategory ?? ''}
@@ -813,14 +821,19 @@ export default function GeoPointForm({
               const next = val === '' ? undefined : val
               setPointCategory(next)
               onChange({ pointCategory: next })
+              if (next) setCategoryError(null)
             }}
-            className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className={[
+              'w-full rounded-lg border bg-gray-800/50 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500',
+              categoryError ? 'border-red-500' : 'border-gray-700',
+            ].join(' ')}
           >
             <option value="">Sin categoría</option>
             {POINT_CATEGORIES.map(({ value, label }) => (
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
+          {categoryError && <p className="text-xs text-red-400">{categoryError}</p>}
         </div>
 
         {/* ── Modo del punto ────────────────────────────────────────────── */}

@@ -2498,7 +2498,7 @@ export default function PublicPage({
                              ring-1 ring-white/10 shadow-lg"
                 />
               )}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 pt-1">
                 <p className="text-base font-semibold text-gray-700 line-clamp-2 leading-snug">
                   {project.title}
                 </p>

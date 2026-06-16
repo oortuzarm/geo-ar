@@ -118,6 +118,36 @@ export default function DashboardPage() {
       return
     }
 
+    const noContentType = allPoints.filter(
+      (pt) => pt.pointMode === 'unlock' && !pt.contentType,
+    )
+    if (noContentType.length > 0) {
+      const n = noContentType.length
+      addToast(
+        n === 1
+          ? 'Hay 1 punto GPS interactivo sin tipo de contenido. Selecciona un tipo antes de guardar el proyecto.'
+          : `Hay ${n} puntos GPS interactivos sin tipo de contenido. Selecciona un tipo antes de guardar el proyecto.`,
+        'error',
+      )
+      useGeoStore.getState().setSelectedPointId(noContentType[0].id)
+      return
+    }
+
+    const noUrl = allPoints.filter(
+      (pt) => pt.pointMode === 'unlock' && pt.contentType === 'url' && !pt.lookiarUrl?.trim(),
+    )
+    if (noUrl.length > 0) {
+      const n = noUrl.length
+      addToast(
+        n === 1
+          ? 'Hay 1 punto GPS interactivo sin URL de contenido. Agrega una URL antes de guardar el proyecto.'
+          : `Hay ${n} puntos GPS interactivos sin URL de contenido. Agrega una URL antes de guardar el proyecto.`,
+        'error',
+      )
+      useGeoStore.getState().setSelectedPointId(noUrl[0].id)
+      return
+    }
+
     if (isSavingRef.current) {
       pendingSaveRef.current = true
       console.log('[Save] Guardado en curso — cambios pendientes registrados')

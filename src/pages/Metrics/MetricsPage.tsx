@@ -567,11 +567,10 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
     return () => clearTimeout(t)
   }, [])
 
-  const data         = byPoint
-  const maxVal       = Math.max(...data.flatMap(p => [p.radiusEntries, p.clicks]), 1)
-  const LEVELS       = 4
-  const BAR_H        = 160
-  const POINT_MIN_W  = 56   // px mínimos por grupo de barras (Entradas + Clics)
+  const data   = byPoint.slice(0, 8)
+  const maxVal = Math.max(...data.flatMap(p => [p.radiusEntries, p.clicks]), 1)
+  const LEVELS = 4
+  const BAR_H  = 160
 
   if (data.length === 0) {
     return (
@@ -619,12 +618,8 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
           ))}
         </div>
 
-        {/* Bars + grid — scroll horizontal automático cuando hay muchos puntos */}
-        <div className="flex-1 overflow-x-auto overflow-y-hidden min-w-0">
-          <div
-            className="flex flex-col"
-            style={{ minWidth: `${data.length * POINT_MIN_W}px`, width: '100%' }}
-          >
+        {/* Bars + grid */}
+        <div className="flex-1 flex flex-col min-h-0">
 
           {/* Bars area */}
           <div className="relative flex-1" style={{ height: `${BAR_H}px` }}>
@@ -725,16 +720,14 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
           {/* X labels */}
           <div className="flex gap-1 mt-2 shrink-0" style={{ height: '24px' }}>
             {data.map(pt => (
-              <div key={pt.pointId} className="flex-1 min-w-0 overflow-hidden">
+              <div key={pt.pointId} className="flex-1 overflow-hidden">
                 <p className="text-[9px] text-gray-600 truncate text-center leading-tight">
                   {pt.pointName.split(' ')[0]}
                 </p>
               </div>
             ))}
           </div>
-
-          </div>{/* end inner scroll content */}
-        </div>{/* end scroll wrapper */}
+        </div>
       </div>
     </div>
   )

@@ -1001,8 +1001,8 @@ export default function PublicPage({
     )
   }, [points])
 
-  // Only render the filter when the project has points from multiple categories.
-  const showCategoryFilter = availableCategories.length > 1
+  // Render the filter whenever at least one category exists (even a single one).
+  const showCategoryFilter = availableCategories.length > 0
 
   // ── Ghost-click suppression ───────────────────────────────────────────────
   // Mobile browsers fire a synthetic click ~300ms after touchend.  When the
@@ -2489,7 +2489,7 @@ export default function PublicPage({
             </div>
           </div>
 
-          {/* Category chips — only when project has multiple categories */}
+          {/* Category chips — shown when at least one category exists */}
           {showCategoryFilter && (
             <div className="flex-shrink-0 px-4 pb-2 pt-0.5">
               <CategoryChips

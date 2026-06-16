@@ -363,8 +363,8 @@ export default function PublicPointCard({
           {/* List mode only — primary always centered; secondaries right-aligned in left column */}
           {!isDetail && (primaryBadge || secondaryLabels.length > 0) && (
             <div className="absolute bottom-3.5 inset-x-0 flex items-center px-3">
-              {/* Left column: secondaries right-aligned so they sit immediately left of primary */}
-              <div className="flex-1 flex items-center justify-end gap-1.5 pr-2">
+              {/* Left column: when primary exists → flex-1 right-aligned; without primary → left-aligned */}
+              <div className={`flex items-center gap-1.5 ${primaryBadge ? 'flex-1 justify-end pr-2' : ''}`}>
                 {secondaryLabels.includes('new') && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
                                    bg-black/[0.4] backdrop-blur-md border border-amber-300/[0.22]
@@ -400,8 +400,8 @@ export default function PublicPointCard({
               </div>
               {/* Primary badge — always at horizontal center */}
               {primaryBadge && <PrimaryBadgePill badge={primaryBadge} theme="dark" />}
-              {/* Right spacer — mirrors left column to keep primary centered */}
-              <div className="flex-1" />
+              {/* Right spacer — only when primary exists (mirrors left col to keep primary centered) */}
+              {primaryBadge && <div className="flex-1" />}
             </div>
           )}
         </div>

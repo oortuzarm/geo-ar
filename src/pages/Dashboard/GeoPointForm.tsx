@@ -373,7 +373,7 @@ export default function GeoPointForm({
   const otherPoints = (allPoints ?? []).filter((p) => p.id !== point.id)
 
   const editorMode = useEditorMode()
-  const { canUseContentType, canUseScheduleAvailability, canUseQuotaAvailability, canUseDwellTime, canUseLiveVisits } = usePlanFeatures()
+  const { canUseContentType, canUseScheduleAvailability, canUseQuotaAvailability, canUseDwellTime, canUseLiveVisits, canUseInteractivePointMode } = usePlanFeatures()
   const mediaFileRef   = useRef<HTMLInputElement>(null)
   const galleryFileRef = useRef<HTMLInputElement>(null)
   const [advancedOpen,         setAdvancedOpen]         = useState(false)
@@ -845,29 +845,36 @@ export default function GeoPointForm({
             {([
               { value: 'informative', label: 'Informativo',   desc: 'Visible desde cualquier lugar. No requiere desbloqueo.' },
               { value: 'unlock',      label: 'Interactivo',   desc: 'Requiere cumplir reglas de acceso' },
-            ] as { value: 'informative' | 'unlock'; label: string; desc: string }[]).map(({ value, label, desc }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => {
-                  setPointMode(value)
-                  onChange({ pointMode: value })
-                }}
-                className={[
-                  'flex flex-col items-start px-3 py-2.5 rounded-lg border text-left transition-all',
-                  pointMode === value
-                    ? 'border-brand-500 bg-brand-500/10'
-                    : 'border-gray-700 bg-gray-800/50 hover:border-gray-600',
-                ].join(' ')}
-              >
-                <span className={`text-sm font-medium ${pointMode === value ? 'text-brand-400' : 'text-gray-300'}`}>
-                  {label}
-                </span>
-                <span className={`text-xs mt-0.5 ${pointMode === value ? 'text-brand-500/70' : 'text-gray-600'}`}>
-                  {desc}
-                </span>
-              </button>
-            ))}
+            ] as { value: 'informative' | 'unlock'; label: string; desc: string }[]).map(({ value, label, desc }) => {
+              const isLocked = value === 'unlock' && !canUseInteractivePointMode
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => {
+                    if (isLocked) { setUpgradeOpen(true); return }
+                    setPointMode(value)
+                    onChange({ pointMode: value })
+                  }}
+                  className={[
+                    'flex flex-col items-start px-3 py-2.5 rounded-lg border text-left transition-all',
+                    isLocked
+                      ? 'border-gray-700 bg-gray-800/30 cursor-pointer'
+                      : pointMode === value
+                        ? 'border-brand-500 bg-brand-500/10'
+                        : 'border-gray-700 bg-gray-800/50 hover:border-gray-600',
+                  ].join(' ')}
+                >
+                  <span className={`text-sm font-medium ${isLocked ? 'text-gray-600' : pointMode === value ? 'text-brand-400' : 'text-gray-300'}`}>
+                    {label}
+                  </span>
+                  {isLocked
+                    ? <span className="text-xs mt-0.5 text-gray-600">🔒 No disponible</span>
+                    : <span className={`text-xs mt-0.5 ${pointMode === value ? 'text-brand-500/70' : 'text-gray-600'}`}>{desc}</span>
+                  }
+                </button>
+              )
+            })}
           </div>
         </div>
 

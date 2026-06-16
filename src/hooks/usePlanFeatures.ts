@@ -3,14 +3,15 @@ import { DEFAULT_FEATURES_CONFIG } from '../lib/planFeatureRegistry'
 import type { FeaturesConfig } from '../lib/planFeatureRegistry'
 
 export interface PlanFeatures {
-  config:                      FeaturesConfig
-  canUseContentType:           (type: string) => boolean
-  canUseScheduleAvailability:  boolean
-  canUseQuotaAvailability:     boolean
-  canUseAnalytics:             boolean
-  canUseMembers:               boolean
-  canUseDwellTime:             boolean
-  canUseLiveVisits:            boolean
+  config:                       FeaturesConfig
+  canUseContentType:            (type: string) => boolean
+  canUseScheduleAvailability:   boolean
+  canUseQuotaAvailability:      boolean
+  canUseAnalytics:              boolean
+  canUseMembers:                boolean
+  canUseDwellTime:              boolean
+  canUseLiveVisits:             boolean
+  canUseInteractivePointMode:   boolean
 }
 
 export function usePlanFeatures(): PlanFeatures {
@@ -23,12 +24,13 @@ export function usePlanFeatures(): PlanFeatures {
 
   return {
     config,
-    canUseContentType:          (type: string) => allowedTypes.includes(type),
-    canUseScheduleAvailability: config.availability_schedule ?? true,
-    canUseQuotaAvailability:    config.availability_quota    ?? true,
-    canUseAnalytics:            config.analytics             ?? true,
-    canUseMembers:              config.members               ?? true,
-    canUseDwellTime:            config.dwell_time            ?? true,
-    canUseLiveVisits:           config.live_visits           ?? true,
+    canUseContentType:           (type: string) => allowedTypes.includes(type),
+    canUseScheduleAvailability:  config.availability_schedule   ?? true,
+    canUseQuotaAvailability:     config.availability_quota      ?? true,
+    canUseAnalytics:             config.analytics               ?? true,
+    canUseMembers:               config.members                 ?? true,
+    canUseDwellTime:             config.dwell_time              ?? true,
+    canUseLiveVisits:            config.live_visits             ?? true,
+    canUseInteractivePointMode:  config.interactive_point_mode  ?? true,
   }
 }

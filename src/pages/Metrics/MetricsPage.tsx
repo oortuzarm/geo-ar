@@ -1595,9 +1595,9 @@ export default function MetricsPage() {
                     {/* KPI cards */}
                     <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${!pointFilter ? 'sm:grid-cols-3' : ''}`}>
                       <KPICard
-                        label="Entradas"
+                        label="Entradas al área"
                         value={displaySummary!.radiusEntries}
-                        sub="exposición geográfica al radio de activación"
+                        sub="Personas que ingresaron al área GPS."
                         valueColor="text-brand-400"
                       />
                       <KPICard

@@ -91,6 +91,20 @@ export default function DashboardPage() {
     if (!currentProject) return
 
     const allPoints = useGeoStore.getState().points
+
+    const unnamed = allPoints.filter((pt) => !pt.name?.trim())
+    if (unnamed.length > 0) {
+      const n = unnamed.length
+      addToast(
+        n === 1
+          ? 'Hay 1 punto GPS sin nombre. Asigna un nombre antes de guardar el proyecto.'
+          : `Hay ${n} puntos GPS sin nombre. Asigna un nombre antes de guardar el proyecto.`,
+        'error',
+      )
+      useGeoStore.getState().setSelectedPointId(unnamed[0].id)
+      return
+    }
+
     const uncategorized = allPoints.filter((pt) => pt.pointCategory == null)
     if (uncategorized.length > 0) {
       const n = uncategorized.length

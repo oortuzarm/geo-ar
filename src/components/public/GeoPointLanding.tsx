@@ -82,9 +82,9 @@ function AvailabilityBadge({
           ? 'bg-red-50 border border-red-200'
           : 'bg-amber-50 border border-amber-200'
       }`}>
-        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-          isTemporalBlock ? 'bg-red-500' : 'bg-amber-500'
-        }`} />
+        {isTemporalBlock
+          ? <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+          : '🔒'}
         <span className={`text-xs font-semibold ${
           isTemporalBlock ? 'text-red-700' : 'text-amber-700'
         }`}>

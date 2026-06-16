@@ -59,6 +59,10 @@ const POINT_CATEGORY_LABELS: Record<PointCategory, string> = {
   other:         'Otro',
 }
 
+// ── Point mode filter ─────────────────────────────────────────────────────────
+
+type PointModeFilter = 'all' | 'interactive' | 'informative'
+
 // ── Category filter chips ─────────────────────────────────────────────────────
 
 function CategoryChips({
@@ -102,6 +106,42 @@ function CategoryChips({
           {POINT_CATEGORY_LABELS[cat]}
         </button>
       ))}
+    </div>
+  )
+}
+
+// ── Mode filter chips ─────────────────────────────────────────────────────────
+
+function ModeChips({
+  selected,
+  onSelect,
+}: {
+  selected: PointModeFilter
+  onSelect: (mode: PointModeFilter) => void
+}) {
+  const chip = (mode: PointModeFilter, label: string) => (
+    <button
+      key={mode}
+      onClick={() => onSelect(mode)}
+      className={[
+        'flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium',
+        'transition-all duration-150 active:scale-95',
+        selected === mode
+          ? 'bg-gray-700 text-white shadow-sm'
+          : 'bg-gray-100 text-gray-500 hover:bg-gray-200',
+      ].join(' ')}
+    >
+      {label}
+    </button>
+  )
+  return (
+    <div
+      className="flex gap-1.5 overflow-x-auto"
+      style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+    >
+      {chip('all',         'Todos')}
+      {chip('interactive', 'Interactivos')}
+      {chip('informative', 'Informativos')}
     </div>
   )
 }
@@ -988,6 +1028,8 @@ export default function PublicPage({
   const [distanceSortOrder, setDistanceSortOrder] = useState<'asc' | 'desc'>('asc')
   // null = "Todas" (no category filter applied)
   const [categoryFilter, setCategoryFilter] = useState<PointCategory | null>(null)
+  // 'all' = show all modes; 'interactive' / 'informative' = filter by pointMode
+  const [pointModeFilter, setPointModeFilter] = useState<PointModeFilter>('all')
 
   // Categories present in this project's points, sorted alphabetically.
   // Computed once when points load; never re-sorted on each render.
@@ -1003,6 +1045,11 @@ export default function PublicPage({
 
   // Render the filter whenever at least one category exists (even a single one).
   const showCategoryFilter = availableCategories.length > 0
+
+  // Only show the mode filter when the project has both interactive and informative points.
+  const showModeFilter =
+    points.some((p) => p.pointMode !== 'informative') &&
+    points.some((p) => p.pointMode === 'informative')
 
   // ── Ghost-click suppression ───────────────────────────────────────────────
   // Mobile browsers fire a synthetic click ~300ms after touchend.  When the
@@ -2085,24 +2132,28 @@ export default function PublicPage({
   const categoryFilteredPoints = categoryFilter
     ? displayedPoints.filter((p) => p.pointCategory === categoryFilter)
     : displayedPoints
+  const modeFilteredPoints = pointModeFilter === 'interactive'
+    ? categoryFilteredPoints.filter((p) => p.pointMode !== 'informative')
+    : pointModeFilter === 'informative'
+    ? categoryFilteredPoints.filter((p) => p.pointMode === 'informative')
+    : categoryFilteredPoints
 
   const sortedDisplayedPoints = useMemo(() => {
-    if (!userLocation) return categoryFilteredPoints
-    return [...categoryFilteredPoints].sort((a, b) => {
+    if (!userLocation) return modeFilteredPoints
+    return [...modeFilteredPoints].sort((a, b) => {
       const da = distances[a.id]
       const db = distances[b.id]
       if (da == null || db == null) return 0
       return distanceSortOrder === 'asc' ? da - db : db - da
     })
-  }, [categoryFilteredPoints, distances, userLocation, distanceSortOrder])
+  }, [modeFilteredPoints, distances, userLocation, distanceSortOrder])
 
-  // Clear selected point when the category filter changes so a point from a
-  // different category does not remain highlighted on the map or in sheets.
+  // Clear selected point when any filter changes so stale highlights don't persist.
   useEffect(() => {
     setSelectedPointId(null)
     setMobileState('clean')
     setAccessError(null)
-  }, [categoryFilter]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [categoryFilter, pointModeFilter]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Early returns ──────────────────────────────────────────────────────────
 
@@ -2175,14 +2226,18 @@ export default function PublicPage({
   // cardRefsProp: which ref map to populate (mobile or desktop)
   function renderPoints(cardRefsProp: React.MutableRefObject<Record<string, HTMLDivElement | null>>) {
     if (sortedDisplayedPoints.length === 0) {
+      const modeLabel = pointModeFilter === 'informative' ? 'informativas' : 'interactivas'
+      const emptyMsg = pointModeFilter !== 'all'
+        ? categoryFilter
+          ? `No hay ubicaciones ${modeLabel} en la categoría "${POINT_CATEGORY_LABELS[categoryFilter]}".`
+          : `No hay ubicaciones ${modeLabel}.`
+        : categoryFilter
+          ? `No hay ubicaciones en la categoría "${POINT_CATEGORY_LABELS[categoryFilter]}".`
+          : locationFilter === 'available'
+            ? 'No hay experiencias activas en este momento.'
+            : 'Este proyecto no tiene puntos activos aún.'
       return (
-        <p className="text-sm text-gray-500 text-center py-6 px-4">
-          {categoryFilter
-            ? `No hay ubicaciones en la categoría "${POINT_CATEGORY_LABELS[categoryFilter]}".`
-            : locationFilter === 'available'
-              ? 'No hay experiencias activas en este momento.'
-              : 'Este proyecto no tiene puntos activos aún.'}
-        </p>
+        <p className="text-sm text-gray-500 text-center py-6 px-4">{emptyMsg}</p>
       )
     }
     return sortedDisplayedPoints.map((pt) => (
@@ -2241,7 +2296,7 @@ export default function PublicPage({
             <UserLocationMarker lat={userLocation.latitude} lng={userLocation.longitude} />
           )}
           <MapClusterLayer
-            points={categoryFilteredPoints}
+            points={modeFilteredPoints}
             selectedPointId={selectedPointId}
             onPointClick={handlePointClick}
           />
@@ -2500,6 +2555,13 @@ export default function PublicPage({
             </div>
           )}
 
+          {/* Mode chips — shown only when the project has both interactive and informative points */}
+          {showModeFilter && (
+            <div className={`flex-shrink-0 px-4 pb-2 ${showCategoryFilter ? 'pt-0 border-t border-gray-100' : 'pt-0.5'}`}>
+              <ModeChips selected={pointModeFilter} onSelect={setPointModeFilter} />
+            </div>
+          )}
+
           {/* Gesture capture layer — non-scrolling wrapper that owns the touch
               listeners. Keeping this separate from the scroll container prevents
               the browser from entering "scroll mode" before preventDefault fires.
@@ -2694,12 +2756,18 @@ export default function PublicPage({
         </div>
 
         {showCategoryFilter && (
-          <div className="mb-3">
+          <div className="mb-2">
             <CategoryChips
               categories={availableCategories}
               selected={categoryFilter}
               onSelect={setCategoryFilter}
             />
+          </div>
+        )}
+
+        {showModeFilter && (
+          <div className={`mb-3 ${showCategoryFilter ? 'pt-2 border-t border-gray-100' : ''}`}>
+            <ModeChips selected={pointModeFilter} onSelect={setPointModeFilter} />
           </div>
         )}
 

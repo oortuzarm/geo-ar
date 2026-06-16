@@ -2499,7 +2499,7 @@ export default function PublicPage({
                 />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-700 line-clamp-2 leading-snug">
+                <p className="text-base font-semibold text-gray-700 line-clamp-2 leading-snug">
                   {project.title}
                 </p>
                 <div className="mt-1">
@@ -2714,7 +2714,7 @@ export default function PublicPage({
             />
           )}
           <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-gray-800 text-base leading-tight">{project.title}</h1>
+            <h1 className="font-bold text-gray-800 text-lg leading-tight">{project.title}</h1>
             {project.subtitle && (
               <p className="text-sm text-gray-500 mt-0.5">{project.subtitle}</p>
             )}

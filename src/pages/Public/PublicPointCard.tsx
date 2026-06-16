@@ -360,42 +360,48 @@ export default function PublicPointCard({
           <div className="absolute inset-x-0 bottom-0 h-1/2
                           bg-gradient-to-t from-gray-950/70 to-transparent
                           pointer-events-none" />
-          {/* List mode only — secondaries (small, left) + primary (larger) bottom-center */}
+          {/* List mode only — primary always centered; secondaries right-aligned in left column */}
           {!isDetail && (primaryBadge || secondaryLabels.length > 0) && (
-            <div className="absolute bottom-3.5 inset-x-0 flex items-center justify-center gap-2 px-3">
-              {secondaryLabels.includes('new') && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full
-                                 bg-black/[0.4] backdrop-blur-md border border-amber-300/[0.22]
-                                 shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
-                  <span className="text-[9px] leading-none">✨</span>
-                  <span className="text-[10px] font-medium text-amber-200 leading-none">Nuevo</span>
-                </span>
-              )}
-              {secondaryLabels.includes('last-slots') && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full
-                                 bg-black/[0.4] backdrop-blur-md border border-white/[0.18]
-                                 shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
-                  <span className="text-[9px] leading-none">🔥</span>
-                  <span className="text-[10px] font-medium text-white leading-none">Últimos cupos</span>
-                </span>
-              )}
-              {secondaryLabels.includes('every-day') && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full
-                                 bg-black/[0.4] backdrop-blur-md border border-white/[0.18]
-                                 shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
-                  <span className="text-[9px] leading-none">🗓️</span>
-                  <span className="text-[10px] font-medium text-white leading-none">Todos los días</span>
-                </span>
-              )}
-              {secondaryLabels.includes('tomorrow') && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full
-                                 bg-black/[0.4] backdrop-blur-md border border-white/[0.18]
-                                 shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
-                  <span className="text-[9px] leading-none">🕒</span>
-                  <span className="text-[10px] font-medium text-white leading-none">Mañana</span>
-                </span>
-              )}
+            <div className="absolute bottom-3.5 inset-x-0 flex items-center px-3">
+              {/* Left column: secondaries right-aligned so they sit immediately left of primary */}
+              <div className="flex-1 flex items-center justify-end gap-1.5 pr-2">
+                {secondaryLabels.includes('new') && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+                                   bg-black/[0.4] backdrop-blur-md border border-amber-300/[0.22]
+                                   shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
+                    <span className="text-[9px] leading-none">✨</span>
+                    <span className="text-[11px] font-medium text-amber-200 leading-none">Nuevo</span>
+                  </span>
+                )}
+                {secondaryLabels.includes('last-slots') && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+                                   bg-black/[0.4] backdrop-blur-md border border-white/[0.18]
+                                   shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
+                    <span className="text-[9px] leading-none">🔥</span>
+                    <span className="text-[11px] font-medium text-white leading-none">Últimos cupos</span>
+                  </span>
+                )}
+                {secondaryLabels.includes('every-day') && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+                                   bg-black/[0.4] backdrop-blur-md border border-white/[0.18]
+                                   shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
+                    <span className="text-[9px] leading-none">🗓️</span>
+                    <span className="text-[11px] font-medium text-white leading-none">Todos los días</span>
+                  </span>
+                )}
+                {secondaryLabels.includes('tomorrow') && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+                                   bg-black/[0.4] backdrop-blur-md border border-white/[0.18]
+                                   shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
+                    <span className="text-[9px] leading-none">🕒</span>
+                    <span className="text-[11px] font-medium text-white leading-none">Mañana</span>
+                  </span>
+                )}
+              </div>
+              {/* Primary badge — always at horizontal center */}
               {primaryBadge && <PrimaryBadgePill badge={primaryBadge} theme="dark" />}
+              {/* Right spacer — mirrors left column to keep primary centered */}
+              <div className="flex-1" />
             </div>
           )}
         </div>

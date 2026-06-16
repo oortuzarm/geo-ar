@@ -66,5 +66,8 @@ export function normalizeGeoPoint(raw: Record<string, unknown>): GeoPoint {
     // ── Collection / social ───────────────────────────────────────────────
     requiredPointIds: ((raw.requiredPointIds ?? raw.required_point_ids) as string[] | undefined) ?? [],
     socialLinks:      ((raw.socialLinks      ?? raw.social_links)       ?? {})                   as GeoPoint['socialLinks'],
+
+    // ── Featured ──────────────────────────────────────────────────────────
+    featured: Boolean(raw.featured),
   }
 }

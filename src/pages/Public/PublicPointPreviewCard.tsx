@@ -1,6 +1,7 @@
 import { computePointAvailability } from '../../features/geolocation/availability'
 import { formatDistance } from '../../features/geolocation/haversine'
 import type { GeoPoint } from '../../types'
+import { getPointCoverImage } from '../../lib/pointImageUtils'
 
 // Badge variants mirror the four possible access states visible from a glance.
 type StatusVariant = 'ok' | 'warn' | 'block' | 'neutral'
@@ -13,18 +14,17 @@ const BADGE: Record<StatusVariant, string> = {
 }
 
 interface PublicPointPreviewCardProps {
-  point:             GeoPoint
-  distance:          number | null
+  point:            GeoPoint
+  distance:         number | null
   /** Raw user coordinates — required for polygon-mode area checks. */
-  userLocation?:     { latitude: number; longitude: number } | null
-  onViewDetail:      () => void
-  onClose:           () => void
-  liveVisitsCount?:  number
-  projectLogoUrl?:   string
+  userLocation?:    { latitude: number; longitude: number } | null
+  onViewDetail:     () => void
+  onClose:          () => void
+  liveVisitsCount?: number
 }
 
 export default function PublicPointPreviewCard({
-  point, distance, userLocation, onViewDetail, onClose, liveVisitsCount, projectLogoUrl,
+  point, distance, userLocation, onViewDetail, onClose, liveVisitsCount,
 }: PublicPointPreviewCardProps) {
   // Derived from the same computePointAvailability used by PublicPointCard —
   // both components always agree on the access state.
@@ -72,9 +72,9 @@ export default function PublicPointPreviewCard({
                     shadow-[0_4px_24px_rgba(0,0,0,0.13),0_1px_4px_rgba(0,0,0,0.07)]">
 
       <div className="flex gap-3 p-3">
-        {projectLogoUrl && (
+        {getPointCoverImage(point) && (
           <img
-            src={projectLogoUrl}
+            src={getPointCoverImage(point)}
             alt={point.name}
             className="w-[68px] h-[68px] rounded-xl object-cover flex-shrink-0 ring-1 ring-black/[0.07]"
           />

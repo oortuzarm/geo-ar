@@ -878,11 +878,16 @@ export default function GeoPointForm({
           </div>
         </div>
 
-        {/* ── Acceso ────────────────────────────────────────────────────── */}
+        {/* ── Área GPS ──────────────────────────────────────────────────── */}
         <div className="space-y-2">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Acceso
-          </span>
+          <div>
+            <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              Área GPS
+            </span>
+            <p className="text-xs text-gray-600 mt-0.5">
+              Se utiliza para mediciones y analíticas geolocalizadas.
+            </p>
+          </div>
 
           {/* Zona de activación — Circular o Polígono personalizado */}
           {(() => {
@@ -905,8 +910,8 @@ export default function GeoPointForm({
                 {/* Mode selector */}
                 <div className="grid grid-cols-2 gap-1.5">
                   {([
-                    { value: 'radius',  label: 'Circular' },
-                    { value: 'polygon', label: 'Polígono' },
+                    { value: 'radius',  label: 'Radio' },
+                    { value: 'polygon', label: 'Área personalizada' },
                   ] as { value: 'radius' | 'polygon'; label: string }[]).map(({ value, label }) => (
                     <button
                       key={value}

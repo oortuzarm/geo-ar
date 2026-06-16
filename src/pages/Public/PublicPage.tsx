@@ -120,21 +120,21 @@ function ModeSelector({
   onSelect: (mode: PointModeFilter) => void
 }) {
   return (
-    <div className="flex items-center gap-1.5">
-      <span className="text-[11px] font-medium text-gray-400 select-none">Modo:</span>
+    <div className="flex items-center gap-2">
+      <span className="text-xs font-medium text-gray-400 select-none">Modo:</span>
       <div className="relative inline-flex items-center">
         <select
           value={selected}
           onChange={(e) => onSelect(e.target.value as PointModeFilter)}
-          className="text-[11px] font-semibold text-gray-600 bg-transparent border-0
-                     appearance-none pl-0 pr-3.5 py-0 cursor-pointer focus:outline-none"
+          className="text-[13px] font-semibold text-gray-600 bg-transparent border-0
+                     appearance-none pl-0 pr-4 py-0 cursor-pointer focus:outline-none"
         >
           <option value="all">Todos</option>
           <option value="interactive">Interactivos</option>
           <option value="informative">Informativos</option>
         </select>
         <svg
-          className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-gray-400 pointer-events-none"
+          className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none"
           viewBox="0 0 20 20" fill="currentColor"
         >
           <path fillRule="evenodd" clipRule="evenodd"
@@ -2557,7 +2557,7 @@ export default function PublicPage({
 
           {/* Mode selector — compact, secondary; only when both types exist */}
           {showModeFilter && (
-            <div className="flex-shrink-0 px-4 pb-2">
+            <div className="flex-shrink-0 px-4 pt-1.5 pb-3">
               <ModeSelector selected={pointModeFilter} onSelect={setPointModeFilter} />
             </div>
           )}
@@ -2766,7 +2766,7 @@ export default function PublicPage({
         )}
 
         {showModeFilter && (
-          <div className="mb-3">
+          <div className="mt-1.5 mb-4">
             <ModeSelector selected={pointModeFilter} onSelect={setPointModeFilter} />
           </div>
         )}

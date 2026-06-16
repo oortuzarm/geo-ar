@@ -1600,9 +1600,9 @@ export default function MetricsPage() {
                         sub="exposición geográfica al radio de activación"
                       />
                       <KPICard
-                        label="Acciones digitales"
+                        label="Clics en CTA"
                         value={displaySummary!.clicks}
-                        sub="interacciones generadas por el espacio físico"
+                        sub="Interacciones con el botón principal del punto."
                         accent
                       />
                       {!pointFilter && activePoints !== null && (

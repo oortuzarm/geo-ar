@@ -33,6 +33,7 @@ import Spinner from '../../components/ui/Spinner'
 import ToastContainer from '../../components/ui/Toast'
 import type { GeoProject, GeoPoint, LocationStatus, UserLocation, AccessResponse, PointCategory } from '../../types'
 import GeoPointLanding, { type ValidationState } from '../../components/public/GeoPointLanding'
+import FeaturedPointCards from '../../components/public/FeaturedPointCards'
 import { markPointUnlocked } from '../../lib/unlockedPoints'
 import { hasPointContent }   from '../../lib/pointContent'
 
@@ -2156,6 +2157,22 @@ export default function PublicPage({
     })
   }, [modeFilteredPoints, distances, userLocation, distanceSortOrder])
 
+  // Featured points: active points with featured===true, sorted by distance, max 5.
+  const featuredPoints = useMemo(() => {
+    const featured = points.filter((p) => p.featured && p.active)
+    const hasDist  = Object.keys(distances).length > 0
+    const sorted   = hasDist
+      ? [...featured].sort((a, b) => (distances[a.id] ?? Infinity) - (distances[b.id] ?? Infinity))
+      : featured
+    return sorted.slice(0, 5)
+  }, [points, distances])
+
+  // Set<id> for O(1) availability check inside FeaturedPointCards.
+  const availableIdsSet = useMemo(
+    () => new Set(availablePoints.map((p) => p.id)),
+    [points, liveVisitCounts], // eslint-disable-line react-hooks/exhaustive-deps
+  )
+
   // Clear selected point when any filter changes so stale highlights don't persist.
   useEffect(() => {
     setSelectedPointId(null)
@@ -2468,6 +2485,40 @@ export default function PublicPage({
           </span>
         </div>
       )}
+
+        {/* ── Featured point cards overlay ──────────────────────────────────────
+            Mobile:  bottom of the map, above the "Mostrar lista" button,
+                     only when the sheet is hidden and no point is selected.
+            Desktop: bottom-left corner, always visible while points exist.   */}
+        {featuredPoints.length > 0 && !isEmbed && (
+          <>
+            {sheetState === 'hidden' && mobileState === 'clean' && (
+              <div
+                className="md:hidden absolute inset-x-0 z-[700] pointer-events-none"
+                style={{ bottom: 'calc(90px + env(safe-area-inset-bottom, 0px))' }}
+              >
+                <div className="pointer-events-auto">
+                  <FeaturedPointCards
+                    points={featuredPoints}
+                    distances={distances}
+                    availableIds={availableIdsSet}
+                    selectedPointId={selectedPointId}
+                    onCardClick={handlePointClick}
+                  />
+                </div>
+              </div>
+            )}
+            <div className="hidden md:block absolute left-4 bottom-4 z-[700] max-w-[440px]">
+              <FeaturedPointCards
+                points={featuredPoints}
+                distances={distances}
+                availableIds={availableIdsSet}
+                selectedPointId={selectedPointId}
+                onCardClick={handlePointClick}
+              />
+            </div>
+          </>
+        )}
       </div>
 
       {/* ── MOBILE BOTTOM SHEET (hidden on md+) ─────────────────────────────

@@ -2487,15 +2487,13 @@ export default function PublicPage({
       )}
 
         {/* ── Featured point cards overlay ──────────────────────────────────────
-            Mobile:  bottom of the map, above the "Mostrar lista" button,
-                     only when the sheet is hidden and no point is selected.
+            Mobile:  top of the map, just below the "Ubicación activa" badge.
             Desktop: bottom-left corner, always visible while points exist.   */}
         {featuredPoints.length > 0 && !isEmbed && (
           <>
             {sheetState === 'hidden' && mobileState === 'clean' && (
               <div
-                className="md:hidden absolute inset-x-0 z-[700] pointer-events-none"
-                style={{ bottom: 'calc(90px + env(safe-area-inset-bottom, 0px))' }}
+                className="md:hidden absolute inset-x-0 top-14 z-[700] pointer-events-none"
               >
                 <div className="pointer-events-auto">
                   <FeaturedPointCards

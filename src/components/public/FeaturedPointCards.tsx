@@ -54,7 +54,7 @@ export default function FeaturedPointCards({
             key={point.id}
             onClick={() => onCardClick(point)}
             className={[
-              'flex-shrink-0 flex items-center gap-2.5',
+              'relative flex-shrink-0 flex items-center gap-2.5',
               'bg-white rounded-2xl pl-2.5 pr-3.5 py-2.5',
               'shadow-[0_2px_12px_rgba(0,0,0,0.15)]',
               'border transition-all duration-150 active:scale-95',
@@ -63,6 +63,14 @@ export default function FeaturedPointCards({
                 : 'border-white/60 hover:border-gray-200',
             ].join(' ')}
           >
+            {/* Featured star */}
+            <svg
+              className="absolute top-1.5 left-1.5 w-3 h-3 text-amber-400 drop-shadow-sm pointer-events-none"
+              viewBox="0 0 24 24" fill="currentColor"
+            >
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+
             {/* Thumbnail */}
             {thumb ? (
               <img

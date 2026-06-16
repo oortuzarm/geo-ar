@@ -71,41 +71,49 @@ function CategoryChips({
   onSelect,
 }: {
   categories: PointCategory[]
-  selected:   PointCategory | null
-  onSelect:   (cat: PointCategory | null) => void
+  selected:   PointCategory[]
+  onSelect:   (cats: PointCategory[]) => void
 }) {
+  const allActive = selected.length === 0
   return (
     <div
       className="flex gap-1.5 overflow-x-auto"
       style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
     >
       <button
-        onClick={() => onSelect(null)}
+        onClick={() => onSelect([])}
         className={[
           'flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium',
           'transition-all duration-150 active:scale-95',
-          selected === null
+          allActive
             ? 'bg-gray-900 text-white shadow-sm'
             : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
         ].join(' ')}
       >
         Todas
       </button>
-      {categories.map(cat => (
-        <button
-          key={cat}
-          onClick={() => onSelect(cat)}
-          className={[
-            'flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium',
-            'transition-all duration-150 active:scale-95',
-            selected === cat
-              ? 'bg-gray-900 text-white shadow-sm'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
-          ].join(' ')}
-        >
-          {POINT_CATEGORY_LABELS[cat]}
-        </button>
-      ))}
+      {categories.map(cat => {
+        const active = selected.includes(cat)
+        return (
+          <button
+            key={cat}
+            onClick={() => onSelect(
+              active
+                ? selected.filter(c => c !== cat)
+                : [...selected, cat]
+            )}
+            className={[
+              'flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium',
+              'transition-all duration-150 active:scale-95',
+              active
+                ? 'bg-gray-900 text-white shadow-sm'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+            ].join(' ')}
+          >
+            {POINT_CATEGORY_LABELS[cat]}
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -1026,8 +1034,8 @@ export default function PublicPage({
   // 'available' → show only points currently accessible (schedule + quota pass)
   const [locationFilter] = useState<LocationFilter>('all')
   const [distanceSortOrder, setDistanceSortOrder] = useState<'asc' | 'desc'>('asc')
-  // null = "Todas" (no category filter applied)
-  const [categoryFilter, setCategoryFilter] = useState<PointCategory | null>(null)
+  // [] = "Todas" (no category filter applied); multiple values = multi-select
+  const [categoryFilter, setCategoryFilter] = useState<PointCategory[]>([])
   // 'all' = show all modes; 'interactive' / 'informative' = filter by pointMode
   const [pointModeFilter, setPointModeFilter] = useState<PointModeFilter>('all')
 
@@ -2126,11 +2134,11 @@ export default function PublicPage({
   // `points`                 = all admin-enabled points (the "ubicaciones" universe)
   // `availablePoints`        = subset currently accessible by schedule + quota rules
   // `displayedPoints`        = after locationFilter ('all' | 'available')
-  // `categoryFilteredPoints` = after categoryFilter (null = Todas)
+  // `categoryFilteredPoints` = after categoryFilter ([] = Todas)
   const availablePoints        = points.filter((p) => isPointAvailableNow(p, liveVisitCounts))
   const displayedPoints        = locationFilter === 'available' ? availablePoints : points
-  const categoryFilteredPoints = categoryFilter
-    ? displayedPoints.filter((p) => p.pointCategory === categoryFilter)
+  const categoryFilteredPoints = categoryFilter.length > 0
+    ? displayedPoints.filter((p) => p.pointCategory != null && categoryFilter.includes(p.pointCategory))
     : displayedPoints
   const modeFilteredPoints = pointModeFilter === 'interactive'
     ? categoryFilteredPoints.filter((p) => p.pointMode !== 'informative')
@@ -2153,7 +2161,8 @@ export default function PublicPage({
     setSelectedPointId(null)
     setMobileState('clean')
     setAccessError(null)
-  }, [categoryFilter, pointModeFilter]) // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryFilter.join(','), pointModeFilter])
 
   // ── Early returns ──────────────────────────────────────────────────────────
 
@@ -2227,12 +2236,15 @@ export default function PublicPage({
   function renderPoints(cardRefsProp: React.MutableRefObject<Record<string, HTMLDivElement | null>>) {
     if (sortedDisplayedPoints.length === 0) {
       const modeLabel = pointModeFilter === 'informative' ? 'informativas' : 'interactivas'
+      const categoryLabel = categoryFilter.length === 1
+        ? `"${POINT_CATEGORY_LABELS[categoryFilter[0]]}"`
+        : 'las categorías seleccionadas'
       const emptyMsg = pointModeFilter !== 'all'
-        ? categoryFilter
-          ? `No hay ubicaciones ${modeLabel} en la categoría "${POINT_CATEGORY_LABELS[categoryFilter]}".`
+        ? categoryFilter.length > 0
+          ? `No hay ubicaciones ${modeLabel} en ${categoryLabel}.`
           : `No hay ubicaciones ${modeLabel}.`
-        : categoryFilter
-          ? `No hay ubicaciones en la categoría "${POINT_CATEGORY_LABELS[categoryFilter]}".`
+        : categoryFilter.length > 0
+          ? `No hay ubicaciones en ${categoryLabel}.`
           : locationFilter === 'available'
             ? 'No hay experiencias activas en este momento.'
             : 'Este proyecto no tiene puntos activos aún.'

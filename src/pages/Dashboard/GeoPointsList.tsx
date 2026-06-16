@@ -500,6 +500,25 @@ export default function GeoPointsList({
                       </span>
                     )}
 
+                    {/* Toggle — in Nombre mode only (hidden in Fecha, Entradas, Clics) */}
+                    {!selectionMode && metric === null && sortKey !== 'date' && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onToggleActive(point.id) }}
+                        className={[
+                          'relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors',
+                          point.active ? 'bg-brand-600' : 'bg-gray-700',
+                        ].join(' ')}
+                        title={point.active ? 'Desactivar' : 'Activar'}
+                      >
+                        <span
+                          className={[
+                            'inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform',
+                            point.active ? 'translate-x-4' : 'translate-x-1',
+                          ].join(' ')}
+                        />
+                      </button>
+                    )}
+
                     {/* Compartir — always visible when not in selection mode */}
                     {!selectionMode && projectId && (
                       <button
@@ -538,25 +557,6 @@ export default function GeoPointsList({
                           strokeLinecap="round" strokeLinejoin="round">
                           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                         </svg>
-                      </button>
-                    )}
-
-                    {/* Toggle — in Orden and Nombre modes only */}
-                    {!selectionMode && metric === null && sortKey !== 'date' && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onToggleActive(point.id) }}
-                        className={[
-                          'relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors',
-                          point.active ? 'bg-brand-600' : 'bg-gray-700',
-                        ].join(' ')}
-                        title={point.active ? 'Desactivar' : 'Activar'}
-                      >
-                        <span
-                          className={[
-                            'inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform',
-                            point.active ? 'translate-x-4' : 'translate-x-1',
-                          ].join(' ')}
-                        />
                       </button>
                     )}
                   </div>

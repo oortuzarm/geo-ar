@@ -558,9 +558,10 @@ function HorariosTab({ projectId, pointId, params }: {
 // ── Right chart — grouped vertical bars per point ─────────────────────────────
 
 function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
-  const [mounted, setMounted]   = useState(false)
-  const [hovered, setHovered]   = useState<number | null>(null)
-  const containerRef            = useRef<HTMLDivElement>(null)
+  const [mounted,    setMounted]    = useState(false)
+  const [hovered,    setHovered]    = useState<number | null>(null)
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null)
+  const containerRef                = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 350)
@@ -647,14 +648,19 @@ function RightChart({ byPoint }: { byPoint: PointAnalytics[] }) {
                     key={pt.pointId}
                     className="flex-1 flex items-end gap-0.5 h-full relative group cursor-default"
                     onMouseEnter={() => setHovered(i)}
-                    onMouseLeave={() => setHovered(null)}
+                    onMouseMove={(e) => setTooltipPos({ x: e.clientX, y: e.clientY })}
+                    onMouseLeave={() => { setHovered(null); setTooltipPos(null) }}
                   >
-                    {/* Tooltip */}
-                    {isH && (
+                    {/* Tooltip — fixed position escapes overflow-x-auto clip context */}
+                    {isH && tooltipPos && (
                       <div
-                        className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-30
-                                   bg-gray-800 border border-gray-700/60 rounded-xl px-3 py-2.5
+                        className="fixed z-50 bg-gray-800 border border-gray-700/60 rounded-xl px-3 py-2.5
                                    shadow-2xl shadow-black/60 text-[11px] whitespace-nowrap pointer-events-none"
+                        style={{
+                          left: tooltipPos.x,
+                          top:  tooltipPos.y,
+                          transform: 'translate(-50%, calc(-100% - 10px))',
+                        }}
                       >
                         <p className="font-semibold text-gray-200 mb-1.5 max-w-[150px] truncate">
                           {pt.pointName}

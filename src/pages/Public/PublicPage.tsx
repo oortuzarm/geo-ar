@@ -2499,7 +2499,7 @@ export default function PublicPage({
                 />
               )}
               <div className="flex-1 min-w-0">
-                <p className="mt-1.5 text-base font-semibold text-gray-700 line-clamp-2 leading-snug">
+                <p className="text-base font-semibold text-gray-700 line-clamp-2 leading-snug">
                   {project.title}
                 </p>
                 <div className="mt-0.5">

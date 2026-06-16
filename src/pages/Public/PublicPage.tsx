@@ -2498,15 +2498,13 @@ export default function PublicPage({
                              ring-1 ring-white/10 shadow-lg"
                 />
               )}
-              <div className="flex-1 min-w-0 pt-1">
+              <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                 <p className="text-base font-semibold text-gray-700 line-clamp-2 leading-snug">
                   {project.title}
                 </p>
-                <div className="mt-0.5">
-                  <span className="text-[11px] text-gray-500">
-                    {points.length} ubicaciones • {availablePoints.length} activas
-                  </span>
-                </div>
+                <span className="text-[11px] text-gray-500">
+                  {points.length} ubicaciones • {availablePoints.length} activas
+                </span>
               </div>
               <button
                 onClick={(e) => {

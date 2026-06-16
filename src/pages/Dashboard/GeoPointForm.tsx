@@ -614,7 +614,7 @@ export default function GeoPointForm({
       setNameError(null)
     }
 
-    if (!pointCategory) {
+    if (pointCategory == null) {
       setCategoryError('Debes seleccionar una categoría.')
       valid = false
     } else {
@@ -812,7 +812,7 @@ export default function GeoPointForm({
         {/* ── Categoría del punto ──────────────────────────────────────── */}
         <div className="flex flex-col gap-1">
           <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Categoría del punto <span className="text-red-400">*</span>
+            Categoría del punto *
           </span>
           <select
             value={pointCategory ?? ''}

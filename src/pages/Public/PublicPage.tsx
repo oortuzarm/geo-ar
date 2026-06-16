@@ -2502,7 +2502,7 @@ export default function PublicPage({
                 <p className="mt-1.5 text-base font-semibold text-gray-700 line-clamp-2 leading-snug">
                   {project.title}
                 </p>
-                <div className="mt-1">
+                <div className="mt-0.5">
                   <span className="text-[11px] text-gray-500">
                     {points.length} ubicaciones • {availablePoints.length} activas
                   </span>

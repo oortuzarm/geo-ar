@@ -2502,26 +2502,10 @@ export default function PublicPage({
                 <p className="text-sm font-semibold text-gray-700 line-clamp-2 leading-snug">
                   {project.title}
                 </p>
-                <div className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5 mt-1">
+                <div className="mt-1">
                   <span className="text-[11px] text-gray-500">
                     {points.length} ubicaciones • {availablePoints.length} activas
                   </span>
-                  {userLocation && (
-                    <>
-                      <span className="text-[11px] text-gray-400">•</span>
-                      <button
-                        onClick={() => setDistanceSortOrder(distanceSortOrder === 'asc' ? 'desc' : 'asc')}
-                        className="flex items-center gap-0.5 text-[11px] text-gray-600 font-medium
-                                   hover:text-gray-800 transition-colors active:scale-95"
-                      >
-                        {distanceSortOrder === 'asc' ? 'Más cercanas' : 'Más lejanas'}
-                        <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
-                            d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" />
-                        </svg>
-                      </button>
-                    </>
-                  )}
                 </div>
               </div>
               <button
@@ -2555,10 +2539,25 @@ export default function PublicPage({
             </div>
           )}
 
-          {/* Mode selector — compact, secondary; only when both types exist */}
-          {showModeFilter && (
-            <div className="flex-shrink-0 px-4 pt-1.5 pb-3">
-              <ModeSelector selected={pointModeFilter} onSelect={setPointModeFilter} />
+          {/* Secondary row: mode selector (left) + sort order (right) */}
+          {(showModeFilter || userLocation) && (
+            <div className="flex-shrink-0 flex items-center px-4 pt-1.5 pb-3">
+              {showModeFilter && (
+                <ModeSelector selected={pointModeFilter} onSelect={setPointModeFilter} />
+              )}
+              {userLocation && (
+                <button
+                  onClick={() => setDistanceSortOrder(distanceSortOrder === 'asc' ? 'desc' : 'asc')}
+                  className="ml-auto flex items-center gap-1 text-[13px] font-semibold text-gray-600
+                             hover:text-gray-800 transition-colors active:scale-95"
+                >
+                  {distanceSortOrder === 'asc' ? 'Más cercanas' : 'Más lejanas'}
+                  <svg className="w-3 h-3 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                      d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" />
+                  </svg>
+                </button>
+              )}
             </div>
           )}
 
@@ -2733,26 +2732,10 @@ export default function PublicPage({
           </button>
         </div>
 
-        <div className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5 mb-3 -mt-1">
+        <div className="mb-3 -mt-1">
           <span className="text-xs text-gray-500">
             {points.length} ubicaciones • {availablePoints.length} activas
           </span>
-          {userLocation && (
-            <>
-              <span className="text-xs text-gray-400">•</span>
-              <button
-                onClick={() => setDistanceSortOrder(distanceSortOrder === 'asc' ? 'desc' : 'asc')}
-                className="flex items-center gap-0.5 text-xs text-gray-600 font-medium
-                           hover:text-gray-800 transition-colors active:scale-95"
-              >
-                {distanceSortOrder === 'asc' ? 'Más cercanas' : 'Más lejanas'}
-                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
-                    d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" />
-                </svg>
-              </button>
-            </>
-          )}
         </div>
 
         {showCategoryFilter && (
@@ -2765,9 +2748,24 @@ export default function PublicPage({
           </div>
         )}
 
-        {showModeFilter && (
-          <div className="mt-1.5 mb-4">
-            <ModeSelector selected={pointModeFilter} onSelect={setPointModeFilter} />
+        {(showModeFilter || userLocation) && (
+          <div className="flex items-center mt-1.5 mb-4">
+            {showModeFilter && (
+              <ModeSelector selected={pointModeFilter} onSelect={setPointModeFilter} />
+            )}
+            {userLocation && (
+              <button
+                onClick={() => setDistanceSortOrder(distanceSortOrder === 'asc' ? 'desc' : 'asc')}
+                className="ml-auto flex items-center gap-1 text-[13px] font-semibold text-gray-600
+                           hover:text-gray-800 transition-colors active:scale-95"
+              >
+                {distanceSortOrder === 'asc' ? 'Más cercanas' : 'Más lejanas'}
+                <svg className="w-3 h-3 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                    d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+              </button>
+            )}
           </div>
         )}
 

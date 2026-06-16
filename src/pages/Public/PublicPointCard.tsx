@@ -48,8 +48,10 @@ function TagIcon() {
 
 // ─── Badge system types ───────────────────────────────────────────────────────
 
-/** Operational badge rendered on each card (max 1 at a time). */
-type OpBadge = 'unlocked' | 'available' | 'last-slots' | 'every-day' | 'tomorrow' | 'unavailable' | 'not-unlocked' | null
+/** Primary badge — exclusive, answers "can I access?". Max 1 per card. */
+type PrimaryBadge = 'unlocked' | 'available' | 'unavailable' | 'not-unlocked' | null
+/** Secondary labels — can combine, answer "what else should I know?". */
+type SecondaryLabel = 'new' | 'last-slots' | 'every-day' | 'tomorrow'
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 
@@ -98,6 +100,40 @@ interface PublicPointCardProps {
   liveVisitsCount?: number
 }
 
+// ─── Badge render helpers ─────────────────────────────────────────────────────
+
+function PrimaryBadgePill({ badge, theme }: { badge: PrimaryBadge; theme: 'dark' | 'light' }) {
+  if (!badge) return null
+  if (theme === 'dark') {
+    const base = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/[0.55] backdrop-blur-md border border-white/[0.22] shadow-[0_2px_8px_rgba(0,0,0,0.4)]'
+    if (badge === 'unlocked')     return <span className={base}><span className="text-[10px] leading-none">🏆</span><span className="text-[12px] font-semibold text-white leading-none">Desbloqueado</span></span>
+    if (badge === 'available')    return <span className={base}><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" /><span className="text-[12px] font-semibold text-white leading-none">Disponible</span></span>
+    if (badge === 'unavailable')  return <span className={base}><span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" /><span className="text-[12px] font-semibold text-white leading-none">No disponible</span></span>
+    if (badge === 'not-unlocked') return <span className={base}>🔒<span className="text-[12px] font-semibold text-white leading-none">Aún no desbloqueado</span></span>
+  }
+  // Light theme — colored pills for white card backgrounds
+  if (badge === 'unlocked')     return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200"><span className="text-[10px] leading-none">🏆</span><span className="text-[12px] font-semibold text-emerald-700 leading-none">Desbloqueado</span></span>
+  if (badge === 'available')    return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-[12px] font-semibold text-emerald-700 leading-none">Disponible</span></span>
+  if (badge === 'unavailable')  return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 border border-red-200"><span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" /><span className="text-[12px] font-semibold text-red-700 leading-none">No disponible</span></span>
+  if (badge === 'not-unlocked') return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200">🔒<span className="text-[12px] font-semibold text-amber-700 leading-none">Aún no desbloqueado</span></span>
+  return null
+}
+
+function SecondaryLabels({ labels }: { labels: SecondaryLabel[] }) {
+  if (labels.length === 0) return null
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+      {labels.map((label) => {
+        if (label === 'new')        return <span key="new"        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200"><span className="text-[9px] leading-none">✨</span><span className="text-[11px] font-medium text-amber-700 leading-none">Nuevo</span></span>
+        if (label === 'last-slots') return <span key="last-slots" className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200"><span className="text-[9px] leading-none">🔥</span><span className="text-[11px] font-medium text-orange-700 leading-none">Últimos cupos</span></span>
+        if (label === 'every-day')  return <span key="every-day"  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200"><span className="text-[9px] leading-none">🗓️</span><span className="text-[11px] font-medium text-blue-700 leading-none">Todos los días</span></span>
+        if (label === 'tomorrow')   return <span key="tomorrow"   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200"><span className="text-[9px] leading-none">🕒</span><span className="text-[11px] font-medium text-blue-700 leading-none">Disponible mañana</span></span>
+        return null
+      })}
+    </div>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function PublicPointCard({
@@ -126,47 +162,39 @@ export default function PublicPointCard({
   const hasCoverBanner = !hideImage && Boolean(getPointCoverImage(point))
 
   // ── Badge computation ───────────────────────────────────────────────────────
-  // Editorial: point/project published within the last 7 days.
   const isNew = Boolean(
     pointCreatedAt &&
     Date.now() - new Date(pointCreatedAt).getTime() < 7 * 24 * 60 * 60 * 1000,
   )
-  // True only when all locally-checkable rules are satisfied:
-  // location granted + inside activation area + schedule ok + quota ok + live visits ok + dwell completed.
-  // Note: collection requires an async API fetch and cannot be verified here.
   const isFullyAvailable =
     avail.canAccess &&
     !getDwellAccessState(point, distance, dwellProgress?.state, dwellProgress?.elapsed).blocksAccess
 
-  // Operational (max 1, evaluated in priority order):
-  //   0. unlocked      — user previously accessed this point (localStorage record matches updatedAt)
-  //   1. available     — all local rules pass right now (user can access)
-  //   2. unavailable   — schedule/day blocks (temporal; user cannot resolve by moving)
-  //   3. every-day     — schedule covers all 7 days (friendly reassurance)
-  //   4. tomorrow      — schedule blocks today but available tomorrow
-  //   5. last-slots    — quota still open but ≤ 10 remaining (urgency signal)
-  //   6. not-unlocked  — blocked by location/area/quota/dwell/live-visits
-  // Informative points have no unlock lifecycle — no badge shown.
-  const opBadge: OpBadge = (() => {
+  // Primary badge — exclusive, answers "can I access?":
+  const primaryBadge: PrimaryBadge = (() => {
     if (point.pointMode === 'informative') return null
     if (isPointUnlocked(point.geoProjectId, point.id, point.updatedAt)) return 'unlocked'
     if (isFullyAvailable) return 'available'
-    if (avail.scheduleActive && !avail.scheduleAvailable) {
-      const av = point.availability
-      if (av?.scheduleEnabled) {
-        const days = av.scheduleDays ?? []
-        if (days.length === 0 || days.length === 7) return 'every-day'
-        const d    = new Date(); d.setDate(d.getDate() + 1)
-        const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'] as const
-        if (days.includes(DAYS[d.getDay()])) return 'tomorrow'
-      }
-      return 'unavailable'
-    }
-    if (avail.quotaActive && avail.quotaAvailable &&
-        avail.quotaRemaining !== undefined && avail.quotaRemaining <= 10)
-      return 'last-slots'
+    if (avail.scheduleActive && !avail.scheduleAvailable) return 'unavailable'
     return 'not-unlocked'
   })()
+
+  // Secondary labels — can combine, answer "what else should I know?":
+  const secondaryLabels: SecondaryLabel[] = []
+  if (isNew) secondaryLabels.push('new')
+  if (avail.quotaActive && avail.quotaAvailable &&
+      avail.quotaRemaining !== undefined && avail.quotaRemaining <= 10)
+    secondaryLabels.push('last-slots')
+  if (primaryBadge === 'unavailable' && avail.scheduleActive && point.availability) {
+    const days = point.availability.scheduleDays ?? []
+    if (days.length === 0 || days.length === 7) {
+      secondaryLabels.push('every-day')
+    } else {
+      const d = new Date(); d.setDate(d.getDate() + 1)
+      const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'] as const
+      if (days.includes(DAYS[d.getDay()])) secondaryLabels.push('tomorrow')
+    }
+  }
 
   function openMaps() {
     window.open(mapsUrl, '_blank', 'noopener,noreferrer')
@@ -249,10 +277,10 @@ export default function PublicPointCard({
       ].join(' ')}
       onClick={isDetail ? undefined : onSelect}
     >
-      {/* DETAIL MODE: badges centred above the image */}
-      {isDetail && (isNew || opBadge) && (
+      {/* DETAIL MODE: badges centred above the image — layout unchanged */}
+      {isDetail && (primaryBadge || secondaryLabels.length > 0) && (
         <div className="flex justify-center items-center flex-wrap gap-2 pb-4">
-          {isNew && (
+          {secondaryLabels.includes('new') && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
                              bg-black/[0.5] backdrop-blur-md border border-amber-300/[0.3]
                              shadow-[0_1px_8px_rgba(0,0,0,0.35)]">
@@ -260,7 +288,7 @@ export default function PublicPointCard({
               <span className="text-[11px] font-medium text-amber-200 leading-none">Nuevo</span>
             </span>
           )}
-          {opBadge === 'unlocked' && (
+          {primaryBadge === 'unlocked' && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                              bg-black/[0.65] backdrop-blur-md border border-white/[0.28]
                              shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
@@ -268,7 +296,7 @@ export default function PublicPointCard({
               <span className="text-[12px] font-semibold text-white leading-none">Desbloqueado</span>
             </span>
           )}
-          {opBadge === 'available' && (
+          {primaryBadge === 'available' && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                              bg-black/[0.65] backdrop-blur-md border border-white/[0.28]
                              shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
@@ -276,7 +304,7 @@ export default function PublicPointCard({
               <span className="text-[12px] font-semibold text-white leading-none">Disponible</span>
             </span>
           )}
-          {opBadge === 'last-slots' && (
+          {secondaryLabels.includes('last-slots') && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                              bg-black/[0.65] backdrop-blur-md border border-white/[0.28]
                              shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
@@ -284,7 +312,7 @@ export default function PublicPointCard({
               <span className="text-[12px] font-semibold text-white leading-none">Últimos cupos</span>
             </span>
           )}
-          {opBadge === 'every-day' && (
+          {secondaryLabels.includes('every-day') && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                              bg-black/[0.65] backdrop-blur-md border border-white/[0.28]
                              shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
@@ -292,7 +320,7 @@ export default function PublicPointCard({
               <span className="text-[12px] font-semibold text-white leading-none">Todos los días</span>
             </span>
           )}
-          {opBadge === 'tomorrow' && (
+          {secondaryLabels.includes('tomorrow') && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                              bg-black/[0.65] backdrop-blur-md border border-white/[0.28]
                              shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
@@ -300,7 +328,7 @@ export default function PublicPointCard({
               <span className="text-[12px] font-semibold text-white leading-none">Disponible mañana</span>
             </span>
           )}
-          {opBadge === 'unavailable' && (
+          {primaryBadge === 'unavailable' && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                              bg-black/[0.65] backdrop-blur-md border border-white/[0.28]
                              shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
@@ -308,7 +336,7 @@ export default function PublicPointCard({
               <span className="text-[12px] font-semibold text-white leading-none">No disponible</span>
             </span>
           )}
-          {opBadge === 'not-unlocked' && (
+          {primaryBadge === 'not-unlocked' && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                              bg-black/[0.65] backdrop-blur-md border border-white/[0.28]
                              shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
@@ -332,81 +360,23 @@ export default function PublicPointCard({
           <div className="absolute inset-x-0 bottom-0 h-1/2
                           bg-gradient-to-t from-gray-950/70 to-transparent
                           pointer-events-none" />
-          {/* List mode only — detail mode shows badges above the image */}
-          {!isDetail && (isNew || opBadge) && (
-            <div className="absolute bottom-3.5 left-3 flex items-center gap-2">
-              {/* Editorial — warm/subtle, secondary to the operational badge */}
-              {isNew && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
-                                 bg-black/[0.4] backdrop-blur-md border border-amber-300/[0.22]
-                                 shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
-                  <span className="text-[9px] leading-none">✨</span>
-                  <span className="text-[11px] font-medium text-amber-200 leading-none">Nuevo</span>
-                </span>
-              )}
-              {/* Operational — more opaque, larger, higher contrast */}
-              {opBadge === 'unlocked' && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                                 bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
-                                 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
-                  <span className="text-[10px] leading-none">🏆</span>
-                  <span className="text-[12px] font-semibold text-white leading-none">Desbloqueado</span>
-                </span>
-              )}
-              {opBadge === 'available' && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                                 bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
-                                 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-                  <span className="text-[12px] font-semibold text-white leading-none">Disponible</span>
-                </span>
-              )}
-              {opBadge === 'last-slots' && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                                 bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
-                                 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
-                  <span className="text-[10px] leading-none">🔥</span>
-                  <span className="text-[12px] font-semibold text-white leading-none">Últimos cupos</span>
-                </span>
-              )}
-              {opBadge === 'every-day' && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                                 bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
-                                 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
-                  <span className="text-[10px] leading-none">🗓️</span>
-                  <span className="text-[12px] font-semibold text-white leading-none">Todos los días</span>
-                </span>
-              )}
-              {opBadge === 'tomorrow' && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                                 bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
-                                 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
-                  <span className="text-[10px] leading-none">🕒</span>
-                  <span className="text-[12px] font-semibold text-white leading-none">Disponible mañana</span>
-                </span>
-              )}
-              {opBadge === 'unavailable' && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                                 bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
-                                 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
-                  <span className="text-[12px] font-semibold text-white leading-none">No disponible</span>
-                </span>
-              )}
-              {opBadge === 'not-unlocked' && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                                 bg-black/[0.55] backdrop-blur-md border border-white/[0.22]
-                                 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
-                  🔒
-                  <span className="text-[12px] font-semibold text-white leading-none">Aún no desbloqueado</span>
-                </span>
-              )}
+          {/* List mode only — primary badge top-left over image */}
+          {!isDetail && primaryBadge && (
+            <div className="absolute top-3 left-3">
+              <PrimaryBadgePill badge={primaryBadge} theme="dark" />
             </div>
           )}
         </div>
       )}
 
       <div className={isDetail ? '' : 'p-3.5'}>
+        {/* Primary badge — list mode, no cover image, above title */}
+        {!isDetail && !hasCoverBanner && primaryBadge && (
+          <div className="mb-2">
+            <PrimaryBadgePill badge={primaryBadge} theme="light" />
+          </div>
+        )}
+
         {/* Name + exit button */}
         <div className="flex items-start justify-between gap-2">
           <h3
@@ -428,70 +398,6 @@ export default function PublicPointCard({
             </button>
           )}
         </div>
-
-        {/* Badge system — below title when no cover image occupies the banner slot (list mode only) */}
-        {!isDetail && !hasCoverBanner && (isNew || opBadge) && (
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            {/* Editorial — warm/subtle */}
-            {isNew && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full
-                               bg-black/[0.2] border border-amber-300/[0.18]">
-                <span className="text-[9px] leading-none">✨</span>
-                <span className="text-[11px] font-medium text-amber-200 leading-none">Nuevo</span>
-              </span>
-            )}
-            {/* Operational — more prominent */}
-            {opBadge === 'unlocked' && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
-                               bg-black/[0.3] border border-white/[0.15]">
-                <span className="text-[10px] leading-none">🏆</span>
-                <span className="text-[12px] font-semibold text-white leading-none">Desbloqueado</span>
-              </span>
-            )}
-            {opBadge === 'available' && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
-                               bg-black/[0.3] border border-white/[0.15]">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-                <span className="text-[12px] font-semibold text-white leading-none">Disponible</span>
-              </span>
-            )}
-            {opBadge === 'last-slots' && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
-                               bg-black/[0.3] border border-white/[0.15]">
-                <span className="text-[10px] leading-none">🔥</span>
-                <span className="text-[12px] font-semibold text-white leading-none">Últimos cupos</span>
-              </span>
-            )}
-            {opBadge === 'every-day' && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
-                               bg-black/[0.3] border border-white/[0.15]">
-                <span className="text-[10px] leading-none">🗓️</span>
-                <span className="text-[12px] font-semibold text-white leading-none">Todos los días</span>
-              </span>
-            )}
-            {opBadge === 'tomorrow' && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
-                               bg-black/[0.3] border border-white/[0.15]">
-                <span className="text-[10px] leading-none">🕒</span>
-                <span className="text-[12px] font-semibold text-white leading-none">Disponible mañana</span>
-              </span>
-            )}
-            {opBadge === 'unavailable' && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
-                               bg-black/[0.3] border border-white/[0.15]">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
-                <span className="text-[12px] font-semibold text-white leading-none">No disponible</span>
-              </span>
-            )}
-            {opBadge === 'not-unlocked' && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
-                               bg-black/[0.3] border border-white/[0.15]">
-                🔒
-                <span className="text-[12px] font-semibold text-white leading-none">Aún no desbloqueado</span>
-              </span>
-            )}
-          </div>
-        )}
 
         {/* Description */}
         {point.description && (
@@ -557,6 +463,11 @@ export default function PublicPointCard({
             </svg>
             <p className={`line-clamp-2 ${isDetail ? 'text-sm text-gray-600' : 'text-xs text-gray-500'}`}>{address ?? point.instructions}</p>
           </div>
+        )}
+
+        {/* Secondary labels — list mode, below address */}
+        {!isDetail && secondaryLabels.length > 0 && (
+          <SecondaryLabels labels={secondaryLabels} />
         )}
 
         {/* ── Selected: status chips + button ── */}

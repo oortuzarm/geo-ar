@@ -360,10 +360,42 @@ export default function PublicPointCard({
           <div className="absolute inset-x-0 bottom-0 h-1/2
                           bg-gradient-to-t from-gray-950/70 to-transparent
                           pointer-events-none" />
-          {/* List mode only — primary badge top-left over image */}
-          {!isDetail && primaryBadge && (
-            <div className="absolute top-3 left-3">
-              <PrimaryBadgePill badge={primaryBadge} theme="dark" />
+          {/* List mode only — secondaries (small, left) + primary (larger) bottom-center */}
+          {!isDetail && (primaryBadge || secondaryLabels.length > 0) && (
+            <div className="absolute bottom-3.5 inset-x-0 flex items-center justify-center gap-2 px-3">
+              {secondaryLabels.includes('new') && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+                                 bg-black/[0.4] backdrop-blur-md border border-amber-300/[0.22]
+                                 shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
+                  <span className="text-[9px] leading-none">✨</span>
+                  <span className="text-[10px] font-medium text-amber-200 leading-none">Nuevo</span>
+                </span>
+              )}
+              {secondaryLabels.includes('last-slots') && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+                                 bg-black/[0.4] backdrop-blur-md border border-white/[0.18]
+                                 shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
+                  <span className="text-[9px] leading-none">🔥</span>
+                  <span className="text-[10px] font-medium text-white leading-none">Últimos cupos</span>
+                </span>
+              )}
+              {secondaryLabels.includes('every-day') && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+                                 bg-black/[0.4] backdrop-blur-md border border-white/[0.18]
+                                 shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
+                  <span className="text-[9px] leading-none">🗓️</span>
+                  <span className="text-[10px] font-medium text-white leading-none">Todos los días</span>
+                </span>
+              )}
+              {secondaryLabels.includes('tomorrow') && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+                                 bg-black/[0.4] backdrop-blur-md border border-white/[0.18]
+                                 shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
+                  <span className="text-[9px] leading-none">🕒</span>
+                  <span className="text-[10px] font-medium text-white leading-none">Mañana</span>
+                </span>
+              )}
+              {primaryBadge && <PrimaryBadgePill badge={primaryBadge} theme="dark" />}
             </div>
           )}
         </div>
@@ -465,8 +497,8 @@ export default function PublicPointCard({
           </div>
         )}
 
-        {/* Secondary labels — list mode, below address */}
-        {!isDetail && secondaryLabels.length > 0 && (
+        {/* Secondary labels — list mode without cover image, below address */}
+        {!isDetail && !hasCoverBanner && secondaryLabels.length > 0 && (
           <SecondaryLabels labels={secondaryLabels} />
         )}
 

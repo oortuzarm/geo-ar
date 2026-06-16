@@ -90,6 +90,20 @@ export default function DashboardPage() {
     const currentProject = useGeoStore.getState().project
     if (!currentProject) return
 
+    const allPoints = useGeoStore.getState().points
+    const uncategorized = allPoints.filter((pt) => pt.pointCategory == null)
+    if (uncategorized.length > 0) {
+      const n = uncategorized.length
+      addToast(
+        n === 1
+          ? 'Hay 1 punto GPS sin categoría. Selecciona una categoría antes de guardar el proyecto.'
+          : `Hay ${n} puntos GPS sin categoría. Selecciona una categoría antes de guardar el proyecto.`,
+        'error',
+      )
+      useGeoStore.getState().setSelectedPointId(uncategorized[0].id)
+      return
+    }
+
     if (isSavingRef.current) {
       pendingSaveRef.current = true
       console.log('[Save] Guardado en curso — cambios pendientes registrados')

@@ -647,6 +647,7 @@ export default function GeoPointForm({
       onChange({
         name,
         pointMode,
+        pointCategory,
         contentType,
         contentData,
         lookiarUrl:          contentType === 'url' ? normalizedUrl as string : undefined,
@@ -695,6 +696,7 @@ export default function GeoPointForm({
       onChange({
         name,
         pointMode,
+        pointCategory,
         contentType:         resolvedContentType,
         contentData:         resolvedContentData,
         lookiarUrl:          resolvedLookiarUrl,

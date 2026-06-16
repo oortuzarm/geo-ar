@@ -113,6 +113,7 @@ export class RemoteGeoRepository implements IGeoRepository {
       point_video_url:       p.pointVideoUrl        ?? null,
       point_video_type:      p.pointVideoType       ?? null,
       required_point_ids:    p.requiredPointIds     ?? [],
+      point_category:        p.pointCategory        ?? null,
     }))
     const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_projects/${id}/sync`), {
       method: 'PATCH',
@@ -164,6 +165,7 @@ export class RemoteGeoRepository implements IGeoRepository {
       ...('pointLogoPositionY' in data ? { point_logo_position_y: data.pointLogoPositionY } : {}),
       ...('pointVideoUrl'      in data ? { point_video_url:       data.pointVideoUrl      } : {}),
       ...('pointVideoType'     in data ? { point_video_type:      data.pointVideoType     } : {}),
+      ...('pointCategory'      in data ? { point_category:        data.pointCategory      } : {}),
     }
     const raw = await apiFetch<Record<string, unknown>>(
       this.url(`/api/geo_projects/${data.geoProjectId}/geo_points`),
@@ -187,6 +189,7 @@ export class RemoteGeoRepository implements IGeoRepository {
       ...('pointLogoPositionY' in updates ? { point_logo_position_y: updates.pointLogoPositionY } : {}),
       ...('pointVideoUrl'      in updates ? { point_video_url:       updates.pointVideoUrl      } : {}),
       ...('pointVideoType'     in updates ? { point_video_type:      updates.pointVideoType     } : {}),
+      ...('pointCategory'      in updates ? { point_category:        updates.pointCategory      } : {}),
     }
     const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_points/${id}`), {
       method: 'PUT',

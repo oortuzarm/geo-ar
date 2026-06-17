@@ -218,6 +218,162 @@ function PointFilterDropdown({
   )
 }
 
+// ── Spatial insights ──────────────────────────────────────────────────────────
+
+interface SpatialInsight {
+  id:   string
+  label: string
+  text:  string
+  dot:   'emerald' | 'amber' | 'blue' | 'violet' | 'brand'
+}
+
+const INSIGHT_DOT: Record<SpatialInsight['dot'], string> = {
+  emerald: 'bg-emerald-400',
+  amber:   'bg-amber-400',
+  blue:    'bg-blue-400',
+  violet:  'bg-violet-400',
+  brand:   'bg-brand-400',
+}
+
+function deriveSpatialInsights(
+  mode:             IntensityMode,
+  liveData:         LiveVisitsResponse | null,
+  historicalPoints: PointAnalytics[] | null,
+): SpatialInsight[] {
+  if (!liveData) return []
+  const out: SpatialInsight[] = []
+
+  if (mode === 'live') {
+    const { liveVisitsTotal: total, liveVisitsInsideAreas: inside,
+            liveVisitsOutsideAreas: outside, liveVisitsMixed: mixed,
+            mostActivePoint } = liveData
+
+    if (mostActivePoint && mostActivePoint.activeNow > 0) {
+      out.push({
+        id: 'top-point', label: 'Ubicación más activa', dot: 'amber',
+        text: `"${mostActivePoint.name}" concentra la mayor actividad en este momento (${mostActivePoint.activeNow} persona${mostActivePoint.activeNow !== 1 ? 's' : ''}).`,
+      })
+    }
+    if (total > 0) {
+      const pct = Math.round((inside / total) * 100)
+      out.push({
+        id: 'inside-pct', label: 'Distribución espacial', dot: 'emerald',
+        text: `El ${pct}% de las personas activas se encuentra dentro de las ubicaciones monitoreadas.`,
+      })
+    }
+    if (total > 0 && outside > 0) {
+      const pct = Math.round((outside / total) * 100)
+      out.push({
+        id: 'outside-pct', label: 'Actividad externa', dot: 'blue',
+        text: `El ${pct}% de la actividad ocurre fuera de las ubicaciones configuradas.`,
+      })
+    }
+    if (mixed > 0) {
+      out.push({
+        id: 'mixed', label: 'Comportamiento mixto', dot: 'violet',
+        text: `${mixed} persona${mixed !== 1 ? 's' : ''} con presencia simultánea dentro y fuera de ubicaciones.`,
+      })
+    }
+
+  } else {
+    const { periodPeopleTotal: total, periodPeopleInsideAreas: inside,
+            periodPeopleOutsideAreas: outside, periodPeopleMixed: mixed } = liveData
+
+    if (total > 0) {
+      const pct = Math.round((inside / total) * 100)
+      out.push({
+        id: 'inside-pct', label: 'Actividad principal', dot: 'emerald',
+        text: `El ${pct}% de las personas registradas interactuó dentro de las ubicaciones configuradas.`,
+      })
+    }
+
+    if (historicalPoints && historicalPoints.length > 0) {
+      const sorted = [...historicalPoints].sort((a, b) => b.radiusEntries - a.radiusEntries)
+      const top    = sorted[0]
+      if (top.radiusEntries > 0) {
+        out.push({
+          id: 'top-point', label: 'Ubicación más activa', dot: 'amber',
+          text: `"${top.pointName}" concentró el mayor volumen de actividad del período.`,
+        })
+        if (sorted.length > 1) {
+          const totalEntries = sorted.reduce((s, p) => s + p.radiusEntries, 0)
+          if (totalEntries > 0) {
+            const pct = Math.round((top.radiusEntries / totalEntries) * 100)
+            if (pct >= 50) {
+              out.push({
+                id: 'concentration', label: 'Zona de mayor concentración', dot: 'brand',
+                text: `"${top.pointName}" concentró el ${pct}% de las entradas al área del período.`,
+              })
+            }
+          }
+        }
+      }
+    }
+
+    if (total > 0 && outside > 0) {
+      const pct = Math.round((outside / total) * 100)
+      out.push({
+        id: 'outside-pct', label: 'Actividad externa', dot: 'blue',
+        text: `El ${pct}% de la actividad del período ocurrió fuera de las ubicaciones monitoreadas.`,
+      })
+    }
+    if (mixed > 0) {
+      out.push({
+        id: 'mixed', label: 'Comportamiento detectado', dot: 'violet',
+        text: `Se observaron desplazamientos entre áreas internas y externas en ${mixed} persona${mixed !== 1 ? 's' : ''}.`,
+      })
+    }
+    if (historicalPoints && historicalPoints.length > 1) {
+      const active = historicalPoints.filter(p => p.radiusEntries > 0).length
+      if (active > 0 && active < historicalPoints.length) {
+        out.push({
+          id: 'coverage', label: 'Cobertura de ubicaciones', dot: 'brand',
+          text: `${active} de ${historicalPoints.length} ubicaciones registraron actividad en el período.`,
+        })
+      }
+    }
+  }
+
+  return out.slice(0, 5)
+}
+
+function SpatialInsightsSection({
+  mode,
+  liveData,
+  historicalPoints,
+}: {
+  mode:             IntensityMode
+  liveData:         LiveVisitsResponse | null
+  historicalPoints: PointAnalytics[] | null
+}) {
+  const insights = deriveSpatialInsights(mode, liveData, historicalPoints)
+  if (insights.length === 0) return null
+
+  return (
+    <section className="space-y-3">
+      <SectionLabel>Resumen Espacial</SectionLabel>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {insights.map(insight => (
+          <div
+            key={insight.id}
+            className="flex items-start gap-2.5 bg-gray-900/50 border border-white/[0.05] rounded-xl px-3.5 py-3"
+          >
+            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-[5px] ${INSIGHT_DOT[insight.dot]}`} />
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-none mb-1">
+                {insight.label}
+              </p>
+              <p className="text-[12px] text-gray-300 leading-snug">
+                {insight.text}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 // ── Feature flags ─────────────────────────────────────────────────────────────
 //
 // Enable when ProjectLiveVisit stores multiple GPS positions per session so a
@@ -766,6 +922,13 @@ export default function LiveVisitsPage() {
           })()}
         </section>
         )}
+
+        {/* ── Resumen Espacial ───────────────────────────────────────────────── */}
+        <SpatialInsightsSection
+          mode={intensityMode}
+          liveData={liveData}
+          historicalPoints={historicalPoints}
+        />
 
         {/* ── 3. Actividad Espacial ──────────────────────────────────────────── */}
         <section className="space-y-4">

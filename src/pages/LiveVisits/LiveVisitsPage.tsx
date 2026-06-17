@@ -280,10 +280,11 @@ function deriveSpatialInsights(
             periodPeopleOutsideAreas: outside, periodPeopleMixed: mixed } = liveData
 
     if (total > 0) {
-      const pct = Math.round((inside / total) * 100)
+      const onlyInside = inside - mixed
+      const pct = Math.round((onlyInside / total) * 100)
       out.push({
         id: 'inside-pct', label: 'Actividad principal', dot: 'emerald',
-        text: `El ${pct}% de las personas registradas interactuó dentro de las ubicaciones configuradas.`,
+        text: `El ${pct}% de las personas permaneció exclusivamente dentro de las ubicaciones configuradas.`,
       })
     }
 

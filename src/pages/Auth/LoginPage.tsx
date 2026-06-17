@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { ApiError } from '../../lib/apiFetch'
 import PasswordInput from '../../components/ui/PasswordInput'
+import { resendVerificationCode } from '../../services/authApi'
 
 export default function LoginPage() {
   const { isAuthenticated, isInitialized, login } = useAuthStore()
@@ -13,7 +14,11 @@ export default function LoginPage() {
   const [error,    setError]    = useState<string | null>(null)
   const [loading,  setLoading]  = useState(false)
 
-  // If session already verified and user is logged in, go straight to /app/live-visits
+  // Unverified-email state
+  const [unverifiedEmail,  setUnverifiedEmail]  = useState<string | null>(null)
+  const [resendLoading,    setResendLoading]    = useState(false)
+  const [resendMessage,    setResendMessage]    = useState<string | null>(null)
+
   if (isInitialized && isAuthenticated) {
     return <Navigate to="/app/live-visits" replace />
   }
@@ -21,6 +26,8 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    setUnverifiedEmail(null)
+    setResendMessage(null)
     setLoading(true)
     try {
       await login({ email, password })
@@ -30,7 +37,13 @@ export default function LoginPage() {
         if (err.status === 401 || err.status === 422) {
           setError('Email o contraseña incorrectos.')
         } else if (err.status === 403) {
-          setError('Tu cuenta está suspendida. Contacta al administrador.')
+          let body: { code?: string; email?: string } = {}
+          try { body = JSON.parse(err.message) } catch { /* not JSON */ }
+          if (body.code === 'email_not_verified') {
+            setUnverifiedEmail(body.email ?? email)
+          } else {
+            setError('Tu cuenta está suspendida. Contacta al administrador.')
+          }
         } else {
           setError('Error al iniciar sesión. Intenta de nuevo.')
         }
@@ -39,6 +52,20 @@ export default function LoginPage() {
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleResend() {
+    if (!unverifiedEmail) return
+    setResendLoading(true)
+    setResendMessage(null)
+    try {
+      await resendVerificationCode(unverifiedEmail)
+      setResendMessage('Código reenviado. Revisá tu correo para completar el registro.')
+    } catch {
+      setResendMessage('No se pudo reenviar. Intentá de nuevo.')
+    } finally {
+      setResendLoading(false)
     }
   }
 
@@ -71,7 +98,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setUnverifiedEmail(null); setResendMessage(null) }}
                 placeholder="tu@email.com"
                 className="bg-gray-800 border border-gray-700 hover:border-gray-600
                            rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500
@@ -111,6 +138,27 @@ export default function LoginPage() {
                             rounded-lg px-3 py-2">
                 {error}
               </p>
+            )}
+
+            {unverifiedEmail && (
+              <div className="rounded-lg border border-yellow-700/50 bg-yellow-950/30 px-3 py-3 space-y-2">
+                <p className="text-sm text-yellow-300">
+                  Debés verificar tu correo electrónico antes de iniciar sesión.
+                </p>
+                {resendMessage ? (
+                  <p className="text-xs text-green-400">{resendMessage}</p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={resendLoading}
+                    className="text-xs text-brand-400 hover:text-brand-300 font-medium
+                               transition-colors disabled:opacity-50 disabled:cursor-wait"
+                  >
+                    {resendLoading ? 'Enviando…' : 'Reenviar código de verificación'}
+                  </button>
+                )}
+              </div>
             )}
 
             <button

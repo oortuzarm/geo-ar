@@ -1,5 +1,10 @@
 import type { FeaturesConfig } from '../lib/planFeatureRegistry'
 
+export interface PendingVerification {
+  status: 'pending_verification'
+  email:  string
+}
+
 export interface User {
   id:     string
   email:  string

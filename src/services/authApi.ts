@@ -1,5 +1,5 @@
 import { apiFetch } from '../lib/apiFetch'
-import type { User } from '../types/auth.types'
+import type { User, PendingVerification } from '../types/auth.types'
 
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
 
@@ -25,14 +25,28 @@ export function login(creds: LoginCredentials): Promise<User> {
   })
 }
 
-export function register(creds: RegisterCredentials): Promise<User> {
-  return apiFetch<User>(url('/api/auth/register'), {
+export function register(creds: RegisterCredentials): Promise<PendingVerification> {
+  return apiFetch<PendingVerification>(url('/api/auth/register'), {
     method: 'POST',
     body: JSON.stringify({
       email: creds.email,
       password: creds.password,
       password_confirmation: creds.passwordConfirmation,
     }),
+  })
+}
+
+export function verifyEmailCode(email: string, code: string): Promise<User> {
+  return apiFetch<User>(url('/api/auth/verify_email_code'), {
+    method: 'POST',
+    body: JSON.stringify({ email, code }),
+  })
+}
+
+export function resendVerificationCode(email: string): Promise<void> {
+  return apiFetch<void>(url('/api/auth/resend_verification_code'), {
+    method: 'POST',
+    body: JSON.stringify({ email }),
   })
 }
 

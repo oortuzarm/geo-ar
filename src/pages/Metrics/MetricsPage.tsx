@@ -1607,7 +1607,7 @@ export default function MetricsPage() {
                       <KPICard
                         label="Entradas al área"
                         value={displaySummary!.radiusEntries}
-                        sub="Personas que ingresaron al área GPS."
+                        sub="Ingresos registrados al área GPS."
                         valueColor="text-brand-400"
                       />
                       <KPICard

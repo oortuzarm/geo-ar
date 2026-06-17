@@ -453,13 +453,6 @@ export default function AppShell() {
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-0.5">
           <NavLink
-            to="/app/live-visits"
-            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
-          >
-            <LiveVisitsIcon />
-            Inteligencia Espacial
-          </NavLink>
-          <NavLink
             to="/app" end
             className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
           >
@@ -474,13 +467,6 @@ export default function AppShell() {
             Analytics
           </NavLink>
           <NavLink
-            to="/app/members"
-            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
-          >
-            <UsersIcon />
-            Miembros
-          </NavLink>
-          <NavLink
             to="/app/integrations"
             className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
           >
@@ -488,11 +474,25 @@ export default function AppShell() {
             Integraciones
           </NavLink>
           <NavLink
+            to="/app/live-visits"
+            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
+          >
+            <LiveVisitsIcon />
+            Inteligencia Espacial
+          </NavLink>
+          <NavLink
             to="/app/smart-proxies"
             className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
           >
             <SmartProxiesIcon />
             Smart Proxies
+          </NavLink>
+          <NavLink
+            to="/app/members"
+            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
+          >
+            <UsersIcon />
+            Miembros
           </NavLink>
           <NavLink
             to="/app/account"
@@ -574,14 +574,6 @@ export default function AppShell() {
         {/* Drawer navigation */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           <NavLink
-            to="/app/live-visits"
-            onClick={closeDrawer}
-            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
-          >
-            <LiveVisitsIcon />
-            Inteligencia Espacial
-          </NavLink>
-          <NavLink
             to="/app" end
             onClick={closeDrawer}
             className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
@@ -598,14 +590,6 @@ export default function AppShell() {
             Analytics
           </NavLink>
           <NavLink
-            to="/app/members"
-            onClick={closeDrawer}
-            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
-          >
-            <UsersIcon />
-            Miembros
-          </NavLink>
-          <NavLink
             to="/app/integrations"
             onClick={closeDrawer}
             className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
@@ -614,12 +598,28 @@ export default function AppShell() {
             Integraciones
           </NavLink>
           <NavLink
+            to="/app/live-visits"
+            onClick={closeDrawer}
+            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
+          >
+            <LiveVisitsIcon />
+            Inteligencia Espacial
+          </NavLink>
+          <NavLink
             to="/app/smart-proxies"
             onClick={closeDrawer}
             className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
           >
             <SmartProxiesIcon />
             Smart Proxies
+          </NavLink>
+          <NavLink
+            to="/app/members"
+            onClick={closeDrawer}
+            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
+          >
+            <UsersIcon />
+            Miembros
           </NavLink>
           <NavLink
             to="/app/account"

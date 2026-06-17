@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWorkspace } from '../../hooks/useWorkspace'
+import { usePlanFeatures } from '../../hooks/usePlanFeatures'
+import PlanGate from '../../components/ui/PlanGate'
 import GpsIntensityMap from '../../components/map/GpsIntensityMap'
 import type { IntensityLevel } from '../../components/map/GpsIntensityMap'
 import IntensityModeSelector from '../../components/map/IntensityModeSelector'
@@ -377,6 +379,7 @@ const LIVE_MIXED_ENABLED = false
 export default function LiveVisitsPage() {
   const navigate = useNavigate()
   const { project, points, loading } = useWorkspace()
+  const { canUseSpatialIntelligence } = usePlanFeatures()
   const editorUrl = project ? `/project/${project.id}` : null
 
   const [liveData,    setLiveData]    = useState<LiveVisitsResponse | null>(null)
@@ -695,6 +698,16 @@ export default function LiveVisitsPage() {
       <div className="flex justify-center items-center py-32">
         <Spinner size="lg" />
       </div>
+    )
+  }
+
+  if (!canUseSpatialIntelligence) {
+    return (
+      <PlanGate
+        emoji="🗺️"
+        title="Inteligencia Espacial no disponible"
+        description="Esta función no está disponible en tu plan actual. Actualizá tu plan para acceder a mapas de actividad, zonas calientes e insights espaciales."
+      />
     )
   }
 

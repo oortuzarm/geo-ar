@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Input, Textarea } from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
-import type { ContentData, ContentType, DestinationCategory, GeoPoint, GeoPointAvailability, MediaContentData, PointCategory } from '../../types'
+import type { ContentData, ContentType, GeoPoint, GeoPointAvailability, MediaContentData, PointCategory } from '../../types'
 import { reverseGeocode } from '../../features/geolocation/geocoding'
 import { uploadFile, formatFileSize } from '../../lib/uploadFile'
 import { uploadImage } from '../../lib/uploadImage'
@@ -70,20 +70,6 @@ const POINT_CATEGORIES: { value: PointCategory; label: string }[] = [
   { value: 'real_estate',    label: 'Inmobiliaria'   },
   { value: 'corporate',      label: 'Corporativo'    },
   { value: 'other',          label: 'Otro'           },
-]
-
-// ─── Destination category config (only shown when content type is URL) ────────
-
-const DESTINATION_CATEGORIES: { value: DestinationCategory; label: string }[] = [
-  { value: 'website',     label: 'Sitio web'     },
-  { value: 'whatsapp',    label: 'WhatsApp'      },
-  { value: 'form',        label: 'Formulario'    },
-  { value: 'reservation', label: 'Reserva'       },
-  { value: 'ecommerce',   label: 'E-commerce'    },
-  { value: 'social',      label: 'Red social'    },
-  { value: 'map',         label: 'Mapa'          },
-  { value: 'coupon',      label: 'Cupón'         },
-  { value: 'custom',      label: 'Personalizado' },
 ]
 
 const FILE_CONFIG: Record<Exclude<ContentType, 'url'>, { accept: string; hint: string; maxLabel: string }> = {
@@ -408,9 +394,8 @@ export default function GeoPointForm({
   // ── Point category ────────────────────────────────────────────────────────
   const [pointCategory, setPointCategory] = useState<PointCategory | undefined>(point.pointCategory)
 
-  // ── Content type + destination category state ────────────────────────────
-  const [contentType,         setContentType]         = useState<ContentType>(point.contentType ?? 'url')
-  const [destinationCategory, setDestinationCategory] = useState<DestinationCategory | undefined>(point.destinationCategory)
+  // ── Content type state ────────────────────────────────────────────────────
+  const [contentType, setContentType] = useState<ContentType>(point.contentType ?? 'url')
   // Uploaded file info (for video/audio/file types)
   const initialMedia = isMediaContentData(point.contentData)
     ? { url: point.contentData.file_url, fileName: point.contentData.file_name, mimeType: point.contentData.mime_type, size: 0 }
@@ -520,9 +505,6 @@ export default function GeoPointForm({
       setUploadError(null)
       setContentError(null)
       setUrlError(null)
-      if (ct !== 'url') {
-        setDestinationCategory(undefined)
-      }
     }
     setContentType(ct)
   }
@@ -658,9 +640,8 @@ export default function GeoPointForm({
         pointCategory,
         contentType,
         contentData,
-        lookiarUrl:          contentType === 'url' ? normalizedUrl as string : undefined,
-        destinationCategory: contentType === 'url' ? destinationCategory : undefined,
-        description:         description    || undefined,
+        lookiarUrl:  contentType === 'url' ? normalizedUrl as string : undefined,
+        description: description    || undefined,
         instructions:        addressCustom  || undefined,
         buttonText:          buttonText     || undefined,
         socialLinks:         buildSocialLinks(),
@@ -672,7 +653,6 @@ export default function GeoPointForm({
       let resolvedContentType: typeof contentType | undefined
       let resolvedContentData: ContentData | undefined
       let resolvedLookiarUrl:  string | undefined
-      let resolvedDestCat:     DestinationCategory | undefined
 
       if (contentType === 'url') {
         if (lookiarUrl.trim()) {
@@ -682,7 +662,6 @@ export default function GeoPointForm({
             resolvedContentType = 'url'
             resolvedContentData = { url: normalizedUrl }
             resolvedLookiarUrl  = normalizedUrl
-            resolvedDestCat     = destinationCategory ?? undefined
           }
         } else {
           setUrlError(null)
@@ -705,11 +684,10 @@ export default function GeoPointForm({
         name,
         pointMode,
         pointCategory,
-        contentType:         resolvedContentType,
-        contentData:         resolvedContentData,
-        lookiarUrl:          resolvedLookiarUrl,
-        destinationCategory: resolvedDestCat,
-        description:         description || undefined,
+        contentType: resolvedContentType,
+        contentData: resolvedContentData,
+        lookiarUrl:  resolvedLookiarUrl,
+        description: description || undefined,
         instructions:        addressCustom || undefined,
         buttonText:          buttonText || undefined,
         socialLinks:         buildSocialLinks(),
@@ -1174,32 +1152,6 @@ export default function GeoPointForm({
               />
             </div>
 
-            {/* ── Categoría del destino ──────────────────────────────────── */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                Categoría del destino
-              </label>
-              <select
-                value={destinationCategory ?? ''}
-                onChange={(e) => {
-                  const val = e.target.value as DestinationCategory | ''
-                  const next = val === '' ? undefined : val
-                  setDestinationCategory(next)
-                  onChange({ destinationCategory: next })
-                }}
-                className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2
-                           text-sm text-gray-200 focus:border-brand-500 focus:outline-none
-                           focus:ring-1 focus:ring-brand-500 transition-colors"
-              >
-                <option value="">Sin categoría</option>
-                {DESTINATION_CATEGORIES.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-500">
-                Opcional. Clasifica el destino para analytics.
-              </p>
-            </div>
           </>
         )}
 

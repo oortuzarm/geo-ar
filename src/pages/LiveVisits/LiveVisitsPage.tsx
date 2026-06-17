@@ -221,18 +221,9 @@ function PointFilterDropdown({
 // ── Spatial insights ──────────────────────────────────────────────────────────
 
 interface SpatialInsight {
-  id:   string
+  id:    string
   label: string
   text:  string
-  dot:   'emerald' | 'amber' | 'blue' | 'violet' | 'brand'
-}
-
-const INSIGHT_DOT: Record<SpatialInsight['dot'], string> = {
-  emerald: 'bg-emerald-400',
-  amber:   'bg-amber-400',
-  blue:    'bg-blue-400',
-  violet:  'bg-violet-400',
-  brand:   'bg-brand-400',
 }
 
 function deriveSpatialInsights(
@@ -250,27 +241,27 @@ function deriveSpatialInsights(
 
     if (mostActivePoint && mostActivePoint.activeNow > 0) {
       out.push({
-        id: 'top-point', label: 'Ubicación más activa', dot: 'amber',
+        id: 'top-point', label: 'Ubicación más activa',
         text: `"${mostActivePoint.name}" concentra la mayor actividad en este momento (${mostActivePoint.activeNow} persona${mostActivePoint.activeNow !== 1 ? 's' : ''}).`,
       })
     }
     if (total > 0) {
       const pct = Math.round((inside / total) * 100)
       out.push({
-        id: 'inside-pct', label: 'Distribución espacial', dot: 'emerald',
+        id: 'inside-pct', label: 'Distribución espacial',
         text: `El ${pct}% de las personas activas se encuentra dentro de las ubicaciones monitoreadas.`,
       })
     }
     if (total > 0 && outside > 0) {
       const pct = Math.round((outside / total) * 100)
       out.push({
-        id: 'outside-pct', label: 'Actividad externa', dot: 'blue',
+        id: 'outside-pct', label: 'Actividad externa',
         text: `El ${pct}% de la actividad ocurre fuera de las ubicaciones configuradas.`,
       })
     }
     if (mixed > 0) {
       out.push({
-        id: 'mixed', label: 'Comportamiento mixto', dot: 'violet',
+        id: 'mixed', label: 'Comportamiento mixto',
         text: `${mixed} persona${mixed !== 1 ? 's' : ''} con presencia simultánea dentro y fuera de ubicaciones.`,
       })
     }
@@ -283,7 +274,7 @@ function deriveSpatialInsights(
       const onlyInside = inside - mixed
       const pct = Math.round((onlyInside / total) * 100)
       out.push({
-        id: 'inside-pct', label: 'Actividad principal', dot: 'emerald',
+        id: 'inside-pct', label: 'Actividad principal',
         text: `El ${pct}% de las personas permaneció exclusivamente dentro de las ubicaciones configuradas.`,
       })
     }
@@ -293,7 +284,7 @@ function deriveSpatialInsights(
       const top    = sorted[0]
       if (top.radiusEntries > 0) {
         out.push({
-          id: 'top-point', label: 'Ubicación más activa', dot: 'amber',
+          id: 'top-point', label: 'Ubicación más activa',
           text: `"${top.pointName}" concentró el mayor volumen de actividad del período.`,
         })
         if (sorted.length > 1) {
@@ -302,7 +293,7 @@ function deriveSpatialInsights(
             const pct = Math.round((top.radiusEntries / totalEntries) * 100)
             if (pct >= 50) {
               out.push({
-                id: 'concentration', label: 'Zona de mayor concentración', dot: 'brand',
+                id: 'concentration', label: 'Zona de mayor concentración',
                 text: `"${top.pointName}" concentró el ${pct}% de las entradas al área del período.`,
               })
             }
@@ -314,13 +305,13 @@ function deriveSpatialInsights(
     if (total > 0 && outside > 0) {
       const pct = Math.round((outside / total) * 100)
       out.push({
-        id: 'outside-pct', label: 'Actividad externa', dot: 'blue',
+        id: 'outside-pct', label: 'Actividad externa',
         text: `El ${pct}% de la actividad del período ocurrió fuera de las ubicaciones monitoreadas.`,
       })
     }
     if (mixed > 0) {
       out.push({
-        id: 'mixed', label: 'Comportamiento detectado', dot: 'violet',
+        id: 'mixed', label: 'Comportamiento detectado',
         text: `Se observaron desplazamientos entre áreas internas y externas en ${mixed} persona${mixed !== 1 ? 's' : ''}.`,
       })
     }
@@ -328,7 +319,7 @@ function deriveSpatialInsights(
       const active = historicalPoints.filter(p => p.radiusEntries > 0).length
       if (active > 0 && active < historicalPoints.length) {
         out.push({
-          id: 'coverage', label: 'Cobertura de ubicaciones', dot: 'brand',
+          id: 'coverage', label: 'Cobertura de ubicaciones',
           text: `${active} de ${historicalPoints.length} ubicaciones registraron actividad en el período.`,
         })
       }

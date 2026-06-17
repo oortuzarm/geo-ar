@@ -1163,7 +1163,7 @@ export default function GeoPointForm({
                 Botón principal
               </span>
               <p className="text-xs text-gray-500 leading-snug">
-                Este botón corresponde al CTA principal que verá el visitante para acceder al contenido, promoción o experiencia configurada. Los clics realizados sobre este botón se registran automáticamente en Analytics.
+                Los clics en este botón se registran automáticamente en Analytics.
               </p>
               <Input
                 placeholder="Ej: Acceder al contenido"
@@ -1287,21 +1287,14 @@ export default function GeoPointForm({
         })()}
 
         {(contentType === 'video' || contentType === 'audio' || contentType === 'file') && (
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-              Botón principal
-            </span>
-            <p className="text-xs text-gray-500 leading-snug">
-              Este botón corresponde al CTA principal que verá el visitante para acceder al contenido, promoción o experiencia configurada. Los clics realizados sobre este botón se registran automáticamente en Analytics.
-            </p>
-            <Input
-              placeholder="Ej: Acceder al contenido"
-              value={buttonText}
-              onChange={(e) => setButtonText(e.target.value)}
-              onBlur={() => onChange({ buttonText: buttonText || undefined })}
-              hint='Si se deja vacío, se usa "Acceder al contenido"'
-            />
-          </div>
+          <Input
+            label="Texto del botón"
+            placeholder="Ej: Acceder al contenido"
+            value={buttonText}
+            onChange={(e) => setButtonText(e.target.value)}
+            onBlur={() => onChange({ buttonText: buttonText || undefined })}
+            hint='Si se deja vacío, se usa "Acceder al contenido"'
+          />
         )}
 
         {/* ── Disponibilidad (solo modo unlock) ──────────────────────────── */}

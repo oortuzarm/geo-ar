@@ -921,8 +921,8 @@ function UbicacionesSection({
                         text-[10px] text-gray-600 font-medium uppercase tracking-wider"
           style={{ gridTemplateColumns: '1fr 80px 80px 80px' }}>
           <span>Ubicación</span>
-          <span className="text-right">Entradas</span>
-          <span className="text-right">Interacciones</span>
+          <span className="text-right">Entradas al área</span>
+          <span className="text-right">Clics en CTA</span>
           <span className="text-right">Participación</span>
         </div>
 
@@ -946,7 +946,7 @@ function UbicacionesSection({
                 {/* Mobile compact */}
                 <div className="sm:hidden flex items-center gap-2 text-xs flex-shrink-0 ml-auto">
                   <span className="text-gray-500">{pt.radiusEntries} ent.</span>
-                  <span className="text-gray-400">{pt.clicks} int.</span>
+                  <span className="text-gray-400">{pt.clicks} clics</span>
                   <span className="text-gray-400">{pct}%</span>
                 </div>
               </div>

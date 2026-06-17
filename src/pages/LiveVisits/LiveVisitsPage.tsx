@@ -839,36 +839,6 @@ export default function LiveVisitsPage() {
                   </span>
                 </p>
               )}
-              {showOutsideAreas && (
-                <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
-                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400/70 flex-shrink-0 mt-[3px]" />
-                  <span>
-                    <span className="font-medium text-gray-400">Actividad Dentro y Fuera</span>
-                    {' — '}
-                    Interacciones registradas tanto dentro como fuera de los GeoPoints configurados durante el período. Permite identificar desplazamientos entre ubicaciones monitoreadas y zonas externas.
-                  </span>
-                </p>
-              )}
-              {showExclusivelyOutside && (
-                <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400/70 flex-shrink-0 mt-[3px]" />
-                  <span>
-                    <span className="font-medium text-gray-400">Personas Exclusivamente Fuera</span>
-                    {' — '}
-                    Personas detectadas durante el período que nunca ingresaron a ninguna ubicación. Cada marcador representa una persona única.
-                  </span>
-                </p>
-              )}
-              {showLiveMixed && (
-                <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
-                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400/70 flex-shrink-0 mt-[3px]" />
-                  <span>
-                    <span className="font-medium text-gray-400">Dentro y Fuera</span>
-                    {' — '}
-                    Personas con presencia simultánea dentro y fuera de ubicaciones. Actualmente vacío: en modo En Vivo cada sesión tiene una única posición activa.
-                  </span>
-                </p>
-              )}
               {showLiveInside && (
                 <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/70 flex-shrink-0 mt-[3px]" />
@@ -889,6 +859,26 @@ export default function LiveVisitsPage() {
                   </span>
                 </p>
               )}
+              {showOutsideAreas && (
+                <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400/70 flex-shrink-0 mt-[3px]" />
+                  <span>
+                    <span className="font-medium text-gray-400">Actividad Dentro y Fuera</span>
+                    {' — '}
+                    Interacciones registradas tanto dentro como fuera de los GeoPoints configurados durante el período. Permite identificar desplazamientos entre ubicaciones monitoreadas y zonas externas.
+                  </span>
+                </p>
+              )}
+              {showLiveMixed && (
+                <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400/70 flex-shrink-0 mt-[3px]" />
+                  <span>
+                    <span className="font-medium text-gray-400">Dentro y Fuera</span>
+                    {' — '}
+                    Personas con presencia simultánea dentro y fuera de ubicaciones. Actualmente vacío: en modo En Vivo cada sesión tiene una única posición activa.
+                  </span>
+                </p>
+              )}
               {showInsideOnly && (
                 <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/70 flex-shrink-0 mt-[3px]" />
@@ -896,6 +886,16 @@ export default function LiveVisitsPage() {
                     <span className="font-medium text-gray-400">Personas Solo en Ubicaciones</span>
                     {' — '}
                     Personas detectadas durante el período que permanecieron siempre dentro de las ubicaciones configuradas. Cada marcador representa una persona única.
+                  </span>
+                </p>
+              )}
+              {showExclusivelyOutside && (
+                <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400/70 flex-shrink-0 mt-[3px]" />
+                  <span>
+                    <span className="font-medium text-gray-400">Personas Exclusivamente Fuera</span>
+                    {' — '}
+                    Personas detectadas durante el período que nunca ingresaron a ninguna ubicación. Cada marcador representa una persona única.
                   </span>
                 </p>
               )}

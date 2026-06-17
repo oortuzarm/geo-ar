@@ -10,6 +10,7 @@ export interface PlanFeatures {
   canUseAnalytics:                boolean
   canUseSpatialIntelligence:      boolean
   canUseMembers:                  boolean
+  canUseSmartProxies:             boolean
   canUseDwellTime:                boolean
   canUseLiveVisits:               boolean
   canUseInteractivePointMode:     boolean
@@ -31,6 +32,7 @@ export function usePlanFeatures(): PlanFeatures {
     canUseAnalytics:             config.analytics               ?? true,
     canUseSpatialIntelligence:   config.spatial_intelligence    ?? true,
     canUseMembers:               config.members                 ?? true,
+    canUseSmartProxies:          config.smart_proxies           ?? true,
     canUseDwellTime:             config.dwell_time              ?? true,
     canUseLiveVisits:            config.live_visits             ?? true,
     canUseInteractivePointMode:  config.interactive_point_mode  ?? true,

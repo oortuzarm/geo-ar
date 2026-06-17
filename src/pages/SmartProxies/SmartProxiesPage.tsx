@@ -3,6 +3,8 @@ import { useNavigate }         from 'react-router-dom'
 import Spinner                 from '../../components/ui/Spinner'
 import Modal                   from '../../components/ui/Modal'
 import { useGeoStore }         from '../../store/geoStore'
+import { usePlanFeatures }     from '../../hooks/usePlanFeatures'
+import PlanGate                from '../../components/ui/PlanGate'
 import {
   listSmartProxies,
   updateSmartProxy,
@@ -181,8 +183,9 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function SmartProxiesPage() {
-  const navigate        = useNavigate()
-  const { addToast }    = useGeoStore()
+  const navigate                 = useNavigate()
+  const { addToast }             = useGeoStore()
+  const { canUseSmartProxies }   = usePlanFeatures()
 
   const [proxies,       setProxies]       = useState<SmartProxy[]>([])
   const [loading,       setLoading]       = useState(true)
@@ -228,6 +231,16 @@ export default function SmartProxiesPage() {
     } finally {
       setIsDeletingId(null)
     }
+  }
+
+  if (!canUseSmartProxies) {
+    return (
+      <PlanGate
+        emoji="🔗"
+        title="Smart Proxies no disponible"
+        description="Esta función no está disponible en tu plan actual. Actualizá tu plan para crear y gestionar enlaces inteligentes con seguimiento."
+      />
+    )
   }
 
   return (

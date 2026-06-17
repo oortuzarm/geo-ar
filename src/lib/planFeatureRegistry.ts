@@ -8,6 +8,7 @@ export interface FeaturesConfig {
   analytics?:                boolean
   spatial_intelligence?:     boolean
   members?:                  boolean
+  smart_proxies?:            boolean
   dwell_time?:               boolean
   live_visits?:              boolean
   interactive_point_mode?:   boolean
@@ -34,6 +35,7 @@ export const BOOLEAN_FEATURES: BooleanFeatureMeta[] = [
   { key: 'analytics',              label: 'Analíticas'                   },
   { key: 'spatial_intelligence',   label: 'Inteligencia Espacial'        },
   { key: 'members',                label: 'Miembros del equipo'          },
+  { key: 'smart_proxies',          label: 'Smart Proxies'                },
   { key: 'dwell_time',             label: 'Permanencia'                  },
   { key: 'live_visits',            label: 'Visitas en Vivo'              },
   { key: 'interactive_point_mode', label: 'Modo del punto: Interactivo'  },
@@ -47,6 +49,7 @@ export const DEFAULT_FEATURES_CONFIG: Required<FeaturesConfig> = {
   analytics:               true,
   spatial_intelligence:    true,
   members:                 true,
+  smart_proxies:           true,
   dwell_time:              true,
   live_visits:             true,
   interactive_point_mode:  true,

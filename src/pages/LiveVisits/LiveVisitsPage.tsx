@@ -357,9 +357,8 @@ function SpatialInsightsSection({
         {insights.map(insight => (
           <div
             key={insight.id}
-            className="flex items-start gap-2.5 bg-gray-900/50 border border-white/[0.05] rounded-xl px-3.5 py-3"
+            className="bg-gray-900/50 border border-white/[0.05] rounded-xl px-3.5 py-3"
           >
-            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-[5px] ${INSIGHT_DOT[insight.dot]}`} />
             <div className="min-w-0">
               <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-none mb-1">
                 {insight.label}

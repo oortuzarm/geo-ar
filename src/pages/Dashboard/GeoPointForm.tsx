@@ -1158,6 +1158,15 @@ export default function GeoPointForm({
               {urlError && <p className="text-xs text-red-400">{urlError}</p>}
             </div>
 
+            <Input
+              label="Texto del botón"
+              placeholder="Ej: Acceder al contenido"
+              value={buttonText}
+              onChange={(e) => setButtonText(e.target.value)}
+              onBlur={() => onChange({ buttonText: buttonText || undefined })}
+              hint='Si se deja vacío, se usa "Acceder al contenido"'
+            />
+
             {/* ── Categoría del destino ──────────────────────────────────── */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
@@ -1269,6 +1278,17 @@ export default function GeoPointForm({
             </div>
           )
         })()}
+
+        {(contentType === 'video' || contentType === 'audio' || contentType === 'file') && (
+          <Input
+            label="Texto del botón"
+            placeholder="Ej: Acceder al contenido"
+            value={buttonText}
+            onChange={(e) => setButtonText(e.target.value)}
+            onBlur={() => onChange({ buttonText: buttonText || undefined })}
+            hint='Si se deja vacío, se usa "Acceder al contenido"'
+          />
+        )}
 
         {/* ── Disponibilidad (solo modo unlock) ──────────────────────────── */}
         {pointMode === 'unlock' && <div className="space-y-2">
@@ -1755,15 +1775,6 @@ export default function GeoPointForm({
               ? `Auto: ${addressAuto}`
               : undefined
           }
-        />
-
-        <Input
-          label="Texto del botón"
-          placeholder="Ej: Acceder al contenido"
-          value={buttonText}
-          onChange={(e) => setButtonText(e.target.value)}
-          onBlur={() => onChange({ buttonText: buttonText || undefined })}
-          hint='Si se deja vacío, se usa "Acceder al contenido"'
         />
 
       </div>

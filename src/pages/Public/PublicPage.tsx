@@ -1372,7 +1372,7 @@ export default function PublicPage({
   useEffect(() => {
     if (prefetched) {
       const activePoints = prefetched.points.filter((p) => p.active)
-      console.log('[DwellDebug][temporary] PublicPage prefetched — active points:', activePoints.length,
+      if (import.meta.env.DEV) console.log('[DwellDebug][temporary] PublicPage prefetched — active points:', activePoints.length,
         '| first point dwell:', activePoints[0]
           ? { id: activePoints[0].id, requiresDwellTime: activePoints[0].requiresDwellTime, dwellTimeSeconds: activePoints[0].dwellTimeSeconds }
           : '(none)')
@@ -1576,7 +1576,7 @@ export default function PublicPage({
     // The timer logic never needs id — only analytics calls do.
     if (!userLocation) return
     for (const pt of points) {
-      console.log('[DwellDebug][hysteresis] route:', isTemporaryPreview ? 'temporary' : 'public',
+      if (import.meta.env.DEV) console.log('[DwellDebug][hysteresis] route:', isTemporaryPreview ? 'temporary' : 'public',
         '| pt:', pt.id,
         '| requiresDwellTime:', pt.requiresDwellTime,
         '| dwellTimeSeconds:', pt.dwellTimeSeconds)
@@ -1592,7 +1592,7 @@ export default function PublicPage({
       const isExited = pt.activationMode === 'polygon' && pt.activationPolygon
         ? !isInside
         : dist > pt.activationRadius + 20
-      console.log('[DwellDebug][hysteresis] route:', isTemporaryPreview ? 'temporary' : 'public',
+      if (import.meta.env.DEV) console.log('[DwellDebug][hysteresis] route:', isTemporaryPreview ? 'temporary' : 'public',
         '| pt:', pt.id,
         '| dist:', dist.toFixed(0) + 'm', '| radius:', pt.activationRadius + 'm',
         '| isInside:', isInside, '| isExited:', isExited,
@@ -2492,7 +2492,7 @@ export default function PublicPage({
     const progress = !entry
       ? { state: 'idle' as const, elapsed: 0, total: pt.dwellTimeSeconds ?? 60, showResetMessage: false }
       : { state: entry.state, elapsed: entry.elapsed, total: entry.total, showResetMessage: entry.showResetMessage }
-    console.log('[DwellDebug][progress] route:', isTemporaryPreview ? 'temporary' : 'public',
+    if (import.meta.env.DEV) console.log('[DwellDebug][progress] route:', isTemporaryPreview ? 'temporary' : 'public',
       '| ptId:', ptId,
       '| requiresDwellTime:', pt.requiresDwellTime,
       '| dwellTimeSeconds:', pt.dwellTimeSeconds,

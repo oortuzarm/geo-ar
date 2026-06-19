@@ -209,7 +209,7 @@ export class RemoteGeoRepository implements IGeoRepository {
       { cache: 'no-store' },
     )
     const points = raw.map(normalizeGeoPoint)
-    console.log('[RemoteGeoRepository] listPublicPoints — sample point dwell fields:',
+    if (import.meta.env.DEV) console.log('[RemoteGeoRepository] listPublicPoints — sample point dwell fields:',
       points[0] ? { requiresDwellTime: points[0].requiresDwellTime, dwellTimeSeconds: points[0].dwellTimeSeconds } : '(no points)')
     return points
   }

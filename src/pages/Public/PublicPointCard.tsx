@@ -224,7 +224,7 @@ export default function PublicPointCard({
 
   // Informative points are always accessible regardless of location or dwell.
   const isCtaBlocked = point.pointMode !== 'informative' && (!avail.canAccess || dwellBlocking)
-  console.log('[DwellDebug][card] point:', point.id,
+  if (import.meta.env.DEV) console.log('[DwellDebug][card] point:', point.id,
     '| requiresDwellTime:', point.requiresDwellTime,
     '| dwellTimeSeconds:', point.dwellTimeSeconds,
     '| insideArea:', avail.insideArea,

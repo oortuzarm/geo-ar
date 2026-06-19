@@ -1,11 +1,7 @@
-const SESSION_KEY = 'lv_session_id'
+import { getSessionId } from '../lib/session'
 
 export function getLiveVisitSessionId(): string {
-  const existing = localStorage.getItem(SESSION_KEY)
-  if (existing) return existing
-  const id = crypto.randomUUID()
-  localStorage.setItem(SESSION_KEY, id)
-  return id
+  return getSessionId()
 }
 
 export function intensityFromCount(count: number): 'low' | 'medium' | 'high' {

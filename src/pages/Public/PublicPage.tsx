@@ -936,6 +936,32 @@ interface DwellEntry {
   showResetMessage: boolean
 }
 
+// ── Dwell persistence helpers ─────────────────────────────────────────────────
+
+interface DwellPersisted {
+  projectId: string
+  pointId:   string
+  elapsed:   number
+  total:     number
+  startedAt: number
+}
+
+function dwellStorageKey(projectId: string, pointId: string): string {
+  return `ubyca:dwell:${projectId}:${pointId}`
+}
+
+function isValidDwellPersisted(v: unknown): v is DwellPersisted {
+  if (typeof v !== 'object' || v === null) return false
+  const o = v as Record<string, unknown>
+  return (
+    typeof o.projectId === 'string' &&
+    typeof o.pointId   === 'string' &&
+    typeof o.elapsed   === 'number' &&
+    typeof o.total     === 'number' &&
+    typeof o.startedAt === 'number'
+  )
+}
+
 // Retries fn up to (1 + delays.length) times with the given inter-attempt delays.
 async function retryWithBackoff<T>(
   fn: () => Promise<T>,
@@ -996,6 +1022,7 @@ export default function PublicPage({
   const dwellMapRef             = useRef<Record<string, DwellEntry>>({})
   const dwellCompletionFiredRef    = useRef<Set<string>>(new Set())
   const dwellCompletionInFlightRef = useRef<Set<string>>(new Set())
+  const dwellRestoredRef           = useRef(false)
 
   // ── Mobile interaction state ──────────────────────────────────────────────
   const [mobileState, setMobileState] = useState<MobileState>('clean')
@@ -1473,6 +1500,64 @@ export default function PublicPage({
     }
   }, [userLocation, points, id])
 
+  // ── Dwell restoration — single-run when points + GPS are first ready ──────
+  // Reads persisted 'running' dwells from localStorage and restores them into
+  // dwellMap only when the user is still inside the activation area.
+  // Declared BEFORE the GPS hysteresis effect so that dwellMapRef.current is
+  // pre-populated before hysteresis reads it on the same render cycle — this
+  // prevents the hysteresis from restarting the timer from 0 on the same tick.
+  useEffect(() => {
+    if (dwellRestoredRef.current) return
+    if (!id || points.length === 0 || !userLocation) return
+
+    dwellRestoredRef.current = true
+
+    const toRestore: Record<string, DwellEntry> = {}
+
+    for (const pt of points) {
+      if (!(pt.requiresDwellTime ?? false) || !pt.dwellTimeSeconds) continue
+
+      const key = dwellStorageKey(id, pt.id)
+      const raw = localStorage.getItem(key)
+      if (!raw) continue
+
+      let saved: unknown
+      try { saved = JSON.parse(raw) } catch {
+        localStorage.removeItem(key)
+        continue
+      }
+
+      if (!isValidDwellPersisted(saved)) { localStorage.removeItem(key); continue }
+      // Already completed locally — stale entry, discard.
+      if (saved.elapsed >= saved.total) { localStorage.removeItem(key); continue }
+      // User moved away from the area since the last session — discard.
+      if (!effectiveInside(pt, userLocation.latitude, userLocation.longitude)) {
+        localStorage.removeItem(key)
+        continue
+      }
+
+      toRestore[pt.id] = {
+        state: 'running',
+        elapsed: saved.elapsed,
+        total: pt.dwellTimeSeconds,  // use live point definition, not cached value
+        startedAt: saved.startedAt,
+        showResetMessage: false,
+      }
+
+      if (import.meta.env.DEV) {
+        console.log(`[Dwell] restored pt=${pt.id} elapsed=${saved.elapsed}/${pt.dwellTimeSeconds}s`)
+      }
+    }
+
+    if (Object.keys(toRestore).length === 0) return
+
+    // Mutate ref synchronously so the GPS hysteresis effect below (same render
+    // cycle, runs after this one by declaration order) sees state:'running' and
+    // does not overwrite the restored entry with a fresh timer from 0.
+    dwellMapRef.current = { ...dwellMapRef.current, ...toRestore }
+    setDwellMap((prev) => ({ ...prev, ...toRestore }))
+  }, [userLocation, points, id]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Dwell timer — GPS hysteresis ─────────────────────────────────────────
   // Entry threshold : dist ≤ activationRadius  (mirrors the access check)
   // Exit  threshold : dist > activationRadius + 20 m  (hysteresis gap)
@@ -1552,6 +1637,37 @@ export default function PublicPage({
     }, 1000)
     return () => clearInterval(interval)
   }, [hasRunningDwell])
+
+  // ── Dwell persistence — write running dwells to localStorage on each tick ─
+  // Persists only 'running' entries. Removes the key for 'idle' and 'completed'
+  // so stale data never causes a phantom restore on the next page load.
+  useEffect(() => {
+    if (!id) return
+    for (const [ptId, entry] of Object.entries(dwellMap)) {
+      const key = dwellStorageKey(id, ptId)
+      if (entry.state === 'running' && entry.startedAt !== null) {
+        try {
+          const payload: DwellPersisted = {
+            projectId: id,
+            pointId:   ptId,
+            elapsed:   entry.elapsed,
+            total:     entry.total,
+            startedAt: entry.startedAt,
+          }
+          localStorage.setItem(key, JSON.stringify(payload))
+          if (import.meta.env.DEV) console.log(`[Dwell] persisted pt=${ptId} elapsed=${entry.elapsed}`)
+        } catch {
+          // localStorage quota exceeded — skip silently, progress already in memory
+        }
+      } else {
+        const existed = localStorage.getItem(key) !== null
+        localStorage.removeItem(key)
+        if (import.meta.env.DEV && existed) {
+          console.log(`[Dwell] cleared pt=${ptId} state=${entry.state}`)
+        }
+      }
+    }
+  }, [dwellMap, id])
 
   // ── Live-visit heartbeat — 15-second interval ────────────────────────────
   // Live visits mide presencia física dentro del radio GPS de puntos activos,

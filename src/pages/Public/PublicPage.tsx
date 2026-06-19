@@ -936,6 +936,29 @@ interface DwellEntry {
   showResetMessage: boolean
 }
 
+// Retries fn up to (1 + delays.length) times with the given inter-attempt delays.
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  delays: number[],
+  label: string,
+): Promise<T> {
+  let lastErr: unknown
+  for (let i = 0; i <= delays.length; i++) {
+    if (import.meta.env.DEV) console.log(`[Dwell] ${label} attempt ${i + 1}`)
+    try {
+      const result = await fn()
+      if (import.meta.env.DEV) console.log(`[Dwell] ${label} success`)
+      return result
+    } catch (err) {
+      lastErr = err
+      if (i < delays.length) {
+        await new Promise<void>((resolve) => setTimeout(resolve, delays[i]))
+      }
+    }
+  }
+  throw lastErr
+}
+
 export default function PublicPage({
   isEmbed = false,
   prefetched,
@@ -971,7 +994,8 @@ export default function PublicPage({
   // ── Dwell timer state ─────────────────────────────────────────────────────
   const [dwellMap, setDwellMap] = useState<Record<string, DwellEntry>>({})
   const dwellMapRef             = useRef<Record<string, DwellEntry>>({})
-  const dwellCompletionFiredRef = useRef<Set<string>>(new Set())
+  const dwellCompletionFiredRef    = useRef<Set<string>>(new Set())
+  const dwellCompletionInFlightRef = useRef<Set<string>>(new Set())
 
   // ── Mobile interaction state ──────────────────────────────────────────────
   const [mobileState, setMobileState] = useState<MobileState>('clean')
@@ -1619,21 +1643,51 @@ export default function PublicPage({
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Dwell completion side-effects ─────────────────────────────────────────
-  // Fires trackDwellCompleted + completeDwellTime once per completed point.
+  // Fires trackDwellCompleted immediately, then sends completeDwellTime to the
+  // backend with up to 3 attempts (immediate → 500ms → 1500ms).
+  // dwellCompletionFiredRef is only set after a confirmed backend success, so
+  // a transient network failure never permanently blocks a retry.
+  // dwellCompletionInFlightRef prevents concurrent duplicate calls while a
+  // retry sequence is already running for the same point.
   useEffect(() => {
     for (const [ptId, entry] of Object.entries(dwellMap)) {
       if (entry.state !== 'completed') continue
-      if (dwellCompletionFiredRef.current.has(ptId)) continue
+      if (dwellCompletionFiredRef.current.has(ptId)) continue    // backend already confirmed
+      if (dwellCompletionInFlightRef.current.has(ptId)) continue // retry already in progress
       if (!id || !entry.startedAt) continue
-      dwellCompletionFiredRef.current.add(ptId)
-      const capturedStartedAt = entry.startedAt
-      trackDwellCompleted(id, ptId, userLocation)
-      void geoPointsApi.completeDwellTime(
-        id, ptId,
-        userLocation?.latitude  ?? 0,
-        userLocation?.longitude ?? 0,
-        capturedStartedAt,
-      ).catch(() => {})
+
+      // Capture all values synchronously before any async work.
+      const capturedProjectId  = id
+      const capturedPointId    = ptId
+      const capturedStartedAt  = entry.startedAt
+      const capturedLat        = userLocation?.latitude  ?? 0
+      const capturedLng        = userLocation?.longitude ?? 0
+
+      dwellCompletionInFlightRef.current.add(capturedPointId)
+
+      // Analytics fires immediately regardless of API outcome (same as before).
+      trackDwellCompleted(capturedProjectId, capturedPointId, userLocation)
+
+      retryWithBackoff(
+        () => geoPointsApi.completeDwellTime(
+          capturedProjectId, capturedPointId,
+          capturedLat, capturedLng,
+          capturedStartedAt,
+        ),
+        [500, 1500],
+        `complete_dwell(${capturedPointId})`,
+      )
+        .then(() => {
+          dwellCompletionFiredRef.current.add(capturedPointId)
+          dwellCompletionInFlightRef.current.delete(capturedPointId)
+        })
+        .catch((err) => {
+          dwellCompletionInFlightRef.current.delete(capturedPointId)
+          console.warn('[Dwell] complete_dwell failed after all retries', {
+            pointId: capturedPointId,
+            err,
+          })
+        })
     }
   }, [dwellMap]) // eslint-disable-line react-hooks/exhaustive-deps
 

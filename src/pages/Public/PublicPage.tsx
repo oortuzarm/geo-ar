@@ -1023,6 +1023,7 @@ export default function PublicPage({
   const dwellCompletionFiredRef    = useRef<Set<string>>(new Set())
   const dwellCompletionInFlightRef = useRef<Set<string>>(new Set())
   const dwellRestoredRef           = useRef(false)
+  const lastKnownLocationRef       = useRef<{ latitude: number; longitude: number } | null>(null)
 
   // ── Mobile interaction state ──────────────────────────────────────────────
   const [mobileState, setMobileState] = useState<MobileState>('clean')
@@ -1334,6 +1335,15 @@ export default function PublicPage({
 
   useEffect(() => { pointsRef.current    = points       }, [points])
   useEffect(() => { userLocationRef.current = userLocation }, [userLocation])
+  useEffect(() => {
+    if (
+      userLocation &&
+      userLocation.latitude  !== 0 &&
+      userLocation.longitude !== 0
+    ) {
+      lastKnownLocationRef.current = { latitude: userLocation.latitude, longitude: userLocation.longitude }
+    }
+  }, [userLocation])
 
   // Reverse-geocode each point's address when the point list changes.
   // Requests are staggered 300ms apart to respect Nominatim's rate limit.
@@ -1768,45 +1778,82 @@ export default function PublicPage({
   // a transient network failure never permanently blocks a retry.
   // dwellCompletionInFlightRef prevents concurrent duplicate calls while a
   // retry sequence is already running for the same point.
+  //
+  // Coordinate resolution order (never sends 0,0):
+  //   1. userLocationRef   — current GPS position, if valid (non-null, non-0,0)
+  //   2. lastKnownLocationRef — last valid GPS fix ever received this session
+  //   3. wait up to 2 s   — allow a pending GPS update to arrive
+  //   4. null             — omit lat/lng from the payload rather than send (0,0)
   useEffect(() => {
+    function isValidCoords(
+      loc: { latitude: number; longitude: number } | null | undefined,
+    ): loc is { latitude: number; longitude: number } {
+      return (
+        loc != null &&
+        typeof loc.latitude  === 'number' &&
+        typeof loc.longitude === 'number' &&
+        loc.latitude  !== 0 &&
+        loc.longitude !== 0
+      )
+    }
+
+    async function resolveBestCoords(
+      timeoutMs: number,
+    ): Promise<{ latitude: number; longitude: number } | null> {
+      if (isValidCoords(userLocationRef.current))      return userLocationRef.current
+      if (isValidCoords(lastKnownLocationRef.current)) return lastKnownLocationRef.current
+      const deadline = Date.now() + timeoutMs
+      while (Date.now() < deadline) {
+        await new Promise<void>((r) => setTimeout(r, 100))
+        if (isValidCoords(userLocationRef.current))      return userLocationRef.current
+        if (isValidCoords(lastKnownLocationRef.current)) return lastKnownLocationRef.current
+      }
+      return null
+    }
+
     for (const [ptId, entry] of Object.entries(dwellMap)) {
       if (entry.state !== 'completed') continue
       if (dwellCompletionFiredRef.current.has(ptId)) continue    // backend already confirmed
       if (dwellCompletionInFlightRef.current.has(ptId)) continue // retry already in progress
       if (!id || !entry.startedAt) continue
 
-      // Capture all values synchronously before any async work.
-      const capturedProjectId  = id
-      const capturedPointId    = ptId
-      const capturedStartedAt  = entry.startedAt
-      const capturedLat        = userLocation?.latitude  ?? 0
-      const capturedLng        = userLocation?.longitude ?? 0
+      // Capture invariant values synchronously before any async work.
+      const capturedProjectId = id
+      const capturedPointId   = ptId
+      const capturedStartedAt = entry.startedAt
 
       dwellCompletionInFlightRef.current.add(capturedPointId)
 
       // Analytics fires immediately regardless of API outcome (same as before).
       trackDwellCompleted(capturedProjectId, capturedPointId, userLocation)
 
-      retryWithBackoff(
-        () => geoPointsApi.completeDwellTime(
-          capturedProjectId, capturedPointId,
-          capturedLat, capturedLng,
-          capturedStartedAt,
-        ),
-        [500, 1500],
-        `complete_dwell(${capturedPointId})`,
-      )
-        .then(() => {
-          dwellCompletionFiredRef.current.add(capturedPointId)
-          dwellCompletionInFlightRef.current.delete(capturedPointId)
-        })
-        .catch((err) => {
-          dwellCompletionInFlightRef.current.delete(capturedPointId)
-          console.warn('[Dwell] complete_dwell failed after all retries', {
-            pointId: capturedPointId,
-            err,
+      void resolveBestCoords(2000).then((loc) => {
+        if (import.meta.env.DEV) {
+          if (loc) console.log(`[Dwell] complete_dwell coords: lat=${loc.latitude} lng=${loc.longitude}`)
+          else     console.warn('[Dwell] complete_dwell: no valid location — omitting coords from payload')
+        }
+        return retryWithBackoff(
+          () => geoPointsApi.completeDwellTime(
+            capturedProjectId, capturedPointId,
+            loc?.latitude  ?? null,
+            loc?.longitude ?? null,
+            capturedStartedAt,
+          ),
+          [500, 1500],
+          `complete_dwell(${capturedPointId})`,
+        )
+          .then(() => {
+            dwellCompletionFiredRef.current.add(capturedPointId)
+            dwellCompletionInFlightRef.current.delete(capturedPointId)
           })
-        })
+          .catch((err) => {
+            dwellCompletionInFlightRef.current.delete(capturedPointId)
+            console.warn('[Dwell] complete_dwell failed after all retries', {
+              pointId: capturedPointId,
+              err,
+            })
+          })
+      })
     }
   }, [dwellMap]) // eslint-disable-line react-hooks/exhaustive-deps
 

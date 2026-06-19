@@ -59,12 +59,17 @@ export function fetchSessionVisitedPoints(projectId: string, sessionId: string):
 export function completeDwellTime(
   projectId: string,
   pointId: string,
-  lat: number,
-  lng: number,
+  lat: number | null,
+  lng: number | null,
   startedAt: number,
 ): Promise<{ unlocked: boolean }> {
+  const body: Record<string, unknown> = { startedAt }
+  if (lat !== null && lng !== null) {
+    body.latitude  = lat
+    body.longitude = lng
+  }
   return apiFetch<{ unlocked: boolean }>(
     `${API_BASE}/api/public/geo_projects/${projectId}/geo_points/${pointId}/complete_dwell`,
-    { method: 'POST', body: JSON.stringify({ latitude: lat, longitude: lng, startedAt }) },
+    { method: 'POST', body: JSON.stringify(body) },
   )
 }

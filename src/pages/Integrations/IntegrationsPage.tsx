@@ -918,7 +918,7 @@ const CODE_SNIPPETS = [
   },
   {
     label: 'POST Presence Validate',
-    code:  `curl -X POST ${BASE_ENDPOINT}/presence/validate \\\n  -H "X-Api-Key: ubk_live_xxx" \\\n  -H "X-Api-Secret: your_secret" \\\n  -H "Content-Type: application/json" \\\n  -d '{"lat":-34.6037,"lng":-58.3816,"project_id":"proj_xxx","session_id":"session-abc"}'`,
+    code:  `curl -X POST ${BASE_ENDPOINT}/presence/validate \\\n  -H "X-Api-Key: ubk_live_xxx" \\\n  -H "X-Api-Secret: your_secret" \\\n  -H "Content-Type: application/json" \\\n  -d '{"location_id":"42","session_id":"session-abc-123","coordinates":{"latitude":-33.4372,"longitude":-70.6506}}'`,
   },
 ]
 

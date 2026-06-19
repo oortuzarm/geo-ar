@@ -997,6 +997,9 @@ export default function PublicPage({
   const routeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pointsRef = useRef<GeoPoint[]>([])
   const wasInsideRef      = useRef<Record<string, boolean>>({})
+  // Confirmed inside/outside result from the last heartbeat response per point.
+  // undefined = no heartbeat response received yet for that point.
+  const backendInsideRef  = useRef<Record<string, boolean>>({})
   const userLocationRef   = useRef<UserLocation | null>(null)
   // Ref for the mobile bottom sheet — used to call L.DomEvent.disableClickPropagation
   // so Leaflet's internal tap/click detection cannot fire through the sheet.
@@ -1393,6 +1396,35 @@ export default function PublicPage({
     }
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Backend-authoritative inside check ────────────────────────────────────
+  // Polygon mode: defers to the last insideRadius result from the heartbeat once
+  // the first response has arrived; falls back to local Turf.js before that.
+  // Radius mode: local haversine (formula is identical to GeoEngine) — backend
+  // result is still logged in DEV so divergence can be spotted during testing.
+  function effectiveInside(pt: GeoPoint, userLat: number, userLng: number): boolean {
+    const localResult = isInsideActivationArea(pt, userLat, userLng)
+    if (pt.activationMode === 'polygon' && pt.activationPolygon) {
+      const backendResult = backendInsideRef.current[pt.id]
+      if (import.meta.env.DEV && backendResult !== undefined && backendResult !== localResult) {
+        console.warn(
+          `[GEO] polígono divergencia "${pt.name ?? pt.id}": ` +
+          `frontend=${localResult} backend=${backendResult}`,
+        )
+      }
+      return backendResult !== undefined ? backendResult : localResult
+    }
+    if (import.meta.env.DEV) {
+      const backendResult = backendInsideRef.current[pt.id]
+      if (backendResult !== undefined && backendResult !== localResult) {
+        console.warn(
+          `[GEO] radio divergencia "${pt.name ?? pt.id}": ` +
+          `frontend=${localResult} backend=${backendResult}`,
+        )
+      }
+    }
+    return localResult
+  }
+
   useEffect(() => {
     if (!userLocation) return
     const newDist: Record<string, number> = {}
@@ -1435,7 +1467,7 @@ export default function PublicPage({
         pt.latitude, pt.longitude,
       )
       const entry    = dwellMapRef.current[pt.id]
-      const isInside = isInsideActivationArea(pt, userLocation.latitude, userLocation.longitude)
+      const isInside = effectiveInside(pt, userLocation.latitude, userLocation.longitude)
       // For radius mode: add 20 m hysteresis to prevent rapid in/out near the edge.
       // For polygon mode: use the polygon boundary directly (no extra buffer).
       const isExited = pt.activationMode === 'polygon' && pt.activationPolygon
@@ -1561,6 +1593,12 @@ export default function PublicPage({
           sendHeartbeat(pt.id, payload).then((res) => {
             if (res?.active_now !== undefined) {
               setLiveVisitCounts((prev) => ({ ...prev, [pt.id]: res.active_now! }))
+            }
+            if (res?.insideRadius !== undefined) {
+              backendInsideRef.current[pt.id] = res.insideRadius!
+              if (import.meta.env.DEV) {
+                console.log(`  ← insideRadius [backend] "${pt.name ?? pt.id}": ${res.insideRadius}`)
+              }
             }
           })
         } else {
@@ -2121,7 +2159,7 @@ export default function PublicPage({
 
     if (point.pointMode === 'informative') return
 
-    const inside = isInsideActivationArea(point, userLocation.latitude, userLocation.longitude)
+    const inside = effectiveInside(point, userLocation.latitude, userLocation.longitude)
 
     if (phase === 'unlocked' && !inside) {
       setLandingValidation({ phase: 'blocked', message: 'Saliste del área de acceso.' })

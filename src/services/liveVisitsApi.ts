@@ -100,7 +100,9 @@ export function fetchHistoricalIntensity(projectId: string): Promise<HistoricalI
 }
 
 export interface HeartbeatResponse {
-  active_now?: number  // current active visitor count for this point
+  active_now?:     number   // current active visitor count for this point
+  insideRadius?:   boolean  // backend's determination of whether user is inside the area
+  distanceMeters?: number   // distance to point centre in metres
 }
 
 export function sendHeartbeat(

@@ -14,7 +14,8 @@ import {
 } from '../../services/integrationsApi'
 import type { ApiCredential, ApiCredentialWithSecret } from '../../types/integrations.types'
 
-const BASE_ENDPOINT = 'https://api.ubyca.com/api/v1'
+const BASE_ENDPOINT   = 'https://api.ubyca.com/api/v1'
+const HEALTH_ENDPOINT = `${BASE_ENDPOINT}/health`
 
 const SCOPES = [
   { value: 'analytics:read',    desc: 'Leer métricas y reportes de ubicaciones' },
@@ -832,24 +833,54 @@ function ApiCredentialsSection() {
         </div>
       )}
 
-      {/* Endpoint base */}
-      <div className="border-t border-white/[0.05] pt-5">
-        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
-          Endpoint base
-        </p>
-        <div className="flex items-center gap-2">
-          <div className="flex-1 bg-gray-800 border border-gray-700/50 rounded-lg px-3 py-2.5
-                          font-mono text-sm text-gray-300 select-all">
-            {BASE_ENDPOINT}
+      {/* Base URL */}
+      <div className="border-t border-white/[0.05] pt-5 space-y-4">
+        <div>
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
+            Base URL (Prefijo)
+          </p>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 bg-gray-800 border border-gray-700/50 rounded-lg px-3 py-2.5
+                            font-mono text-sm text-gray-300 select-all">
+              {BASE_ENDPOINT}
+            </div>
+            <button
+              onClick={() => copyText(BASE_ENDPOINT, 'Base URL', addToast)}
+              className="px-3 py-2.5 rounded-lg text-sm border border-gray-700/50
+                         text-gray-400 hover:text-gray-200 hover:bg-gray-800
+                         transition-all duration-150 flex-shrink-0"
+            >
+              Copiar
+            </button>
           </div>
-          <button
-            onClick={() => copyText(BASE_ENDPOINT, 'Endpoint', addToast)}
-            className="px-3 py-2.5 rounded-lg text-sm border border-gray-700/50
-                       text-gray-400 hover:text-gray-200 hover:bg-gray-800
-                       transition-all duration-150 flex-shrink-0"
-          >
-            Copiar
-          </button>
+          <p className="text-[11px] text-gray-600 mt-2">
+            Usa esta URL como prefijo para los endpoints de la API. Para verificar estado, abre <span className="font-mono text-gray-500">/health</span>.
+          </p>
+        </div>
+
+        {/* Health check */}
+        <div>
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
+            API Health Check
+          </p>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 bg-gray-800 border border-gray-700/50 rounded-lg px-3 py-2.5
+                            font-mono text-sm text-gray-300 select-all flex items-center gap-2">
+              <span className="text-[10px] font-semibold text-emerald-500 bg-emerald-950/60
+                               border border-emerald-800/50 rounded px-1.5 py-0.5 flex-shrink-0">
+                GET
+              </span>
+              {HEALTH_ENDPOINT}
+            </div>
+            <button
+              onClick={() => copyText(HEALTH_ENDPOINT, 'Health URL', addToast)}
+              className="px-3 py-2.5 rounded-lg text-sm border border-gray-700/50
+                         text-gray-400 hover:text-gray-200 hover:bg-gray-800
+                         transition-all duration-150 flex-shrink-0"
+            >
+              Copiar
+            </button>
+          </div>
         </div>
       </div>
 

@@ -1528,24 +1528,24 @@ export default function PublicPage({
       }
 
       if (!isValidDwellPersisted(saved)) { localStorage.removeItem(key); continue }
-      // Already completed locally — stale entry, discard.
-      if (saved.elapsed >= saved.total) { localStorage.removeItem(key); continue }
       // User moved away from the area since the last session — discard.
       if (!effectiveInside(pt, userLocation.latitude, userLocation.longitude)) {
         localStorage.removeItem(key)
         continue
       }
 
+      const restoredElapsed = Math.max(0, Math.floor((Date.now() - saved.startedAt) / 1000))
+
       toRestore[pt.id] = {
         state: 'running',
-        elapsed: saved.elapsed,
+        elapsed: restoredElapsed,
         total: pt.dwellTimeSeconds,  // use live point definition, not cached value
         startedAt: saved.startedAt,
         showResetMessage: false,
       }
 
       if (import.meta.env.DEV) {
-        console.log(`[Dwell] restored pt=${pt.id} elapsed=${saved.elapsed}/${pt.dwellTimeSeconds}s`)
+        console.log(`[Dwell] restored pt=${pt.id} elapsed=${restoredElapsed}/${pt.dwellTimeSeconds}s (real-time from startedAt)`)
       }
     }
 
@@ -1625,9 +1625,12 @@ export default function PublicPage({
       setDwellMap((prev) => {
         if (!Object.values(prev).some((e) => e.state === 'running')) return prev
         const next: Record<string, DwellEntry> = {}
+        const now = Date.now()
         for (const [ptId, entry] of Object.entries(prev)) {
           if (entry.state !== 'running') { next[ptId] = entry; continue }
-          const newElapsed = entry.elapsed + 1
+          const newElapsed = entry.startedAt !== null
+            ? Math.floor((now - entry.startedAt) / 1000)
+            : entry.elapsed
           next[ptId] = newElapsed >= entry.total
             ? { ...entry, state: 'completed', elapsed: entry.total }
             : { ...entry, elapsed: newElapsed }

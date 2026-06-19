@@ -18,6 +18,7 @@ const BASE_ENDPOINT   = 'https://api.ubyca.com/api/v1'
 const HEALTH_ENDPOINT = `${BASE_ENDPOINT}/health`
 
 const SCOPES = [
+  { value: 'projects:read',     desc: 'Leer proyectos y puntos del workspace' },
   { value: 'analytics:read',    desc: 'Leer métricas y reportes de ubicaciones' },
   { value: 'presence:validate', desc: 'Validar presencia GPS en tiempo real' },
   { value: 'presence:check',    desc: 'Consultar estado de presencia activa' },
@@ -86,6 +87,7 @@ function Chevron({ open }: { open: boolean }) {
 // ── Scope badge ───────────────────────────────────────────────────────────────
 
 const SCOPE_COLOR: Record<string, string> = {
+  'projects:read':     'bg-sky-900/40 text-sky-400 border-sky-700/40',
   'analytics:read':    'bg-brand-900/50 text-brand-300 border-brand-700/40',
   'presence:validate': 'bg-emerald-900/40 text-emerald-400 border-emerald-700/40',
   'presence:check':    'bg-emerald-900/40 text-emerald-400 border-emerald-700/40',
@@ -916,7 +918,7 @@ const CODE_SNIPPETS = [
   },
   {
     label: 'POST Presence Validate',
-    code:  `curl -X POST ${BASE_ENDPOINT}/presence/validate \\\n  -H "X-Api-Key: ubk_live_xxx" \\\n  -H "X-Api-Secret: your_secret" \\\n  -H "Content-Type: application/json" \\\n  -d '{"lat":-34.6037,"lng":-58.3816,"project_id":"proj_xxx"}'`,
+    code:  `curl -X POST ${BASE_ENDPOINT}/presence/validate \\\n  -H "X-Api-Key: ubk_live_xxx" \\\n  -H "X-Api-Secret: your_secret" \\\n  -H "Content-Type: application/json" \\\n  -d '{"lat":-34.6037,"lng":-58.3816,"project_id":"proj_xxx","session_id":"session-abc"}'`,
   },
 ]
 

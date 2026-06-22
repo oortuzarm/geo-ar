@@ -26,6 +26,7 @@ import IntegrationsPage        from './pages/Integrations/IntegrationsPage'
 import SmartProxiesPage        from './pages/SmartProxies/SmartProxiesPage'
 import SmartProxyFormPage      from './pages/SmartProxies/SmartProxyFormPage'
 import SmartProxyDetailPage    from './pages/SmartProxies/SmartProxyDetailPage'
+import DevelopersPage          from './pages/Developers/DevelopersPage'
 import AccountPage              from './pages/Account/AccountPage'
 import PrivacyPolicyPage        from './pages/Legal/PrivacyPolicyPage'
 import TermsAndConditionsPage   from './pages/Legal/TermsAndConditionsPage'
@@ -76,6 +77,7 @@ const protectedChildren = [
       { path: 'settings',   element: <SettingsPage /> },
       { path: 'plans',         element: <PlansPage /> },
       { path: 'integrations',  element: <IntegrationsPage /> },
+      { path: 'developers',    element: <DevelopersPage /> },
       { path: 'smart-proxies',           element: <SmartProxiesPage /> },
       { path: 'smart-proxies/new',       element: <SmartProxyFormPage /> },
       { path: 'smart-proxies/:id',       element: <SmartProxyDetailPage /> },

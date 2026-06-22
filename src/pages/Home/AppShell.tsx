@@ -85,6 +85,15 @@ function IntegrationsIcon() {
   )
 }
 
+function DevelopersIcon() {
+  return (
+    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+    </svg>
+  )
+}
+
 function SmartProxiesIcon() {
   return (
     <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -474,6 +483,13 @@ export default function AppShell() {
             Integraciones
           </NavLink>
           <NavLink
+            to="/app/developers"
+            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
+          >
+            <DevelopersIcon />
+            Developers
+          </NavLink>
+          <NavLink
             to="/app/live-visits"
             className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
           >
@@ -596,6 +612,14 @@ export default function AppShell() {
           >
             <IntegrationsIcon />
             Integraciones
+          </NavLink>
+          <NavLink
+            to="/app/developers"
+            onClick={closeDrawer}
+            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
+          >
+            <DevelopersIcon />
+            Developers
           </NavLink>
           <NavLink
             to="/app/live-visits"

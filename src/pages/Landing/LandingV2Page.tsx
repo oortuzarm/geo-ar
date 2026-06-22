@@ -24,16 +24,6 @@ function HeroCodePanel() {
         </div>
       </div>
 
-      {/* Smart Proxy badge — references proxy_result in response */}
-      <div className="absolute -bottom-3 left-10 z-20 flex items-center gap-1.5
-                      bg-[#0d1117] border border-brand-500/[0.35] rounded-xl px-3 py-1.5
-                      shadow-[0_4px_16px_rgba(0,0,0,0.5),0_0_0_1px_rgba(14,165,233,0.08)]">
-        <svg className="w-3 h-3 text-brand-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-        <span className="text-[10px] font-bold text-brand-400 font-mono">Smart Proxy</span>
-      </div>
-
       <div className="relative rounded-2xl overflow-hidden border border-white/[0.10]
                       shadow-[0_4px_6px_rgba(0,0,0,0.3),0_24px_80px_rgba(0,0,0,0.65),0_0_0_1px_rgba(14,165,233,0.06)]">
         <div className="h-10 bg-[#0a0e1a] border-b border-white/[0.06] flex items-center gap-3 px-4 flex-shrink-0">
@@ -92,13 +82,23 @@ function HeroCodePanel() {
             <span className="text-slate-600">,</span>
           </div>
           <div className="pl-5">
-            <span className="text-brand-400">"proxy_result"</span>
+            <span className="text-brand-400">"validation_result"</span>
             <span className="text-slate-500">: </span>
-            <span className="text-white">{'{ '}</span>
+            <span className="text-white">{'{'}</span>
+          </div>
+          <div className="pl-10">
             <span className="text-brand-400">"valid"</span>
             <span className="text-slate-500">: </span>
             <span className="text-purple-400">true</span>
-            <span className="text-white">{' }'}</span>
+            <span className="text-slate-600">,</span>
+          </div>
+          <div className="pl-10">
+            <span className="text-brand-400">"checks"</span>
+            <span className="text-slate-500">: </span>
+            <span className="text-emerald-400">["dwell_time", "schedule", "capacity"]</span>
+          </div>
+          <div className="pl-5">
+            <span className="text-white">{'}'}</span>
           </div>
           <div className="text-white">{'}'}</div>
         </div>
@@ -191,7 +191,7 @@ function HeroSection() {
             transition={{ duration: 0.7, delay: 0.42 }}
             className="mt-10 flex items-center gap-2 flex-wrap"
           >
-            {['API REST', 'OpenAPI 3.1', 'Presence Validation', 'Smart Proxies'].map((item, i) => (
+            {['API REST', 'OpenAPI 3.1', 'Presence Validation', 'Spatial Analytics'].map((item, i) => (
               <span key={item} className="flex items-center gap-2">
                 {i > 0 && <span className="text-slate-700 select-none">·</span>}
                 <span className="text-xs text-slate-600">{item}</span>
@@ -298,7 +298,7 @@ const CAPABILITIES = [
   },
   {
     label: 'Actúa',
-    desc: 'Activa contenido, dispara flujos vía API o aplica reglas de negocio complejas. Smart Proxies evalúa condiciones — horario, dwell time, cupos — sin que escribas lógica de ubicación.',
+    desc: 'Activa contenido, dispara flujos vía API o aplica reglas de negocio complejas. Ubyca evalúa condiciones — horario, dwell time, cupos — y devuelve un resultado accionable para tu sistema.',
     visual: (
       <div className="w-full rounded-xl border border-white/[0.08] bg-[#080b14] overflow-hidden mb-5">
         <div className="px-4 pt-4 pb-3">
@@ -399,7 +399,7 @@ const HOW_STEPS = [
   },
   {
     title: 'Tu sistema actúa sobre el resultado',
-    desc: 'Consume la respuesta vía API e integra la lógica en tu producto. O usa Smart Proxies para que Ubyca evalúe las condiciones por ti y solo recibas: válido / no válido.',
+    desc: 'Consume la respuesta vía API e integra la lógica en tu producto. Ubyca devuelve el resultado de cada validación: presente, condiciones cumplidas y datos de permanencia.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}

@@ -497,6 +497,233 @@ function HowItWorksSection() {
   )
 }
 
+// ─── API section ──────────────────────────────────────────────────────────────
+
+const ENDPOINTS = [
+  {
+    method: 'POST',
+    path: '/presence/validate',
+    desc: 'Valida si un usuario está presente en una ubicación.',
+    scope: 'presence:validate',
+    methodColor: 'text-emerald-400',
+    methodBg: 'bg-emerald-500/[0.10] border-emerald-500/[0.20]',
+  },
+  {
+    method: 'POST',
+    path: '/presence/check',
+    desc: 'Consulta rápida de presencia sin reglas de negocio.',
+    scope: 'presence:check',
+    methodColor: 'text-emerald-400',
+    methodBg: 'bg-emerald-500/[0.10] border-emerald-500/[0.20]',
+  },
+  {
+    method: 'GET',
+    path: '/projects/{id}/analytics',
+    desc: 'Métricas de visitas, dwell time y flujos espaciales.',
+    scope: 'analytics:read',
+    methodColor: 'text-brand-400',
+    methodBg: 'bg-brand-500/[0.10] border-brand-500/[0.20]',
+  },
+  {
+    method: 'GET',
+    path: '/locations/{id}',
+    desc: 'Devuelve geometría, radio y metadatos de un GeoPoint.',
+    scope: 'locations:read',
+    methodColor: 'text-brand-400',
+    methodBg: 'bg-brand-500/[0.10] border-brand-500/[0.20]',
+  },
+]
+
+function ApiCodePanel() {
+  return (
+    <div className="rounded-2xl overflow-hidden border border-white/[0.10] shadow-[0_24px_64px_rgba(0,0,0,0.7)]">
+      {/* Header bar */}
+      <div className="bg-[#0d1117] border-b border-white/[0.06] px-5 py-3 flex items-center gap-3">
+        <div className="flex gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
+          <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
+          <div className="w-2.5 h-2.5 rounded-full bg-green-500/50" />
+        </div>
+        <span className="text-[11px] text-slate-500 font-mono">POST /api/v1/presence/validate</span>
+      </div>
+      {/* Code body */}
+      <div className="bg-[#080b14] p-5 font-mono text-[12px] leading-7 overflow-x-auto">
+        {/* Request */}
+        <p className="text-slate-600 mb-1">{'// Request'}</p>
+        <p><span className="text-slate-500">{'{'}</span></p>
+        <p className="pl-5">
+          <span className="text-brand-400">"location_id"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-emerald-400">"loc_stand_principal"</span>
+          <span className="text-slate-500">,</span>
+        </p>
+        <p className="pl-5">
+          <span className="text-brand-400">"lat"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-amber-400">-34.603722</span>
+          <span className="text-slate-500">,</span>
+        </p>
+        <p className="pl-5">
+          <span className="text-brand-400">"lng"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-amber-400">-58.381592</span>
+        </p>
+        <p><span className="text-slate-500">{'}'}</span></p>
+
+        <div className="my-4 border-t border-white/[0.05]" />
+
+        {/* Response */}
+        <p className="text-slate-600 mb-1">{'// Response  200 OK'}</p>
+        <p><span className="text-slate-500">{'{'}</span></p>
+        <p className="pl-5">
+          <span className="text-brand-400">"valid"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-purple-400">true</span>
+          <span className="text-slate-500">,</span>
+        </p>
+        <p className="pl-5">
+          <span className="text-brand-400">"locationId"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-emerald-400">"loc_stand_principal"</span>
+          <span className="text-slate-500">,</span>
+        </p>
+        <p className="pl-5">
+          <span className="text-brand-400">"checks"</span>
+          <span className="text-slate-500">{': {'}</span>
+        </p>
+        <p className="pl-10">
+          <span className="text-brand-400">"insideBoundary"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-purple-400">true</span>
+          <span className="text-slate-500">,</span>
+        </p>
+        <p className="pl-10">
+          <span className="text-brand-400">"distanceMeters"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-amber-400">48</span>
+          <span className="text-slate-500">,</span>
+        </p>
+        <p className="pl-10">
+          <span className="text-brand-400">"dwellTimeMet"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-purple-400">true</span>
+        </p>
+        <p className="pl-5"><span className="text-slate-500">{'}'}{','}</span></p>
+        <p className="pl-5">
+          <span className="text-brand-400">"validation_result"</span>
+          <span className="text-slate-500">{': {'}</span>
+        </p>
+        <p className="pl-10">
+          <span className="text-brand-400">"valid"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-purple-400">true</span>
+          <span className="text-slate-500">,</span>
+        </p>
+        <p className="pl-10">
+          <span className="text-brand-400">"checks"</span>
+          <span className="text-slate-500">{': ['}</span>
+          <span className="text-emerald-400">"dwell_time"</span>
+          <span className="text-slate-500">, </span>
+          <span className="text-emerald-400">"schedule"</span>
+          <span className="text-slate-500">, </span>
+          <span className="text-emerald-400">"capacity"</span>
+          <span className="text-slate-500">{']'}</span>
+        </p>
+        <p className="pl-5"><span className="text-slate-500">{'}'}</span></p>
+        <p><span className="text-slate-500">{'}'}</span></p>
+      </div>
+    </div>
+  )
+}
+
+function ApiSection() {
+  return (
+    <section id="v2-api" className="py-16 sm:py-24 px-5 bg-[#050810]">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+
+          {/* Left: copy + endpoints */}
+          <div>
+            <Reveal>
+              <SectionLabel>API</SectionLabel>
+              <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight mb-4">
+                Una API para validar presencia física en tiempo real.
+              </h2>
+              <p className="text-slate-400 leading-relaxed mb-8">
+                Integra validación GPS, reglas de disponibilidad y datos espaciales en cualquier
+                sistema. REST, JSON y OpenAPI 3.1.
+              </p>
+            </Reveal>
+
+            {/* Endpoint rows */}
+            <Reveal delay={0.08}>
+              <div className="space-y-3 mb-8">
+                {ENDPOINTS.map((ep) => (
+                  <div key={ep.path}
+                    className="flex items-start gap-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06]
+                               px-4 py-3.5 hover:border-white/[0.10] hover:bg-white/[0.05] transition-all duration-150">
+                    <span className={`flex-shrink-0 mt-0.5 text-[10px] font-bold font-mono px-2 py-0.5
+                                     rounded border ${ep.methodBg} ${ep.methodColor}`}>
+                      {ep.method}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[12px] font-mono text-slate-300 leading-none mb-1 truncate">{ep.path}</p>
+                      <p className="text-[11px] text-slate-600 leading-snug">{ep.desc}</p>
+                    </div>
+                    <span className="flex-shrink-0 ml-auto text-[9px] font-mono text-slate-700
+                                     bg-white/[0.03] border border-white/[0.06] rounded px-1.5 py-0.5 whitespace-nowrap">
+                      {ep.scope}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+
+            {/* CTAs */}
+            <Reveal delay={0.15}>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <a
+                  href="https://studio.ubyca.com/app/developers"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl
+                             bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
+                             font-semibold text-sm transition-all duration-150
+                             shadow-[0_4px_20px_rgba(2,132,199,0.35)]">
+                  Ver documentación
+                  <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" clipRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+                  </svg>
+                </a>
+                <a
+                  href="/openapi.yaml"
+                  download
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl
+                             bg-white/[0.05] hover:bg-white/[0.09] active:scale-[0.98]
+                             border border-white/[0.10] text-slate-300 hover:text-white
+                             font-semibold text-sm transition-all duration-150">
+                  Descargar OpenAPI
+                  <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" clipRule="evenodd"
+                      d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" />
+                  </svg>
+                </a>
+              </div>
+            </Reveal>
+          </div>
+
+          {/* Right: code panel */}
+          <Reveal delay={0.12}>
+            <ApiCodePanel />
+          </Reveal>
+
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ─── Use cases ────────────────────────────────────────────────────────────────
 
 const USE_CASES = [
@@ -632,6 +859,7 @@ export default function LandingV2Page() {
       <HeroSection />
       <CapabilitiesSection />
       <HowItWorksSection />
+      <ApiSection />
       <UseCasesSection />
       <FinalCTASection />
       <SiteFooter />

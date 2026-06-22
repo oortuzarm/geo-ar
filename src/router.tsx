@@ -32,6 +32,7 @@ import PrivacyPolicyPage        from './pages/Legal/PrivacyPolicyPage'
 import TermsAndConditionsPage   from './pages/Legal/TermsAndConditionsPage'
 import PricingPage              from './pages/Landing/PricingPage'
 import StudioPage               from './pages/Landing/StudioPage'
+import LandingDevelopersPage    from './pages/Landing/LandingDevelopersPage'
 import CommunityPage            from './pages/Community/CommunityPage'
 import ProtectedRoute           from './components/auth/ProtectedRoute'
 import AdminRoute               from './components/auth/AdminRoute'
@@ -106,14 +107,15 @@ export const landingRouter = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      { path: '/contact',     element: <ContactPage /> },
-      { path: '/precios',     element: <PricingPage /> },
-      { path: '/studio',      element: <StudioPage /> },
-      { path: '/community',   element: <CommunityPage /> },
-      { path: '/landing-v2',  element: <LandingV2Page /> },
-      { path: '/landing-old', element: <LandingPage /> },
+      { path: '/contact',      element: <ContactPage /> },
+      { path: '/precios',      element: <PricingPage /> },
+      { path: '/studio',       element: <StudioPage /> },
+      { path: '/community',    element: <CommunityPage /> },
+      { path: '/developers',   element: <LandingDevelopersPage /> },
+      { path: '/landing-v2',   element: <LandingV2Page /> },
+      { path: '/landing-old',  element: <LandingPage /> },
       ...legalRoutes,
-      { path: '*',            element: <LandingV2Page /> },
+      { path: '*',             element: <LandingV2Page /> },
     ],
   },
 ])
@@ -144,12 +146,13 @@ export const devRouter = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      { path: '/',            element: <LandingV2Page /> },
-      { path: '/contact',     element: <ContactPage /> },
-      { path: '/precios',     element: <PricingPage /> },
-      { path: '/studio',      element: <StudioPage /> },
-      { path: '/landing-v2',  element: <LandingV2Page /> },
-      { path: '/landing-old', element: <LandingPage /> },
+      { path: '/',             element: <LandingV2Page /> },
+      { path: '/contact',      element: <ContactPage /> },
+      { path: '/precios',      element: <PricingPage /> },
+      { path: '/studio',       element: <StudioPage /> },
+      { path: '/developers',   element: <LandingDevelopersPage /> },
+      { path: '/landing-v2',   element: <LandingV2Page /> },
+      { path: '/landing-old',  element: <LandingPage /> },
       ...authRoutes,
       ...publicRoutes,
       ...legalRoutes,

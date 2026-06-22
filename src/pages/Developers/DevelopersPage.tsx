@@ -195,7 +195,7 @@ function IntroTab() {
         <p className="text-sm text-gray-300 leading-relaxed mb-3">
           La <span className="text-gray-100 font-medium">Ubyca API v1</span> te permite integrar capacidades de
           geolocalización en tus propias aplicaciones, sitios web y sistemas.
-          Con ella podés crear flujos de presencia GPS, consultar proyectos y ubicaciones,
+          Con ella puedes crear flujos de presencia GPS, consultar proyectos y ubicaciones,
           y obtener métricas espaciales en tiempo real.
         </p>
         <p className="text-sm text-gray-500 leading-relaxed">
@@ -229,9 +229,9 @@ function IntroTab() {
             </svg>
           </div>
           <div className="flex-1">
-            <p className="text-sm font-semibold text-gray-100 mb-0.5">Necesitás credenciales</p>
+            <p className="text-sm font-semibold text-gray-100 mb-0.5">Necesitas credenciales</p>
             <p className="text-xs text-gray-400 mb-3">
-              Para usar la API creá una API Key desde la sección Integraciones.
+              Para usar la API crea una API Key desde la sección Integraciones.
               Cada clave tiene scopes que definen a qué endpoints puede acceder.
             </p>
             <Link
@@ -264,7 +264,7 @@ function AuthTab() {
       <Card>
         <SectionLabel>Headers recomendados</SectionLabel>
         <p className="text-sm text-gray-400 mb-4">
-          Incluí tu API Key y Secret en cada request. Los headers <span className="font-mono text-gray-300 text-xs">X-Api-Key</span> y <span className="font-mono text-gray-300 text-xs">X-Api-Secret</span> son el método principal.
+          Incluye tu API Key y Secret en cada request. Los headers <span className="font-mono text-gray-300 text-xs">X-Api-Key</span> y <span className="font-mono text-gray-300 text-xs">X-Api-Secret</span> son el método principal.
         </p>
         <CodeBlock
           code={`curl -X GET ${BASE}/projects \\
@@ -277,7 +277,7 @@ function AuthTab() {
       <Card>
         <SectionLabel>Authorization: Basic</SectionLabel>
         <p className="text-sm text-gray-400 mb-4">
-          Podés usar HTTP Basic Auth con el par <span className="font-mono text-gray-300 text-xs">key:secret</span> codificado en Base64.
+          Puedes usar HTTP Basic Auth con el par <span className="font-mono text-gray-300 text-xs">key:secret</span> codificado en Base64.
           Es equivalente a los headers X-Api-Key / X-Api-Secret.
         </p>
         <CodeBlock
@@ -291,7 +291,7 @@ curl -u "ubk_live_xxx:sk_live_xxx" \\
       <Card>
         <SectionLabel>Authorization: Bearer</SectionLabel>
         <p className="text-sm text-gray-400 mb-4">
-          También podés pasar <span className="font-mono text-gray-300 text-xs">key:secret</span> como Bearer token en el header <span className="font-mono text-gray-300 text-xs">Authorization</span>.
+          También puedes pasar <span className="font-mono text-gray-300 text-xs">key:secret</span> como Bearer token en el header <span className="font-mono text-gray-300 text-xs">Authorization</span>.
         </p>
         <CodeBlock
           code={`curl -X GET ${BASE}/projects \\
@@ -306,8 +306,8 @@ curl -u "ubk_live_xxx:sk_live_xxx" \\
             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
         <p className="text-xs text-amber-300/80 leading-relaxed">
-          El secret solo se muestra una vez al crearlo. Almacenalo en un lugar seguro —
-          si lo perdés debés regenerar la credencial desde Integraciones.
+          El secret solo se muestra una vez al crearlo. Guárdalo en un lugar seguro —
+          si lo pierdes debes regenerar la credencial desde Integraciones.
         </p>
       </div>
     </div>
@@ -323,7 +323,7 @@ function ScopesTab() {
         <SectionLabel>Scopes disponibles</SectionLabel>
         <p className="text-sm text-gray-400 mb-5">
           Cada API Key tiene un conjunto de scopes que limitan su acceso.
-          Seleccionás los scopes al crear la credencial desde Integraciones.
+          Selecciona los scopes al crear la credencial desde Integraciones.
         </p>
 
         <div className="space-y-3">
@@ -527,8 +527,8 @@ function QuickStartTab() {
       <Card>
         <SectionLabel>Flujo completo</SectionLabel>
         <p className="text-sm text-gray-400 mb-6">
-          Seguí estos 6 pasos en orden para integrar la API desde cero.
-          Necesitás al menos una API Key con los scopes correspondientes a cada paso.
+          Sigue estos 6 pasos en orden para integrar la API desde cero.
+          Necesitas al menos una API Key con los scopes correspondientes a cada paso.
         </p>
 
         <div className="space-y-8">
@@ -550,7 +550,7 @@ function OpenApiTab() {
         <SectionLabel>Especificación OpenAPI</SectionLabel>
         <p className="text-sm text-gray-400 mb-5">
           La especificación completa de la Ubyca API v1 está disponible en formato OpenAPI 3.1.
-          Podés usarla para generar clientes, configurar herramientas como Postman o Insomnia,
+          Puedes usarla para generar clientes, configurar herramientas como Postman o Insomnia,
           o validar requests contra el contrato oficial.
         </p>
 
@@ -573,11 +573,11 @@ function OpenApiTab() {
         <SectionLabel>Importar en Postman</SectionLabel>
         <ol className="space-y-3">
           {[
-            'Descargá el archivo ubyca-api-v1.yaml.',
-            'En Postman, abrí Import → Upload Files.',
-            'Seleccioná el archivo descargado.',
+            'Descarga el archivo ubyca-api-v1.yaml.',
+            'En Postman, abre Import → Upload Files.',
+            'Selecciona el archivo descargado.',
             'Postman generará la colección con todos los endpoints.',
-            'Configurá las variables ubk_key y ubk_secret en tu entorno.',
+            'Configura las variables ubk_key y ubk_secret en tu entorno.',
           ].map((step, i) => (
             <li key={i} className="flex gap-3 text-sm text-gray-400">
               <span className="text-gray-600 font-mono text-xs mt-0.5 flex-shrink-0 w-4">{i + 1}.</span>
@@ -591,9 +591,9 @@ function OpenApiTab() {
         <SectionLabel>Importar en Insomnia</SectionLabel>
         <ol className="space-y-3">
           {[
-            'Descargá el archivo ubyca-api-v1.yaml.',
-            'En Insomnia, abrí Import / Export → Import Data.',
-            'Seleccioná From File y elegí el YAML.',
+            'Descarga el archivo ubyca-api-v1.yaml.',
+            'En Insomnia, abre Import / Export → Import Data.',
+            'Selecciona From File y elige el YAML.',
             'La colección se importa con todos los endpoints y esquemas.',
           ].map((step, i) => (
             <li key={i} className="flex gap-3 text-sm text-gray-400">

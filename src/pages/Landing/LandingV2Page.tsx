@@ -1,76 +1,82 @@
-import { useEffect, useRef, useState } from 'react'
-import { motion, useInView, AnimatePresence } from 'framer-motion'
+import { useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { Reveal, SectionLabel } from '../../components/landing/LandingPrimitives'
 import LandingNavBar from '../../components/landing/LandingNavBar'
 import SiteFooter from '../../components/landing/SiteFooter'
 
-// ─── Shared primitives ────────────────────────────────────────────────────────
-
-function Reveal({
-  children,
-  delay = 0,
-  className = '',
-}: {
-  children: React.ReactNode
-  delay?: number
-  className?: string
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  const inView = useInView(ref, { once: true, margin: '-60px' })
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 24 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  )
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-[11px] font-bold tracking-widest uppercase text-brand-400 mb-4">
-      {children}
-    </p>
-  )
-}
-
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
-const HERO_WORDS = [
-  'eventos y festivales.',
-  'activaciones.',
-  'ferias y stands.',
-  'tiendas y retail.',
-  'municipios.',
-  'turismo.',
-  'campus.',
-  'espacios públicos.',
-]
-
-function RotatingWord() {
-  const [idx, setIdx] = useState(0)
-  useEffect(() => {
-    const id = setInterval(() => setIdx((i) => (i + 1) % HERO_WORDS.length), 2600)
-    return () => clearInterval(id)
-  }, [])
+function HeroCodePanel() {
   return (
-    <span className="block min-h-[1.4em]">
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.span
-          key={idx}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="block text-brand-400"
-        >
-          {HERO_WORDS[idx]}
-        </motion.span>
-      </AnimatePresence>
-    </span>
+    <div className="relative rounded-2xl overflow-hidden border border-white/[0.10]
+                    shadow-[0_4px_6px_rgba(0,0,0,0.3),0_24px_80px_rgba(0,0,0,0.65),0_0_0_1px_rgba(14,165,233,0.06)]">
+      <div className="h-10 bg-[#0a0e1a] border-b border-white/[0.06] flex items-center gap-3 px-4 flex-shrink-0">
+        <div className="flex gap-1.5 flex-shrink-0">
+          <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
+          <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
+          <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+        </div>
+        <span className="text-[11px] text-slate-500 font-mono">POST /api/v1/presence/validate</span>
+      </div>
+      <div className="bg-[#080b14] p-6 font-mono text-[13px] leading-7 overflow-x-auto">
+        <p className="text-[10px] font-bold tracking-widest uppercase text-slate-600 mb-3">Request</p>
+        <div className="text-white">{'{'}</div>
+        <div className="pl-5">
+          <span className="text-brand-400">"location_id"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-emerald-400">"loc_stand_principal"</span>
+          <span className="text-slate-600">,</span>
+        </div>
+        <div className="pl-5">
+          <span className="text-brand-400">"lat"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-amber-400">-34.6037</span>
+          <span className="text-slate-600">,</span>
+        </div>
+        <div className="pl-5">
+          <span className="text-brand-400">"lng"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-amber-400">-58.3816</span>
+        </div>
+        <div className="text-white mb-4">{'}'}</div>
+
+        <div className="border-t border-white/[0.05] mb-4" />
+
+        <div className="flex items-center gap-2 mb-3">
+          <p className="text-[10px] font-bold tracking-widest uppercase text-slate-600">Response</p>
+          <span className="text-[10px] font-bold text-emerald-400">200 OK</span>
+        </div>
+        <div className="text-white">{'{'}</div>
+        <div className="pl-5">
+          <span className="text-brand-400">"present"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-purple-400">true</span>
+          <span className="text-slate-600">,</span>
+        </div>
+        <div className="pl-5">
+          <span className="text-brand-400">"distance_meters"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-amber-400">48</span>
+          <span className="text-slate-600">,</span>
+        </div>
+        <div className="pl-5">
+          <span className="text-brand-400">"dwell_seconds"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-amber-400">312</span>
+          <span className="text-slate-600">,</span>
+        </div>
+        <div className="pl-5">
+          <span className="text-brand-400">"proxy_result"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-white">{'{ '}</span>
+          <span className="text-brand-400">"valid"</span>
+          <span className="text-slate-500">: </span>
+          <span className="text-purple-400">true</span>
+          <span className="text-white">{' }'}</span>
+        </div>
+        <div className="text-white">{'}'}</div>
+      </div>
+    </div>
   )
 }
 
@@ -100,7 +106,7 @@ function HeroSection() {
                              uppercase text-brand-400 border border-brand-500/30
                              bg-brand-500/[0.08] px-3.5 py-1.5 rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse" />
-              Experiencias geolocalizadas
+              Physical Presence Infrastructure
             </span>
           </motion.div>
 
@@ -110,8 +116,7 @@ function HeroSection() {
             className="mt-6 font-black text-white tracking-tight leading-[1.04]
                        text-[2.2rem] sm:text-[2.8rem] lg:text-[3rem]"
           >
-            Desbloquea contenido geolocalizado en
-            <RotatingWord />
+            Infraestructura de presencia física.
           </motion.h1>
 
           <motion.p
@@ -119,8 +124,8 @@ function HeroSection() {
             transition={{ duration: 0.7, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
             className="mt-5 text-base md:text-lg text-slate-400 leading-relaxed"
           >
-            Obtén un análisis detallado de entradas, conversiones y actividad en tiempo real
-            para comprender cómo interactúan las personas con tus ubicaciones.
+            Ubyca detecta, valida y actúa sobre la ubicación real de tus usuarios
+            — vía API, sin SDK, desde cualquier dispositivo.
           </motion.p>
 
           <motion.div
@@ -136,108 +141,48 @@ function HeroSection() {
                          bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
                          font-semibold text-sm transition-all duration-150
                          shadow-[0_4px_24px_rgba(2,132,199,0.4)]">
-              Crear experiencia gratis
+              Comenzar gratis
               <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" clipRule="evenodd"
                   d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
               </svg>
             </a>
             <a
-              href="/precios"
+              href="/developers"
               className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
                          bg-white/[0.06] hover:bg-white/[0.10] active:scale-[0.98]
                          border border-white/10 text-white font-semibold text-sm
                          backdrop-blur-sm transition-all duration-150"
             >
-              Ver planes
+              Ver documentación
             </a>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.42 }}
-            className="mt-10 flex items-center gap-5 flex-wrap"
+            className="mt-10 flex items-center gap-2 flex-wrap"
           >
-            {[['Sin app nativa', '🌐'], ['Solo una URL', '🔗'], ['GPS verificado', '📍'], ['Métricas reales', '📊']].map(
-              ([label, icon]) => (
-                <div key={label} className="flex items-center gap-1.5 text-xs text-slate-600">
-                  <span>{icon}</span>
-                  <span>{label}</span>
-                </div>
-              ),
-            )}
+            {['Sin SDK', 'Sin hardware', 'Sin app nativa', 'OpenAPI 3.1'].map((item, i) => (
+              <span key={item} className="flex items-center gap-2">
+                {i > 0 && <span className="text-slate-700 select-none">·</span>}
+                <span className="text-xs text-slate-600">{item}</span>
+              </span>
+            ))}
           </motion.div>
         </div>
 
-        {/* Right: product screenshots */}
+        {/* Right: code panel */}
         <motion.div
           initial={{ opacity: 0, x: 36 }} animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.9, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
           className="flex-1 w-full min-w-0 relative"
           style={{ paddingBottom: 48 }}
         >
-          {/* Glow */}
           <div className="absolute -inset-20 pointer-events-none" style={{
             background: 'radial-gradient(ellipse 85% 65% at 55% 45%, rgba(14,165,233,0.09) 0%, transparent 68%)',
           }} />
-
-          {/* Desktop browser frame */}
-          <div className="relative rounded-2xl overflow-hidden border border-white/[0.10]
-                          shadow-[0_4px_6px_rgba(0,0,0,0.3),0_24px_80px_rgba(0,0,0,0.65),0_0_0_1px_rgba(14,165,233,0.06)]">
-            <div className="h-10 bg-[#111827] border-b border-white/[0.06] flex items-center gap-3 px-4 flex-shrink-0">
-              <div className="flex gap-1.5 flex-shrink-0">
-                <div className="w-3 h-3 rounded-full bg-red-500/70" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
-                <div className="w-3 h-3 rounded-full bg-green-500/70" />
-              </div>
-              <div className="flex-1 flex justify-center min-w-0">
-                <div className="bg-white/[0.05] border border-white/[0.05] rounded-md
-                                px-4 py-1 text-[11px] text-slate-500 truncate max-w-[240px]">
-                  studio.ubyca.com/project/descuentos
-                </div>
-              </div>
-            </div>
-            <div className="relative bg-[#111827] overflow-hidden" style={{ height: 410 }}>
-              <img
-                src="/imagen-landing-1.webp"
-                alt="Editor de experiencias geolocalizadas Ubyca"
-                className="absolute inset-0 w-full h-full object-cover select-none"
-                style={{ objectPosition: 'center top' }}
-                draggable={false}
-                loading="eager"
-              />
-              <div className="absolute inset-0 pointer-events-none" style={{
-                background: 'linear-gradient(to bottom, transparent 62%, rgba(5,8,16,0.82) 100%)',
-              }} />
-              <div className="absolute bottom-3 left-3 flex items-center gap-1.5 backdrop-blur-sm
-                              bg-sky-500/10 border border-sky-500/20 rounded-full px-2.5 py-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
-                <span className="text-[10px] font-semibold text-sky-400">Radio de activación activo</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Phone mockup */}
-          <motion.div
-            animate={{ y: [0, -9, 0] }}
-            transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-            className="absolute -right-6 xl:-right-10 z-20 hidden lg:block"
-            style={{ width: 182, height: 400, bottom: -8 }}
-          >
-            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-28 h-8 pointer-events-none"
-              style={{ background: 'radial-gradient(ellipse 100% 100% at 50% 100%, rgba(14,165,233,0.22) 0%, transparent 70%)' }} />
-            <div className="w-full h-full rounded-[2.6rem] border-[3.5px] border-gray-600/70 overflow-hidden
-                            shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.9),0_0_28px_rgba(14,165,233,0.12)]">
-              <img
-                src="/hero-mobile.jpg"
-                alt="Vista mobile Ubyca"
-                className="w-full h-full object-cover select-none"
-                style={{ objectPosition: 'center 50%', transform: 'scale(1)', transformOrigin: 'center 70%' }}
-                draggable={false}
-                loading="lazy"
-              />
-            </div>
-          </motion.div>
+          <HeroCodePanel />
         </motion.div>
       </div>
 

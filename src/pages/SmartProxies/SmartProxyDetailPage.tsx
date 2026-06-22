@@ -3,6 +3,8 @@ import { useNavigate, useParams }       from 'react-router-dom'
 import { MapContainer, useMap }          from 'react-leaflet'
 import type { LatLngBoundsExpression }   from 'leaflet'
 import Spinner                           from '../../components/ui/Spinner'
+import PlanGate                          from '../../components/ui/PlanGate'
+import { usePlanFeatures }               from '../../hooks/usePlanFeatures'
 import BaseMapLayer                      from '../../components/map/BaseMapLayer'
 import HotspotsLayer                     from '../../components/maps/HotspotsLayer'
 import IntensityModeSelector             from '../../components/map/IntensityModeSelector'
@@ -111,6 +113,7 @@ export default function SmartProxyDetailPage() {
   const { id }       = useParams<{ id: string }>()
   const navigate     = useNavigate()
   const { addToast } = useGeoStore()
+  const { canUseSmartProxies } = usePlanFeatures()
 
   // ── Proxy data ───────────────────────────────────────────────────────────────
   const [proxy,        setProxy]       = useState<SmartProxy | null>(null)
@@ -203,6 +206,16 @@ export default function SmartProxyDetailPage() {
     navigator.clipboard.writeText(proxy.publicUrl)
       .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
       .catch(() => addToast('No se pudo copiar', 'error'))
+  }
+
+  if (!canUseSmartProxies) {
+    return (
+      <PlanGate
+        emoji="🔗"
+        title="Smart Proxies no disponible"
+        description="Esta función no está disponible en tu plan actual. Actualizá tu plan para crear y gestionar enlaces inteligentes con seguimiento."
+      />
+    )
   }
 
   if (proxyLoading) {

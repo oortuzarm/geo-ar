@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore'
 import { useWorkspaceStore } from '../../store/workspaceStore'
 import { useSettingsStore } from '../../store/settingsStore'
 import { useSubscription } from '../../hooks/useSubscription'
+import { usePlanFeatures } from '../../hooks/usePlanFeatures'
 import { geoProjectsApi, geoPointsApi } from '../../services'
 import { LAST_PROJECT_KEY } from '../../hooks/useWorkspace'
 import type { GeoProject } from '../../types'
@@ -394,6 +395,7 @@ export default function AppShell() {
   const { logout, currentUser } = useAuthStore()
   const navigate = useNavigate()
   const { isLoaded, setWorkspace } = useWorkspaceStore()
+  const { canUseSmartProxies } = usePlanFeatures()
   const fetchStarted = useRef(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -496,13 +498,15 @@ export default function AppShell() {
             <LiveVisitsIcon />
             Inteligencia Espacial
           </NavLink>
-          <NavLink
-            to="/app/smart-proxies"
-            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
-          >
-            <SmartProxiesIcon />
-            Smart Proxies
-          </NavLink>
+          {canUseSmartProxies && (
+            <NavLink
+              to="/app/smart-proxies"
+              className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
+            >
+              <SmartProxiesIcon />
+              Smart Proxies
+            </NavLink>
+          )}
           <NavLink
             to="/app/members"
             className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
@@ -629,14 +633,16 @@ export default function AppShell() {
             <LiveVisitsIcon />
             Inteligencia Espacial
           </NavLink>
-          <NavLink
-            to="/app/smart-proxies"
-            onClick={closeDrawer}
-            className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
-          >
-            <SmartProxiesIcon />
-            Smart Proxies
-          </NavLink>
+          {canUseSmartProxies && (
+            <NavLink
+              to="/app/smart-proxies"
+              onClick={closeDrawer}
+              className={({ isActive }) => `${side.link} ${isActive ? side.active : side.idle}`}
+            >
+              <SmartProxiesIcon />
+              Smart Proxies
+            </NavLink>
+          )}
           <NavLink
             to="/app/members"
             onClick={closeDrawer}

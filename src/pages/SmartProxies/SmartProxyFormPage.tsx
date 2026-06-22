@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams }      from 'react-router-dom'
 import Spinner                         from '../../components/ui/Spinner'
+import PlanGate                        from '../../components/ui/PlanGate'
+import { usePlanFeatures }             from '../../hooks/usePlanFeatures'
 import { useGeoStore }                 from '../../store/geoStore'
 import {
   getSmartProxy,
@@ -130,6 +132,7 @@ export default function SmartProxyFormPage() {
   const navigate     = useNavigate()
   const { id }       = useParams<{ id: string }>()
   const { addToast } = useGeoStore()
+  const { canUseSmartProxies } = usePlanFeatures()
   const isEdit       = Boolean(id)
 
   const [name,           setName]           = useState('')
@@ -239,6 +242,16 @@ export default function SmartProxyFormPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  if (!canUseSmartProxies) {
+    return (
+      <PlanGate
+        emoji="🔗"
+        title="Smart Proxies no disponible"
+        description="Esta función no está disponible en tu plan actual. Actualizá tu plan para crear y gestionar enlaces inteligentes con seguimiento."
+      />
+    )
   }
 
   if (loading) {

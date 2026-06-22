@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 const NAV_LINKS: [string, string][] = [
-  ['Plataforma',  '/studio'],
-  ['Developers',  '/developers'],
-  ['Precios',     '/precios'],
-  ['Contacto',    '/contact'],
+  ['Plataforma',     '/studio'],
+  ['Documentación',  '/docs'],
+  ['Precios',        '/precios'],
+  ['Contacto',       '/contact'],
 ]
 
 export default function LandingNavBar() {

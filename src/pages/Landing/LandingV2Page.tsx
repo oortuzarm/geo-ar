@@ -176,7 +176,7 @@ function HeroSection() {
               </svg>
             </a>
             <a
-              href="/developers"
+              href="/docs"
               className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
                          bg-white/[0.06] hover:bg-white/[0.10] active:scale-[0.98]
                          border border-white/10 text-white font-semibold text-sm
@@ -482,7 +482,7 @@ function HowItWorksSection() {
             </svg>
           </a>
           <a
-            href="/developers"
+            href="/docs"
             className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
                        bg-white/[0.06] hover:bg-white/[0.10] active:scale-[0.98]
                        border border-white/10 text-white font-semibold text-sm
@@ -683,9 +683,7 @@ function ApiSection() {
             <Reveal delay={0.15}>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
-                  href="https://studio.ubyca.com/app/developers"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="/docs"
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-xl
                              bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
                              font-semibold text-sm transition-all duration-150

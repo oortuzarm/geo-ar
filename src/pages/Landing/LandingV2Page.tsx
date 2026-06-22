@@ -8,73 +8,100 @@ import SiteFooter from '../../components/landing/SiteFooter'
 
 function HeroCodePanel() {
   return (
-    <div className="relative rounded-2xl overflow-hidden border border-white/[0.10]
-                    shadow-[0_4px_6px_rgba(0,0,0,0.3),0_24px_80px_rgba(0,0,0,0.65),0_0_0_1px_rgba(14,165,233,0.06)]">
-      <div className="h-10 bg-[#0a0e1a] border-b border-white/[0.06] flex items-center gap-3 px-4 flex-shrink-0">
-        <div className="flex gap-1.5 flex-shrink-0">
-          <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
-          <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
-          <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+    <div className="relative">
+      {/* Location badge — references location_id in request */}
+      <div className="absolute -top-3 right-6 z-20 flex items-center gap-2
+                      bg-[#0d1117] border border-white/[0.14] rounded-xl px-3 py-2
+                      shadow-[0_8px_24px_rgba(0,0,0,0.6)]">
+        <svg className="w-3.5 h-3.5 text-brand-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <div>
+          <p className="text-[10px] font-bold text-white font-mono leading-none">loc_stand_principal</p>
+          <p className="text-[9px] text-slate-500 font-mono mt-0.5 leading-none">Radio activo · 150m</p>
         </div>
-        <span className="text-[11px] text-slate-500 font-mono">POST /api/v1/presence/validate</span>
       </div>
-      <div className="bg-[#080b14] p-6 font-mono text-[13px] leading-7 overflow-x-auto">
-        <p className="text-[10px] font-bold tracking-widest uppercase text-slate-600 mb-3">Request</p>
-        <div className="text-white">{'{'}</div>
-        <div className="pl-5">
-          <span className="text-brand-400">"location_id"</span>
-          <span className="text-slate-500">: </span>
-          <span className="text-emerald-400">"loc_stand_principal"</span>
-          <span className="text-slate-600">,</span>
-        </div>
-        <div className="pl-5">
-          <span className="text-brand-400">"lat"</span>
-          <span className="text-slate-500">: </span>
-          <span className="text-amber-400">-34.6037</span>
-          <span className="text-slate-600">,</span>
-        </div>
-        <div className="pl-5">
-          <span className="text-brand-400">"lng"</span>
-          <span className="text-slate-500">: </span>
-          <span className="text-amber-400">-58.3816</span>
-        </div>
-        <div className="text-white mb-4">{'}'}</div>
 
-        <div className="border-t border-white/[0.05] mb-4" />
+      {/* Smart Proxy badge — references proxy_result in response */}
+      <div className="absolute -bottom-3 left-10 z-20 flex items-center gap-1.5
+                      bg-[#0d1117] border border-brand-500/[0.35] rounded-xl px-3 py-1.5
+                      shadow-[0_4px_16px_rgba(0,0,0,0.5),0_0_0_1px_rgba(14,165,233,0.08)]">
+        <svg className="w-3 h-3 text-brand-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        <span className="text-[10px] font-bold text-brand-400 font-mono">Smart Proxy</span>
+      </div>
 
-        <div className="flex items-center gap-2 mb-3">
-          <p className="text-[10px] font-bold tracking-widest uppercase text-slate-600">Response</p>
-          <span className="text-[10px] font-bold text-emerald-400">200 OK</span>
+      <div className="relative rounded-2xl overflow-hidden border border-white/[0.10]
+                      shadow-[0_4px_6px_rgba(0,0,0,0.3),0_24px_80px_rgba(0,0,0,0.65),0_0_0_1px_rgba(14,165,233,0.06)]">
+        <div className="h-10 bg-[#0a0e1a] border-b border-white/[0.06] flex items-center gap-3 px-4 flex-shrink-0">
+          <div className="flex gap-1.5 flex-shrink-0">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
+            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
+            <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+          </div>
+          <span className="text-[11px] text-slate-500 font-mono">POST /api/v1/presence/validate</span>
         </div>
-        <div className="text-white">{'{'}</div>
-        <div className="pl-5">
-          <span className="text-brand-400">"present"</span>
-          <span className="text-slate-500">: </span>
-          <span className="text-purple-400">true</span>
-          <span className="text-slate-600">,</span>
+        <div className="bg-[#080b14] p-6 font-mono text-[13px] leading-7 overflow-x-auto">
+          <p className="text-[10px] font-bold tracking-widest uppercase text-slate-600 mb-3">Request</p>
+          <div className="text-white">{'{'}</div>
+          <div className="pl-5">
+            <span className="text-brand-400">"location_id"</span>
+            <span className="text-slate-500">: </span>
+            <span className="text-emerald-400">"loc_stand_principal"</span>
+            <span className="text-slate-600">,</span>
+          </div>
+          <div className="pl-5">
+            <span className="text-brand-400">"lat"</span>
+            <span className="text-slate-500">: </span>
+            <span className="text-amber-400">-34.6037</span>
+            <span className="text-slate-600">,</span>
+          </div>
+          <div className="pl-5">
+            <span className="text-brand-400">"lng"</span>
+            <span className="text-slate-500">: </span>
+            <span className="text-amber-400">-58.3816</span>
+          </div>
+          <div className="text-white mb-4">{'}'}</div>
+
+          <div className="border-t border-white/[0.05] mb-4" />
+
+          <div className="flex items-center gap-2 mb-3">
+            <p className="text-[10px] font-bold tracking-widest uppercase text-slate-600">Response</p>
+            <span className="text-[10px] font-bold text-emerald-400">200 OK</span>
+          </div>
+          <div className="text-white">{'{'}</div>
+          <div className="pl-5">
+            <span className="text-brand-400">"present"</span>
+            <span className="text-slate-500">: </span>
+            <span className="text-purple-400">true</span>
+            <span className="text-slate-600">,</span>
+          </div>
+          <div className="pl-5">
+            <span className="text-brand-400">"distance_meters"</span>
+            <span className="text-slate-500">: </span>
+            <span className="text-amber-400">48</span>
+            <span className="text-slate-600">,</span>
+          </div>
+          <div className="pl-5">
+            <span className="text-brand-400">"dwell_seconds"</span>
+            <span className="text-slate-500">: </span>
+            <span className="text-amber-400">312</span>
+            <span className="text-slate-600">,</span>
+          </div>
+          <div className="pl-5">
+            <span className="text-brand-400">"proxy_result"</span>
+            <span className="text-slate-500">: </span>
+            <span className="text-white">{'{ '}</span>
+            <span className="text-brand-400">"valid"</span>
+            <span className="text-slate-500">: </span>
+            <span className="text-purple-400">true</span>
+            <span className="text-white">{' }'}</span>
+          </div>
+          <div className="text-white">{'}'}</div>
         </div>
-        <div className="pl-5">
-          <span className="text-brand-400">"distance_meters"</span>
-          <span className="text-slate-500">: </span>
-          <span className="text-amber-400">48</span>
-          <span className="text-slate-600">,</span>
-        </div>
-        <div className="pl-5">
-          <span className="text-brand-400">"dwell_seconds"</span>
-          <span className="text-slate-500">: </span>
-          <span className="text-amber-400">312</span>
-          <span className="text-slate-600">,</span>
-        </div>
-        <div className="pl-5">
-          <span className="text-brand-400">"proxy_result"</span>
-          <span className="text-slate-500">: </span>
-          <span className="text-white">{'{ '}</span>
-          <span className="text-brand-400">"valid"</span>
-          <span className="text-slate-500">: </span>
-          <span className="text-purple-400">true</span>
-          <span className="text-white">{' }'}</span>
-        </div>
-        <div className="text-white">{'}'}</div>
       </div>
     </div>
   )
@@ -116,7 +143,7 @@ function HeroSection() {
             className="mt-6 font-black text-white tracking-tight leading-[1.04]
                        text-[2.2rem] sm:text-[2.8rem] lg:text-[3rem]"
           >
-            Infraestructura de presencia física.
+            Ubyca sabe en tiempo real dónde están tus usuarios.
           </motion.h1>
 
           <motion.p
@@ -124,8 +151,9 @@ function HeroSection() {
             transition={{ duration: 0.7, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
             className="mt-5 text-base md:text-lg text-slate-400 leading-relaxed"
           >
-            Ubyca detecta, valida y actúa sobre la ubicación real de tus usuarios
-            — vía API, sin SDK, desde cualquier dispositivo.
+            Detecta presencia GPS verificada server-side, aplica reglas de negocio
+            sobre cada validación y expone resultados accionables vía API
+            — desde cualquier dispositivo.
           </motion.p>
 
           <motion.div
@@ -163,7 +191,7 @@ function HeroSection() {
             transition={{ duration: 0.7, delay: 0.42 }}
             className="mt-10 flex items-center gap-2 flex-wrap"
           >
-            {['Sin SDK', 'Sin hardware', 'Sin app nativa', 'OpenAPI 3.1'].map((item, i) => (
+            {['API REST', 'OpenAPI 3.1', 'Presence Validation', 'Smart Proxies'].map((item, i) => (
               <span key={item} className="flex items-center gap-2">
                 {i > 0 && <span className="text-slate-700 select-none">·</span>}
                 <span className="text-xs text-slate-600">{item}</span>
@@ -206,32 +234,100 @@ const CAPABILITIES = [
   {
     label: 'Detecta',
     desc: 'Define GeoPoints, radios y polígonos sobre cualquier mapa. Ubyca monitorea entradas, permanencia y salidas por zona — sin hardware, sin balizas, sin infraestructura física adicional.',
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="9" strokeWidth={1.75} />
-        <circle cx="12" cy="12" r="4" strokeWidth={1.5} />
-        <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
-      </svg>
+    visual: (
+      <div className="w-full rounded-xl overflow-hidden border border-white/[0.08] bg-[#070a12] mb-5">
+        <div className="relative h-28">
+          <svg
+            className="absolute inset-0 w-full h-full"
+            viewBox="0 0 220 112"
+            preserveAspectRatio="xMidYMid slice"
+          >
+            <rect width="220" height="112" fill="#070a12" />
+            <line x1="0" y1="28" x2="220" y2="42" stroke="rgba(255,255,255,0.04)" strokeWidth="7" />
+            <line x1="0" y1="72" x2="220" y2="78" stroke="rgba(255,255,255,0.04)" strokeWidth="7" />
+            <line x1="52" y1="0" x2="48" y2="112" stroke="rgba(255,255,255,0.04)" strokeWidth="7" />
+            <line x1="150" y1="0" x2="154" y2="112" stroke="rgba(255,255,255,0.04)" strokeWidth="7" />
+            <line x1="0" y1="112" x2="110" y2="0" stroke="rgba(255,255,255,0.025)" strokeWidth="4" />
+            <circle
+              cx="110" cy="58" r="37"
+              fill="rgba(14,165,233,0.07)"
+              stroke="rgba(14,165,233,0.32)"
+              strokeWidth="1.5"
+              strokeDasharray="5 2.5"
+            />
+            <circle cx="110" cy="58" r="9" fill="rgba(14,165,233,0.18)" />
+            <circle cx="110" cy="58" r="4" fill="#0ea5e9" />
+            <circle cx="110" cy="58" r="1.5" fill="white" />
+          </svg>
+          <div className="absolute top-2 left-2.5 flex items-center gap-1 bg-[#070a12]/75 rounded px-1.5 py-0.5">
+            <span className="text-[9px] font-bold text-white/50 font-mono">GeoPoint activo</span>
+            <span className="text-[9px] text-slate-700 font-mono"> · Radio 150m</span>
+          </div>
+        </div>
+        <div className="border-t border-white/[0.06] px-3 py-2.5">
+          <span className="text-[10px] text-slate-600 font-mono">3 entradas · 1 salida · hoy</span>
+        </div>
+      </div>
     ),
   },
   {
     label: 'Valida',
     desc: 'Cada presencia se verifica server-side contra las coordenadas reales del dispositivo. No auto-declarada. No estimada. GPS contrastado contra tus ubicaciones en tiempo real.',
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-      </svg>
+    visual: (
+      <div className="w-full rounded-xl border border-white/[0.08] bg-[#080b14] overflow-hidden mb-5">
+        <div className="px-4 py-3.5 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-brand-400 font-mono text-[11px]">"present"</span>
+            <span className="text-purple-400 font-mono text-[11px] font-bold">true</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-brand-400 font-mono text-[11px]">"distance_m"</span>
+            <span className="text-amber-400 font-mono text-[11px]">48</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-brand-400 font-mono text-[11px]">"dwell_s"</span>
+            <span className="text-amber-400 font-mono text-[11px]">312</span>
+          </div>
+        </div>
+        <div className="border-t border-white/[0.06] px-4 py-2 flex items-center justify-between">
+          <span className="text-[9px] text-emerald-500/60 font-mono font-bold">200 OK</span>
+          <span className="text-[9px] font-bold text-emerald-400 font-mono">&lt; 80ms</span>
+        </div>
+      </div>
     ),
   },
   {
     label: 'Actúa',
     desc: 'Activa contenido, dispara flujos vía API o aplica reglas de negocio complejas. Smart Proxies evalúa condiciones — horario, dwell time, cupos — sin que escribas lógica de ubicación.',
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-          d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
+    visual: (
+      <div className="w-full rounded-xl border border-white/[0.08] bg-[#080b14] overflow-hidden mb-5">
+        <div className="px-4 pt-4 pb-3">
+          <div className="flex items-center gap-1.5">
+            <div className="flex-1 text-center bg-brand-500/[0.08] border border-brand-500/[0.22] rounded-lg py-2">
+              <p className="text-[8px] font-bold text-brand-400 font-mono leading-tight">Ubyca</p>
+              <p className="text-[7px] text-brand-400/50 font-mono">API</p>
+            </div>
+            <svg className="w-3 h-3 text-slate-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            <div className="flex-1 text-center bg-white/[0.03] border border-white/[0.10] rounded-lg py-2">
+              <p className="text-[8px] font-bold text-slate-400 font-mono leading-tight">Tu</p>
+              <p className="text-[7px] text-slate-500 font-mono">sistema</p>
+            </div>
+            <svg className="w-3 h-3 text-slate-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            <div className="flex-1 text-center bg-emerald-500/[0.08] border border-emerald-500/[0.22] rounded-lg py-2">
+              <p className="text-[8px] font-bold text-emerald-400 font-mono leading-tight">Acción</p>
+              <p className="text-[7px] text-emerald-400/50 font-mono">activa</p>
+            </div>
+          </div>
+          <div className="mt-2.5 flex items-center gap-2 bg-[#060810] rounded-lg px-3 py-1.5 border border-white/[0.06]">
+            <span className="text-[9px] text-slate-600 font-mono">POST /your-webhook</span>
+            <span className="ml-auto text-[9px] font-bold text-emerald-400/70 font-mono">200 OK</span>
+          </div>
+        </div>
+      </div>
     ),
   },
 ]
@@ -259,10 +355,7 @@ function CapabilitiesSection() {
                 'flex flex-col items-center text-center px-8 py-8 sm:py-0',
                 i > 0 ? 'border-t border-white/[0.05] sm:border-t-0 sm:border-l sm:border-white/[0.06]' : '',
               ].join(' ')}>
-                <div className="w-12 h-12 rounded-2xl bg-brand-500/[0.09] border border-brand-500/[0.18]
-                                flex items-center justify-center text-brand-400 mb-5">
-                  {cap.icon}
-                </div>
+                {cap.visual}
                 <p className="text-[11px] font-black tracking-widest uppercase text-brand-400 mb-3">
                   {cap.label}
                 </p>
@@ -487,119 +580,6 @@ function UseCasesSection() {
   )
 }
 
-// ─── Differentials ───────────────────────────────────────────────────────────
-
-const DIFFERENTIALS = [
-  {
-    title: 'Sin app nativa',
-    desc: 'Funciona desde el navegador. Sin instalaciones, sin fricción.',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-          d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Solo una URL',
-    desc: 'Un link. Sin QR obligatorio, sin descargas, sin fricción de onboarding.',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-          d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-      </svg>
-    ),
-  },
-  {
-    title: 'GPS verificado',
-    desc: 'Acceso verificado en tiempo real contra la posición física del usuario.',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Métricas reales',
-    desc: 'Activaciones, radios y conversiones visibles en tiempo real.',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Mobile first',
-    desc: 'Diseñado para usarse en movimiento, desde el celular, en el lugar.',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-          d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Activación contextual',
-    desc: 'El contenido correcto, en el momento exacto, en el lugar preciso.',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-          d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
-    ),
-  },
-]
-
-function DifferentialsSection() {
-  return (
-    <section className="py-16 sm:py-20 px-5"
-      style={{ background: 'linear-gradient(180deg, #050810 0%, #06101f 50%, #050810 100%)' }}>
-      <div className="max-w-6xl mx-auto">
-
-        <Reveal className="text-center mb-10 sm:mb-14">
-          <SectionLabel>Diferenciales</SectionLabel>
-          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-[1.06]">
-            No es un mapa.{' '}
-            <span className="text-brand-400">Es activación real.</span>
-          </h2>
-          <p className="mt-4 text-slate-400 max-w-lg mx-auto">
-            Ubyca no muestra lugares. Activa experiencias cuando alguien llega a ellos.
-          </p>
-        </Reveal>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {DIFFERENTIALS.map((d, i) => (
-            <Reveal key={d.title} delay={i * 0.055}>
-              <div className="group flex items-start gap-4 p-5 rounded-2xl
-                              border border-white/[0.06] bg-white/[0.01]
-                              hover:border-white/[0.12] hover:bg-white/[0.03]
-                              transition-all duration-200">
-                <div className="flex-shrink-0 w-9 h-9 rounded-xl
-                                bg-brand-500/[0.09] border border-brand-500/[0.18]
-                                flex items-center justify-center text-brand-400
-                                group-hover:bg-brand-500/[0.14] transition-colors duration-200">
-                  {d.icon}
-                </div>
-                <div className="min-w-0">
-                  <h3 className="font-bold text-white text-sm mb-1 leading-snug">{d.title}</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">{d.desc}</p>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-
-      </div>
-    </section>
-  )
-}
-
-
-
 // ─── Final CTA ────────────────────────────────────────────────────────────────
 
 function FinalCTASection() {
@@ -636,7 +616,6 @@ function FinalCTASection() {
   )
 }
 
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LandingV2Page() {
@@ -654,7 +633,6 @@ export default function LandingV2Page() {
       <CapabilitiesSection />
       <HowItWorksSection />
       <UseCasesSection />
-      <DifferentialsSection />
       <FinalCTASection />
       <SiteFooter />
     </div>

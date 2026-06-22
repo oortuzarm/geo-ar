@@ -1,11 +1,12 @@
 import { useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Reveal, SectionLabel } from '../../components/landing/LandingPrimitives'
+import { Reveal, SectionLabel, BrowserChrome } from '../../components/landing/LandingPrimitives'
 import LandingNavBar from '../../components/landing/LandingNavBar'
 import SiteFooter from '../../components/landing/SiteFooter'
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
+// @ts-ignore -- Preserved for reference, not currently used as Hero visual.
 function HeroCodePanel() {
   return (
     <div className="relative">
@@ -107,10 +108,96 @@ function HeroCodePanel() {
   )
 }
 
+function HeroVisualPanel() {
+  return (
+    <div className="relative w-full" style={{ paddingBottom: 48 }}>
+      {/* Ambient glow behind the panel */}
+      <div className="absolute -inset-20 pointer-events-none" style={{
+        background: 'radial-gradient(ellipse 85% 65% at 55% 45%, rgba(14,165,233,0.09) 0%, transparent 68%)',
+      }} />
+
+      {/* Browser + Studio screenshot */}
+      <div className="relative rounded-2xl overflow-hidden border border-white/[0.10]
+                      shadow-[0_4px_6px_rgba(0,0,0,0.3),0_24px_80px_rgba(0,0,0,0.65),0_0_0_1px_rgba(14,165,233,0.06)]">
+        <BrowserChrome url="studio.ubyca.com" />
+        <div className="relative bg-[#111827] overflow-hidden" style={{ height: 410 }}>
+          <img
+            src="/imagen-landing-1.webp"
+            alt="Studio Ubyca — presencia física en tiempo real"
+            className="absolute inset-0 w-full h-full object-cover select-none"
+            style={{ objectPosition: 'center top' }}
+            draggable={false}
+            loading="eager"
+          />
+          <div className="absolute inset-0 pointer-events-none" style={{
+            background: 'linear-gradient(to bottom, transparent 62%, rgba(5,8,16,0.82) 100%)',
+          }} />
+        </div>
+      </div>
+
+      {/* Floating card — visits (top right) */}
+      <motion.div
+        animate={{ y: [0, -8, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+        className="absolute -right-4 top-12 hidden lg:block"
+      >
+        <div className="bg-gray-950/95 backdrop-blur-xl border border-white/[0.12]
+                        rounded-2xl px-4 py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+          <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-1.5">Hoy</p>
+          <p className="text-2xl font-black text-brand-400 leading-none">147</p>
+          <p className="text-[10px] text-slate-500 mt-1">visitas activas</p>
+        </div>
+      </motion.div>
+
+      {/* Floating card — locations (bottom left) */}
+      <motion.div
+        animate={{ y: [0, -6, 0] }}
+        transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut', delay: 1.8 }}
+        className="absolute -left-4 bottom-10 hidden lg:block"
+      >
+        <div className="bg-gray-950/95 backdrop-blur-xl border border-white/[0.12]
+                        rounded-2xl px-4 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <p className="text-[10px] font-bold text-emerald-400">3 ubicaciones activas</p>
+          </div>
+          <p className="text-[10px] text-slate-500">Última activación: hace 4 min</p>
+        </div>
+      </motion.div>
+
+      {/* API mini card (bottom right) — secondary: confirms the technical layer exists */}
+      <motion.div
+        animate={{ y: [0, -5, 0] }}
+        transition={{ duration: 6.5, repeat: Infinity, ease: 'easeInOut', delay: 3.0 }}
+        className="absolute -right-4 bottom-10 hidden lg:block"
+      >
+        <div className="bg-gray-950/95 backdrop-blur-xl border border-white/[0.10]
+                        rounded-xl px-3.5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+          <p className="text-[9px] font-mono text-slate-600 mb-2">POST /presence/validate</p>
+          <div className="space-y-0.5 font-mono text-[10px]">
+            <div className="flex items-center justify-between gap-5">
+              <span className="text-brand-400">valid</span>
+              <span className="text-purple-400">true</span>
+            </div>
+            <div className="flex items-center justify-between gap-5">
+              <span className="text-brand-400">distance</span>
+              <span className="text-amber-400">48m</span>
+            </div>
+            <div className="flex items-center justify-between gap-5">
+              <span className="text-brand-400">latency</span>
+              <span className="text-emerald-400">&lt; 80ms</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 function HeroSection() {
   return (
     <section className="relative bg-[#050810] overflow-hidden" style={{ minHeight: '100dvh' }}>
-      {/* Ambient glow */}
+      {/* Ambient glows */}
       <div className="absolute inset-0 pointer-events-none" style={{
         background: 'radial-gradient(ellipse 70% 80% at 72% 50%, rgba(14,165,233,0.08) 0%, transparent 65%)',
       }} />
@@ -133,7 +220,7 @@ function HeroSection() {
                              uppercase text-brand-400 border border-brand-500/30
                              bg-brand-500/[0.08] px-3.5 py-1.5 rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse" />
-              Physical Presence Infrastructure
+              Plataforma de Presencia Física
             </span>
           </motion.div>
 
@@ -151,9 +238,9 @@ function HeroSection() {
             transition={{ duration: 0.7, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
             className="mt-5 text-base md:text-lg text-slate-400 leading-relaxed"
           >
-            Detecta presencia GPS verificada server-side, aplica reglas de negocio
-            sobre cada validación y expone resultados accionables vía API
-            — desde cualquier dispositivo.
+            Presencia GPS verificada en el servidor, con reglas de negocio aplicadas en
+            cada validación. Studio para visualizar y operar.
+            La API para integrar en cualquier sistema.
           </motion.p>
 
           <motion.div
@@ -191,7 +278,7 @@ function HeroSection() {
             transition={{ duration: 0.7, delay: 0.42 }}
             className="mt-10 flex items-center gap-2 flex-wrap"
           >
-            {['API REST', 'OpenAPI 3.1', 'Presence Validation', 'Spatial Analytics'].map((item, i) => (
+            {['Studio', 'REST API', 'Tiempo real', 'OpenAPI 3.1'].map((item, i) => (
               <span key={item} className="flex items-center gap-2">
                 {i > 0 && <span className="text-slate-700 select-none">·</span>}
                 <span className="text-xs text-slate-600">{item}</span>
@@ -200,17 +287,13 @@ function HeroSection() {
           </motion.div>
         </div>
 
-        {/* Right: code panel */}
+        {/* Right: Studio visual + API overlay */}
         <motion.div
           initial={{ opacity: 0, x: 36 }} animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.9, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
-          className="flex-1 w-full min-w-0 relative"
-          style={{ paddingBottom: 48 }}
+          className="flex-1 w-full min-w-0"
         >
-          <div className="absolute -inset-20 pointer-events-none" style={{
-            background: 'radial-gradient(ellipse 85% 65% at 55% 45%, rgba(14,165,233,0.09) 0%, transparent 68%)',
-          }} />
-          <HeroCodePanel />
+          <HeroVisualPanel />
         </motion.div>
       </div>
 

@@ -228,6 +228,214 @@ function HeroSection() {
   )
 }
 
+// ─── Platform split ───────────────────────────────────────────────────────────
+
+function PlatformSplitSection() {
+  return (
+    <section className="py-14 sm:py-20 px-5 bg-[#050810] relative">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
+      <div className="max-w-5xl mx-auto">
+
+        {/* Header */}
+        <Reveal className="text-center mb-10 sm:mb-14">
+          <SectionLabel>Plataforma</SectionLabel>
+          <h2 className="text-3xl sm:text-4xl font-black text-white leading-[1.12]">
+            Una plataforma.<br />Dos formas de usarla.
+          </h2>
+          <p className="mt-4 text-slate-400 max-w-xl mx-auto leading-relaxed">
+            Ubyca tiene un único motor de presencia física.
+            Studio y la API son dos interfaces distintas hacia los mismos datos en tiempo real.
+          </p>
+        </Reveal>
+
+        {/* Cards + connector */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr]">
+
+          {/* ── Studio card */}
+          <Reveal>
+            <div className="h-full rounded-2xl border border-white/[0.08] bg-white/[0.02]
+                            p-6 sm:p-8 hover:border-white/[0.12] hover:bg-white/[0.03]
+                            transition-all duration-200 flex flex-col">
+
+              {/* Visual preview */}
+              <div className="mb-6 space-y-2">
+                <div className="rounded-xl bg-[#0d1117] border border-white/[0.08] px-4 py-3
+                                shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-1.5">Hoy</p>
+                  <p className="text-2xl font-black text-brand-400 leading-none">147</p>
+                  <p className="text-[10px] text-slate-500 mt-1">visitas activas</p>
+                </div>
+                <div className="rounded-xl bg-[#0d1117] border border-white/[0.08] px-4 py-3
+                                shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                    <p className="text-[10px] font-bold text-emerald-400">3 ubicaciones activas</p>
+                  </div>
+                  <p className="text-[10px] text-slate-500">Última activación: hace 4 min</p>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg
+                                bg-white/[0.02] border border-white/[0.05]">
+                  <div className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse flex-shrink-0" />
+                  <span className="text-[10px] text-slate-500 font-mono">
+                    Stand principal · 11 visitantes · En vivo
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-1">
+                Para equipos
+              </p>
+              <h3 className="text-xl font-black text-white mb-1.5">Studio</h3>
+              <p className="text-sm font-semibold text-slate-300 mb-3">
+                Visualiza y analiza sin escribir código.
+              </p>
+              <p className="text-sm text-slate-500 leading-relaxed mb-5">
+                Mapas en tiempo real, dashboards de analytics y editor visual de GeoPoints.
+              </p>
+
+              <div className="space-y-1.5 mb-6 flex-1">
+                {['Mapa en tiempo real', 'Analytics espaciales', 'GeoPoints y polígonos', 'Reglas de activación'].map(f => (
+                  <div key={f} className="flex items-center gap-2">
+                    <div className="w-1 h-1 rounded-full bg-brand-500 flex-shrink-0" />
+                    <span className="text-xs text-slate-500">{f}</span>
+                  </div>
+                ))}
+              </div>
+
+              <a
+                href="/studio"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-400
+                           hover:text-brand-300 transition-colors duration-150"
+              >
+                Explorar Studio
+                <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" clipRule="evenodd"
+                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+                </svg>
+              </a>
+            </div>
+          </Reveal>
+
+          {/* ── Center connector */}
+          <div>
+            {/* Desktop: vertical */}
+            <div className="hidden lg:flex flex-col items-center justify-center h-full w-28 relative">
+              <div
+                className="absolute top-10 bottom-10 left-1/2 -translate-x-1/2 w-px"
+                style={{ background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.07) 25%, rgba(255,255,255,0.07) 75%, transparent)' }}
+              />
+              <div className="relative z-10 flex flex-col items-center gap-2.5">
+                <div className="bg-[#080b14] border border-white/[0.10] rounded-full px-3 py-1.5">
+                  <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">
+                    Mismo motor
+                  </span>
+                </div>
+                <p className="text-[9px] text-slate-700 font-mono text-center leading-relaxed">
+                  Mismos datos<br />Mismo tiempo real
+                </p>
+              </div>
+            </div>
+            {/* Mobile: horizontal */}
+            <div className="lg:hidden flex items-center gap-3 my-5">
+              <div
+                className="flex-1 h-px"
+                style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.07))' }}
+              />
+              <div className="bg-[#080b14] border border-white/[0.10] rounded-full px-3 py-1.5 flex-shrink-0">
+                <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">
+                  Mismo motor
+                </span>
+              </div>
+              <div
+                className="flex-1 h-px"
+                style={{ background: 'linear-gradient(to left, transparent, rgba(255,255,255,0.07))' }}
+              />
+            </div>
+          </div>
+
+          {/* ── API card */}
+          <Reveal delay={0.08}>
+            <div className="h-full rounded-2xl border border-white/[0.08] bg-white/[0.02]
+                            p-6 sm:p-8 hover:border-white/[0.12] hover:bg-white/[0.03]
+                            transition-all duration-200 flex flex-col">
+
+              {/* Mini code panel */}
+              <div className="mb-6 rounded-xl overflow-hidden border border-white/[0.08]
+                              shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+                <div className="h-8 bg-[#0a0e1a] border-b border-white/[0.06] flex items-center gap-2 px-3">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 rounded-full bg-red-500/50" />
+                    <div className="w-2 h-2 rounded-full bg-yellow-500/50" />
+                    <div className="w-2 h-2 rounded-full bg-green-500/50" />
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-600 ml-1">POST /presence/validate</span>
+                </div>
+                <div className="bg-[#080b14] px-4 py-3.5 font-mono text-[11px] leading-[1.8]">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-brand-400">valid</span>
+                    <span className="text-purple-400">true</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-brand-400">distanceMeters</span>
+                    <span className="text-amber-400">48</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-brand-400">dwellTimeMet</span>
+                    <span className="text-purple-400">true</span>
+                  </div>
+                  <div className="mt-3 pt-2.5 border-t border-white/[0.05] flex items-center gap-2">
+                    <span className="text-emerald-400 text-[10px] font-bold">&lt; 80ms</span>
+                    <span className="text-slate-700">·</span>
+                    <span className="text-slate-600 text-[10px]">REST</span>
+                    <span className="text-slate-700">·</span>
+                    <span className="text-slate-600 text-[10px]">OpenAPI 3.1</span>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-1">
+                Para desarrolladores
+              </p>
+              <h3 className="text-xl font-black text-white mb-1.5">API</h3>
+              <p className="text-sm font-semibold text-slate-300 mb-3">
+                Integra presencia física en cualquier sistema.
+              </p>
+              <p className="text-sm text-slate-500 leading-relaxed mb-5">
+                REST + JSON + OpenAPI 3.1 para validar presencia GPS, consultar ubicaciones y consumir analytics.
+              </p>
+
+              <div className="space-y-1.5 mb-6 flex-1">
+                {['Presence Validation', 'Locations API', 'Analytics API', 'OpenAPI 3.1'].map(f => (
+                  <div key={f} className="flex items-center gap-2">
+                    <div className="w-1 h-1 rounded-full bg-brand-500 flex-shrink-0" />
+                    <span className="text-xs text-slate-500">{f}</span>
+                  </div>
+                ))}
+              </div>
+
+              <a
+                href="/docs"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-400
+                           hover:text-brand-300 transition-colors duration-150"
+              >
+                Leer documentación
+                <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" clipRule="evenodd"
+                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+                </svg>
+              </a>
+            </div>
+          </Reveal>
+
+        </div>
+      </div>
+
+      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/[0.04] to-transparent" />
+    </section>
+  )
+}
+
 // ─── Capabilities ─────────────────────────────────────────────────────────────
 
 const CAPABILITIES = [
@@ -855,6 +1063,7 @@ export default function LandingV2Page() {
     <div className="min-h-screen bg-[#050810] text-white">
       <LandingNavBar />
       <HeroSection />
+      <PlatformSplitSection />
       <CapabilitiesSection />
       <HowItWorksSection />
       <ApiSection />

@@ -164,7 +164,7 @@ export default function LandingDevelopersPage() {
               <h1 className="text-2xl sm:text-3xl font-black text-white mb-3">Documentación</h1>
               <p className="text-[14px] text-slate-400 leading-relaxed mb-6">
                 Ubyca expone una API REST para validar presencia física de usuarios en tiempo real.
-                Enviá coordenadas GPS contra GeoPoints configurados en tu proyecto y recibí resultados
+                Envía coordenadas GPS contra GeoPoints configurados en tu proyecto y recibe resultados
                 accionables: presente o ausente, distancia exacta, tiempo de permanencia y resultado
                 de las reglas de negocio aplicadas.
               </p>
@@ -203,7 +203,7 @@ export default function LandingDevelopersPage() {
                 <code className="text-slate-300 bg-white/[0.06] px-1.5 py-0.5 rounded text-[12px] font-mono">
                   Authorization
                 </code>.
-                Generá tu clave desde{' '}
+                Genera tu clave desde{' '}
                 <a
                   href="https://studio.ubyca.com/app/developers"
                   target="_blank"
@@ -275,19 +275,19 @@ Content-Type: application/json`}</Code>
                 {([
                   {
                     n: '1',
-                    title: 'Creá un GeoPoint en Studio',
-                    body: 'En Studio, creá un proyecto y definí una ubicación (GeoPoint) con nombre, coordenadas y radio activo.',
+                    title: 'Crea un GeoPoint en Studio',
+                    body: 'En Studio, crea un proyecto y define una ubicación (GeoPoint) con nombre, coordenadas y radio activo.',
                     code: null,
                   },
                   {
                     n: '2',
-                    title: 'Generá una API key',
-                    body: 'Desde Studio › Settings › Developers, creá una clave con el scope presence:validate.',
+                    title: 'Genera una API key',
+                    body: 'Desde Studio › Settings › Developers, crea una clave con el scope presence:validate.',
                     code: null,
                   },
                   {
                     n: '3',
-                    title: 'Hacé el primer request',
+                    title: 'Haz el primer request',
                     body: null,
                     code: `curl -X POST https://api.ubyca.com/v1/presence/validate \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
@@ -300,7 +300,7 @@ Content-Type: application/json`}</Code>
                   },
                   {
                     n: '4',
-                    title: 'Consumí el resultado',
+                    title: 'Consume el resultado',
                     body: 'La respuesta incluye si el usuario está presente, la distancia exacta y si se cumplen las reglas de negocio configuradas en el GeoPoint.',
                     code: null,
                   },
@@ -417,7 +417,7 @@ Content-Type: application/json`}</Code>
 
               <p className="text-[14px] text-slate-400 leading-relaxed mb-6">
                 La especificación completa de la API está disponible en formato OpenAPI 3.1.
-                Usala para generar clientes, explorar endpoints con Swagger UI o integrarla
+                Úsala para generar clientes, explorar endpoints con Swagger UI o integrarla
                 en tu pipeline de CI.
               </p>
 

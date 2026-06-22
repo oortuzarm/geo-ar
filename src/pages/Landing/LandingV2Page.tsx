@@ -200,63 +200,74 @@ function HeroSection() {
   )
 }
 
-// ─── Metrics band ─────────────────────────────────────────────────────────────
+// ─── Capabilities ─────────────────────────────────────────────────────────────
 
-const METRICS = [
+const CAPABILITIES = [
   {
-    number: '5x',
-    title:  'más interacción',
-    desc:   'Las experiencias basadas en ubicación generan más interacción al activar contenido en el momento correcto.',
+    label: 'Detecta',
+    desc: 'Define GeoPoints, radios y polígonos sobre cualquier mapa. Ubyca monitorea entradas, permanencia y salidas por zona — sin hardware, sin balizas, sin infraestructura física adicional.',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" strokeWidth={1.75} />
+        <circle cx="12" cy="12" r="4" strokeWidth={1.5} />
+        <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+      </svg>
+    ),
   },
   {
-    number: '+20%',
-    title:  'visitas físicas',
-    desc:   'Las activaciones geolocalizadas aumentan recorridos e interacción en espacios físicos.',
+    label: 'Valida',
+    desc: 'Cada presencia se verifica server-side contra las coordenadas reales del dispositivo. No auto-declarada. No estimada. GPS contrastado contra tus ubicaciones en tiempo real.',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+    ),
   },
   {
-    number: '+293%',
-    title:  'aperturas',
-    desc:   'El contenido contextual aumenta el engagement y las aperturas frente a experiencias tradicionales.',
-  },
-  {
-    number: '65%',
-    title:  'interacción contextual',
-    desc:   'El 65% de los usuarios interactuaría con experiencias basadas en ubicación si el contenido es relevante.',
+    label: 'Actúa',
+    desc: 'Activa contenido, dispara flujos vía API o aplica reglas de negocio complejas. Smart Proxies evalúa condiciones — horario, dwell time, cupos — sin que escribas lógica de ubicación.',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+          d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    ),
   },
 ]
 
-// Border logic per index for a sm:2-col / lg:4-col grid.
-// Mobile  (1 col)  — top border for all except first.
-// sm      (2 cols) — left border on odd items (col 2); top border stays for row 2 items.
-// lg      (4 cols) — left border on items 1-3; remove top borders.
-const METRIC_BORDERS = [
-  '',
-  'border-t border-white/[0.05] sm:border-t-0 sm:border-l sm:border-white/[0.06]',
-  'border-t border-white/[0.05]                             lg:border-t-0 lg:border-l lg:border-white/[0.06]',
-  'border-t border-white/[0.05] sm:border-l sm:border-white/[0.06] lg:border-t-0',
-]
-
-function MetricsBandSection() {
+function CapabilitiesSection() {
   return (
     <section className="relative bg-[#050810] px-5 py-12 sm:py-20">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
 
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          {METRICS.map((m, i) => (
-            <Reveal key={m.number} delay={i * 0.1}>
+        <Reveal className="text-center mb-12 sm:mb-16">
+          <SectionLabel>El núcleo</SectionLabel>
+          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+            Detecta. Valida. Actúa.
+          </h2>
+          <p className="mt-4 text-slate-400 max-w-lg mx-auto">
+            Tres capacidades que convierten coordenadas GPS en decisiones operacionales.
+          </p>
+        </Reveal>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3">
+          {CAPABILITIES.map((cap, i) => (
+            <Reveal key={cap.label} delay={i * 0.1}>
               <div className={[
-                'flex flex-col items-center text-center px-8 py-8 sm:py-6 lg:py-0',
-                METRIC_BORDERS[i],
+                'flex flex-col items-center text-center px-8 py-8 sm:py-0',
+                i > 0 ? 'border-t border-white/[0.05] sm:border-t-0 sm:border-l sm:border-white/[0.06]' : '',
               ].join(' ')}>
-                <span className="text-[2.8rem] sm:text-[3.2rem] font-black text-brand-400 leading-none tracking-tight tabular-nums">
-                  {m.number}
-                </span>
-                <p className="mt-3 text-sm font-semibold text-white/80">
-                  {m.title}
+                <div className="w-12 h-12 rounded-2xl bg-brand-500/[0.09] border border-brand-500/[0.18]
+                                flex items-center justify-center text-brand-400 mb-5">
+                  {cap.icon}
+                </div>
+                <p className="text-[11px] font-black tracking-widest uppercase text-brand-400 mb-3">
+                  {cap.label}
                 </p>
-                <p className="mt-2.5 text-[12px] text-slate-400 leading-relaxed max-w-[240px]">
-                  {m.desc}
+                <p className="text-sm text-slate-400 leading-relaxed max-w-[280px]">
+                  {cap.desc}
                 </p>
               </div>
             </Reveal>
@@ -273,8 +284,8 @@ function MetricsBandSection() {
 
 const HOW_STEPS = [
   {
-    title: 'Conecta espacios físicos',
-    desc: 'Agrega ubicaciones desde el mapa y configura el contenido, promociones o información que se activará en cada lugar.',
+    title: 'Define tus ubicaciones',
+    desc: 'Crea GeoPoints, dibuja radios o traza polígonos sobre el mapa desde Studio, o gestiona ubicaciones directamente vía API. Cada zona tiene su propio conjunto de reglas: horarios, cupos, dwell time mínimo.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
@@ -284,23 +295,22 @@ const HOW_STEPS = [
     ),
   },
   {
-    title: 'Activa contenido y experiencias',
-    desc: 'Define radios o áreas de activación para controlar cuándo y dónde ocurre cada interacción.',
+    title: 'Ubyca valida la presencia',
+    desc: 'Cuando un usuario envía sus coordenadas, Ubyca las contrasta en tiempo real contra tus GeoPoints activos. El resultado incluye: presente o no, distancia exacta, zona identificada y tiempo de permanencia acumulado.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="9" strokeWidth={1.75} />
-        <circle cx="12" cy="12" r="4" strokeWidth={1.5} />
-        <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
       </svg>
     ),
   },
   {
-    title: 'Mide y comprende lo que ocurre',
-    desc: 'Analiza entradas, conversiones y actividad en tiempo real para comprender qué ocurre en cada ubicación.',
+    title: 'Tu sistema actúa sobre el resultado',
+    desc: 'Consume la respuesta vía API e integra la lógica en tu producto. O usa Smart Proxies para que Ubyca evalúe las condiciones por ti y solo recibas: válido / no válido.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          d="M13 10V3L4 14h7v7l9-11h-7z" />
       </svg>
     ),
   },
@@ -313,12 +323,12 @@ function HowItWorksSection() {
       <div className="max-w-5xl mx-auto">
 
         <Reveal className="text-center mb-14 sm:mb-20">
-          <SectionLabel>Cómo funciona</SectionLabel>
+          <SectionLabel>El flujo</SectionLabel>
           <h2 className="text-3xl sm:text-4xl font-black text-white">
-            Activa contenido en lugares reales.
+            Sin SDK. Sin hardware. Sin semanas de setup.
           </h2>
           <p className="mt-4 text-slate-400 max-w-lg mx-auto">
-            Crea ubicaciones inteligentes, comprende la actividad de tus visitantes y toma decisiones basadas en datos en tiempo real.
+            Ubyca funciona desde el primer request. No hay integración de meses ni agentes físicos que instalar.
           </p>
         </Reveal>
 
@@ -372,20 +382,20 @@ function HowItWorksSection() {
                        bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
                        font-semibold text-sm transition-all duration-150
                        shadow-[0_4px_24px_rgba(2,132,199,0.4)]">
-            Comienza gratis
+            Comenzar gratis
             <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" clipRule="evenodd"
                 d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
             </svg>
           </a>
           <a
-            href="https://www.ubyca.com/contact"
+            href="/developers"
             className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
                        bg-white/[0.06] hover:bg-white/[0.10] active:scale-[0.98]
                        border border-white/10 text-white font-semibold text-sm
                        backdrop-blur-sm transition-all duration-150"
           >
-            Hablemos
+            Leer documentación
           </a>
         </Reveal>
 
@@ -641,7 +651,7 @@ export default function LandingV2Page() {
     <div className="min-h-screen bg-[#050810] text-white">
       <LandingNavBar />
       <HeroSection />
-      <MetricsBandSection />
+      <CapabilitiesSection />
       <HowItWorksSection />
       <UseCasesSection />
       <DifferentialsSection />

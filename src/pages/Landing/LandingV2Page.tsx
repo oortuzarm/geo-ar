@@ -709,7 +709,7 @@ function HowItWorksSection() {
         <Reveal className="text-center mb-14 sm:mb-20">
           <SectionLabel>El flujo</SectionLabel>
           <h2 className="text-3xl sm:text-4xl font-black text-white">
-            Sin SDK. Sin hardware. Sin semanas de setup.
+            Sin instalaciones. Sin hardware. Sin semanas de espera.
           </h2>
           <p className="mt-4 text-slate-400 max-w-lg mx-auto">
             Ubyca funciona desde el primer request. No hay integración de meses ni agentes físicos que instalar.

@@ -101,10 +101,10 @@ export const limitations: Limitation[] = [
       'debe solicitar y recibir el permiso de ubicación explícitamente. ' +
       'Ubyca no accede a la ubicación en segundo plano sin acción del usuario. ' +
       'El cliente que implementa Ubyca es responsable exclusivo de: informar a ' +
-      'sus usuarios del uso de datos de ubicación, cumplir la normativa local ' +
-      'aplicable (GDPR, LGPD, Ley 25.326 argentina u otras), y obtener los ' +
-      'consentimientos que su legislación exija. Ubyca provee la infraestructura ' +
-      'técnica, no asesoramiento legal ni garantías de cumplimiento normativo.',
+      'sus usuarios del uso de datos de ubicación, obtener los consentimientos ' +
+      'que exija la legislación aplicable en su jurisdicción, y cumplir con la ' +
+      'normativa de privacidad vigente en cada país donde opere. Ubyca provee ' +
+      'infraestructura técnica, no asesoramiento legal ni garantías de cumplimiento normativo.',
     workaround:
       'Incluir en el flujo de usuario una pantalla de consentimiento clara antes ' +
       'de solicitar la ubicación. Los Smart Proxies de Ubyca incluyen una pantalla ' +

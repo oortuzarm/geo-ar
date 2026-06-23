@@ -160,10 +160,10 @@ export const faqMonitoring: FAQ = {
     'del dispositivo en segundo plano sin acción del usuario. ' +
     'En escenarios de monitoreo de equipos de trabajo (agentes de campo, ' +
     'vendedores, técnicos), la solución requiere que los propios trabajadores ' +
-    'participen activamente en cada validación. El cumplimiento de normativas ' +
-    'de privacidad (GDPR, LGPD, Ley 25.326 Argentina) es responsabilidad del ' +
-    'cliente que implementa la solución — Ubyca provee infraestructura técnica, ' +
-    'no asesoramiento legal.',
+    'participen activamente en cada validación. El cumplimiento normativo ' +
+    'corresponde al cliente que implementa la solución, de acuerdo con la ' +
+    'legislación aplicable en su jurisdicción — Ubyca provee infraestructura ' +
+    'técnica, no asesoramiento legal.',
   tags: ['Presencia física', 'API'],
 }
 

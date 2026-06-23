@@ -26,22 +26,29 @@ export const realEstateVisits: UseCase = {
 export const realEstateOpenHouse: UseCase = {
   id: 'real-estate-open-house',
   vertical: 'real-estate',
-  title: 'Open house con contenido activado en el lugar',
+  title: 'Sala de ventas y open house con experiencia digital contextual',
   problem:
     'Una desarrolladora inmobiliaria organiza jornadas de puertas abiertas ' +
-    'y quiere entregar información detallada de cada unidad, planos y ' +
-    'beneficios de compra solo a quienes estén físicamente en el proyecto.',
+    'o mantiene una sala de ventas activa y quiere entregar catálogo, planos ' +
+    'y precios de forma contextual y medible, con o sin requerir que el ' +
+    'visitante esté físicamente en el proyecto como condición.',
   solution:
-    'Ubyca activa el acceso al catálogo, planos y precios solo cuando el ' +
-    'visitante está físicamente en el proyecto inmobiliario. El material ' +
-    'no puede ser consultado fuera del radio definido, lo que genera ' +
-    'exclusividad. Puedes usar Smart Proxy sobre tu catálogo online ' +
-    'existente sin modificar el sitio.',
-  capabilities: ['geopoints', 'presence', 'smart-proxies'],
+    'Puedes configurar la experiencia con o sin desbloqueo por presencia. ' +
+    'Con desbloqueo activo, Ubyca valida que el visitante esté dentro del ' +
+    'GeoPoint antes de habilitar el catálogo, planos o precios — el material ' +
+    'no circula fuera del sitio y genera exclusividad. Sin desbloqueo, la ' +
+    'experiencia funciona como una capa geolocalizada o informativa: el ' +
+    'contenido está disponible sin exigir presencia física, y Ubyca registra ' +
+    'igualmente las visitas, el tiempo de permanencia y la analítica. En ' +
+    'ambos casos puedes usar Smart Proxy sobre tu catálogo online existente ' +
+    'sin modificar el sitio, y ver las métricas en Studio.',
+  capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],
   matchKeywords: [
     'open house', 'puertas abiertas', 'proyecto inmobiliario',
     'catálogo presencial', 'material de venta en sitio',
-    'showroom', 'sala de ventas',
+    'showroom', 'sala de ventas', 'visita a sala de ventas',
+    'planos en proyecto', 'precios en sitio', 'catálogo inmobiliario',
+    'desarrollo inmobiliario', 'unidades en venta',
   ],
 }
 

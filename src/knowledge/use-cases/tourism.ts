@@ -3,23 +3,27 @@ import type { UseCase } from '../types'
 export const tourismRoutes: UseCase = {
   id: 'tourism-routes',
   vertical: 'tourism',
-  title: 'Rutas turísticas con contenido que se activa por parada',
+  title: 'Contenido contextual en monumentos, rutas y puntos de interés',
   problem:
-    'Una ciudad, museo o operador turístico quiere que los visitantes ' +
-    'descubran información, audio o video de cada punto de interés ' +
-    'automáticamente al llegar, sin tener que escanear un QR ni abrir ' +
-    'una app dedicada.',
+    'Una ciudad, organismo de patrimonio, museo u operador turístico quiere ' +
+    'que los visitantes descubran información, audio o video al llegar a un ' +
+    'monumento, sitio histórico o parada de circuito — sin escanear un QR ' +
+    'ni abrir una app dedicada.',
   solution:
-    'Ubyca define un GeoPoint para cada parada de la ruta con el contenido ' +
-    'asociado. Cuando el visitante llega al área del punto, el contenido ' +
-    'se activa automáticamente. Puedes crear circuitos completos en Studio, ' +
-    'medir qué puntos generan más permanencia y cuáles son salteados, ' +
-    'y actualizar el contenido sin tocar la infraestructura.',
+    'Ubyca define un GeoPoint alrededor de cada monumento, sitio histórico ' +
+    'o punto de interés. Al llegar al área, el contenido asociado — texto, ' +
+    'audio, video, enlace — se activa en el dispositivo del visitante. ' +
+    'Funciona para un único monumento o para circuitos completos de múltiples ' +
+    'paradas. Puedes medir qué puntos generan más permanencia y cuáles son ' +
+    'salteados, y actualizar el contenido en Studio sin tocar la infraestructura.',
   capabilities: ['geopoints', 'presence', 'analytics', 'smart-proxies'],
   matchKeywords: [
-    'ruta turística', 'turismo', 'patrimonio', 'museo', 'circuito',
-    'guía de viaje', 'punto de interés', 'parada turística',
-    'tour autoguiado', 'audio guía', 'contenido por ubicación',
+    'monumento', 'patrimonio', 'patrimonio histórico', 'sitio histórico',
+    'contenido en monumento', 'experiencia patrimonial', 'turismo cultural',
+    'punto de interés histórico', 'museo', 'circuito',
+    'ruta turística', 'turismo', 'guía de viaje', 'punto de interés',
+    'parada turística', 'tour autoguiado', 'audio guía',
+    'contenido por ubicación', 'desbloquear contenido en punto',
   ],
 }
 

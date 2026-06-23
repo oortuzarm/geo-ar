@@ -20,6 +20,7 @@ import { realEstateVisits, realEstateOpenHouse, realEstateBuilding } from './use
 import { operationsSafety, operationsMaintenanceRoutes, operationsFleetTracking } from './use-cases/operations'
 import { healthHomeVisits, healthFieldWorkers, healthOutpatient } from './use-cases/health'
 import { brandActivationCampaign, brandActivationLaunch, brandActivationExperience } from './use-cases/brand-activations'
+import { crmIntegration } from './use-cases/crm-integration'
 import { limitations } from './limitations'
 
 export const knowledge: KnowledgeBase = {
@@ -69,6 +70,7 @@ export const knowledge: KnowledgeBase = {
     brandActivationCampaign,
     brandActivationLaunch,
     brandActivationExperience,
+    crmIntegration,
   ],
   limitations,
 }

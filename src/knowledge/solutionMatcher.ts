@@ -113,3 +113,61 @@ export function matchSolution(query: string): MatchResult {
     matchedId: bestUc.id,
   }
 }
+
+// ─── Audit mode (temporary diagnostic, no production effect) ────────────────
+
+export interface AuditCandidate {
+  id: string
+  title: string
+  type: 'FAQ' | 'BusinessGoal' | 'UseCase'
+  score: number
+  matchedKeywords: string[]
+}
+
+export interface AuditResult {
+  query: string
+  normalized: string
+  top3: AuditCandidate[]
+  winner: AuditCandidate | null
+  isFallback: boolean
+}
+
+function scoreWithMatches(
+  patterns: string[],
+  lower: string,
+): { score: number; matched: string[] } {
+  const matched = patterns.filter(k => lower.includes(normalize(k)))
+  const score = matched.reduce((sum, k) => sum + (normalize(k).includes(' ') ? 2 : 1), 0)
+  return { score, matched }
+}
+
+export function auditMatch(query: string): AuditResult {
+  const normalized = normalize(query)
+  const candidates: AuditCandidate[] = []
+
+  for (const faq of knowledge.faqs) {
+    const { score, matched } = scoreWithMatches(faq.questionPatterns, normalized)
+    candidates.push({ id: faq.id, title: faq.title, type: 'FAQ', score, matchedKeywords: matched })
+  }
+
+  for (const goal of knowledge.businessGoals) {
+    const { score, matched } = scoreWithMatches(goal.matchKeywords, normalized)
+    candidates.push({ id: goal.id, title: goal.title, type: 'BusinessGoal', score, matchedKeywords: matched })
+  }
+
+  for (const uc of knowledge.useCases) {
+    const { score, matched } = scoreWithMatches(uc.matchKeywords, normalized)
+    candidates.push({ id: uc.id, title: uc.title, type: 'UseCase', score, matchedKeywords: matched })
+  }
+
+  const typePriority: Record<string, number> = { FAQ: 3, BusinessGoal: 2, UseCase: 1 }
+  candidates.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score
+    return typePriority[b.type] - typePriority[a.type]
+  })
+
+  const top3 = candidates.filter(c => c.score > 0).slice(0, 3)
+  const winner = top3.length > 0 ? top3[0] : null
+
+  return { query, normalized, top3, winner, isFallback: winner === null }
+}

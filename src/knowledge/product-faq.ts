@@ -167,6 +167,35 @@ export const faqMonitoring: FAQ = {
   tags: ['Presencia física', 'API'],
 }
 
+export const faqVsQR: FAQ = {
+  id: 'faq-vs-qr',
+  title: 'Diferencia entre Ubyca y usar un QR en cada ubicación',
+  questionPatterns: [
+    'diferencia entre ubyca y qr', 'diferencia con qr',
+    'ventaja sobre qr', 'comparado con qr',
+    'ubyca vs qr', 'qr tradicional',
+    'poner un qr', 'usar qr', 'simplemente poner un qr',
+    'diferencia entre usar ubyca y qr',
+    'por qué no usar qr', 'para que sirve si tengo qr',
+    'ya tengo qr', 'en vez de qr',
+  ],
+  answer:
+    'Un QR es suficiente cuando solo necesitas distribuir un enlace o facilitar ' +
+    'acceso a contenido. El problema es que un QR puede compartirse, fotografiarse ' +
+    'y usarse desde cualquier lugar y momento — no hay forma de saber si quien lo ' +
+    'escaneó estaba físicamente donde debía estar. ' +
+    'Ubyca resuelve casos donde eso importa: valida en el servidor que el usuario ' +
+    'está dentro de un GeoPoint antes de activar el contenido, registrar la visita ' +
+    'o habilitar el beneficio. No puede falsificarse compartiendo un link ni ' +
+    'escaneando desde casa. Además, Ubyca registra datos reales de presencia, ' +
+    'cuánto tiempo estuvo el usuario y desde qué ubicación — datos que un QR no ' +
+    'genera. Si tu caso solo requiere "dar acceso a un link", un QR puede ser ' +
+    'suficiente. Si necesitas verificar que alguien estuvo físicamente en el lugar, ' +
+    'medir esa presencia o activar reglas basadas en ubicación real, Ubyca es la ' +
+    'herramienta correcta.',
+  tags: ['GeoPoints', 'Presencia física', 'Analytics'],
+}
+
 export const productFaqs: FAQ[] = [
   faqWhatIsUbyca,
   faqCapabilities,
@@ -174,4 +203,5 @@ export const productFaqs: FAQ[] = [
   faqStadium,
   faqIndoor,
   faqMonitoring,
+  faqVsQR,
 ]

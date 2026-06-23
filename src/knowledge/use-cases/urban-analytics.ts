@@ -34,6 +34,11 @@ export const urbanMobilityStudy: UseCase = {
     'potencial de la zona', 'tráfico en la zona',
     'actividad en la zona', 'flujo en la zona',
     'cuánto tráfico hay', 'movimiento en la zona',
+    // Evaluación para abrir nueva sucursal (Q9)
+    'nueva sucursal', 'abrir una nueva sucursal', 'abrir una sucursal',
+    'evaluar abrir', 'evaluar nueva sucursal',
+    'abrir nuevo local', 'abrir una tienda',
+    'elegir nueva ubicación', 'elegir nueva ubicacion',
   ],
 }
 

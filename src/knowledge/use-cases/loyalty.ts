@@ -46,6 +46,10 @@ export const loyaltyMultiLocation: UseCase = {
     'distintos locales', 'completar visitas a locales',
     'recorrido entre locales', 'premiar por visitar varios',
     'visitas a varios puntos', 'diferentes sucursales',
+    // Premiar clientes que visiten más de una tienda (Q5)
+    'premiar a los clientes', 'visiten más de una', 'visiten mas de una',
+    'visiten varias', 'visitar más de una tienda', 'visitar mas de una tienda',
+    'clientes que visiten', 'premiar visitas',
   ],
 }
 

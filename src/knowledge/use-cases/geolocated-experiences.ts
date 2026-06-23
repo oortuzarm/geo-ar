@@ -42,5 +42,11 @@ export const geolocationARExperience: UseCase = {
     'funciones geolocalizadas', 'habilitar funciones por ubicación',
     'solo cuando el usuario esté', 'funciones por ubicación',
     'app con geolocalización', 'funciones disponibles en un lugar',
+    // App que activa contenido solo al llegar a un lugar (Q8)
+    'solo cuando alguien llegue', 'aparezcan solo cuando',
+    'ciertas cosas aparezcan', 'llegue a un lugar específico',
+    'llegue a un lugar especifico', 'alguien llegue a un lugar',
+    'cosas aparezcan por ubicación', 'cosas aparezcan por ubicacion',
+    'tengo una app y quiero', 'app y quiero que',
   ],
 }

@@ -50,6 +50,11 @@ export const operationsMaintenanceRoutes: UseCase = {
     'confirmar llegada', 'verificar que llegaron', 'lugar asignado',
     'personal llegó al lugar', 'confirmar visita en terreno',
     'trabajadores en terreno', 'verificar asistencia en terreno',
+    // Verificar que trabajadores estuvieron donde debían (Q3)
+    'mis trabajadores', 'estuvieron donde debían', 'estuvieron donde debian',
+    'donde debían estar', 'donde debian estar',
+    'verificar trabajadores', 'comprobar trabajadores',
+    'verificar que estuvieron', 'trabajadores realmente estuvieron',
   ],
 }
 

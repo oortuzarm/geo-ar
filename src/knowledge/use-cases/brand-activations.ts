@@ -26,6 +26,13 @@ export const brandActivationCampaign: UseCase = {
     'campaña en terreno', 'si la campaña funcionó', 'resultados de campaña',
     'evaluar campaña', 'medir campaña', 'rendimiento de campaña',
     'si funcionó la campaña', 'medir activación', 'evaluar activación',
+    // Demostrar que una activación presencial generó interacción (Q2)
+    'activación presencial', 'activacion presencial',
+    'generó interacción', 'genero interaccion',
+    'si generó interacción', 'si genero interaccion',
+    'demostrar que funcionó', 'demostrar que funciono',
+    'demostrar interacción', 'demostrar interaccion',
+    'campaña generó interacción', 'campana genero interaccion',
   ],
 }
 

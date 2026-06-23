@@ -32,5 +32,10 @@ export const presenceRegistration: UseCase = {
     'registro sin hardware', 'acceso sin hardware',
     // Personas llegando
     'personas que ingresan', 'cuando llega la persona', 'validar que llegó',
+    // Verificar que alguien realmente estuvo en un lugar (Q6)
+    'estuvo en un lugar', 'alguien estuvo en',
+    'comprobar que estuvo', 'realmente estuvo',
+    'verificar que estuvo', 'validar que estuvo',
+    'confirmar que estuvo', 'comprobar presencia',
   ],
 }

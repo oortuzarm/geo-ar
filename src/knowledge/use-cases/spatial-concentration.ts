@@ -42,5 +42,14 @@ export const spatialConcentration: UseCase = {
     'comparar el comportamiento', 'entre varias ubicaciones',
     'comportamiento de visitantes', 'varias ubicaciones',
     'comparar sucursales', 'comparar zonas',
+    // Valor y rendimiento por sucursal (Q1, Q4)
+    'aporta más valor', 'aporta mas valor',
+    'cuál aporta más', 'cual aporta mas',
+    'genera mejores resultados', 'mejores resultados por sucursal',
+    'comparar resultados entre sucursales', 'rendimiento de sucursales',
+    // Concentración expresada con vocabulario coloquial (Q7)
+    'donde se junta', 'dónde se junta',
+    'se junta más gente', 'se junta mas gente',
+    'dónde se acumula gente', 'donde se acumula gente',
   ],
 }

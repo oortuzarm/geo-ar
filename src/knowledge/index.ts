@@ -16,7 +16,7 @@ import { loyaltyPhysicalVisits, loyaltyMultiLocation, loyaltyEngagement } from '
 import { tourismRoutes, tourismVerification, tourismCityAnalytics } from './use-cases/tourism'
 import { educationAttendance, educationCampusExperience, educationFieldTrips } from './use-cases/education'
 import { municipalitiesPublicServices, municipalitiesUrbanAnalysis, municipalitiesInspection } from './use-cases/municipalities'
-import { realEstateVisits, realEstateOpenHouse, realEstateBuilding } from './use-cases/real-estate'
+import { realEstateVisits, realEstateOpenHouse, realEstatePortfolio, realEstateBuilding } from './use-cases/real-estate'
 import { operationsSafety, operationsMaintenanceRoutes, operationsFleetTracking } from './use-cases/operations'
 import { healthHomeVisits, healthFieldWorkers, healthOutpatient } from './use-cases/health'
 import { brandActivationCampaign, brandActivationLaunch, brandActivationExperience } from './use-cases/brand-activations'
@@ -25,6 +25,10 @@ import { localBusinessProximityPromo, localBusinessFootfall, localBusinessContex
 import { urbanMobilityStudy, fairMovementAnalysis } from './use-cases/urban-analytics'
 import { geolocationARExperience } from './use-cases/geolocated-experiences'
 import { ecommerceIntegration } from './use-cases/ecommerce'
+import { geolocatedCatalog } from './use-cases/geolocated-catalog'
+import { presenceRegistration } from './use-cases/presence-registration'
+import { productOverview, productCapabilities } from './use-cases/product-questions'
+import { spatialConcentration } from './use-cases/spatial-concentration'
 import { limitations } from './limitations'
 
 export const knowledge: KnowledgeBase = {
@@ -64,6 +68,7 @@ export const knowledge: KnowledgeBase = {
     municipalitiesInspection,
     realEstateVisits,
     realEstateOpenHouse,
+    realEstatePortfolio,
     realEstateBuilding,
     operationsSafety,
     operationsMaintenanceRoutes,
@@ -82,6 +87,11 @@ export const knowledge: KnowledgeBase = {
     fairMovementAnalysis,
     geolocationARExperience,
     ecommerceIntegration,
+    geolocatedCatalog,
+    presenceRegistration,
+    productOverview,
+    productCapabilities,
+    spatialConcentration,
   ],
   limitations,
 }

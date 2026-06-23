@@ -52,6 +52,38 @@ export const realEstateOpenHouse: UseCase = {
   ],
 }
 
+export const realEstatePortfolio: UseCase = {
+  id: 'real-estate-portfolio',
+  vertical: 'real-estate',
+  title: 'Portafolio inmobiliario geolocalizado de proyectos construidos',
+  problem:
+    'Una constructora o desarrolladora inmobiliaria quiere mostrar su historial ' +
+    'de proyectos entregados sobre un mapa — que potenciales clientes, socios o ' +
+    'inversores puedan explorar las obras realizadas por zona geográfica y ' +
+    'acceder a la información de cada una.',
+  solution:
+    'Ubyca crea un GeoPoint por cada proyecto o desarrollo entregado. Al ' +
+    'acercarse a la ubicación, el contenido del proyecto — ficha técnica, ' +
+    'renders, estado de entrega, link al dossier o video — se activa en el ' +
+    'dispositivo. El portafolio funciona como catálogo territorial interactivo: ' +
+    'se navega por mapa, no por lista. Sin app nativa, sin modificar el sitio ' +
+    'web. Se actualiza desde Studio al agregar nuevos proyectos.',
+  capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],
+  matchKeywords: [
+    // Señales de portafolio inmobiliario específico (fuertes)
+    'portafolio inmobiliario', 'portafolio de proyectos inmobiliarios',
+    'catálogo inmobiliario', 'catálogo inmobiliario de proyectos',
+    'catálogo de desarrollos inmobiliarios',
+    'proyectos de la constructora', 'proyectos de la desarrolladora',
+    'mapa de proyectos inmobiliarios', 'portafolio de obras',
+    'obras de la constructora', 'catálogo de desarrollos',
+    // Proyectos completados (compartidas para ganar por combinación)
+    'proyectos construidos', 'proyectos entregados', 'obras entregadas',
+    'desarrollos realizados', 'historial de proyectos', 'proyectos realizados',
+    'catálogo de proyectos construidos', 'obras realizadas inmobiliarias',
+  ],
+}
+
 export const realEstateBuilding: UseCase = {
   id: 'real-estate-building',
   vertical: 'real-estate',

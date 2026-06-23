@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Reveal, SectionLabel, BrowserChrome } from '../../components/landing/LandingPrimitives'
 import LandingNavBar from '../../components/landing/LandingNavBar'
 import SiteFooter from '../../components/landing/SiteFooter'
-import { knowledge } from '../../knowledge'
+import { matchSolution } from '../../knowledge/solutionMatcher'
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
@@ -1150,46 +1150,11 @@ const MATCHER_EXAMPLES = [
   'Quiero crear una ruta turística con contenido que se activa en cada parada.',
 ]
 
-const CAPABILITY_TAG_LABELS: Record<string, string> = {
-  studio: 'Studio',
-  api: 'API',
-  geopoints: 'GeoPoints',
-  presence: 'Presencia física',
-  analytics: 'Analytics',
-  'live-visits': 'Visitas en vivo',
-  'spatial-intelligence': 'Inteligencia espacial',
-  'smart-proxies': 'Smart Proxies',
-  integrations: 'Integraciones',
-}
-
-const SOLUTION_RULES = knowledge.useCases.map(uc => ({
-  keywords: uc.matchKeywords,
-  body: uc.solution,
-  tags: uc.capabilities.map(id => CAPABILITY_TAG_LABELS[id] ?? id),
-}))
-
-const DEFAULT_SOLUTION = {
-  body: 'Ubyca puede resolver casi cualquier caso donde la ubicación física del usuario importa. Define zonas sobre el mapa, configura las reglas de activación y obtén datos reales de presencia, permanencia y comportamiento espacial — sin hardware adicional, sin aplicaciones nativas que instalar.',
-  tags: ['GeoPoints', 'Presencia física', 'Analytics', 'API'],
-}
-
-function normalize(s: string) {
-  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-}
-
-function matchSolution(input: string) {
-  const lower = normalize(input)
-  let best: { rule: typeof SOLUTION_RULES[0] | null; score: number } = { rule: null, score: 0 }
-  for (const rule of SOLUTION_RULES) {
-    const score = rule.keywords.filter(k => lower.includes(normalize(k))).length
-    if (score > best.score) best = { rule, score }
-  }
-  return best.rule ?? DEFAULT_SOLUTION
-}
 
 function SolutionMatcherSection() {
   const [query, setQuery] = useState('')
   const [result, setResult] = useState<{ body: string; tags: string[] } | null>(null)
+  const [loading, setLoading] = useState(false)
   const [placeholderIdx, setPlaceholderIdx] = useState(0)
 
   useEffect(() => {
@@ -1198,12 +1163,30 @@ function SolutionMatcherSection() {
     return () => clearInterval(id)
   }, [query])
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const trimmed = query.trim()
-    if (!trimmed) return
-    setResult(matchSolution(trimmed))
-    // Phase 2: track({ query: trimmed, matched: ... })
+    if (!trimmed || loading) return
+
+    setLoading(true)
+    try {
+      const res = await fetch('/api/solution-generator', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: trimmed }),
+      })
+      if (!res.ok) throw new Error('api-unavailable')
+      const data = await res.json()
+      setResult({ body: data.answer, tags: data.capabilities })
+      // TODO: posthog/gtag({ query: trimmed, matchedUseCase: data.matchedUseCase, source: data.source })
+    } catch {
+      // Fallback to local matcher when API is unavailable (dev mode / network error)
+      const local = matchSolution(trimmed)
+      setResult({ body: local.body, tags: local.tags })
+      // TODO: log fallback occurrence
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -1239,13 +1222,13 @@ function SolutionMatcherSection() {
             <div className="flex justify-end">
               <button
                 type="submit"
-                disabled={!query.trim()}
+                disabled={!query.trim() || loading}
                 className="px-7 py-3 rounded-xl bg-brand-600 hover:bg-brand-500
                            disabled:opacity-40 disabled:cursor-not-allowed
                            active:scale-[0.98] text-white font-semibold text-sm
                            transition-all duration-150 shadow-[0_4px_20px_rgba(2,132,199,0.3)]"
               >
-                Ver solución
+                {loading ? 'Analizando...' : 'Ver solución'}
               </button>
             </div>
           </form>

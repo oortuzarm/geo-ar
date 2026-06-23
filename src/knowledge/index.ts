@@ -21,6 +21,7 @@ import { operationsSafety, operationsMaintenanceRoutes, operationsFleetTracking 
 import { healthHomeVisits, healthFieldWorkers, healthOutpatient } from './use-cases/health'
 import { brandActivationCampaign, brandActivationLaunch, brandActivationExperience } from './use-cases/brand-activations'
 import { crmIntegration } from './use-cases/crm-integration'
+import { localBusinessProximityPromo, localBusinessFootfall, localBusinessContextualMessage } from './use-cases/local-business'
 import { limitations } from './limitations'
 
 export const knowledge: KnowledgeBase = {
@@ -71,6 +72,9 @@ export const knowledge: KnowledgeBase = {
     brandActivationLaunch,
     brandActivationExperience,
     crmIntegration,
+    localBusinessProximityPromo,
+    localBusinessFootfall,
+    localBusinessContextualMessage,
   ],
   limitations,
 }

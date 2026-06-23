@@ -39,7 +39,12 @@ export function matchSolution(query: string): MatchResult {
   let bestScore = 0
 
   for (const uc of knowledge.useCases) {
-    const score = uc.matchKeywords.filter(k => lower.includes(normalize(k))).length
+    // Multi-word keywords (phrases) score 2; single-word keywords score 1.
+    // This ensures a specific phrase like "taller de autos" outweighs generic
+    // single-word matches when both appear in the same query.
+    const score = uc.matchKeywords
+      .filter(k => lower.includes(normalize(k)))
+      .reduce((sum, k) => sum + (normalize(k).includes(' ') ? 2 : 1), 0)
     if (score > bestScore) {
       bestScore = score
       bestUc = uc

@@ -22,6 +22,11 @@ export const retailDwellTime: UseCase = {
     'tiempo en local', 'permanencia en tienda', 'cuánto tiempo clientes',
     'tráfico de local', 'comportamiento en tienda', 'retail analytics',
     'flujo de clientes', 'mapa de calor tienda',
+    // Lenguaje natural — permanencia
+    'cuánto tiempo permanecen', 'tiempo de permanencia',
+    'duración de visita', 'dwell time',
+    'cuánto tiempo estuvieron', 'tiempo que pasan en',
+    'permanencia en ubicación', 'cuánto permanecen',
   ],
 }
 

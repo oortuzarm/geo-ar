@@ -46,6 +46,11 @@ export const operationsMaintenanceRoutes: UseCase = {
     'mantenimiento preventivo', 'técnico en terreno',
     'torre', 'subestación', 'infraestructura física',
     'CMMS', 'control de rondas',
+    // Lenguaje natural — técnicos y verificación de llegada
+    'técnicos en terreno', 'confirmar que llegaron', 'llegaron al lugar asignado',
+    'confirmar llegada', 'verificar que llegaron', 'lugar asignado',
+    'personal llegó al lugar', 'confirmar visita en terreno',
+    'trabajadores en terreno', 'verificar asistencia en terreno',
   ],
 }
 

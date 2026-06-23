@@ -35,5 +35,13 @@ export const spatialConcentration: UseCase = {
     // Zonas más visitadas (transversal, no vertical-específico)
     'áreas más visitadas', 'zonas más visitadas', 'zonas de mayor tráfico',
     'flujo por zona', 'intensidad de tráfico',
+    // Comparación multi-local y rendimiento por punto
+    'varias tiendas', 'comparar tiendas', 'comparar locales',
+    'interacción de clientes', 'rendimiento por tienda',
+    'qué local tiene más tráfico',
+    // Comparación de comportamiento entre ubicaciones
+    'comparar el comportamiento', 'entre varias ubicaciones',
+    'comportamiento de visitantes', 'varias ubicaciones',
+    'comparar sucursales', 'comparar zonas',
   ],
 }

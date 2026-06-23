@@ -28,6 +28,12 @@ export const urbanMobilityStudy: UseCase = {
     'comportamiento en zona', 'análisis de localización',
     'buen lugar para construir', 'dónde construir',
     'flujo de personas en zona', 'movimiento en el sector',
+    // Lenguaje natural — análisis antes de abrir un negocio
+    'abrir un negocio', 'antes de abrir', 'suficiente movimiento',
+    'movimiento de personas', 'cuánta gente pasa',
+    'potencial de la zona', 'tráfico en la zona',
+    'actividad en la zona', 'flujo en la zona',
+    'cuánto tráfico hay', 'movimiento en la zona',
   ],
 }
 

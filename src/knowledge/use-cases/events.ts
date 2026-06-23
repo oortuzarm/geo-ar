@@ -19,6 +19,11 @@ export const eventsAccess: UseCase = {
   matchKeywords: [
     'evento', 'acceso sin QR', 'control de acceso', 'asistente',
     'festival', 'conferencia', 'perímetro', 'entrada sin código',
+    // Lenguaje natural — acceso sin QR
+    'sin usar QR', 'sin QR', 'controlar acceso sin QR', 'sin código QR',
+    'sin escanear', 'alternativa al QR', 'sin tarjeta ni QR',
+    'acceso por ubicación real', 'acceso sin hardware',
+    'controlar el acceso sin', 'acceso sin lector',
   ],
 }
 

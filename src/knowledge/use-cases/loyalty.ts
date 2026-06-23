@@ -41,6 +41,11 @@ export const loyaltyMultiLocation: UseCase = {
   matchKeywords: [
     'cadena de locales', 'sucursales', 'multi-local', 'franquicia',
     'fidelización cadena', 'visita a cualquier sucursal',
+    // Lenguaje natural — visitas a múltiples locales
+    'visitar varios locales', 'tres locales', 'locales distintos',
+    'distintos locales', 'completar visitas a locales',
+    'recorrido entre locales', 'premiar por visitar varios',
+    'visitas a varios puntos', 'diferentes sucursales',
   ],
 }
 

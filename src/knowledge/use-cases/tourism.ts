@@ -35,6 +35,10 @@ export const tourismRoutes: UseCase = {
     'visitar monumentos', 'visitar museos',
     'recorrido autoguiado', 'app de turismo', 'app para turistas',
     'información en sitios', 'información al llegar a',
+    // Experiencias de ciudad con múltiples puntos
+    'distintos puntos', 'puntos de una ciudad', 'distintos puntos de la ciudad',
+    'visitar distintos puntos', 'puntos de interés de la ciudad',
+    'experiencia ciudad puntos', 'recorrido por puntos',
   ],
 }
 

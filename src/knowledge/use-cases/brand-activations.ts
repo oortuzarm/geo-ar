@@ -22,6 +22,10 @@ export const brandActivationCampaign: UseCase = {
     'campaña de marca', 'activación de marca', 'brand activation',
     'marketing geolocalizado', 'campaña física', 'campaña físico-digital',
     'contenido de campaña por ubicación', 'activar campaña en punto',
+    // Medición y evaluación de campañas en terreno
+    'campaña en terreno', 'si la campaña funcionó', 'resultados de campaña',
+    'evaluar campaña', 'medir campaña', 'rendimiento de campaña',
+    'si funcionó la campaña', 'medir activación', 'evaluar activación',
   ],
 }
 

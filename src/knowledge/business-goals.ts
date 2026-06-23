@@ -96,6 +96,9 @@ export const goalInteractiveGame: BusinessGoal = {
     'competencia geolocalizada', 'competencia en terreno',
     'experiencia interactiva en terreno',
     'recorrido con desafíos', 'recorrido gamificado',
+    // Analogía Pokémon GO
+    'pokémon go', 'pokemon go', 'parecido a pokémon', 'tipo pokémon go',
+    'similar a pokemon', 'juego tipo pokemon', 'como pokemon',
   ],
   solution:
     'Ubyca proporciona la capa de validación y activación geolocalizada que ' +

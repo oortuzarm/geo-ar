@@ -37,5 +37,10 @@ export const geolocationARExperience: UseCase = {
     'trivial geolocalizado', 'quiz geolocalizado',
     'contenido desbloqueado por ubicación',
     'app que funcione en puntos del mapa',
+    // Funciones de app disponibles solo por ubicación (Q11)
+    'aplicación móvil', 'usuario esté físicamente',
+    'funciones geolocalizadas', 'habilitar funciones por ubicación',
+    'solo cuando el usuario esté', 'funciones por ubicación',
+    'app con geolocalización', 'funciones disponibles en un lugar',
   ],
 }

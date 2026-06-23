@@ -811,17 +811,37 @@ const STUDIO_FEATURES = [
 
 function StudioMobilePanel() {
   return (
-    <div className="relative w-full flex justify-center" style={{ paddingBottom: 96 }}>
+    <div className="relative flex items-start justify-center"
+         style={{ paddingTop: 8, paddingBottom: 40 }}>
       {/* Ambient glow */}
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 65% 65% at 50% 45%, rgba(14,165,233,0.09) 0%, transparent 68%)',
+        background: 'radial-gradient(ellipse 65% 65% at 45% 45%, rgba(14,165,233,0.09) 0%, transparent 68%)',
       }} />
 
-      {/* Phone frame — primary */}
-      <div className="relative z-10 mt-4" style={{ width: 210 }}>
-        <div className="overflow-hidden rounded-[2.8rem] border-[2.5px] border-white/[0.15]
-                        shadow-[0_4px_6px_rgba(0,0,0,0.3),0_24px_80px_rgba(0,0,0,0.65),0_0_0_1px_rgba(14,165,233,0.07)]"
-             style={{ height: 420 }}>
+      {/* Secondary phone — behind, desktop only */}
+      <div className="relative z-0 hidden lg:block flex-shrink-0"
+           style={{ width: 168, height: 336, marginTop: 36, marginRight: -50 }}>
+        <div className="relative w-full h-full overflow-hidden rounded-[2.4rem]
+                        border-[2.5px] border-white/[0.10]
+                        shadow-[0_4px_6px_rgba(0,0,0,0.2),0_16px_48px_rgba(0,0,0,0.5),0_0_0_1px_rgba(14,165,233,0.04)]">
+          <img
+            src="/hero-mobile.jpg"
+            alt="Studio Ubyca — vista de exploración"
+            className="w-full h-full object-cover select-none"
+            style={{ objectPosition: 'center 65%' }}
+            draggable={false}
+            loading="lazy"
+          />
+          {/* Dim overlay reinforces secondary hierarchy */}
+          <div className="absolute inset-0 bg-black/30 pointer-events-none" />
+        </div>
+      </div>
+
+      {/* Primary phone — in front */}
+      <div className="relative z-10 mt-4 flex-shrink-0" style={{ width: 210, height: 420 }}>
+        <div className="w-full h-full overflow-hidden rounded-[2.8rem]
+                        border-[2.5px] border-white/[0.15]
+                        shadow-[0_4px_6px_rgba(0,0,0,0.3),0_24px_80px_rgba(0,0,0,0.65),0_0_0_1px_rgba(14,165,233,0.07)]">
           <img
             src="/hero-mobile.jpg"
             alt="Studio Ubyca — mapa de presencia física en terreno"
@@ -830,26 +850,6 @@ function StudioMobilePanel() {
             draggable={false}
             loading="lazy"
           />
-        </div>
-
-        {/* Analytics mini — desktop only, floats bottom-right of phone */}
-        <div className="absolute hidden lg:block z-20"
-             style={{ bottom: -72, right: -112 }}>
-          <div className="rounded-xl overflow-hidden border border-white/[0.09]
-                          shadow-[0_8px_32px_rgba(0,0,0,0.6)]"
-               style={{ width: 174 }}>
-            <BrowserChrome url="studio.ubyca.com/metrics" />
-            <div className="relative overflow-hidden bg-[#111827]" style={{ height: 88 }}>
-              <img
-                src="/screenshot-metrics.png"
-                alt="Analytics espaciales — Studio Ubyca"
-                className="absolute inset-0 w-full h-full object-cover select-none"
-                style={{ objectPosition: 'center top' }}
-                draggable={false}
-                loading="lazy"
-              />
-            </div>
-          </div>
         </div>
       </div>
     </div>

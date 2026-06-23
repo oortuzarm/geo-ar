@@ -788,6 +788,138 @@ function HowItWorksSection() {
   )
 }
 
+// ─── Studio section ───────────────────────────────────────────────────────────
+
+const STUDIO_FEATURES = [
+  {
+    title: 'Ubicaciones y GeoPoints',
+    desc: 'Dibuja radios o polígonos sobre el mapa y define reglas de activación por zona.',
+  },
+  {
+    title: 'Visitas en vivo',
+    desc: 'Observa la actividad de tus usuarios en tiempo real, zona por zona.',
+  },
+  {
+    title: 'Analytics espaciales',
+    desc: 'Métricas de dwell time, flujos de entrada y conversión por ubicación.',
+  },
+  {
+    title: 'Inteligencia espacial',
+    desc: 'Identifica patrones de comportamiento y optimiza la operación de tus espacios.',
+  },
+]
+
+function StudioMobilePanel() {
+  return (
+    <div className="relative w-full flex justify-center" style={{ paddingBottom: 96 }}>
+      {/* Ambient glow */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(ellipse 65% 65% at 50% 45%, rgba(14,165,233,0.09) 0%, transparent 68%)',
+      }} />
+
+      {/* Phone frame — primary */}
+      <div className="relative z-10 mt-4" style={{ width: 210 }}>
+        <div className="overflow-hidden rounded-[2.8rem] border-[2.5px] border-white/[0.15]
+                        shadow-[0_4px_6px_rgba(0,0,0,0.3),0_24px_80px_rgba(0,0,0,0.65),0_0_0_1px_rgba(14,165,233,0.07)]"
+             style={{ height: 420 }}>
+          <img
+            src="/hero-mobile.jpg"
+            alt="Studio Ubyca — mapa de presencia física en terreno"
+            className="w-full h-full object-cover select-none"
+            style={{ objectPosition: 'center 42%' }}
+            draggable={false}
+            loading="lazy"
+          />
+        </div>
+
+        {/* Analytics mini — desktop only, floats bottom-right of phone */}
+        <div className="absolute hidden lg:block z-20"
+             style={{ bottom: -72, right: -112 }}>
+          <div className="rounded-xl overflow-hidden border border-white/[0.09]
+                          shadow-[0_8px_32px_rgba(0,0,0,0.6)]"
+               style={{ width: 174 }}>
+            <BrowserChrome url="studio.ubyca.com/metrics" />
+            <div className="relative overflow-hidden bg-[#111827]" style={{ height: 88 }}>
+              <img
+                src="/screenshot-metrics.png"
+                alt="Analytics espaciales — Studio Ubyca"
+                className="absolute inset-0 w-full h-full object-cover select-none"
+                style={{ objectPosition: 'center top' }}
+                draggable={false}
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function StudioSection() {
+  return (
+    <section id="v2-studio" className="py-16 sm:py-20 px-5 bg-[#050810]">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+
+          {/* Left: copy */}
+          <div>
+            <Reveal>
+              <SectionLabel>Studio</SectionLabel>
+              <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight mb-4">
+                Gestiona presencia física visualmente.
+              </h2>
+              <p className="text-slate-400 leading-relaxed mb-8">
+                Crea ubicaciones, administra GeoPoints, visualiza visitas en tiempo real
+                y descubre patrones espaciales desde una única interfaz.
+              </p>
+            </Reveal>
+
+            {/* Feature rows — same structure as ApiSection endpoint rows */}
+            <Reveal delay={0.08}>
+              <div className="space-y-3 mb-8">
+                {STUDIO_FEATURES.map((f) => (
+                  <div key={f.title}
+                    className="flex items-start gap-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06]
+                               px-4 py-3.5 hover:border-white/[0.10] hover:bg-white/[0.05] transition-all duration-150">
+                    <div className="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0 mt-[5px]" />
+                    <div className="min-w-0">
+                      <p className="text-[12px] font-semibold text-slate-300 leading-none mb-1">{f.title}</p>
+                      <p className="text-[11px] text-slate-600 leading-snug">{f.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+
+            {/* CTA */}
+            <Reveal delay={0.15}>
+              <a
+                href="/studio"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl
+                           bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white
+                           font-semibold text-sm transition-all duration-150
+                           shadow-[0_4px_20px_rgba(2,132,199,0.35)]">
+                Explorar Studio
+                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" clipRule="evenodd"
+                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+                </svg>
+              </a>
+            </Reveal>
+          </div>
+
+          {/* Right: mobile visual */}
+          <Reveal delay={0.12}>
+            <StudioMobilePanel />
+          </Reveal>
+
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ─── API section ──────────────────────────────────────────────────────────────
 
 const ENDPOINTS = [
@@ -1144,6 +1276,7 @@ export default function LandingV2Page() {
       <PlatformSplitSection />
       <CapabilitiesSection />
       <HowItWorksSection />
+      <StudioSection />
       <ApiSection />
       <UseCasesSection />
       <FinalCTASection />

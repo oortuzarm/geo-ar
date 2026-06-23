@@ -3,18 +3,20 @@ import type { UseCase } from '../types'
 export const operationsSafety: UseCase = {
   id: 'operations-safety',
   vertical: 'operations',
-  title: 'Control de acceso a zonas de riesgo o restringidas',
+  title: 'Control de acceso a zonas industriales o restringidas',
   problem:
     'Una planta industrial, obra de construcción o instalación minera ' +
-    'necesita verificar que solo el personal autorizado accede a zonas ' +
-    'de riesgo. Los sistemas actuales requieren hardware (torniquetes, ' +
-    'lectores de tarjetas) que es caro y difícil de mover.',
+    'necesita verificar que solo el personal autorizado accede a ciertas ' +
+    'zonas. Los sistemas de hardware (torniquetes, lectores de tarjetas) ' +
+    'son caros, difíciles de mover y requieren infraestructura fija.',
   solution:
-    'Ubyca define polígonos de exclusión o acceso sobre el mapa de la ' +
-    'instalación. Cuando alguien intenta acceder a un recurso o sistema ' +
-    'desde esa zona, la API valida si está físicamente autorizado para ' +
-    'estar allí. No hay hardware que instalar: cualquier dispositivo ' +
-    'móvil puede hacer la validación.',
+    'Ubyca define polígonos sobre el mapa de la instalación que representan ' +
+    'las zonas autorizadas. Cuando el personal intenta acceder a un recurso ' +
+    'o sistema desde su dispositivo móvil, la API de Ubyca responde si están ' +
+    'físicamente dentro del área autorizada. El sistema del cliente decide qué ' +
+    'acción tomar según ese resultado: habilitar o denegar el acceso. ' +
+    'Ubyca no genera alertas automáticas: la lógica de autorización vive ' +
+    'en el sistema integrador, no en Ubyca.',
   capabilities: ['geopoints', 'presence', 'api'],
   matchKeywords: [
     'zona de riesgo', 'área restringida', 'planta industrial',
@@ -53,14 +55,16 @@ export const operationsFleetTracking: UseCase = {
   title: 'Validación de presencia de flota en puntos de parada',
   problem:
     'Una empresa con flota móvil (transporte de pasajeros, servicios urbanos, ' +
-    'logística) necesita validar que los vehículos pasaron por los puntos ' +
+    'logística) necesita verificar que los conductores pasaron por los puntos ' +
     'asignados de la ruta, con la hora exacta de cada parada.',
   solution:
-    'Ubyca define GeoPoints para cada parada o punto de ruta. La API ' +
-    'valida la presencia del conductor cuando el vehículo se acerca al ' +
-    'punto. El historial muestra qué puntos se completaron, a qué hora ' +
-    'y si hubo desvíos. Los datos se integran al sistema de gestión de ' +
-    'flota existente.',
+    'Ubyca define GeoPoints para cada parada o punto de ruta. El conductor ' +
+    'realiza la validación desde su dispositivo al llegar a cada punto. ' +
+    'El historial muestra qué puntos se completaron y a qué hora; los puntos ' +
+    'no validados quedan como pendientes. Ubyca registra eventos de llegada ' +
+    'a puntos discretos: no registra la trayectoria del vehículo entre paradas ' +
+    'ni detecta desvíos de ruta. Los datos se integran al sistema de gestión ' +
+    'de flota existente vía API.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api'],
   matchKeywords: [
     'flota', 'vehículo', 'transporte', 'parada', 'ruta vehicular',

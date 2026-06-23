@@ -6,14 +6,17 @@ export const retailDwellTime: UseCase = {
   title: 'Tiempo de permanencia en local comercial',
   problem:
     'Un local comercial quiere saber cuánto tiempo pasan los clientes dentro ' +
-    'de la tienda, si llegan hasta ciertas zonas (caja, fondo del local, probadores) ' +
-    'y cuál es el momento del día con más tráfico real — no solo ingresos.',
+    'de la tienda y cuál es el momento del día con más tráfico real — datos ' +
+    'que los sistemas de caja no capturan porque no registran quienes entran ' +
+    'sin comprar.',
   solution:
-    'Ubyca define zonas por área dentro del local: entrada, zona de producto, ' +
-    'probadores, caja. Mide cuánto tiempo pasan los clientes en cada zona, ' +
-    'cuántos visitan el fondo del local vs. solo la entrada, y cuál es la ' +
-    'distribución horaria. Los mapas de calor revelan qué partes del espacio ' +
-    'son más transitadas y cuáles son ignoradas.',
+    'Ubyca define un GeoPoint que cubre el área del local y mide cuántos ' +
+    'clientes entran, cuánto tiempo permanecen y la distribución horaria del ' +
+    'tráfico. Para locales de gran superficie (supermercados, showrooms, centros ' +
+    'comerciales con zonas de al menos 50 metros de separación), es posible ' +
+    'definir múltiples GeoPoints por área amplia. En locales pequeños o medianos ' +
+    'el GeoPoint cubre el local como una unidad: el GPS indoor no permite ' +
+    'distinguir con fiabilidad entre zonas separadas menos de 30-50 metros.',
   capabilities: ['geopoints', 'analytics', 'spatial-intelligence', 'live-visits'],
   matchKeywords: [
     'tiempo en local', 'permanencia en tienda', 'cuánto tiempo clientes',

@@ -3,26 +3,27 @@ import type { Capability } from '../types'
 export const integrations: Capability = {
   id: 'integrations',
   name: 'Integraciones',
-  tagline: 'Conecta Ubyca con tus sistemas y aplicaciones existentes.',
+  tagline: 'Presencia física como input en sistemas ya existentes.',
   description:
-    'Ubyca puede integrarse con sistemas externos mediante su REST API. ' +
+    'Ubyca no reemplaza los sistemas del cliente: los complementa. ' +
     'Cualquier sistema que pueda hacer llamadas HTTP puede consumir resultados ' +
-    'de presencia, leer datos de GeoPoints y acceder a analytics. ' +
-    'Los webhooks permiten que Ubyca notifique proactivamente a sistemas externos ' +
-    'cuando ocurren eventos de presencia. No hay un marketplace de integraciones ' +
-    'predefinidas: la integración se construye sobre la API.',
+    'de validación de presencia, leer datos de GeoPoints y acceder a analytics. ' +
+    'No existe un marketplace de integraciones predefinidas ni conectores nativos ' +
+    'con CRM, ERP o plataformas de marketing: toda integración se construye sobre ' +
+    'la REST API de Ubyca. El cliente mantiene el control total de la lógica de ' +
+    'negocio; Ubyca aporta únicamente el dato de presencia y sus métricas.',
   keyFeatures: [
-    'Apps móviles nativas: integra validación GPS en iOS o Android via API',
-    'Sitios web: consume presencia y analytics desde el frontend o backend',
-    'E-commerce: activa promociones cuando el cliente llega al local físico',
-    'CRM y ERP: registra visitas verificadas de vendedores directamente',
-    'Sistemas de acceso: valida presencia como condición de autorización',
-    'Plataformas de fidelización: dispara recompensas por visita física validada',
-    'Autenticación: Bearer token, HTTPS obligatorio',
-    'Scopes disponibles: presence:validate, presence:check, locations:read, analytics:read',
+    'Apps móviles iOS / Android: llamada a API desde la app nativa del cliente',
+    'Sitios web y PWA: validación GPS desde el navegador via fetch a la API',
+    'E-commerce: gate de beneficios que requiere presencia física verificada',
+    'CRM y ERP: registro automático de visitas de campo verificadas por GPS',
+    'Sistemas de control de acceso: presencia como condición de autorización',
+    'Plataformas de fidelización: acumulación de puntos solo por visita validada',
+    'Sin webhooks: la integración es siempre request-response iniciado por el cliente',
   ],
   whoIsItFor:
-    'Desarrolladores y equipos técnicos que quieren usar presencia física ' +
-    'como un input en sistemas ya existentes, sin reemplazar su infraestructura.',
-  relatedCapabilities: ['api', 'presence', 'geopoints', 'analytics', 'smart-proxies'],
+    'Desarrolladores y arquitectos de sistemas que quieren añadir presencia ' +
+    'física verificada como un input dentro de flujos y reglas ya existentes, ' +
+    'sin modificar la infraestructura central del cliente.',
+  relatedCapabilities: ['api', 'presence', 'geopoints', 'analytics'],
 }

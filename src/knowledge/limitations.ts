@@ -92,4 +92,57 @@ export const limitations: Limitation[] = [
       'Implementar una exportación periódica automatizada vía API hacia el sistema ' +
       'de almacenamiento propio del cliente para casos de cumplimiento o auditoría.',
   },
+  {
+    area: 'Consentimiento GPS y privacidad del usuario final',
+    description:
+      'Ubyca no realiza seguimiento oculto de ningún tipo. Para que la validación ' +
+      'de presencia funcione, el usuario final debe abrir activamente el enlace o ' +
+      'la aplicación que realiza la solicitud, y el navegador o sistema operativo ' +
+      'debe solicitar y recibir el permiso de ubicación explícitamente. ' +
+      'Ubyca no accede a la ubicación en segundo plano sin acción del usuario. ' +
+      'El cliente que implementa Ubyca es responsable exclusivo de: informar a ' +
+      'sus usuarios del uso de datos de ubicación, cumplir la normativa local ' +
+      'aplicable (GDPR, LGPD, Ley 25.326 argentina u otras), y obtener los ' +
+      'consentimientos que su legislación exija. Ubyca provee la infraestructura ' +
+      'técnica, no asesoramiento legal ni garantías de cumplimiento normativo.',
+    workaround:
+      'Incluir en el flujo de usuario una pantalla de consentimiento clara antes ' +
+      'de solicitar la ubicación. Los Smart Proxies de Ubyca incluyen una pantalla ' +
+      'de permiso integrada. Para integraciones vía API, el cliente debe implementar ' +
+      'su propio flujo de consentimiento.',
+  },
+  {
+    area: 'Identificación de usuarios — Ubyca no gestiona identidades',
+    description:
+      'Ubyca valida coordenadas GPS contra GeoPoints configurados. No tiene un ' +
+      'sistema de identidad de usuarios propio: la API no requiere ni almacena un ' +
+      'user_id nativo. Una solicitud de validación contiene las coordenadas y el ' +
+      'location_id, pero no sabe a quién pertenece esa solicitud. ' +
+      'En Studio, las métricas de analytics muestran conteos agregados (visitas, ' +
+      'activaciones, dwell time), no perfiles individuales. ' +
+      'Si el cliente necesita asociar presencias a personas identificadas ' +
+      '(por ejemplo, saber que fue "Pedro" quien visitó el punto A), debe ' +
+      'implementar su propio sistema de autenticación e incluir el identificador ' +
+      'en la lógica de su aplicación. Ubyca responde si las coordenadas son ' +
+      'válidas: el cliente decide qué hacer con eso y a quién se las atribuye.',
+    workaround:
+      'El sistema integrador mantiene la sesión del usuario autenticado (login propio ' +
+      'o OAuth) y, al llamar a la API de Ubyca, vincula el resultado de presencia ' +
+      'con el user_id de su propio sistema. Ubyca no almacena esa vinculación: ' +
+      'es responsabilidad del sistema cliente.',
+  },
+  {
+    area: 'Webhooks — no disponibles actualmente',
+    description:
+      'Ubyca no tiene un sistema de webhooks que notifique proactivamente a sistemas ' +
+      'externos cuando ocurre un evento de presencia (entrada, salida, dwell time ' +
+      'completado). La integración actual es exclusivamente request-response: el ' +
+      'sistema externo llama a la API de Ubyca y recibe el resultado en ese momento. ' +
+      'Ubyca no puede iniciar una notificación hacia un endpoint externo.',
+    workaround:
+      'Implementar polling periódico a la Analytics API para detectar cambios en ' +
+      'métricas. Para validación en tiempo real, el sistema del cliente debe ' +
+      'ser quien llame a Ubyca en el momento relevante (cuando el usuario abre ' +
+      'la app, escanea un código, etc.), no esperar una notificación entrante.',
+  },
 ]

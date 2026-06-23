@@ -18,6 +18,8 @@ import { educationAttendance, educationCampusExperience, educationFieldTrips } f
 import { municipalitiesPublicServices, municipalitiesUrbanAnalysis, municipalitiesInspection } from './use-cases/municipalities'
 import { realEstateVisits, realEstateOpenHouse, realEstateBuilding } from './use-cases/real-estate'
 import { operationsSafety, operationsMaintenanceRoutes, operationsFleetTracking } from './use-cases/operations'
+import { healthHomeVisits, healthFieldWorkers, healthOutpatient } from './use-cases/health'
+import { brandActivationCampaign, brandActivationLaunch, brandActivationExperience } from './use-cases/brand-activations'
 import { limitations } from './limitations'
 
 export const knowledge: KnowledgeBase = {
@@ -61,6 +63,12 @@ export const knowledge: KnowledgeBase = {
     operationsSafety,
     operationsMaintenanceRoutes,
     operationsFleetTracking,
+    healthHomeVisits,
+    healthFieldWorkers,
+    healthOutpatient,
+    brandActivationCampaign,
+    brandActivationLaunch,
+    brandActivationExperience,
   ],
   limitations,
 }

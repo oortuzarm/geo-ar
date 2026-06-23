@@ -28,15 +28,17 @@ export const educationCampusExperience: UseCase = {
   vertical: 'education',
   title: 'Experiencias de campus activadas por ubicación',
   problem:
-    'Una universidad o colegio quiere ofrecer información contextual o ' +
-    'actividades según dónde se encuentre el alumno en el campus: ' +
-    'biblioteca, laboratorio, cafetería o aula específica.',
+    'Una universidad o colegio quiere ofrecer información contextual ' +
+    'según en qué sector del campus se encuentre el alumno: qué edificio ' +
+    'visitó, qué facultad o cuál es el área de servicios más cercana.',
   solution:
-    'Ubyca activa contenido diferente por zona del campus. En la biblioteca ' +
-    'puede mostrar los recursos disponibles; en el laboratorio, el manual ' +
-    'de seguridad; en la cafetería, el menú del día. Cada zona tiene su ' +
-    'GeoPoint con contenido asociado que se activa al llegar, sin app ' +
-    'nativa requerida.',
+    'Ubyca define un GeoPoint por edificio o sector del campus. Al llegar ' +
+    'al edificio de ciencias puede mostrar el horario de laboratorios; en ' +
+    'la biblioteca, los recursos y catálogos disponibles; en administración, ' +
+    'los trámites online. Cada zona es un edificio o área exterior de al ' +
+    'menos 30-50 metros: el GPS outdoor sobre un campus abierto funciona con ' +
+    'buena precisión. La activación de contenido por sala o piso dentro de ' +
+    'un mismo edificio no es fiable con GPS.',
   capabilities: ['geopoints', 'presence', 'smart-proxies'],
   matchKeywords: [
     'campus digital', 'experiencia universitaria', 'contenido en aula',

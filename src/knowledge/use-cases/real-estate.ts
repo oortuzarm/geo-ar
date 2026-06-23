@@ -32,15 +32,13 @@ export const realEstateOpenHouse: UseCase = {
     'y precios de forma contextual y medible, con o sin requerir que el ' +
     'visitante esté físicamente en el proyecto como condición.',
   solution:
-    'Puedes configurar la experiencia con o sin desbloqueo por presencia. ' +
-    'Con desbloqueo activo, Ubyca valida que el visitante esté dentro del ' +
-    'GeoPoint antes de habilitar el catálogo, planos o precios — el material ' +
-    'no circula fuera del sitio y genera exclusividad. Sin desbloqueo, la ' +
-    'experiencia funciona como una capa geolocalizada o informativa: el ' +
-    'contenido está disponible sin exigir presencia física, y Ubyca registra ' +
-    'igualmente las visitas, el tiempo de permanencia y la analítica. En ' +
-    'ambos casos puedes usar Smart Proxy sobre tu catálogo online existente ' +
-    'sin modificar el sitio, y ver las métricas en Studio.',
+    'Sí. Puedes crear una experiencia para tu sala de ventas u open house donde ' +
+    'el catálogo, planos y precios se activan automáticamente cuando el visitante ' +
+    'llega al proyecto — sin que el material circule fuera del sitio ni llegue a ' +
+    'quien no estuvo presente. Registras cuántos visitantes llegaron, cuánto tiempo ' +
+    'permanecieron y si regresaron — datos reales, no reportes del corredor. Todo ' +
+    'se configura desde Studio sin modificar tu sitio web actual y sin que el ' +
+    'visitante tenga que instalar nada.',
   capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],
   matchKeywords: [
     'open house', 'puertas abiertas', 'proyecto inmobiliario',

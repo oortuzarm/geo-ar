@@ -10,11 +10,13 @@ export const presenceRegistration: UseCase = {
     'sin depender de partes manuales, sin hardware de acceso y sin posibilidad ' +
     'de que el usuario falsifique su presencia.',
   solution:
-    'Puedes registrar automáticamente quién ingresó a una ubicación, a qué hora ' +
-    'y cuánto tiempo permaneció — sin hardware adicional, sin lectores de tarjetas ' +
-    'ni biometría. La presencia se valida en el servidor con GPS, no es auto-declarada ' +
-    'ni puede falsificarse. Los datos son exportables vía API para auditorías, ' +
-    'control de asistencia o reportes de acceso.',
+    'Sí. Puedes saber con certeza si una persona llegó a un lugar, cuándo llegó ' +
+    'y cuánto tiempo permaneció — sin que esa persona pueda declararlo por sí sola ' +
+    'ni falsificarlo. La validación ocurre en el servidor. Ese dato habilita tres ' +
+    'casos: verificar que alguien cumplió una visita o ronda asignada, registrar ' +
+    'asistencia automáticamente sin pasar lista, o usar la presencia física como ' +
+    'condición para habilitar acceso a algo. Los datos son exportables vía API ' +
+    'para auditorías o integración con sistemas existentes.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api'],
   matchKeywords: [
     // Registro de ingreso (señal fuerte)

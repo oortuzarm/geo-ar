@@ -65,11 +65,12 @@ export const geolocationARExperience: UseCase = {
         'funciones disponibles en un lugar',
       ],
       solution:
-        'Sí. Puedes habilitar funciones de tu aplicación según la ubicación del usuario. ' +
-        'Tu app consulta la API de Ubyca antes de mostrar el contenido, y el servidor valida ' +
-        'la presencia real — no el GPS autogestionado del dispositivo. Funciona para cualquier ' +
-        'función que deba estar disponible solo en un lugar específico: contenido desbloqueado, ' +
-        'acceso a zonas, formularios o experiencias interactivas.',
+        'La diferencia clave con usar el GPS del dispositivo directamente: Ubyca valida en ' +
+        'el servidor, no en el teléfono. El usuario no puede manipular la coordenada ni simular ' +
+        'estar en un lugar. Además, cada validación queda registrada con timestamp y duración — ' +
+        'historial auditable que el GPS del dispositivo no genera. Si lo que necesitas es ' +
+        'confirmar que alguien realmente estuvo en un lugar y durante cuánto tiempo, eso no ' +
+        'se puede resolver solo con el GPS del dispositivo.',
     },
     {
       id: 'experiencia-geolocalizada',

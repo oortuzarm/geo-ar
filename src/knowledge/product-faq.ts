@@ -14,14 +14,15 @@ export const faqWhatIsUbyca: FAQ = {
     'presentación de ubyca', 'cómo funciona esto', 'como funciona esto',
   ],
   answer:
-    'Ubyca es una plataforma que verifica en el servidor si un usuario está ' +
-    'físicamente presente en una ubicación geográfica. Defines zonas sobre ' +
-    'cualquier mapa, configuras cuándo y cómo se activan, y obtienes datos ' +
-    'reales de presencia, permanencia y comportamiento espacial — sin hardware ' +
-    'adicional, sin apps nativas. El acceso se hace desde Studio (interfaz ' +
-    'visual sin código) o vía API REST para integración con sistemas propios. ' +
-    'La validación ocurre en el servidor en menos de 80 ms y no puede ser ' +
-    'falsificada por el usuario.',
+    'Ubyca responde una pregunta que muchos sistemas no pueden contestar: ¿esta ' +
+    'persona realmente estuvo en ese lugar? Verifica la presencia física en el ' +
+    'servidor — con hora exacta, duración y sin posibilidad de auto-declaración ' +
+    'ni falsificación — y actúa en consecuencia: activa contenido, registra la ' +
+    'visita, habilita acceso o genera un dato de analítica. Sin hardware, sin ' +
+    'apps nativas que instalar. El acceso es desde Studio (interfaz visual sin ' +
+    'código) o vía API REST. Funciona para equipos en terreno, campañas de marca, ' +
+    'control de acceso, fidelización presencial, análisis de tráfico y experiencias ' +
+    'geolocalizadas.',
   tags: ['Studio', 'API', 'GeoPoints', 'Presencia física'],
 }
 

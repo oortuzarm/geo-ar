@@ -21,10 +21,11 @@ const CAPABILITY_TAG_LABELS: Record<string, string> = {
 
 export const DEFAULT_SOLUTION: MatchResult = {
   body:
-    'Ubyca puede resolver casi cualquier caso donde la ubicación física del usuario importa. ' +
-    'Define zonas sobre el mapa, configura las reglas de activación y obtén datos reales de ' +
-    'presencia, permanencia y comportamiento espacial — sin hardware adicional, sin aplicaciones ' +
-    'nativas que instalar.',
+    'Ubyca verifica si una persona estuvo físicamente en un lugar — con hora exacta, duración ' +
+    'y sin posibilidad de falsificación. Eso habilita casos muy distintos: registrar visitas de ' +
+    'equipos en terreno, activar contenido o beneficios por presencia, medir tráfico real en ' +
+    'ubicaciones, controlar acceso sin hardware, o demostrar que una campaña generó presencia ' +
+    'física. ¿Cuál de estos se acerca más a lo que necesitas?',
   tags: ['GeoPoints', 'Presencia física', 'Analytics', 'API'],
   matchedId: null,
 }

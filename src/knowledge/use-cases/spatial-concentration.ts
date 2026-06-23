@@ -10,12 +10,12 @@ export const spatialConcentration: UseCase = {
     'cómo varía la distribución a lo largo del tiempo — para tomar decisiones ' +
     'de diseño, operación, seguridad o inversión.',
   solution:
-    'Sí. Puedes comparar el comportamiento entre ubicaciones y detectar cuáles ' +
-    'concentran más personas, en qué horarios y cómo varía el patrón a lo largo ' +
-    'del tiempo. El sistema genera mapas de intensidad GPS que muestran densidad ' +
-    'de presencia por zona y detectan los puntos de máxima afluencia. Puedes ' +
-    'identificar qué áreas quedan subutilizadas y exportar todos los datos ' +
-    'vía API para análisis externos.',
+    'Sí. Puedes comparar tus ubicaciones entre sí con datos objetivos: cuántas ' +
+    'personas llegaron a cada una, cuánto tiempo permanecieron y en qué horarios ' +
+    'se concentra el tráfico. Eso te permite identificar qué puntos rinden bien, ' +
+    'cuáles están subutilizados y dónde hay oportunidades de mejora — sin depender ' +
+    'de ventas ni de opinión del equipo. Los datos son exportables por punto, ' +
+    'por período y por horario.',
   capabilities: ['geopoints', 'analytics', 'spatial-intelligence', 'live-visits'],
   matchKeywords: [
     // Concentración (señal fuerte)
@@ -93,11 +93,11 @@ export const spatialConcentration: UseCase = {
         'sucursal más exitosa', 'sucursal mas exitosa',
       ],
       solution:
-        'Sí. Puedes comparar sucursales, locales o puntos entre sí para identificar cuáles ' +
-        'reciben más visitas, en qué horarios concentran más personas y cuáles presentan mejor ' +
-        'permanencia. El sistema genera métricas de tráfico por ubicación — cantidad de visitas, ' +
-        'duración promedio y distribución horaria — exportables vía API para análisis comparativo ' +
-        'o dashboards propios.',
+        'Sí. Puedes ver con datos exactos qué sucursales atraen más visitas, cuáles retienen ' +
+        'más tiempo a los visitantes y cuáles quedan rezagadas — sin depender de ventas ni de ' +
+        'la percepción del equipo. Eso te da una base objetiva para decidir dónde reforzar, ' +
+        'dónde optimizar horarios y cuáles pueden estar mal posicionadas. Los datos se comparan ' +
+        'por punto, por período y por horario, y son exportables para análisis propios.',
     },
     {
       id: 'concurrencia-afluencia',

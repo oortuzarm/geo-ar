@@ -11,14 +11,14 @@ export const ecommerceIntegration: UseCase = {
     'en el local físico, registrar conversiones de visitas presenciales o medir ' +
     'la relación entre tráfico físico y ventas digitales.',
   solution:
-    'Puedes habilitar descuentos, precios especiales o contenidos exclusivos en ' +
-    'tu e-commerce solo cuando el usuario está físicamente en el local. No existen ' +
-    'plugins nativos para Shopify, Wix, WooCommerce ni otras plataformas: la ' +
-    'integración se construye vía API REST. Tu plataforma o backend llama a Ubyca ' +
-    'para validar si el usuario está en el punto antes de aplicar el beneficio. ' +
-    'También puedes usar Smart Proxy para que un enlace de tu e-commerce solo ' +
-    'funcione dentro del radio definido. La lógica del carrito vive en tu plataforma; ' +
-    'Ubyca aporta el dato de presencia física verificada.',
+    'Tu e-commerce no sabe si el usuario que está navegando también está en tu ' +
+    'tienda física en ese momento. Ubyca agrega esa capa: cuando el cliente está ' +
+    'presente en el local, tu plataforma puede mostrarle un beneficio exclusivo ' +
+    'que no existe online — precio de local, descuento por visita, contenido de ' +
+    'producto reservado para quien está presente. La integración es vía API REST: ' +
+    'tu backend consulta a Ubyca, recibe la validación en menos de 80 ms y decide ' +
+    'si mostrar el beneficio. Funciona con cualquier plataforma que soporte llamadas ' +
+    'HTTP — Shopify, WooCommerce, VTEX, backend propio.',
   capabilities: ['geopoints', 'presence', 'api', 'smart-proxies', 'integrations'],
   matchKeywords: [
     'Shopify', 'Wix', 'WooCommerce', 'VTEX', 'Magento', 'PrestaShop',

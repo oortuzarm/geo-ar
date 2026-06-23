@@ -11,12 +11,14 @@ export const brandActivationCampaign: UseCase = {
     'Sin esto, el contenido digital se distribuye sin control y pierde el vínculo ' +
     'con la experiencia física.',
   solution:
-    'Sí. Puedes saber exactamente cuántas personas interactuaron con tu campaña, ' +
-    'desde qué ubicaciones, cuánto tiempo permanecieron y en qué horarios — con ' +
-    'datos reales, no estimaciones. El contenido (video, landing, cupón) se activa ' +
-    'solo cuando el usuario está físicamente en el punto de campaña. Puede ' +
-    'implementarse con Smart Proxy sobre una URL existente o validación vía API. ' +
-    'El resultado: no un flyer que circula sin control, sino datos reales de alcance físico.',
+    'Sí. Puedes saber exactamente cuántas personas estuvieron físicamente en cada ' +
+    'punto de campaña, en qué horarios y cuánto tiempo permanecieron — datos ' +
+    'verificables, no estimaciones de alcance ni impresiones. El contenido se ' +
+    'activa solo cuando el usuario está en el lugar, lo que garantiza que cada ' +
+    'registro corresponde a una presencia real. Esos datos son exportables y ' +
+    'presentables como evidencia del impacto de la campaña: costo por interacción ' +
+    'real, no costo por clic. Para el equipo técnico: la implementación puede ' +
+    'hacerse con Smart Proxy sobre una URL existente o vía API.',
   capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],
   matchKeywords: [
     'campaña de marca', 'activación de marca', 'brand activation',

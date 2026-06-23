@@ -22,6 +22,9 @@ import { healthHomeVisits, healthFieldWorkers, healthOutpatient } from './use-ca
 import { brandActivationCampaign, brandActivationLaunch, brandActivationExperience } from './use-cases/brand-activations'
 import { crmIntegration } from './use-cases/crm-integration'
 import { localBusinessProximityPromo, localBusinessFootfall, localBusinessContextualMessage } from './use-cases/local-business'
+import { urbanMobilityStudy, fairMovementAnalysis } from './use-cases/urban-analytics'
+import { geolocationARExperience } from './use-cases/geolocated-experiences'
+import { ecommerceIntegration } from './use-cases/ecommerce'
 import { limitations } from './limitations'
 
 export const knowledge: KnowledgeBase = {
@@ -75,6 +78,10 @@ export const knowledge: KnowledgeBase = {
     localBusinessProximityPromo,
     localBusinessFootfall,
     localBusinessContextualMessage,
+    urbanMobilityStudy,
+    fairMovementAnalysis,
+    geolocationARExperience,
+    ecommerceIntegration,
   ],
   limitations,
 }

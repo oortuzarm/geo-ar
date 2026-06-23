@@ -23,7 +23,7 @@ export const localBusinessProximityPromo: UseCase = {
   matchKeywords: [
     // Tipos de negocio (señal débil, suman en combinación)
     'taller', 'taller de autos', 'taller mecánico',
-    'restaurante', 'cafetería', 'peluquería', 'farmacia', 'gimnasio', 'tienda',
+    'restaurante', 'cafetería', 'peluquería', 'farmacia', 'gimnasio',
     'negocio local', 'local comercial', 'comercio local', 'tienda local',
     'pequeño comercio', 'mi negocio', 'mi local',
     // Patrones de proximidad (señal fuerte, multi-palabra)

@@ -37,6 +37,7 @@ export function matchSolution(query: string): MatchResult {
   const lower = normalize(query)
   let bestUc: UseCase | null = null
   let bestScore = 0
+  let secondScore = 0
 
   for (const uc of knowledge.useCases) {
     // Multi-word keywords (phrases) score 2; single-word keywords score 1.
@@ -46,16 +47,23 @@ export function matchSolution(query: string): MatchResult {
       .filter(k => lower.includes(normalize(k)))
       .reduce((sum, k) => sum + (normalize(k).includes(' ') ? 2 : 1), 0)
     if (score > bestScore) {
+      secondScore = bestScore
       bestScore = score
       bestUc = uc
+    } else if (score > secondScore) {
+      secondScore = score
     }
   }
 
-  if (!bestUc) return DEFAULT_SOLUTION
+  const usedFallback = !bestUc
+  // TODO: instrument — { query, matchedId: bestUc?.id ?? null, bestScore, secondScore, usedFallback }
+  // Example log destination: posthog.capture('solution_match', { query, matchedId, bestScore, secondScore, usedFallback })
+
+  if (usedFallback) return DEFAULT_SOLUTION
 
   return {
-    body: bestUc.solution,
-    tags: bestUc.capabilities.map(id => CAPABILITY_TAG_LABELS[id] ?? id),
-    matchedId: bestUc.id,
+    body: bestUc!.solution,
+    tags: bestUc!.capabilities.map(id => CAPABILITY_TAG_LABELS[id] ?? id),
+    matchedId: bestUc!.id,
   }
 }

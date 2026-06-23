@@ -24,6 +24,8 @@ export const tourismRoutes: UseCase = {
     'ruta turística', 'turismo', 'guía de viaje', 'punto de interés',
     'parada turística', 'tour autoguiado', 'audio guía',
     'contenido por ubicación', 'desbloquear contenido en punto',
+    'desbloquear contenido', 'cerca de monumentos',
+    'contenido al acercarse a', 'activar contenido en monumento',
   ],
 }
 

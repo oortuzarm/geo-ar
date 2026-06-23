@@ -589,7 +589,7 @@ const CAPABILITIES = [
   },
   {
     label: 'Actúa',
-    desc: 'Activa contenido, dispara flujos vía API o aplica reglas de negocio complejas. Ubyca evalúa condiciones — horario, dwell time, cupos — y devuelve un resultado accionable para tu sistema.',
+    desc: 'Visualiza el resultado en Studio, activa experiencias geolocalizadas y analiza el comportamiento de tus visitantes. Ubyca evalúa condiciones — horario, dwell time, cupos — y también expone cada resultado vía API para integraciones externas.',
     visual: (
       <div className="w-full rounded-xl border border-white/[0.08] bg-[#080b14] overflow-hidden mb-5">
         <div className="px-4 pt-4 pb-3">
@@ -689,8 +689,8 @@ const HOW_STEPS = [
     ),
   },
   {
-    title: 'Tu sistema actúa sobre el resultado',
-    desc: 'Consume la respuesta vía API e integra la lógica en tu producto. Ubyca devuelve el resultado de cada validación: presente, condiciones cumplidas y datos de permanencia.',
+    title: 'Actúa sobre el resultado en tiempo real',
+    desc: 'Visualiza los resultados en Studio: mapa de visitas activas, analytics espaciales y activaciones en vivo. Si necesitas integrar, Ubyca también devuelve cada validación vía API con presencia confirmada, condiciones cumplidas y tiempo de permanencia.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
@@ -985,20 +985,15 @@ function ApiSection() {
                       d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
                   </svg>
                 </a>
-                <a
-                  href="/openapi.yaml"
-                  download
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl
-                             bg-white/[0.05] hover:bg-white/[0.09] active:scale-[0.98]
-                             border border-white/[0.10] text-slate-300 hover:text-white
-                             font-semibold text-sm transition-all duration-150">
-                  Descargar OpenAPI
-                  <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" clipRule="evenodd"
-                      d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" />
-                  </svg>
-                </a>
               </div>
+              <p className="mt-5 text-sm text-slate-600">
+                ¿Prefieres una interfaz visual?{' '}
+                <a href="/studio"
+                   className="text-slate-500 hover:text-slate-400 underline underline-offset-2
+                              transition-colors duration-150">
+                  Explora Studio
+                </a>
+              </p>
             </Reveal>
           </div>
 

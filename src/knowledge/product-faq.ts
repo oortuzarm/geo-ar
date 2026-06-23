@@ -178,6 +178,11 @@ export const faqVsQR: FAQ = {
     'diferencia entre usar ubyca y qr',
     'por qué no usar qr', 'para que sirve si tengo qr',
     'ya tengo qr', 'en vez de qr',
+    // Vocabulario adicional — comparación con landing/página QR
+    'landing con qr', 'landing con un qr',
+    'página con qr', 'pagina con qr',
+    'simplemente qr',
+    'que diferencia hay con',
   ],
   answer:
     'Un QR es suficiente cuando solo necesitas distribuir un enlace o facilitar ' +

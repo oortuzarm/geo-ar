@@ -40,6 +40,11 @@ export const brandActivationCampaign: UseCase = {
     'campaña funcionó', 'campana funciono',
     'campaña exitosa', 'campana exitosa',
     'activación exitosa', 'activacion exitosa',
+    // Vocabulario adicional — campañas presenciales con impacto
+    'campaña presencial', 'campana presencial',
+    'tuvo impacto', 'si tuvo impacto',
+    'activación funcionó', 'activacion funciono',
+    'si tuvo resultados',
   ],
   subIntentions: [
     {

@@ -48,6 +48,9 @@ export const geolocationARExperience: UseCase = {
     'llegue a un lugar especifico', 'alguien llegue a un lugar',
     'cosas aparezcan por ubicación', 'cosas aparezcan por ubicacion',
     'tengo una app y quiero', 'app y quiero que',
+    // Vocabulario adicional — apps existentes integrando Ubyca
+    'ya tengo una app',
+    'qué agrega ubyca', 'que agrega ubyca',
   ],
   subIntentions: [
     {

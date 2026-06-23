@@ -55,6 +55,13 @@ export const operationsMaintenanceRoutes: UseCase = {
     'donde debían estar', 'donde debian estar',
     'verificar trabajadores', 'comprobar trabajadores',
     'verificar que estuvieron', 'trabajadores realmente estuvieron',
+    // Vocabulario adicional — personal externo, contratistas y cuadrillas
+    'contratistas', 'mis contratistas',
+    'puntos asignados',
+    'proveedores', 'proveedores en terreno',
+    'cuadrillas',
+    'personal externo',
+    'fue al lugar',
   ],
 }
 

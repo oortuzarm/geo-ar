@@ -55,6 +55,8 @@ export const spatialConcentration: UseCase = {
     'cuál de mis locales', 'cual de mis locales',
     'cuál de mis sucursales', 'cual de mis sucursales',
     'cuáles de mis sucursales', 'cuales de mis sucursales',
+    'cuál de mis tiendas', 'cual de mis tiendas',
+    'cuáles de mis tiendas', 'cuales de mis tiendas',
     'cuál de mis puntos', 'cual de mis puntos',
     'recibe más visitas', 'recibe mas visitas',
     'más visitas', 'mas visitas',
@@ -64,6 +66,7 @@ export const spatialConcentration: UseCase = {
     'mejor desempeño', 'mejor desempeno',
     'rendimiento comercial', 'mejor rendimiento',
     'aporta valor', 'genera valor', 'genera resultados',
+    'aportando valor',
     'sucursal más exitosa', 'sucursal mas exitosa',
     'cadena de restaurantes',
     // Lenguaje coloquial de afluencia (Tarea 5)

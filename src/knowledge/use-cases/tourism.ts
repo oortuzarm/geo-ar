@@ -39,6 +39,11 @@ export const tourismRoutes: UseCase = {
     'distintos puntos', 'puntos de una ciudad', 'distintos puntos de la ciudad',
     'visitar distintos puntos', 'puntos de interés de la ciudad',
     'experiencia ciudad puntos', 'recorrido por puntos',
+    // Vocabulario adicional — descubrimiento y exploración
+    'distintos lugares', 'distintos lugares de una ciudad',
+    'descubran distintos',
+    'exploración urbana', 'exploracion urbana',
+    'avanzan por una ruta',
   ],
 }
 

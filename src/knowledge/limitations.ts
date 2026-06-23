@@ -44,9 +44,9 @@ export const limitations: Limitation[] = [
       'e-commerce específicas ni herramientas de marketing automation. Toda integración ' +
       'requiere desarrollo personalizado sobre la API REST.',
     workaround:
-      'Usar los webhooks de Ubyca (cuando el evento ocurre, notificar a un endpoint ' +
-      'externo) para disparar integraciones desde el sistema destino. La API REST ' +
-      'estándar permite integración con cualquier plataforma que soporte HTTP.',
+      'La integración se construye sobre la API REST estándar de Ubyca: cualquier ' +
+      'plataforma que soporte HTTP puede consumir resultados de presencia. Ubyca no ' +
+      'tiene webhooks, por lo que el sistema cliente es quien inicia las llamadas.',
   },
   {
     area: 'Latencia en entornos con mala conectividad',

@@ -27,9 +27,9 @@ import { geolocationARExperience } from './use-cases/geolocated-experiences'
 import { ecommerceIntegration } from './use-cases/ecommerce'
 import { geolocatedCatalog } from './use-cases/geolocated-catalog'
 import { presenceRegistration } from './use-cases/presence-registration'
-import { productOverview, productCapabilities } from './use-cases/product-questions'
 import { spatialConcentration } from './use-cases/spatial-concentration'
 import { limitations } from './limitations'
+import { productFaqs } from './product-faq'
 
 export const knowledge: KnowledgeBase = {
   product,
@@ -89,11 +89,10 @@ export const knowledge: KnowledgeBase = {
     ecommerceIntegration,
     geolocatedCatalog,
     presenceRegistration,
-    productOverview,
-    productCapabilities,
     spatialConcentration,
   ],
   limitations,
+  faqs: productFaqs,
 }
 
 export function knowledgeToPromptText(kb: KnowledgeBase = knowledge): string {
@@ -149,7 +148,14 @@ export function knowledgeToPromptText(kb: KnowledgeBase = knowledge): string {
     lines.push('')
   }
 
+  lines.push('## Product FAQ')
+  for (const faq of kb.faqs) {
+    lines.push(`### ${faq.title}`)
+    lines.push(faq.answer)
+    lines.push('')
+  }
+
   return lines.join('\n')
 }
 
-export type { KnowledgeBase, Capability, UseCase, Limitation, ProductInfo } from './types'
+export type { KnowledgeBase, Capability, UseCase, Limitation, ProductInfo, FAQ } from './types'

@@ -1,5 +1,5 @@
 import { knowledge } from './index'
-import type { UseCase } from './types'
+import type { UseCase, FAQ } from './types'
 
 export interface MatchResult {
   body: string
@@ -33,37 +33,60 @@ export function normalize(s: string): string {
   return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 }
 
+function scoreKeywords(patterns: string[], lower: string): number {
+  return patterns
+    .filter(k => lower.includes(normalize(k)))
+    .reduce((sum, k) => sum + (normalize(k).includes(' ') ? 2 : 1), 0)
+}
+
 export function matchSolution(query: string): MatchResult {
   const lower = normalize(query)
+
+  // Score use cases
   let bestUc: UseCase | null = null
-  let bestScore = 0
-  let secondScore = 0
+  let bestUcScore = 0
+  let secondUcScore = 0
 
   for (const uc of knowledge.useCases) {
-    // Multi-word keywords (phrases) score 2; single-word keywords score 1.
-    // This ensures a specific phrase like "taller de autos" outweighs generic
-    // single-word matches when both appear in the same query.
-    const score = uc.matchKeywords
-      .filter(k => lower.includes(normalize(k)))
-      .reduce((sum, k) => sum + (normalize(k).includes(' ') ? 2 : 1), 0)
-    if (score > bestScore) {
-      secondScore = bestScore
-      bestScore = score
+    const score = scoreKeywords(uc.matchKeywords, lower)
+    if (score > bestUcScore) {
+      secondUcScore = bestUcScore
+      bestUcScore = score
       bestUc = uc
-    } else if (score > secondScore) {
-      secondScore = score
+    } else if (score > secondUcScore) {
+      secondUcScore = score
     }
   }
 
-  const usedFallback = !bestUc
-  // TODO: instrument — { query, matchedId: bestUc?.id ?? null, bestScore, secondScore, usedFallback }
-  // Example log destination: posthog.capture('solution_match', { query, matchedId, bestScore, secondScore, usedFallback })
+  // Score FAQs — FAQ wins if bestFaqScore > 0 AND bestFaqScore >= bestUcScore
+  let bestFaq: FAQ | null = null
+  let bestFaqScore = 0
 
-  if (usedFallback) return DEFAULT_SOLUTION
+  for (const faq of knowledge.faqs) {
+    const score = scoreKeywords(faq.questionPatterns, lower)
+    if (score > bestFaqScore) {
+      bestFaqScore = score
+      bestFaq = faq
+    }
+  }
+
+  const usedFaq = bestFaqScore > 0 && bestFaqScore >= bestUcScore
+  // TODO: instrument — { query, matchedId, bestUcScore, secondUcScore, bestFaqScore, usedFaq, usedFallback: !bestUc && !usedFaq }
+  // Example log destination: posthog.capture('solution_match', { query, matchedId, bestUcScore, secondUcScore, bestFaqScore, usedFaq })
+
+  if (usedFaq && bestFaq) {
+    return {
+      body: bestFaq.answer,
+      tags: bestFaq.tags ?? [],
+      matchedId: bestFaq.id,
+    }
+  }
+
+  if (!bestUc) return DEFAULT_SOLUTION
 
   return {
-    body: bestUc!.solution,
-    tags: bestUc!.capabilities.map(id => CAPABILITY_TAG_LABELS[id] ?? id),
-    matchedId: bestUc!.id,
+    body: bestUc.solution,
+    tags: bestUc.capabilities.map(id => CAPABILITY_TAG_LABELS[id] ?? id),
+    matchedId: bestUc.id,
   }
 }

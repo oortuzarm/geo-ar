@@ -39,9 +39,18 @@ export interface ProductInfo {
   accessPoints: string[]
 }
 
+export interface FAQ {
+  id: string
+  title: string
+  questionPatterns: string[]
+  answer: string
+  tags?: string[]
+}
+
 export interface KnowledgeBase {
   product: ProductInfo
   capabilities: Capability[]
   useCases: UseCase[]
   limitations: Limitation[]
+  faqs: FAQ[]
 }

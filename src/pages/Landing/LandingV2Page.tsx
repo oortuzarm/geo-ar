@@ -231,7 +231,7 @@ function HeroSection() {
             className="mt-6 font-black text-white tracking-tight leading-[1.04]
                        text-[2.2rem] sm:text-[2.8rem] lg:text-[3rem]"
           >
-            Ubyca sabe en tiempo real dónde están tus usuarios.
+            Conoce en tiempo real dónde están tus usuarios.
           </motion.h1>
 
           <motion.p

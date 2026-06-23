@@ -30,6 +30,7 @@ import { presenceRegistration } from './use-cases/presence-registration'
 import { spatialConcentration } from './use-cases/spatial-concentration'
 import { limitations } from './limitations'
 import { productFaqs } from './product-faq'
+import { businessGoals } from './business-goals'
 
 export const knowledge: KnowledgeBase = {
   product,
@@ -93,6 +94,7 @@ export const knowledge: KnowledgeBase = {
   ],
   limitations,
   faqs: productFaqs,
+  businessGoals,
 }
 
 export function knowledgeToPromptText(kb: KnowledgeBase = knowledge): string {
@@ -148,6 +150,14 @@ export function knowledgeToPromptText(kb: KnowledgeBase = knowledge): string {
     lines.push('')
   }
 
+  lines.push('## Objetivos de negocio')
+  for (const goal of kb.businessGoals) {
+    lines.push(`### ${goal.title}`)
+    lines.push(goal.solution)
+    lines.push(`**Capacidades:** ${goal.capabilities.join(', ')}`)
+    lines.push('')
+  }
+
   lines.push('## Product FAQ')
   for (const faq of kb.faqs) {
     lines.push(`### ${faq.title}`)
@@ -158,4 +168,4 @@ export function knowledgeToPromptText(kb: KnowledgeBase = knowledge): string {
   return lines.join('\n')
 }
 
-export type { KnowledgeBase, Capability, UseCase, Limitation, ProductInfo, FAQ } from './types'
+export type { KnowledgeBase, Capability, UseCase, Limitation, ProductInfo, FAQ, BusinessGoal } from './types'

@@ -47,10 +47,19 @@ export interface FAQ {
   tags?: string[]
 }
 
+export interface BusinessGoal {
+  id: string
+  title: string
+  matchKeywords: string[]
+  solution: string
+  capabilities: string[]
+}
+
 export interface KnowledgeBase {
   product: ProductInfo
   capabilities: Capability[]
   useCases: UseCase[]
   limitations: Limitation[]
   faqs: FAQ[]
+  businessGoals: BusinessGoal[]
 }

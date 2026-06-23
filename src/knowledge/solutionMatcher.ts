@@ -1,5 +1,5 @@
 import { knowledge } from './index'
-import type { UseCase, FAQ } from './types'
+import type { UseCase, FAQ, BusinessGoal } from './types'
 
 export interface MatchResult {
   body: string
@@ -58,7 +58,19 @@ export function matchSolution(query: string): MatchResult {
     }
   }
 
-  // Score FAQs — FAQ wins if bestFaqScore > 0 AND bestFaqScore >= bestUcScore
+  // Score business goals
+  let bestGoal: BusinessGoal | null = null
+  let bestGoalScore = 0
+
+  for (const goal of knowledge.businessGoals) {
+    const score = scoreKeywords(goal.matchKeywords, lower)
+    if (score > bestGoalScore) {
+      bestGoalScore = score
+      bestGoal = goal
+    }
+  }
+
+  // Score FAQs
   let bestFaq: FAQ | null = null
   let bestFaqScore = 0
 
@@ -70,15 +82,26 @@ export function matchSolution(query: string): MatchResult {
     }
   }
 
-  const usedFaq = bestFaqScore > 0 && bestFaqScore >= bestUcScore
-  // TODO: instrument — { query, matchedId, bestUcScore, secondUcScore, bestFaqScore, usedFaq, usedFallback: !bestUc && !usedFaq }
-  // Example log destination: posthog.capture('solution_match', { query, matchedId, bestUcScore, secondUcScore, bestFaqScore, usedFaq })
+  // Priority: FAQ > BusinessGoal > UseCase > Fallback
+  // Ties favour the higher-priority layer
+  const faqWins = bestFaqScore > 0 && bestFaqScore >= bestGoalScore && bestFaqScore >= bestUcScore
+  const goalWins = !faqWins && bestGoalScore > 0 && bestGoalScore >= bestUcScore
+  // TODO: instrument — { query, matchedId, bestUcScore, secondUcScore, bestGoalScore, bestFaqScore, faqWins, goalWins }
+  // Example log destination: posthog.capture('solution_match', { query, matchedId, bestUcScore, bestGoalScore, bestFaqScore, faqWins, goalWins })
 
-  if (usedFaq && bestFaq) {
+  if (faqWins && bestFaq) {
     return {
       body: bestFaq.answer,
       tags: bestFaq.tags ?? [],
       matchedId: bestFaq.id,
+    }
+  }
+
+  if (goalWins && bestGoal) {
+    return {
+      body: bestGoal.solution,
+      tags: bestGoal.capabilities.map(id => CAPABILITY_TAG_LABELS[id] ?? id),
+      matchedId: bestGoal.id,
     }
   }
 

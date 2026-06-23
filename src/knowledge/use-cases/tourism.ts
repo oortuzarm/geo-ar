@@ -26,6 +26,15 @@ export const tourismRoutes: UseCase = {
     'contenido por ubicación', 'desbloquear contenido en punto',
     'desbloquear contenido', 'cerca de monumentos',
     'contenido al acercarse a', 'activar contenido en monumento',
+    // Lenguaje natural del usuario
+    'recorrido turístico', 'recorrido patrimonial', 'recorrido por la ciudad',
+    'paseo turístico', 'paseo cultural', 'paseo por monumentos',
+    'guía turística', 'experiencia turística',
+    'hacer un recorrido', 'hacer turismo',
+    'tour por la ciudad', 'tour cultural',
+    'visitar monumentos', 'visitar museos',
+    'recorrido autoguiado', 'app de turismo', 'app para turistas',
+    'información en sitios', 'información al llegar a',
   ],
 }
 

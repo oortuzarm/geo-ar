@@ -30,5 +30,12 @@ export const geolocationARExperience: UseCase = {
     'WebXR', 'A-Frame', 'capa AR', 'activar AR',
     'puntos en el mapa', 'definir puntos en mapa',
     'experiencia que funcione en ubicaciones',
+    // Lenguaje natural — juegos y dinámicas
+    'gymkhana', 'yincana', 'gimkana',
+    'caza del tesoro', 'cazatesoros', 'búsqueda del tesoro',
+    'juego de pistas', 'pistas geolocalizadas',
+    'trivial geolocalizado', 'quiz geolocalizado',
+    'contenido desbloqueado por ubicación',
+    'app que funcione en puntos del mapa',
   ],
 }

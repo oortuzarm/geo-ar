@@ -10,13 +10,11 @@ export const presenceRegistration: UseCase = {
     'sin depender de partes manuales, sin hardware de acceso y sin posibilidad ' +
     'de que el usuario falsifique su presencia.',
   solution:
-    'Ubyca define un GeoPoint para cada punto de ingreso o acceso. Cuando la ' +
-    'persona llega al área, la presencia se valida en el servidor con su ' +
-    'ubicación GPS — no es auto-declarada. El evento de ingreso queda ' +
-    'registrado con timestamp y duración de permanencia. Los datos son ' +
-    'consultables en Studio y exportables vía API para auditorías, control ' +
-    'de asistencia o reportes de acceso. No requiere hardware adicional, ' +
-    'lectores de tarjetas ni biometría.',
+    'Puedes registrar automáticamente quién ingresó a una ubicación, a qué hora ' +
+    'y cuánto tiempo permaneció — sin hardware adicional, sin lectores de tarjetas ' +
+    'ni biometría. La presencia se valida en el servidor con GPS, no es auto-declarada ' +
+    'ni puede falsificarse. Los datos son exportables vía API para auditorías, ' +
+    'control de asistencia o reportes de acceso.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api'],
   matchKeywords: [
     // Registro de ingreso (señal fuerte)

@@ -10,10 +10,11 @@ export const municipalitiesPublicServices: UseCase = {
     'Los turnos en papel o por teléfono no evitan que alguien acuda en ' +
     'nombre de otro ni que se declaren presencias falsas.',
   solution:
-    'Ubyca verifica que el ciudadano está físicamente en la dependencia ' +
-    'cuando solicita el servicio. Puedes integrar la validación de presencia ' +
-    'en el sistema de turnos existente vía API. El registro queda disponible ' +
-    'en analytics para auditorías.',
+    'Puedes verificar que el ciudadano está físicamente en la ventanilla o ' +
+    'dependencia cuando solicita un servicio — evitando que alguien acceda en ' +
+    'nombre de otro o declare una presencia que no ocurrió. La validación se ' +
+    'integra al sistema de turnos existente vía API y el registro queda disponible ' +
+    'para auditorías.',
   capabilities: ['geopoints', 'presence', 'api', 'analytics'],
   matchKeywords: [
     'municipio', 'municipalidad', 'gobierno local', 'servicio público',
@@ -31,11 +32,10 @@ export const municipalitiesUrbanAnalysis: UseCase = {
     'plaza, parque, mercado o centro histórico: cuántas personas hay en ' +
     'cada momento, qué zonas están saturadas y cuáles subutilizadas.',
   solution:
-    'Ubyca recolecta datos de presencia en las zonas del espacio público ' +
-    'y genera mapas de intensidad que muestran dónde se concentra el ' +
-    'tráfico peatonal. Puedes ver el comportamiento en tiempo real y el ' +
-    'histórico por hora, día y zona. Los datos informan decisiones de ' +
-    'diseño urbano, eventos públicos y distribución de recursos.',
+    'Puedes visualizar cómo circula la gente en plazas, parques, mercados y ' +
+    'centros históricos: qué zonas están saturadas, cuáles subutilizadas y cómo ' +
+    'varía el comportamiento por hora y día. Los datos informan decisiones de ' +
+    'diseño urbano, organización de eventos públicos y distribución de recursos.',
   capabilities: ['geopoints', 'analytics', 'spatial-intelligence', 'live-visits'],
   matchKeywords: [
     'flujo peatonal', 'espacio público', 'plaza', 'parque',
@@ -54,10 +54,10 @@ export const municipalitiesInspection: UseCase = {
     'verificar que los recorridos se realizaron sin depender de partes ' +
     'escritos que pueden falsificarse.',
   solution:
-    'Ubyca registra automáticamente cuando cada inspector llega a los ' +
-    'puntos de su ronda asignada. El sistema verifica la presencia en el ' +
-    'servidor — no es auto-declarada. El supervisor puede ver la cobertura ' +
-    'real en Studio y exportar el historial a los sistemas municipales.',
+    'Puedes verificar que inspectores y agentes cubrieron sus recorridos ' +
+    'asignados, con hora y tiempo de permanencia por punto — sin partes ' +
+    'escritos que pueden falsificarse. El supervisor ve la cobertura real ' +
+    'en Studio y exporta el historial a los sistemas municipales.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api'],
   matchKeywords: [
     'inspector municipal', 'agente de tránsito', 'ronda municipal',

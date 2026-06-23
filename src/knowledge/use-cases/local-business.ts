@@ -10,15 +10,14 @@ export const localBusinessProximityPromo: UseCase = {
     'cuando una persona entra en el radio del local. El objetivo es convertir ' +
     'el tráfico que pasa cerca en interacción real con el negocio.',
   solution:
-    'Ubyca crea un GeoPoint alrededor del local con el radio que definas. ' +
-    'Cuando una persona entra en esa zona, la experiencia del negocio puede ' +
-    'mostrar una promoción, habilitar un cupón o activar un mensaje contextual. ' +
-    'Puedes configurarlo con o sin desbloqueo por presencia: con desbloqueo activo, ' +
-    'el beneficio se activa solo al estar dentro del radio; sin desbloqueo, el ' +
-    'contenido funciona como capa informativa geolocalizada sin exigir presencia. ' +
-    'Ubyca no envía notificaciones push automáticas: la activación ocurre dentro ' +
-    'de la experiencia web o de app del negocio, no como mensaje enviado al ' +
-    'dispositivo. Funciona sin app nativa para el cliente final.',
+    'Cuando una persona entra al radio de tu local, puedes mostrarle automáticamente ' +
+    'una promoción, cupón o mensaje contextual dentro de tu sitio web o app. ' +
+    'Puedes configurarlo con o sin verificación de presencia: con verificación, ' +
+    'el beneficio se habilita solo dentro del radio; sin verificación, funciona como ' +
+    'capa informativa geolocalizada disponible para cualquiera que la abra cerca. ' +
+    'Ubyca no envía notificaciones push automáticas: la activación ocurre cuando ' +
+    'el usuario ya está cerca e interactúa con la experiencia. Sin app nativa ' +
+    'para el cliente final.',
   capabilities: ['geopoints', 'presence', 'analytics', 'studio'],
   matchKeywords: [
     // Tipos de negocio (señal débil, suman en combinación)
@@ -52,11 +51,11 @@ export const localBusinessFootfall: UseCase = {
     'su estrategia comercial, horarios de atención o decisiones de apertura ' +
     'de sucursales.',
   solution:
-    'Ubyca define un GeoPoint que abarca el área del local y su entorno. ' +
-    'Registra cuántas personas entran al radio definido, cuánto tiempo permanecen ' +
-    'y cómo se distribuye el tráfico por horario y día de la semana. Puedes ver ' +
-    'visitas en tiempo real desde Studio y comparar el comportamiento entre ' +
-    'períodos. Los datos son exportables vía API al sistema de gestión del negocio.',
+    'Puedes medir cuánta gente entra al radio de tu local, en qué horarios hay ' +
+    'más afluencia y cuánto tiempo permanecen en promedio — datos que los sistemas ' +
+    'de caja no capturan. Ves las visitas en tiempo real desde Studio y comparas ' +
+    'el comportamiento entre períodos. Los datos son exportables vía API a tu ' +
+    'sistema de gestión.',
   capabilities: ['geopoints', 'analytics', 'spatial-intelligence', 'live-visits'],
   matchKeywords: [
     'tráfico peatonal', 'afluencia', 'cuánta gente pasa', 'cuántos entran',
@@ -79,11 +78,10 @@ export const localBusinessContextualMessage: UseCase = {
     'al llegar a la sucursal, al barrio, al punto de servicio o a la zona ' +
     'comercial correspondiente.',
   solution:
-    'Ubyca define zonas distintas con contenido o mensajes asociados a cada una. ' +
-    'Al entrar en una zona, el mensaje o información relevante para esa ubicación ' +
-    'se activa en el dispositivo del usuario sin que tenga que seleccionarlo ' +
-    'manualmente. La experiencia puede configurarse con o sin desbloqueo: con ' +
-    'desbloqueo, el contenido aparece solo dentro del área; sin desbloqueo, ' +
+    'Puedes mostrar información, mensajes o experiencias diferentes según en qué ' +
+    'zona o sucursal esté el usuario — automáticamente, sin que tenga que ' +
+    'seleccionar su ubicación. Configúralo con o sin verificación de presencia: ' +
+    'con verificación, el contenido aparece solo dentro del área; sin verificación, ' +
     'funciona como capa informativa geolocalizada disponible sin exigir presencia ' +
     'física. Funciona sin app nativa, desde cualquier navegador web.',
   capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],

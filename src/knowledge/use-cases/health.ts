@@ -10,11 +10,11 @@ export const healthHomeVisits: UseCase = {
     'que el profesional llegó al domicilio correcto, a qué hora llegó y cuánto ' +
     'tiempo estuvo — sin depender de reportes manuales que pueden falsificarse.',
   solution:
-    'Ubyca crea un GeoPoint para cada domicilio de atención. Cuando el profesional ' +
-    'llega al domicilio, el sistema verifica su presencia GPS en el servidor. ' +
-    'El historial registra hora exacta de llegada y tiempo de permanencia por visita. ' +
-    'Los datos son exportables vía API al sistema de gestión de turnos o historia ' +
-    'clínica del prestador para auditoría y facturación.',
+    'Puedes verificar objetivamente que el profesional llegó al domicilio correcto, ' +
+    'a qué hora y cuánto tiempo estuvo — sin depender de partes manuales. El ' +
+    'historial de cada visita (hora de llegada, tiempo de permanencia) queda ' +
+    'disponible para auditoría y facturación, y es exportable vía API al sistema ' +
+    'de gestión de turnos o historia clínica.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api'],
   matchKeywords: [
     'visita domiciliaria', 'enfermero a domicilio', 'kinesiología domiciliaria',
@@ -33,10 +33,10 @@ export const healthFieldWorkers: UseCase = {
     'comunidades o zonas asignadas. No hay forma de verificar la cobertura ' +
     'real sin depender de registros en papel.',
   solution:
-    'Ubyca define zonas geográficas o puntos de cobertura asignados a cada ' +
-    'agente. El sistema registra cuándo cada agente estuvo en su zona, con ' +
-    'qué frecuencia y cuánto tiempo. El coordinador puede ver la cobertura ' +
-    'real desde Studio y exportar los datos a los sistemas de reporte del organismo.',
+    'Puedes verificar la cobertura real de tus agentes sanitarios en terreno — ' +
+    'cuándo estuvieron en cada zona, con qué frecuencia y cuánto tiempo — sin ' +
+    'depender de registros en papel. El coordinador ve la cobertura real desde ' +
+    'Studio y exporta los datos a los sistemas de reporte del organismo.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api'],
   matchKeywords: [
     'agente sanitario', 'promotor de salud', 'vacunador', 'agente comunitario',
@@ -55,10 +55,10 @@ export const healthOutpatient: UseCase = {
     'estuvieron físicamente presentes en la sesión, para cumplimiento y ' +
     'facturación a aseguradoras.',
   solution:
-    'Ubyca define un GeoPoint para cada sala o área de atención. La presencia ' +
-    'se verifica cuando el paciente o profesional llega al área. El historial ' +
-    'de sesiones con timestamp y dwell time es exportable vía API al sistema ' +
-    'de gestión clínica para respaldo de auditorías de prestaciones.',
+    'Puedes acreditar que el paciente o profesional estuvo físicamente presente ' +
+    'en la sesión de atención, con hora exacta y duración — respaldo confiable ' +
+    'para auditorías y facturación a aseguradoras. El historial de sesiones es ' +
+    'exportable vía API al sistema de gestión clínica existente.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api'],
   matchKeywords: [
     'centro de salud', 'clínica', 'hospital', 'rehabilitación',

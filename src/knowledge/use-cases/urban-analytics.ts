@@ -10,13 +10,13 @@ export const urbanMobilityStudy: UseCase = {
     'decisiones sobre localización de proyectos, demanda real de servicios, ' +
     'vivienda o infraestructura urbana.',
   solution:
-    'Ubyca despliega GeoPoints sobre las zonas de interés y recolecta datos ' +
-    'de comportamiento espacial: cuántas personas pasan, en qué horarios, ' +
-    'cuánto tiempo permanecen y qué sectores concentran mayor flujo. Los datos ' +
-    'permiten comparar zonas, identificar patrones de movimiento y tomar ' +
-    'decisiones basadas en demanda observada. Ubyca no genera modelos ' +
-    'predictivos ni proyecciones estadísticas: aporta datos observacionales ' +
-    'de presencia y flujo georreferenciados que sirven como input para el análisis.',
+    'Sí. Puedes medir cuántas personas circulan por una zona, en qué horarios ' +
+    'y cuánto tiempo permanecen — datos observacionales reales para tomar ' +
+    'decisiones sobre apertura, expansión o inversión. Puedes comparar varias ' +
+    'zonas entre sí e identificar dónde hay más movimiento y en qué momentos. ' +
+    'Ubyca aporta datos de presencia y flujo georreferenciados: no genera modelos ' +
+    'predictivos ni proyecciones estadísticas, pero sí los insumos concretos ' +
+    'para construirlos.',
   capabilities: ['geopoints', 'analytics', 'spatial-intelligence', 'live-visits'],
   matchKeywords: [
     'movilidad urbana', 'flujo urbano', 'estudio de movilidad',
@@ -47,14 +47,13 @@ export const fairMovementAnalysis: UseCase = {
     'qué zonas o pabellones concentran más tráfico, cuánto tiempo permanecen ' +
     'en cada área y cuáles quedan con poca presencia.',
   solution:
-    'Ubyca define GeoPoints sobre las zonas del recinto y registra cuántas ' +
-    'personas pasan por cada una, con cuánto tiempo de permanencia y cómo ' +
-    'varía el flujo durante el evento. Los mapas de intensidad muestran dónde ' +
-    'se concentró la gente. Limitación importante: en recintos cerrados, la ' +
-    'precisión del GPS varía entre 10 y 50 metros. Ubyca funciona bien para ' +
-    'mapear zonas amplias como pabellones o sectores separados al menos 30-50 ' +
-    'metros, pero no permite distinguir con fiabilidad entre stands o áreas ' +
-    'adyacentes más cercanas.',
+    'Puedes saber cuántas personas pasaron por cada zona del recinto, cuánto ' +
+    'tiempo permanecieron y en qué momentos del evento hubo picos de tráfico. ' +
+    'Los mapas de intensidad muestran dónde se concentró la gente y cuáles ' +
+    'zonas quedaron subutilizadas. Limitación importante: en recintos cerrados, ' +
+    'el GPS tiene una precisión de 10 a 50 metros. Funciona bien para pabellones ' +
+    'o sectores separados al menos 30-50 metros, pero no distingue con fiabilidad ' +
+    'entre stands o áreas adyacentes.',
   capabilities: ['geopoints', 'analytics', 'spatial-intelligence', 'live-visits'],
   matchKeywords: [
     'feria', 'exposición', 'expo', 'congreso', 'recinto ferial',

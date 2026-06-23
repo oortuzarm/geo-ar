@@ -10,11 +10,10 @@ export const fieldSalesVisits: UseCase = {
     'duraron ni con qué frecuencia se realizan. Los reportes manuales son ' +
     'poco confiables y difíciles de auditar.',
   solution:
-    'Ubyca registra automáticamente las visitas cuando el vendedor o promotor ' +
-    'llega al área del GeoPoint asignado a cada punto de venta. La presencia se ' +
-    'verifica en el servidor, no es auto-declarada. Obtienes un historial real ' +
-    'con hora exacta, tiempo de permanencia y frecuencia por punto — sin ' +
-    'reportes manuales ni posibilidad de datos alterados.',
+    'Puedes obtener un historial real de visitas comerciales — hora exacta, tiempo ' +
+    'de permanencia y frecuencia por punto de venta — sin depender de reportes ' +
+    'manuales que pueden alterarse. La presencia se verifica automáticamente en ' +
+    'el servidor cuando el vendedor llega al área, no es auto-declarada.',
   capabilities: ['geopoints', 'presence', 'analytics'],
   matchKeywords: [
     'vendedor', 'promotor', 'punto de venta', 'fuerza de ventas',
@@ -31,10 +30,10 @@ export const fieldSalesSupervision: UseCase = {
     'real, sin tener que llamar a cada persona ni confiar en reportes de posición ' +
     'auto-declarados.',
   solution:
-    'Con Ubyca puedes definir las zonas que cada integrante del equipo debe cubrir ' +
-    'y ver en tiempo real desde Studio quién está presente en qué zona. El sistema ' +
-    'registra el historial de cobertura por persona, zona y horario — sin que el ' +
-    'equipo tenga que hacer check-ins manuales.',
+    'Puedes ver en tiempo real qué zonas está cubriendo tu equipo, quién está ' +
+    'presente en cada punto y cuál es la cobertura real — sin que nadie haga ' +
+    'check-ins manuales. El sistema registra el historial completo de cobertura ' +
+    'por persona, zona y horario para revisión posterior.',
   capabilities: ['geopoints', 'presence', 'analytics', 'live-visits', 'spatial-intelligence'],
   matchKeywords: [
     'supervisor', 'supervisar', 'supervisión', 'ronda', 'cobertura de zona',
@@ -51,10 +50,10 @@ export const fieldSalesDelivery: UseCase = {
     'repartidores pasaron efectivamente por los puntos de entrega asignados, ' +
     'con la hora exacta y el tiempo que permanecieron.',
   solution:
-    'Ubyca puede verificar que los conductores o repartidores pasen por los ' +
-    'puntos de entrega asignados. Cada visita queda registrada con timestamp y ' +
-    'tiempo de permanencia. Puedes ver la cobertura de rutas en tiempo real ' +
-    'desde Studio y exportar los datos vía API a tu sistema logístico existente.',
+    'Puedes verificar que tus conductores o repartidores pasaron por los puntos ' +
+    'de entrega asignados, con hora exacta y tiempo de permanencia — sin depender ' +
+    'de declaraciones del propio equipo. Ves la cobertura de rutas en tiempo real ' +
+    'desde Studio y exportas los datos vía API a tu sistema logístico existente.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api'],
   matchKeywords: [
     'reparto', 'distribución', 'conductor', 'chofer', 'entrega',

@@ -11,13 +11,13 @@ export const geolocationARExperience: UseCase = {
     'no debe activarse desde cualquier lugar, sino únicamente donde el creador ' +
     'lo defina.',
   solution:
-    'Ubyca no incluye motor de realidad aumentada propio. Lo que aporta es la ' +
-    'capa de acceso y activación geolocalizada: define GeoPoints sobre los puntos ' +
-    'del mapa donde debe funcionar la experiencia. La API de Ubyca valida en el ' +
-    'servidor si el usuario está dentro del área antes de que tu app habilite ' +
-    'el contenido AR, el mapa enriquecido o la experiencia interactiva. ' +
-    'El resultado: una experiencia que literalmente funciona solo en los puntos ' +
-    'que definas, con validación server-side, no autogestión del GPS del dispositivo.',
+    'Sí. Puedes habilitar o bloquear funciones de tu aplicación según si el usuario ' +
+    'está físicamente en una ubicación específica. Tu app consulta la API de Ubyca ' +
+    'antes de mostrar el contenido, y el servidor valida la presencia real — no el ' +
+    'GPS autogestionado del dispositivo. Funciona para cualquier tipo de funcionalidad ' +
+    'que deba estar disponible solo en un lugar: contenido geolocalizado, acceso a zonas, ' +
+    'experiencias interactivas o realidad aumentada. El resultado es una experiencia ' +
+    'que literalmente funciona solo donde tú lo definas.',
   capabilities: ['geopoints', 'presence', 'api', 'smart-proxies'],
   matchKeywords: [
     'realidad aumentada', 'realidad aumentada geolocalizada',

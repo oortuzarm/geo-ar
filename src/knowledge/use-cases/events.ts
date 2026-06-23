@@ -10,11 +10,11 @@ export const eventsAccess: UseCase = {
     'contenido, descuentos o beneficios. Los QR son fácilmente compartibles ' +
     'y el hardware de acceso es caro y difícil de escalar.',
   solution:
-    'Ubyca verifica que el asistente está físicamente en el área del evento ' +
-    'antes de habilitar el acceso. No hay código QR que compartir: la validación ' +
-    'es por ubicación real. Puedes configurar polígonos exactos para el perímetro ' +
-    'del evento y definir reglas de horario. La respuesta llega en menos de 80 ms ' +
-    'vía API, sin app nativa requerida.',
+    'Sí. Puedes controlar el acceso a tu evento sin QR, sin tarjeta y sin hardware: ' +
+    'la única condición es que el usuario esté físicamente en el área. No hay código ' +
+    'que compartir ni falsificar — la validación es por ubicación real, verificada ' +
+    'en el servidor. Puedes definir el perímetro exacto del evento, configurar ' +
+    'horarios de activación y recibir la respuesta en menos de 80 ms vía API.',
   capabilities: ['geopoints', 'presence', 'api'],
   matchKeywords: [
     'evento', 'acceso sin QR', 'control de acceso', 'asistente',
@@ -36,10 +36,10 @@ export const eventsExperience: UseCase = {
     'diferentes según en qué parte del evento se encuentren, sin tener que ' +
     'instalar una app dedicada.',
   solution:
-    'Ubyca activa contenido diferente según el stand, zona o sala donde se ' +
-    'encuentre el asistente. Cada zona tiene su propio GeoPoint con contenido ' +
-    'asociado que se activa automáticamente al llegar. Puedes mapear todo el ' +
-    'evento en Studio y ver en tiempo real qué zonas tienen más tráfico.',
+    'Puedes activar contenido diferente según en qué stand, zona o sala se encuentre ' +
+    'el asistente — sin QR ni personal en cada punto. Al llegar a cada área, el ' +
+    'contenido correspondiente se activa automáticamente en el dispositivo. Desde ' +
+    'Studio puedes ver en tiempo real qué zonas tienen más tráfico.',
   capabilities: ['geopoints', 'presence', 'analytics', 'live-visits', 'smart-proxies'],
   matchKeywords: [
     'stand', 'zona del evento', 'contenido por zona', 'experiencia interactiva',
@@ -56,10 +56,11 @@ export const eventsAnalytics: UseCase = {
     'cada zona, cuánto tiempo permanecieron, qué stands fueron más visitados ' +
     'ni cuál fue el flujo real de asistentes.',
   solution:
-    'Ubyca registra automáticamente el flujo de asistentes por cada zona del ' +
-    'evento: entradas, permanencia promedio, pico de tráfico y ranking de zonas. ' +
-    'Los mapas de intensidad muestran dónde se concentró la gente. ' +
-    'Puedes exportar todos los datos vía API o analizarlos directamente en Studio.',
+    'Después del evento puedes saber exactamente cuánta gente pasó por cada zona, ' +
+    'cuánto tiempo permanecieron, cuál fue el stand más visitado y cuál fue el pico ' +
+    'de tráfico — datos reales, no estimaciones. Los mapas de intensidad muestran ' +
+    'dónde se concentró la gente. Exportas todos los datos vía API o los analizas ' +
+    'directamente en Studio.',
   capabilities: ['geopoints', 'analytics', 'spatial-intelligence', 'live-visits'],
   matchKeywords: [
     'métricas de evento', 'comportamiento de asistentes', 'zonas más visitadas',

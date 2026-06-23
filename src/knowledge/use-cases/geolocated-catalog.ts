@@ -11,13 +11,11 @@ export const geolocatedCatalog: UseCase = {
     'mapa donde cada punto da acceso a la información del proyecto o activo ' +
     'correspondiente.',
   solution:
-    'Ubyca crea un GeoPoint por cada proyecto, obra o activo en el territorio. ' +
-    'Al acercarse a la ubicación o explorar el mapa, se activa el contenido ' +
-    'asociado: ficha del proyecto, fotos, planos, documentación, video o ' +
-    'cualquier URL. El resultado es un catálogo territorial interactivo sin ' +
-    'app nativa: cualquier dispositivo con navegador accede al contenido. ' +
-    'Puedes agregar nuevos proyectos en Studio sin modificar ninguna ' +
-    'infraestructura existente.',
+    'Puedes mostrar tus proyectos, obras o activos sobre un mapa interactivo: ' +
+    'al acercarse a cada ubicación, el contenido asociado se activa automáticamente ' +
+    '— ficha del proyecto, fotos, planos, videos o cualquier URL. Sin app nativa: ' +
+    'cualquier dispositivo con navegador accede al contenido. Agregas nuevos ' +
+    'proyectos desde Studio sin modificar la infraestructura existente.',
   capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],
   matchKeywords: [
     // Intención de catálogo/portafolio

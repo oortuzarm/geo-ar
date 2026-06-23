@@ -10,12 +10,12 @@ export const tourismRoutes: UseCase = {
     'monumento, sitio histórico o parada de circuito — sin escanear un QR ' +
     'ni abrir una app dedicada.',
   solution:
-    'Ubyca define un GeoPoint alrededor de cada monumento, sitio histórico ' +
-    'o punto de interés. Al llegar al área, el contenido asociado — texto, ' +
-    'audio, video, enlace — se activa en el dispositivo del visitante. ' +
-    'Funciona para un único monumento o para circuitos completos de múltiples ' +
-    'paradas. Puedes medir qué puntos generan más permanencia y cuáles son ' +
-    'salteados, y actualizar el contenido en Studio sin tocar la infraestructura.',
+    'Sí. Puedes crear una experiencia donde el contenido — texto, audio, video, ' +
+    'enlace — se activa automáticamente cuando el visitante llega a cada punto, ' +
+    'sin QR ni app dedicada. Funciona tanto para un único monumento como para ' +
+    'circuitos completos de múltiples paradas. Desde Studio puedes ver cuáles ' +
+    'puntos generan más permanencia, cuáles se omiten y actualizar el contenido ' +
+    'sin tocar la infraestructura.',
   capabilities: ['geopoints', 'presence', 'analytics', 'smart-proxies'],
   matchKeywords: [
     'monumento', 'patrimonio', 'patrimonio histórico', 'sitio histórico',
@@ -52,11 +52,10 @@ export const tourismVerification: UseCase = {
     'para emitir sellos digitales, certificados o habilitar beneficios ' +
     'en el siguiente punto.',
   solution:
-    'Ubyca registra cada visita verificada en el servidor, con timestamp y ' +
-    'tiempo de permanencia. Puedes usar la API para emitir un certificado ' +
-    'o sello digital solo si el usuario completó la permanencia mínima ' +
-    'requerida en el sitio. El historial de visitas queda disponible en ' +
-    'analytics para reporting.',
+    'Puedes emitir certificados o sellos digitales que solo se generan si el ' +
+    'visitante estuvo físicamente en el lugar el tiempo mínimo requerido — ' +
+    'validación objetiva, no auto-declarada. El historial de visitas queda ' +
+    'disponible en analytics para reporting.',
   capabilities: ['geopoints', 'presence', 'api', 'analytics'],
   matchKeywords: [
     'certificado de visita', 'sello turístico', 'verificar itinerario',
@@ -74,11 +73,11 @@ export const tourismCityAnalytics: UseCase = {
     'los turistas: qué zonas visitan, cuánto tiempo permanecen, cuáles ' +
     'son las rutas más frecuentes y cuáles los atractivos menos visitados.',
   solution:
-    'Ubyca despliega GeoPoints en los atractivos de la ciudad y recolecta ' +
-    'datos de comportamiento espacial. Los mapas de intensidad muestran ' +
-    'dónde se concentran los visitantes. Puedes comparar flujo por zona, ' +
-    'horario y período, e identificar qué atractivos necesitan más promoción ' +
-    'o infraestructura.',
+    'Puedes entender cómo se mueven realmente los turistas en tu ciudad: qué ' +
+    'atractivos generan más visitas y permanencia, qué rutas son las más ' +
+    'frecuentes y cuáles quedan subutilizadas. Los mapas de intensidad muestran ' +
+    'dónde se concentran los visitantes. Puedes comparar flujo por zona, horario ' +
+    'y período para identificar qué atractivos necesitan más promoción o infraestructura.',
   capabilities: ['geopoints', 'analytics', 'spatial-intelligence', 'live-visits'],
   matchKeywords: [
     'flujo turístico', 'análisis de visitantes ciudad', 'comportamiento turista',

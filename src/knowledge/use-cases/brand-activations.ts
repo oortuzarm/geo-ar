@@ -11,12 +11,12 @@ export const brandActivationCampaign: UseCase = {
     'Sin esto, el contenido digital se distribuye sin control y pierde el vínculo ' +
     'con la experiencia física.',
   solution:
-    'Ubyca define zonas sobre los puntos de la campaña. El contenido digital ' +
-    '(video, landing, cupón) se activa solo cuando el usuario está físicamente ' +
-    'en el área. Puede usarse Smart Proxy sobre una URL existente o validación ' +
-    'vía API. Ubyca registra cuántas personas activaron el contenido desde cada ' +
-    'punto, cuánto tiempo permanecieron y desde qué horarios. Eso convierte la ' +
-    'campaña en datos medibles, no en un flyer que circula sin control.',
+    'Sí. Puedes saber exactamente cuántas personas interactuaron con tu campaña, ' +
+    'desde qué ubicaciones, cuánto tiempo permanecieron y en qué horarios — con ' +
+    'datos reales, no estimaciones. El contenido (video, landing, cupón) se activa ' +
+    'solo cuando el usuario está físicamente en el punto de campaña. Puede ' +
+    'implementarse con Smart Proxy sobre una URL existente o validación vía API. ' +
+    'El resultado: no un flyer que circula sin control, sino datos reales de alcance físico.',
   capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],
   matchKeywords: [
     'campaña de marca', 'activación de marca', 'brand activation',
@@ -39,12 +39,11 @@ export const brandActivationLaunch: UseCase = {
     'para clientes que estén físicamente en el punto de venta durante la ' +
     'ventana de lanzamiento.',
   solution:
-    'Ubyca activa el acceso al material de lanzamiento solo cuando el cliente ' +
-    'está en el radio del punto de venta. Puedes definir la ventana horaria ' +
-    'del lanzamiento directamente en el GeoPoint. El link de contenido no ' +
-    'funciona fuera del área ni fuera del horario configurado, lo que mantiene ' +
-    'la exclusividad. Los datos de activación permiten medir el alcance real ' +
-    'del lanzamiento punto por punto.',
+    'Puedes garantizar que el material exclusivo de tu lanzamiento solo sea ' +
+    'accesible dentro del punto de venta, durante el horario configurado — ' +
+    'no antes, no fuera del área, no compartido fuera del local. El contenido ' +
+    'simplemente no funciona si el usuario no está físicamente donde corresponde. ' +
+    'Los datos de activación te muestran el alcance real del lanzamiento punto por punto.',
   capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],
   matchKeywords: [
     'lanzamiento de producto', 'material de lanzamiento', 'exclusivo en punto de venta',
@@ -62,11 +61,11 @@ export const brandActivationExperience: UseCase = {
     'cambia según en qué zona física se encuentre el participante: diferentes ' +
     'mensajes, videos o dinámicas por punto del recorrido.',
   solution:
-    'Ubyca define un GeoPoint por estación de la experiencia. Al llegar a cada ' +
-    'punto, el contenido correspondiente se activa automáticamente en el teléfono ' +
-    'del participante — sin QR, sin código, sin personal en el punto. Desde ' +
-    'Studio puedes ver en tiempo real cuántos participantes están en cada ' +
-    'estación y cuál tiene más permanencia.',
+    'Puedes crear una experiencia donde el contenido cambia automáticamente según ' +
+    'en qué estación se encuentre el participante — sin QR, sin código, sin nadie ' +
+    'en el punto. Al llegar a cada área, el contenido correspondiente aparece ' +
+    'directamente en el teléfono. Desde Studio puedes ver en tiempo real cuántos ' +
+    'participantes están en cada estación y cuál genera más permanencia.',
   capabilities: ['geopoints', 'presence', 'analytics', 'live-visits'],
   matchKeywords: [
     'experiencia inmersiva', 'experiencia de marca', 'experiencia interactiva',

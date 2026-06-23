@@ -10,11 +10,11 @@ export const educationAttendance: UseCase = {
     'consume tiempo de clase y es fácilmente manipulable. Las soluciones ' +
     'con lectores de tarjetas o biometría son costosas.',
   solution:
-    'Ubyca registra automáticamente la asistencia cuando el alumno llega ' +
-    'al área del campus o aula. La presencia se verifica en el servidor ' +
-    'con la ubicación GPS del dispositivo — no es auto-declarada. Puedes ' +
-    'definir ventanas horarias por materia o turno y exportar el historial ' +
-    'de asistencia vía API a tu sistema académico.',
+    'Puedes registrar la asistencia automáticamente cuando el alumno llega al ' +
+    'campus o aula — sin pasar lista y sin que el alumno pueda declarar una ' +
+    'presencia que no ocurrió. La verificación es en el servidor, no es ' +
+    'auto-declarada. Puedes definir ventanas horarias por materia o turno y ' +
+    'exportar el historial al sistema académico existente.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api'],
   matchKeywords: [
     'asistencia', 'registro de asistencia', 'control de asistencia',
@@ -32,13 +32,12 @@ export const educationCampusExperience: UseCase = {
     'según en qué sector del campus se encuentre el alumno: qué edificio ' +
     'visitó, qué facultad o cuál es el área de servicios más cercana.',
   solution:
-    'Ubyca define un GeoPoint por edificio o sector del campus. Al llegar ' +
-    'al edificio de ciencias puede mostrar el horario de laboratorios; en ' +
-    'la biblioteca, los recursos y catálogos disponibles; en administración, ' +
-    'los trámites online. Cada zona es un edificio o área exterior de al ' +
-    'menos 30-50 metros: el GPS outdoor sobre un campus abierto funciona con ' +
-    'buena precisión. La activación de contenido por sala o piso dentro de ' +
-    'un mismo edificio no es fiable con GPS.',
+    'Puedes mostrar información contextual distinta según en qué edificio o sector ' +
+    'del campus se encuentre el alumno: horario de laboratorios al llegar a ciencias, ' +
+    'recursos al llegar a biblioteca, trámites al llegar a administración. Cada zona ' +
+    'debe ser un edificio o área exterior de al menos 30-50 metros — en campus ' +
+    'abiertos el GPS funciona con buena precisión. La distinción entre salas o pisos ' +
+    'dentro de un mismo edificio no es fiable con GPS.',
   capabilities: ['geopoints', 'presence', 'smart-proxies'],
   matchKeywords: [
     'campus digital', 'experiencia universitaria', 'contenido en aula',
@@ -56,11 +55,10 @@ export const educationFieldTrips: UseCase = {
     'necesita verificar que los estudiantes visitaron los puntos del ' +
     'recorrido, sin depender de fotos o informes que pueden falsificarse.',
   solution:
-    'Ubyca registra cuándo cada estudiante llegó a cada punto del recorrido ' +
-    'y cuánto tiempo permaneció. La verificación es en el servidor, no ' +
-    'auto-declarada. El docente puede ver el historial completo en Studio ' +
-    'o consultarlo vía API. Se puede requerir una permanencia mínima antes ' +
-    'de marcar el punto como visitado.',
+    'Puedes verificar que cada estudiante llegó a los puntos del recorrido y ' +
+    'permaneció el tiempo mínimo requerido — sin fotos ni informes que pueden ' +
+    'falsificarse. La verificación es en el servidor, no auto-declarada. El ' +
+    'docente ve el historial completo en Studio o lo consulta vía API.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api'],
   matchKeywords: [
     'salida pedagógica', 'trabajo de campo', 'excursión escolar',

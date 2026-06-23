@@ -10,11 +10,11 @@ export const loyaltyPhysicalVisits: UseCase = {
     'Los check-ins en redes sociales son voluntarios y auto-declarados. ' +
     'Los cupones en papel o QR son fácilmente falsificables.',
   solution:
-    'Ubyca valida en el servidor que el cliente estaba físicamente en el ' +
-    'local cuando solicitó el beneficio. El sistema puede responder en ' +
-    'menos de 80 ms, lo que permite integrarlo al flujo de compra o al ' +
-    'momento de la caja. Cada visita queda registrada con su hora y duración ' +
-    'para auditoría posterior.',
+    'Puedes verificar en tiempo real que el cliente está físicamente en el ' +
+    'local antes de otorgarle un beneficio o recompensa — sin QR ni tarjeta. ' +
+    'La validación ocurre en el servidor en menos de 80 ms, lo que permite ' +
+    'integrarla al flujo de compra o al momento de la caja. Cada visita queda ' +
+    'registrada con hora y duración para auditoría.',
   capabilities: ['geopoints', 'presence', 'api', 'analytics'],
   matchKeywords: [
     'fidelización', 'puntos por visita', 'loyalty', 'programa de lealtad',
@@ -32,11 +32,11 @@ export const loyaltyMultiLocation: UseCase = {
     'visita cualquier sucursal, acumule visitas y entregue beneficios ' +
     'de forma centralizada.',
   solution:
-    'Ubyca permite crear un proyecto con GeoPoints para cada sucursal. ' +
-    'Desde el mismo proyecto puedes ver las visitas a todas las sucursales ' +
-    'y exportar vía API los datos de visita a tu CRM o sistema de loyalty. ' +
-    'El cliente no necesita saber en qué sucursal está: la validación ' +
-    'ocurre automáticamente por su ubicación.',
+    'Puedes premiar a los clientes que visiten varias sucursales y llevar un ' +
+    'registro unificado de visitas en toda la cadena. El cliente no necesita ' +
+    'declarar en qué sucursal está: la validación ocurre automáticamente según ' +
+    'su ubicación. Exportas los datos de visita vía API a tu CRM o sistema de ' +
+    'loyalty existente.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api', 'integrations'],
   matchKeywords: [
     'cadena de locales', 'sucursales', 'multi-local', 'franquicia',
@@ -58,11 +58,11 @@ export const loyaltyEngagement: UseCase = {
     'material de lanzamiento) solo a clientes que estén presentes en ' +
     'un evento o local, como refuerzo de la experiencia física.',
   solution:
-    'Ubyca activa el acceso al contenido solo cuando el usuario está ' +
-    'físicamente en la zona definida. El contenido puede estar en ' +
-    'una URL existente envuelta con Smart Proxy o detrás de una llamada ' +
-    'a la API que valida presencia. El contenido no puede ser compartido: ' +
-    'la validación falla fuera del área.',
+    'Puedes entregar contenido exclusivo (videos, descuentos, material de ' +
+    'lanzamiento) solo a quienes estén físicamente en el lugar — el link no ' +
+    'funciona fuera del área, no puede compartirse ni usarse desde casa. El ' +
+    'contenido puede estar en una URL existente envuelta con Smart Proxy o ' +
+    'detrás de una llamada a la API que valida presencia.',
   capabilities: ['geopoints', 'presence', 'smart-proxies', 'api'],
   matchKeywords: [
     'contenido exclusivo presencial', 'material solo en local',

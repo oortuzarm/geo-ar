@@ -10,13 +10,13 @@ export const retailDwellTime: UseCase = {
     'que los sistemas de caja no capturan porque no registran quienes entran ' +
     'sin comprar.',
   solution:
-    'Ubyca define un GeoPoint que cubre el área del local y mide cuántos ' +
-    'clientes entran, cuánto tiempo permanecen y la distribución horaria del ' +
-    'tráfico. Para locales de gran superficie (supermercados, showrooms, centros ' +
-    'comerciales con zonas de al menos 50 metros de separación), es posible ' +
-    'definir múltiples GeoPoints por área amplia. En locales pequeños o medianos ' +
-    'el GeoPoint cubre el local como una unidad: el GPS indoor no permite ' +
-    'distinguir con fiabilidad entre zonas separadas menos de 30-50 metros.',
+    'Sí. Puedes medir cuánto tiempo permanecen tus clientes en el local, en qué ' +
+    'horarios hay más tráfico y cuántas personas entran — sin hardware adicional. ' +
+    'En locales de gran superficie (supermercados, showrooms, centros comerciales), ' +
+    'puedes dividir el área en zonas de al menos 50 metros de separación para ' +
+    'analizar cada sector por separado. En locales pequeños o medianos el análisis ' +
+    'cubre el local como una unidad: el GPS en interiores no permite distinguir ' +
+    'con fiabilidad entre zonas más cercanas.',
   capabilities: ['geopoints', 'analytics', 'spatial-intelligence', 'live-visits'],
   matchKeywords: [
     'tiempo en local', 'permanencia en tienda', 'cuánto tiempo clientes',
@@ -39,10 +39,10 @@ export const retailPromotion: UseCase = {
     'están físicamente en el local, sin que la promoción se comparta y use ' +
     'desde fuera de la tienda.',
   solution:
-    'Ubyca valida que el cliente esté en el local antes de habilitar el ' +
-    'beneficio. La validación ocurre en el servidor — no es auto-declarada — ' +
-    'por lo que no puede ser compartida ni usada desde casa. Funciona sin ' +
-    'app nativa: cualquier navegador web puede hacer la llamada a la API.',
+    'Puedes mostrar una promoción o descuento exclusivo solo a quienes estén ' +
+    'físicamente en el local — no puede compartirse ni usarse desde casa porque ' +
+    'la validación ocurre en el servidor, no es auto-declarada. Funciona sin ' +
+    'app nativa: cualquier navegador web puede solicitar la validación de presencia.',
   capabilities: ['geopoints', 'presence', 'api'],
   matchKeywords: [
     'promoción en local', 'descuento presencial', 'oferta por ubicación',
@@ -59,11 +59,11 @@ export const retailSmartProxy: UseCase = {
     'clientes visitan el sitio web mientras están en el local físico, y si ' +
     'esas visitas tienen una tasa de conversión diferente.',
   solution:
-    'Con un Smart Proxy, Ubyca convierte el e-commerce en un enlace con ' +
-    'tracking de presencia física. Cuando el cliente accede desde el local, ' +
-    'el sistema registra que la sesión ocurrió físicamente en la tienda. ' +
-    'Puedes comparar la conversión de visitantes físicos vs. remotos sin ' +
-    'modificar el sitio e-commerce.',
+    'Puedes detectar cuántos clientes visitan tu e-commerce mientras están ' +
+    'físicamente en el local, y si esas visitas tienen una tasa de conversión ' +
+    'diferente. El tracking ocurre sin modificar el sitio e-commerce: un Smart ' +
+    'Proxy envuelve el enlace existente y registra las sesiones que ocurrieron ' +
+    'desde dentro del local.',
   capabilities: ['smart-proxies', 'analytics', 'presence'],
   matchKeywords: [
     'tienda online y física', 'e-commerce presencial', 'omnichannel',

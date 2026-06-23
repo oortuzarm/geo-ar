@@ -16,14 +16,12 @@ export const goalMarketing: BusinessGoal = {
     'promoción geolocalizada', 'campañas de proximidad',
   ],
   solution:
-    'Ubyca convierte la ubicación física en el disparador de una campaña. ' +
-    'Puedes activar contenido, cupones, videos o mensajes solo cuando el consumidor ' +
-    'está físicamente en un punto definido — punto de venta, evento, zona comercial. ' +
-    'GeoPoints delimita las zonas de la campaña. Smart Proxies activa el contenido ' +
-    'digital al detectar presencia. Analytics mide cuántas personas activaron ' +
-    'la campaña desde cada punto, cuánto tiempo permanecieron y desde qué horarios. ' +
-    'El resultado es marketing medible, vinculado a presencia física real, ' +
-    'no a clics o impresiones.',
+    'Sí. Puedes vincular tus campañas de marketing a la presencia física real ' +
+    'de tus clientes: el contenido, cupón o mensaje solo se activa cuando el consumidor ' +
+    'está físicamente en el punto de venta, evento o zona comercial que definas. ' +
+    'Mides cuántas personas activaron la campaña desde cada punto, cuánto tiempo ' +
+    'permanecieron y en qué horarios. El resultado es marketing medible en términos ' +
+    'de presencia real, no de clics o impresiones.',
   capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],
 }
 
@@ -41,14 +39,12 @@ export const goalAttractCustomers: BusinessGoal = {
     'atraer personas al local', 'captar personas cercanas',
   ],
   solution:
-    'Ubyca activa experiencias y contenido cuando una persona entra en el radio ' +
-    'de tu local o punto de interés. Puedes mostrar una promoción, un mensaje ' +
-    'de bienvenida o un beneficio exclusivo que motive la interacción. ' +
-    'Ubyca no envía notificaciones push automáticas: la activación ocurre cuando ' +
-    'el usuario ya está cerca e interactúa con la experiencia web o la app del negocio. ' +
+    'Cuando alguien entra al radio de tu local o punto de interés, puedes mostrarle ' +
+    'automáticamente una promoción, mensaje de bienvenida o beneficio exclusivo ' +
+    'que motive la interacción. La activación ocurre dentro de tu sitio web o app ' +
+    'cuando el usuario ya está cerca — Ubyca no envía notificaciones push automáticas. ' +
     'Los datos de tráfico — cuántas personas entraron, en qué horarios y cuánto ' +
-    'permanecieron — quedan disponibles en Analytics para entender el comportamiento ' +
-    'real y optimizar la estrategia de captación.',
+    'permanecieron — quedan disponibles para optimizar tu estrategia de captación.',
   capabilities: ['geopoints', 'presence', 'analytics', 'smart-proxies'],
 }
 
@@ -66,15 +62,12 @@ export const goalIncreaseSales: BusinessGoal = {
     'mejorar el rendimiento comercial',
   ],
   solution:
-    'Ubyca contribuye a las ventas conectando la presencia física del cliente con ' +
-    'acciones comerciales en el momento adecuado. Cuando alguien está físicamente ' +
-    'en tu punto de venta o zona de influencia, puedes activar una promoción ' +
-    'exclusiva, contenido de producto o un cupón de descuento. ' +
-    'La combinación de GeoPoints, Smart Proxies y Analytics permite medir qué ' +
-    'zonas y horarios generan más activaciones, y ajustar la estrategia con ' +
-    'datos reales de comportamiento en el local. ' +
-    'Ubyca proporciona la infraestructura para vincular presencia física con ' +
-    'incentivos de compra — los resultados dependen de la estrategia comercial de cada negocio.',
+    'Cuando un cliente está físicamente en tu punto de venta, puedes activar ' +
+    'una promoción exclusiva, contenido de producto o un cupón de descuento ' +
+    'en ese momento. Puedes medir qué zonas y horarios generan más activaciones ' +
+    'y ajustar la estrategia con datos reales de comportamiento en el local. ' +
+    'Ubyca vincula la presencia física con el incentivo de compra — los resultados ' +
+    'dependen de la estrategia comercial de cada negocio.',
   capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],
 }
 
@@ -101,16 +94,12 @@ export const goalInteractiveGame: BusinessGoal = {
     'similar a pokemon', 'juego tipo pokemon', 'como pokemon',
   ],
   solution:
-    'Ubyca proporciona la capa de validación y activación geolocalizada que ' +
-    'necesita cualquier juego o dinámica en terreno. Define GeoPoints en los ' +
-    'puntos del mapa que forman parte del juego: estaciones, desafíos, pistas o ' +
-    'coleccionables. Cuando un participante llega a cada punto, tu aplicación ' +
-    'puede desbloquear el siguiente desafío, revelar una pista, acumular puntos ' +
-    'o verificar que completó la etapa — todo validado en el servidor, sin que ' +
-    'el participante pueda simular su ubicación desde casa. ' +
-    'Funciona para gymkhanas, cazatesoros, juegos urbanos, dinámicas de grupo, ' +
-    'circuitos gamificados y cualquier experiencia donde llegar físicamente ' +
-    'a un punto específico sea la condición para avanzar.',
+    'Sí. Puedes construir juegos, gymkhanas, cazatesoros o dinámicas donde los ' +
+    'participantes deben estar físicamente en cada punto para avanzar — sin que ' +
+    'puedan simular la ubicación desde casa. Tu aplicación desbloquea el siguiente ' +
+    'desafío, revela la pista o acumula los puntos solo cuando el usuario llega al ' +
+    'área real. Funciona para juegos urbanos, circuitos gamificados, recorridos con ' +
+    'desafíos y cualquier dinámica donde la presencia física sea la condición para avanzar.',
   capabilities: ['geopoints', 'presence', 'api', 'analytics'],
 }
 

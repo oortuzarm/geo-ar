@@ -10,13 +10,12 @@ export const operationsSafety: UseCase = {
     'zonas. Los sistemas de hardware (torniquetes, lectores de tarjetas) ' +
     'son caros, difíciles de mover y requieren infraestructura fija.',
   solution:
-    'Ubyca define polígonos sobre el mapa de la instalación que representan ' +
-    'las zonas autorizadas. Cuando el personal intenta acceder a un recurso ' +
-    'o sistema desde su dispositivo móvil, la API de Ubyca responde si están ' +
-    'físicamente dentro del área autorizada. El sistema del cliente decide qué ' +
-    'acción tomar según ese resultado: habilitar o denegar el acceso. ' +
-    'Ubyca no genera alertas automáticas: la lógica de autorización vive ' +
-    'en el sistema integrador, no en Ubyca.',
+    'Puedes restringir el acceso a recursos o sistemas según si el personal ' +
+    'está físicamente dentro de las zonas autorizadas — sin torniquetes ni ' +
+    'lectores de tarjetas. Cuando el personal intenta acceder desde su dispositivo, ' +
+    'tu sistema consulta la API para verificar si están dentro del área autorizada ' +
+    'y decide si habilitar o denegar. Ubyca no genera alertas automáticas: la ' +
+    'lógica de autorización vive en tu sistema, Ubyca provee la validación de presencia.',
   capabilities: ['geopoints', 'presence', 'api'],
   matchKeywords: [
     'zona de riesgo', 'área restringida', 'planta industrial',
@@ -35,11 +34,11 @@ export const operationsMaintenanceRoutes: UseCase = {
     'No hay forma de verificar que las rondas ocurrieron sin depender de ' +
     'partes manuales.',
   solution:
-    'Ubyca define los puntos de la ronda como GeoPoints y registra cada ' +
-    'visita con timestamp y tiempo de permanencia. El supervisor puede ' +
-    'ver en Studio si la ronda se completó, qué puntos se saltaron y ' +
-    'cuánto tiempo se tardó en cada uno. Los datos se exportan vía API ' +
-    'a sistemas CMMS o ERP existentes.',
+    'Sí. Puedes confirmar automáticamente que tus técnicos llegaron al lugar ' +
+    'asignado, a qué hora y cuánto tiempo permanecieron — sin depender de ' +
+    'reportes manuales. El supervisor ve en Studio si la ronda se completó, ' +
+    'qué puntos se saltaron y cuánto tiempo tomó cada uno. Los datos se ' +
+    'exportan vía API a sistemas CMMS o ERP existentes.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api', 'integrations'],
   matchKeywords: [
     'ronda de mantenimiento', 'inspección de instalaciones',
@@ -63,13 +62,11 @@ export const operationsFleetTracking: UseCase = {
     'logística) necesita verificar que los conductores pasaron por los puntos ' +
     'asignados de la ruta, con la hora exacta de cada parada.',
   solution:
-    'Ubyca define GeoPoints para cada parada o punto de ruta. El conductor ' +
-    'realiza la validación desde su dispositivo al llegar a cada punto. ' +
-    'El historial muestra qué puntos se completaron y a qué hora; los puntos ' +
-    'no validados quedan como pendientes. Ubyca registra eventos de llegada ' +
-    'a puntos discretos: no registra la trayectoria del vehículo entre paradas ' +
-    'ni detecta desvíos de ruta. Los datos se integran al sistema de gestión ' +
-    'de flota existente vía API.',
+    'Puedes verificar que cada conductor completó sus paradas asignadas, con la ' +
+    'hora exacta de cada llegada — sin llamadas de confirmación ni reportes manuales. ' +
+    'Los puntos no completados quedan como pendientes en el historial. Ubyca registra ' +
+    'llegadas a puntos discretos: no registra la trayectoria entre paradas ni detecta ' +
+    'desvíos de ruta. Los datos se integran al sistema de gestión de flota vía API.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api'],
   matchKeywords: [
     'flota', 'vehículo', 'transporte', 'parada', 'ruta vehicular',

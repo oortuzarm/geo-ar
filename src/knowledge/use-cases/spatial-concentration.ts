@@ -10,13 +10,12 @@ export const spatialConcentration: UseCase = {
     'cómo varía la distribución a lo largo del tiempo — para tomar decisiones ' +
     'de diseño, operación, seguridad o inversión.',
   solution:
-    'Ubyca despliega GeoPoints sobre el área y recolecta eventos de presencia ' +
-    'por zona. Los mapas de intensidad GPS muestran la densidad de presencia ' +
-    'por coordenada y detectan hotspots — zonas de máxima concentración con ' +
-    'radio estimado. Puedes comparar la distribución entre zonas y horarios ' +
-    'para identificar dónde se concentra más gente, qué áreas quedan ' +
-    'subutilizadas y cómo cambian los patrones entre períodos. ' +
-    'Los datos son exportables vía API para análisis externos.',
+    'Sí. Puedes comparar el comportamiento entre ubicaciones y detectar cuáles ' +
+    'concentran más personas, en qué horarios y cómo varía el patrón a lo largo ' +
+    'del tiempo. El sistema genera mapas de intensidad GPS que muestran densidad ' +
+    'de presencia por zona y detectan los puntos de máxima afluencia. Puedes ' +
+    'identificar qué áreas quedan subutilizadas y exportar todos los datos ' +
+    'vía API para análisis externos.',
   capabilities: ['geopoints', 'analytics', 'spatial-intelligence', 'live-visits'],
   matchKeywords: [
     // Concentración (señal fuerte)

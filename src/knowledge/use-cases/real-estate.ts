@@ -10,11 +10,10 @@ export const realEstateVisits: UseCase = {
     'del corredor son incompletos y no permiten comparar el interés real ' +
     'entre propiedades.',
   solution:
-    'Ubyca registra automáticamente cuando un potencial comprador o arrendatario ' +
-    'llega a la propiedad y cuánto tiempo permanece. La presencia se verifica ' +
-    'en el servidor. Puedes comparar el tráfico real entre propiedades y ver ' +
-    'cuáles generan más visitas repetidas — datos que informan el precio y la ' +
-    'estrategia de marketing.',
+    'Puedes saber cuántos interesados visitaron cada propiedad, cuánto tiempo ' +
+    'permanecieron y cuáles generan más visitas repetidas — datos reales que ' +
+    'informan el precio y la estrategia de marketing, sin depender del corredor. ' +
+    'La presencia se verifica automáticamente en el servidor.',
   capabilities: ['geopoints', 'presence', 'analytics'],
   matchKeywords: [
     'inmobiliaria', 'propiedad', 'visita a propiedad', 'open house',
@@ -62,12 +61,11 @@ export const realEstatePortfolio: UseCase = {
     'inversores puedan explorar las obras realizadas por zona geográfica y ' +
     'acceder a la información de cada una.',
   solution:
-    'Ubyca crea un GeoPoint por cada proyecto o desarrollo entregado. Al ' +
-    'acercarse a la ubicación, el contenido del proyecto — ficha técnica, ' +
-    'renders, estado de entrega, link al dossier o video — se activa en el ' +
-    'dispositivo. El portafolio funciona como catálogo territorial interactivo: ' +
-    'se navega por mapa, no por lista. Sin app nativa, sin modificar el sitio ' +
-    'web. Se actualiza desde Studio al agregar nuevos proyectos.',
+    'Puedes mostrar tu historial de proyectos entregados como un catálogo ' +
+    'territorial interactivo: se navega por mapa, no por lista. Al acercarse a ' +
+    'cada ubicación, el contenido del proyecto — ficha técnica, renders, dossier ' +
+    'o video — se activa en el dispositivo. Sin app nativa, sin modificar el sitio ' +
+    'web existente. Se actualiza desde Studio al agregar nuevos proyectos.',
   capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],
   matchKeywords: [
     // Señales de portafolio inmobiliario específico (fuertes)
@@ -93,11 +91,11 @@ export const realEstateBuilding: UseCase = {
     'quién accede a qué áreas, con qué frecuencia y cuánto tiempo permanece, ' +
     'sin instalar hardware costoso.',
   solution:
-    'Ubyca define GeoPoints para las áreas del edificio (lobby, piso, sala ' +
-    'de reuniones, terraza). Registra quién entra, cuándo y cuánto tiempo ' +
-    'permanece. La presencia se valida vía API sin hardware adicional. ' +
-    'Los datos de uso de espacios informan decisiones sobre amenities, ' +
-    'seguridad y mantenimiento.',
+    'Puedes saber quién accede a cada área del edificio, cuándo y cuánto tiempo ' +
+    'permanece — sin hardware de acceso, lectores de tarjetas ni infraestructura ' +
+    'fija. La presencia se valida vía API directamente desde el dispositivo del ' +
+    'usuario. Los datos de uso informan decisiones sobre amenities, seguridad y ' +
+    'mantenimiento.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api'],
   matchKeywords: [
     'edificio', 'oficina comercial', 'control de acceso edificio',

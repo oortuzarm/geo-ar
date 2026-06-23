@@ -10,13 +10,12 @@ export const crmIntegration: UseCase = {
     'un vendedor visitó un cliente o punto de venta, con validación GPS objetiva, ' +
     'sin depender de partes manuales ni auto-declaración.',
   solution:
-    'Ubyca entrega resultados de validación de presencia vía API REST. El sistema ' +
-    'integrador — el propio CRM, un middleware o un proceso backend — lee esos ' +
-    'resultados y los asocia a contactos, cuentas, oportunidades o actividades ' +
-    'en Salesforce. Ubyca no ofrece un conector nativo plug-and-play para Salesforce: ' +
-    'la integración requiere desarrollo vía API. La arquitectura típica es: app ' +
-    'del vendedor → API de Ubyca (valida presencia) → tu backend → Salesforce API. ' +
-    'Cualquier sistema que pueda hacer llamadas HTTP puede consumir resultados de Ubyca.',
+    'Puedes registrar automáticamente en Salesforce o cualquier CRM cuándo un ' +
+    'vendedor visitó un cliente o punto de venta, con validación GPS objetiva. ' +
+    'No existe un conector nativo plug-and-play para Salesforce: la integración ' +
+    'se realiza vía API REST. El flujo típico es tu app de ventas → API de Ubyca ' +
+    '(valida presencia) → tu backend → Salesforce. Cualquier sistema con capacidad ' +
+    'HTTP puede consumir los resultados.',
   capabilities: ['geopoints', 'presence', 'api', 'integrations'],
   matchKeywords: [
     'Salesforce', 'CRM', 'integrar con CRM', 'conectar con Salesforce',

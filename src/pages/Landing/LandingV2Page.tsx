@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Reveal, SectionLabel, BrowserChrome } from '../../components/landing/LandingPrimitives'
 import LandingNavBar from '../../components/landing/LandingNavBar'
@@ -1140,6 +1140,164 @@ function ApiSection() {
   )
 }
 
+// ─── Solution Matcher (MVP experimental) ─────────────────────────────────────
+
+const MATCHER_EXAMPLES = [
+  'Quiero validar que mis vendedores visiten las tiendas.',
+  'Quiero desbloquear beneficios dentro de un evento.',
+  'Quiero medir permanencia en ubicaciones físicas.',
+  'Quiero crear recorridos interactivos.',
+]
+
+const SOLUTION_RULES: Array<{ keywords: string[]; body: string; tags: string[] }> = [
+  {
+    keywords: ['vendedor', 'visita', 'tienda', 'visiten', 'equipo', 'campo', 'control'],
+    body: 'Creá GeoPoints en cada tienda o punto de venta. Cuando tu vendedor llega al lugar, Ubyca verifica la presencia por GPS automáticamente. Obtenés un registro real de visitas: hora exacta, tiempo en el lugar y frecuencia por punto — sin apps adicionales, sin reportes manuales.',
+    tags: ['Presencia física', 'GeoPoints', 'Analytics'],
+  },
+  {
+    keywords: ['beneficio', 'evento', 'desbloquear', 'acceso', 'canjear', 'asistente'],
+    body: 'Configurá zonas dentro del evento que desbloquean beneficios cuando el asistente llega al área. Ubyca verifica la ubicación en tiempo real: sin QR, sin personal adicional. Cada activación queda registrada para análisis post-evento.',
+    tags: ['GeoPoints', 'Presencia física', 'Analytics'],
+  },
+  {
+    keywords: ['permanencia', 'tiempo', 'medir', 'cuánto', 'duración', 'estancia'],
+    body: 'Ubyca registra automáticamente el tiempo de permanencia en cada zona definida. Podés ver cuánto tiempo pasan las personas en cada punto, identificar patrones por horario y comparar entre ubicaciones — desde un dashboard en tiempo real, sin hardware adicional.',
+    tags: ['Presencia física', 'Analytics', 'Inteligencia espacial'],
+  },
+  {
+    keywords: ['recorrido', 'ruta', 'tour', 'guía', 'interactivo', 'gymkhana', 'parada'],
+    body: 'Creá una ruta con múltiples GeoPoints donde el contenido se desbloquea al llegar al lugar físico. Ordená paradas, asigná video, audio o texto a cada punto, y compartí todo con una sola URL — ideal para tours culturales, recorridos educativos o juegos urbanos.',
+    tags: ['GeoPoints', 'Presencia física', 'Analytics', 'API'],
+  },
+  {
+    keywords: ['campaña', 'marca', 'activación', 'marketing', 'promoción', 'retail'],
+    body: 'Creá activaciones físico-digitales donde el contenido de tu campaña se activa solo cuando el usuario está en el lugar correcto. Obtenés datos reales: cuántas personas llegaron, cuántas activaron y cuánto tiempo estuvieron — sin estimaciones.',
+    tags: ['GeoPoints', 'Presencia física', 'Analytics', 'Inteligencia espacial'],
+  },
+]
+
+const DEFAULT_SOLUTION = {
+  body: 'Ubyca te permite crear experiencias donde el contenido, los accesos y los datos se activan en función de la ubicación física del usuario. Podés combinar GeoPoints, rutas y analytics para resolver casi cualquier caso donde el espacio real importa.',
+  tags: ['GeoPoints', 'Presencia física', 'Analytics', 'API'],
+}
+
+function matchSolution(input: string) {
+  const lower = input.toLowerCase()
+  let best: { rule: typeof SOLUTION_RULES[0] | null; score: number } = { rule: null, score: 0 }
+  for (const rule of SOLUTION_RULES) {
+    const score = rule.keywords.filter(k => lower.includes(k)).length
+    if (score > best.score) best = { rule, score }
+  }
+  return best.rule ?? DEFAULT_SOLUTION
+}
+
+function SolutionMatcherSection() {
+  const [query, setQuery] = useState('')
+  const [result, setResult] = useState<{ body: string; tags: string[] } | null>(null)
+  const [placeholderIdx, setPlaceholderIdx] = useState(0)
+
+  useEffect(() => {
+    if (query) return
+    const id = setInterval(() => setPlaceholderIdx(i => (i + 1) % MATCHER_EXAMPLES.length), 3500)
+    return () => clearInterval(id)
+  }, [query])
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const trimmed = query.trim()
+    if (!trimmed) return
+    setResult(matchSolution(trimmed))
+    // Phase 2: track({ query: trimmed, matched: ... })
+  }
+
+  return (
+    <section className="py-16 sm:py-24 px-5 bg-[#050810] relative overflow-hidden">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(14,165,233,0.05) 0%, transparent 70%)',
+      }} />
+
+      <div className="max-w-2xl mx-auto relative">
+        <Reveal className="text-center mb-10">
+          <SectionLabel>Experimental</SectionLabel>
+          <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight">
+            ¿Y esto para qué me sirve?
+          </h2>
+          <p className="mt-4 text-slate-400 text-base sm:text-lg">
+            Describe tu problema y te mostramos cómo Ubyca podría ayudarte.
+          </p>
+        </Reveal>
+
+        <Reveal delay={0.1}>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <textarea
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder={MATCHER_EXAMPLES[placeholderIdx]}
+              rows={3}
+              className="w-full bg-white/[0.04] border border-white/[0.10] rounded-2xl px-5 py-4
+                         text-white placeholder:text-slate-600 text-sm leading-relaxed
+                         focus:outline-none focus:border-brand-500/50 focus:bg-white/[0.06]
+                         resize-none transition-all duration-150"
+            />
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={!query.trim()}
+                className="px-7 py-3 rounded-xl bg-brand-600 hover:bg-brand-500
+                           disabled:opacity-40 disabled:cursor-not-allowed
+                           active:scale-[0.98] text-white font-semibold text-sm
+                           transition-all duration-150 shadow-[0_4px_20px_rgba(2,132,199,0.3)]"
+              >
+                Ver solución
+              </button>
+            </div>
+          </form>
+        </Reveal>
+
+        {result && (
+          <motion.div
+            key={result.body}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-8 p-7 rounded-2xl border border-brand-500/[0.18] bg-brand-500/[0.05]"
+          >
+            <p className="text-[11px] font-bold text-brand-400 uppercase tracking-widest mb-4">
+              Cómo Ubyca podría ayudarte
+            </p>
+            <p className="text-sm text-slate-300 leading-relaxed">{result.body}</p>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              {result.tags.map(tag => (
+                <span key={tag}
+                  className="text-[11px] font-semibold text-brand-400
+                             border border-brand-500/25 bg-brand-500/[0.08]
+                             px-3 py-1 rounded-full">
+                  {tag}
+                </span>
+              ))}
+            </div>
+
+            <div className="mt-6 pt-5 border-t border-white/[0.06]">
+              <a href="/studio"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-white
+                           hover:text-brand-300 transition-colors duration-150">
+                Explorar Studio
+                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" clipRule="evenodd"
+                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+                </svg>
+              </a>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </section>
+  )
+}
+
 // ─── Use cases ────────────────────────────────────────────────────────────────
 
 const USE_CASES = [
@@ -1279,6 +1437,7 @@ export default function LandingV2Page() {
       <StudioSection />
       <ApiSection />
       <UseCasesSection />
+      <SolutionMatcherSection />
       <FinalCTASection />
       <SiteFooter />
     </div>

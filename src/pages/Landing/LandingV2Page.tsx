@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Reveal, SectionLabel, BrowserChrome } from '../../components/landing/LandingPrimitives'
 import LandingNavBar from '../../components/landing/LandingNavBar'
 import SiteFooter from '../../components/landing/SiteFooter'
+import { knowledge } from '../../knowledge'
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
@@ -1149,183 +1150,23 @@ const MATCHER_EXAMPLES = [
   'Quiero crear una ruta turística con contenido que se activa en cada parada.',
 ]
 
-const SOLUTION_RULES: Array<{ keywords: string[]; body: string; tags: string[] }> = [
+const CAPABILITY_TAG_LABELS: Record<string, string> = {
+  studio: 'Studio',
+  api: 'API',
+  geopoints: 'GeoPoints',
+  presence: 'Presencia física',
+  analytics: 'Analytics',
+  'live-visits': 'Visitas en vivo',
+  'spatial-intelligence': 'Inteligencia espacial',
+  'smart-proxies': 'Smart Proxies',
+  integrations: 'Integraciones',
+}
 
-  // ── Fuerza de ventas: visitas a puntos de venta
-  {
-    keywords: ['vendedor', 'promotor', 'punto de venta', 'visitar tienda', 'fuerza de ventas', 'visita comercial', 'cobertura comercial'],
-    body: 'Ubyca puede registrar automáticamente las visitas de tu equipo a cada punto de venta. Cuando un vendedor o promotor llega al lugar, el sistema verifica su presencia por GPS sin que tenga que hacer nada adicional. Obtienes un historial real con hora exacta, tiempo en el lugar y frecuencia por punto — sin reportes manuales ni posibilidad de datos alterados.',
-    tags: ['Presencia física', 'GeoPoints', 'Analytics'],
-  },
-
-  // ── Fuerza de ventas: supervisión de equipo en terreno
-  {
-    keywords: ['supervisor', 'supervisar', 'supervisión', 'ronda', 'cobertura de zona', 'equipo en terreno', 'personal en campo', 'monitorear equipo'],
-    body: 'Con Ubyca puedes definir las zonas que cada integrante del equipo debe cubrir y ver en tiempo real desde Studio quién está presente y en qué zona. El sistema registra el historial de cobertura por persona, zona y horario — sin que el equipo tenga que hacer check-ins manuales.',
-    tags: ['Presencia física', 'GeoPoints', 'Analytics', 'Inteligencia espacial'],
-  },
-
-  // ── Fuerza de ventas: control de rutas de reparto
-  {
-    keywords: ['reparto', 'distribución', 'conductor', 'chofer', 'entrega', 'ruta de entrega', 'logística de campo'],
-    body: 'Ubyca puede verificar que los conductores o repartidores pasen efectivamente por los puntos de entrega asignados. Cada visita queda registrada con timestamp y tiempo de permanencia. Puedes ver la cobertura de rutas en tiempo real desde Studio y exportar los datos vía API a tu sistema logístico existente.',
-    tags: ['Presencia física', 'GeoPoints', 'Analytics', 'API'],
-  },
-
-  // ── Eventos: acreditación y control de acceso
-  {
-    keywords: ['acreditación', 'acreditar', 'credencial', 'control de acceso', 'acceso al evento', 'pase de entrada', 'entrada sin qr', 'validar entrada'],
-    body: 'Ubyca puede reemplazar el QR o la credencial física en el acceso a un evento. Al llegar al área, el teléfono del asistente valida la presencia por GPS automáticamente. Puedes definir zonas diferenciadas — acceso general, VIP, backstage — y obtener el historial completo de ingresos por zona y horario.',
-    tags: ['GeoPoints', 'Presencia física', 'API'],
-  },
-
-  // ── Eventos: desbloqueo de contenido o beneficios
-  {
-    keywords: ['contenido exclusivo', 'beneficio en evento', 'desbloquear beneficio', 'zona exclusiva', 'material exclusivo', 'programa del evento', 'agenda del evento'],
-    body: 'Puedes configurar GeoPoints dentro del evento que desbloquean contenido, beneficios o material exclusivo cuando el asistente llega al área. Sin escaneo, sin personal adicional: el sistema detecta la proximidad y activa el contenido directamente en el teléfono. Cada activación queda registrada con usuario, hora y zona.',
-    tags: ['GeoPoints', 'Presencia física', 'Analytics'],
-  },
-
-  // ── Eventos: gymkhana o juego urbano
-  {
-    keywords: ['gymkhana', 'juego urbano', 'caza del tesoro', 'desafío urbano', 'pistas geolocalizadas', 'reto por lugares', 'competencia por zonas', 'etapas del juego'],
-    body: 'Ubyca es el árbitro perfecto para dinámicas donde los participantes deben llegar físicamente a distintos puntos. Configuras las etapas como GeoPoints y defines el orden o las condiciones de desbloqueo de cada una. El sistema valida la llegada, registra el tiempo y puede mostrar automáticamente la siguiente pista al confirmar la presencia.',
-    tags: ['GeoPoints', 'Presencia física', 'Analytics'],
-  },
-
-  // ── Eventos: feria, exposición o congreso
-  {
-    keywords: ['feria', 'exposición', 'stand', 'pabellón', 'congreso', 'exhibición', 'visitante de stand', 'feria comercial'],
-    body: 'Ubyca puede medir el tráfico real de visitantes en cada stand o pabellón, sin sensores ni personal adicional. Configuras un GeoPoint por zona y obtienes datos exactos de cuántas personas estuvieron, cuánto tiempo permanecieron y en qué horarios hubo mayor actividad — información que los expositores necesitan y que hoy no tienen forma de medir con precisión.',
-    tags: ['Presencia física', 'Analytics', 'Inteligencia espacial', 'GeoPoints'],
-  },
-
-  // ── Retail: promoción o descuento en tienda
-  {
-    keywords: ['promoción en tienda', 'descuento al llegar', 'cupón', 'beneficio en local', 'canjear en tienda', 'oferta en local', 'cliente en local'],
-    body: 'Ubyca puede activar una promoción o descuento automáticamente cuando el cliente llega al local. Sin necesidad de mostrar un cupón ni que el vendedor intervenga: el sistema detecta la presencia y habilita el beneficio directamente en el teléfono. Obtienes datos reales de redención por hora, día y punto de venta.',
-    tags: ['GeoPoints', 'Presencia física', 'Analytics'],
-  },
-
-  // ── Retail / marca: campaña físico-digital
-  {
-    keywords: ['campaña de marca', 'activación de marca', 'lanzamiento de producto', 'marketing geolocalizado', 'experiencia de marca', 'brand activation', 'campaña física'],
-    body: 'Ubyca permite crear activaciones donde el contenido de tu campaña se activa solo cuando el usuario está en el lugar correcto. Puedes vincular video, audio o landing pages a zonas físicas específicas, y medir cuántas personas interactuaron, desde qué puntos y durante cuánto tiempo.',
-    tags: ['GeoPoints', 'Presencia física', 'Analytics', 'Inteligencia espacial'],
-  },
-
-  // ── Retail / operaciones: medir tráfico o afluencia
-  {
-    keywords: ['tráfico de personas', 'afluencia', 'cuántas personas', 'flujo de visitas', 'cuánta gente', 'contar visitas', 'medir visitas', 'medir concurrencia'],
-    body: 'Ubyca puede medir la afluencia real de personas en cualquier espacio físico, sin hardware adicional. Configuras un GeoPoint sobre la zona y el sistema registra entradas, permanencia y salidas en tiempo real. Desde Studio puedes analizar el tráfico por hora, identificar picos de concurrencia y comparar el rendimiento entre distintas ubicaciones.',
-    tags: ['Presencia física', 'Analytics', 'Inteligencia espacial', 'GeoPoints'],
-  },
-
-  // ── Fidelización: programas de lealtad
-  {
-    keywords: ['fidelización', 'programa de lealtad', 'loyalty', 'programa de puntos', 'recompensa por visita', 'membresía', 'cliente frecuente', 'acumular puntos'],
-    body: 'Ubyca puede validar la visita física como condición dentro de un programa de fidelización. Cuando un cliente llega a tu establecimiento, el sistema confirma la presencia y puede disparar la acumulación de puntos o el beneficio en tu plataforma vía API. Sin aplicaciones separadas, sin procesos manuales, con datos reales de frecuencia y tiempo en el lugar.',
-    tags: ['GeoPoints', 'Presencia física', 'Analytics', 'API'],
-  },
-
-  // ── Turismo: ruta turística interactiva
-  {
-    keywords: ['ruta turística', 'turismo', 'puntos de interés', 'guía de ciudad', 'tour de ciudad', 'recorrido cultural', 'patrimonio histórico', 'lugar turístico'],
-    body: 'Ubyca puede convertir cualquier ruta en una experiencia donde el contenido se activa al llegar al lugar. Defines los puntos de interés como GeoPoints y asocias a cada uno el contenido que quieres mostrar — audio, video, texto o enlace. El visitante solo necesita una URL; no hay aplicación nativa que instalar ni equipo de soporte en el lugar.',
-    tags: ['GeoPoints', 'Presencia física', 'Analytics'],
-  },
-
-  // ── Turismo / cultura: guía de museo
-  {
-    keywords: ['museo', 'guía de museo', 'sala del museo', 'obra de arte', 'colección', 'espacio cultural', 'centro histórico', 'galería de arte'],
-    body: 'Ubyca puede actuar como guía interactiva dentro de un museo o espacio cultural. Cuando el visitante se acerca a una obra o sala, el contenido asociado se desbloquea automáticamente en su teléfono, sin QR ni código. Puedes medir qué salas concentran más permanencia y qué contenidos generan más interacción.',
-    tags: ['GeoPoints', 'Presencia física', 'Analytics'],
-  },
-
-  // ── Educación: control de asistencia presencial
-  {
-    keywords: ['control de asistencia', 'pasar lista', 'registro de asistencia', 'alumno presente', 'estudiante en aula', 'capacitación presencial', 'verificar asistencia'],
-    body: 'Ubyca puede verificar la asistencia a instancias presenciales usando GPS como mecanismo automático. Al llegar al campus, aula o sala de capacitación, el sistema confirma la presencia sin necesidad de pasar lista ni usar hardware adicional. Los registros están disponibles por fecha, sesión y participante desde el dashboard de analytics.',
-    tags: ['Presencia física', 'GeoPoints', 'Analytics'],
-  },
-
-  // ── Educación: aprendizaje contextual en terreno
-  {
-    keywords: ['aprendizaje en terreno', 'experiencia educativa en lugar', 'salida escolar', 'visita educativa', 'aula exterior', 'recorrido educativo', 'campo educativo'],
-    body: 'Ubyca permite diseñar experiencias de aprendizaje donde el contenido se activa cuando el estudiante llega al lugar correcto. Puedes vincular explicaciones, actividades o recursos multimedia a zonas específicas de un campus, parque o sitio histórico — el material correcto, en el lugar exacto, sin aplicaciones adicionales que instalar.',
-    tags: ['GeoPoints', 'Presencia física'],
-  },
-
-  // ── Municipalidades / gobierno: monitoreo de zonas urbanas
-  {
-    keywords: ['municipio', 'municipalidad', 'comuna', 'barrio', 'zona urbana', 'territorio', 'sector geográfico', 'área urbana', 'dentro de una comuna'],
-    body: 'Ubyca puede monitorear la presencia de personas o equipos dentro de zonas geográficas como comunas, barrios o sectores urbanos. Puedes trazar polígonos que coincidan exactamente con los límites del territorio y medir ingresos, permanencia, recorridos y distribución espacial. Los resultados se visualizan en Studio o se consumen vía API para integrarlos en tu propia aplicación.',
-    tags: ['GeoPoints', 'Presencia física', 'Analytics', 'Inteligencia espacial', 'API'],
-  },
-
-  // ── Municipalidades / gobierno: inspectores y trabajadores en campo
-  {
-    keywords: ['inspector', 'fiscalización', 'operario', 'cuadrilla municipal', 'trabajador municipal', 'funcionario en terreno', 'trabajo de campo público'],
-    body: 'Ubyca puede verificar que inspectores, técnicos u operarios estén presentes en los puntos de trabajo asignados. El sistema registra automáticamente llegada, tiempo en el lugar y salida en cada zona — sin que el trabajador haga nada adicional. Puedes ver la cobertura en tiempo real y exportar los datos vía API a tus sistemas de gestión o RRHH.',
-    tags: ['Presencia física', 'GeoPoints', 'Analytics', 'API'],
-  },
-
-  // ── Real Estate: sala de ventas o proyecto inmobiliario
-  {
-    keywords: ['sala de ventas', 'proyecto inmobiliario', 'departamento en venta', 'visita a proyecto', 'comprador potencial', 'inmobiliaria', 'showroom inmobiliario'],
-    body: 'Ubyca puede activarse cuando un comprador potencial llega a la sala de ventas o al terreno del proyecto. Al detectar la presencia, puedes desbloquear contenido interactivo — renders, planos, fichas técnicas, formularios de contacto — directamente en el teléfono del visitante, sin atención presencial obligatoria. Obtienes datos de visitas, horarios y tiempo de permanencia para evaluar el interés real.',
-    tags: ['GeoPoints', 'Presencia física', 'Analytics'],
-  },
-
-  // ── Operaciones: permanencia en zonas industriales o bodegas
-  {
-    keywords: ['bodega', 'depósito', 'planta industrial', 'almacén', 'galpón', 'nave industrial', 'zona operativa', 'área de carga'],
-    body: 'Ubyca puede monitorear la permanencia de personas en zonas operativas como bodegas, plantas o áreas de carga. Configuras los GeoPoints sobre el plano del espacio y mides cuánto tiempo pasa cada persona en cada área, en qué horarios hay mayor actividad y cómo se distribuye el flujo dentro de las instalaciones.',
-    tags: ['Presencia física', 'Analytics', 'Inteligencia espacial', 'GeoPoints'],
-  },
-
-  // ── Operaciones / salud: visitas domiciliarias o técnicos en campo
-  {
-    keywords: ['visita domiciliaria', 'técnico en domicilio', 'servicio a domicilio', 'técnico en campo', 'instalador', 'asistente social', 'enfermero a domicilio'],
-    body: 'Ubyca puede registrar automáticamente que un técnico o asistente llegó al domicilio o punto de atención asignado. El sistema verifica la presencia GPS en la dirección indicada y registra la hora de llegada y el tiempo de atención — sin reportes manuales ni posibilidad de datos alterados. Los registros son exportables vía API a tu sistema de gestión de turnos.',
-    tags: ['Presencia física', 'GeoPoints', 'Analytics', 'API'],
-  },
-
-  // ── Integración / API con sistemas externos
-  {
-    keywords: ['integrar con mi sistema', 'api de presencia', 'webhook', 'rest api', 'mi aplicación propia', 'sistema propio', 'plataforma existente', 'endpoint de presencia'],
-    body: 'Ubyca expone una REST API con OpenAPI 3.1 para integrar validación de presencia GPS en cualquier sistema existente. Envías las coordenadas de un usuario y recibes en menos de 80ms si está dentro de una zona, la distancia exacta y el tiempo de permanencia acumulado. También es posible configurar webhooks para que Ubyca notifique a tu sistema en tiempo real al producirse una entrada o salida.',
-    tags: ['API', 'GeoPoints', 'Analytics'],
-  },
-
-  // ── Deportes: circuitos o rutas deportivas
-  {
-    keywords: ['running', 'ciclismo', 'trail', 'senderismo', 'circuito deportivo', 'ruta deportiva', 'maratón', 'checkpoint deportivo'],
-    body: 'Ubyca puede actuar como árbitro de paso en circuitos deportivos o rutas de entrenamiento. Defines los checkpoints como GeoPoints y el sistema registra la hora exacta de paso de cada participante por cada punto. El historial es exportable vía API para integrarlo con tu plataforma deportiva o de resultados.',
-    tags: ['GeoPoints', 'Presencia física', 'Analytics', 'API'],
-  },
-
-  // ── Espacios: ocupación de edificios, coworking o campus
-  {
-    keywords: ['ocupación de espacios', 'coworking', 'campus universitario', 'edificio corporativo', 'sala de reuniones', 'uso de instalaciones', 'hot desking'],
-    body: 'Ubyca puede medir la ocupación real de espacios dentro de un campus, edificio o instalación. Configuras GeoPoints por zona — pisos, salas, áreas comunes — y obtienes datos de cuántas personas hay en cada espacio, en qué horarios y cuánto tiempo permanecen. Esta información permite tomar decisiones operativas basadas en el uso real, no en estimaciones.',
-    tags: ['Presencia física', 'Analytics', 'Inteligencia espacial', 'GeoPoints'],
-  },
-
-  // ── Experiencias: contenido contextual al llegar a un lugar
-  {
-    keywords: ['contenido al llegar', 'información al acercarse', 'experiencia inmersiva', 'contenido por ubicación', 'desbloqueo por proximidad', 'contenido contextual', 'experiencia geolocalizada'],
-    body: 'Ubyca puede entregar el contenido correcto en el momento exacto en que el usuario llega al lugar físico — sin QR, sin código, sin intervención manual. El desbloqueo ocurre por proximidad GPS. Puedes asociar video, audio, texto o formularios a cualquier punto físico y medir la tasa de activación por zona y por horario.',
-    tags: ['GeoPoints', 'Presencia física', 'Analytics'],
-  },
-
-  // ── Permanencia / dwell time (genérico)
-  {
-    keywords: ['tiempo de permanencia', 'cuánto tiempo están', 'dwell time', 'medir permanencia', 'duración de visita', 'cuánto permanecen', 'tiempo en el lugar'],
-    body: 'Ubyca registra automáticamente el tiempo de permanencia en cada zona configurada. Puedes ver cuánto tiempo pasan las personas en cada punto, identificar diferencias por horario o día de la semana, y comparar el comportamiento entre distintas ubicaciones — todo desde un dashboard en tiempo real, sin hardware adicional.',
-    tags: ['Presencia física', 'Analytics', 'Inteligencia espacial'],
-  },
-]
+const SOLUTION_RULES = knowledge.useCases.map(uc => ({
+  keywords: uc.matchKeywords,
+  body: uc.solution,
+  tags: uc.capabilities.map(id => CAPABILITY_TAG_LABELS[id] ?? id),
+}))
 
 const DEFAULT_SOLUTION = {
   body: 'Ubyca puede resolver casi cualquier caso donde la ubicación física del usuario importa. Define zonas sobre el mapa, configura las reglas de activación y obtén datos reales de presencia, permanencia y comportamiento espacial — sin hardware adicional, sin aplicaciones nativas que instalar.',

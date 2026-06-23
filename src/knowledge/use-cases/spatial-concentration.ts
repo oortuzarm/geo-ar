@@ -42,14 +42,34 @@ export const spatialConcentration: UseCase = {
     'comparar el comportamiento', 'entre varias ubicaciones',
     'comportamiento de visitantes', 'varias ubicaciones',
     'comparar sucursales', 'comparar zonas',
-    // Valor y rendimiento por sucursal (Q1, Q4)
+    // Valor y rendimiento por sucursal (auditoría anterior)
     'aporta más valor', 'aporta mas valor',
     'cuál aporta más', 'cual aporta mas',
     'genera mejores resultados', 'mejores resultados por sucursal',
     'comparar resultados entre sucursales', 'rendimiento de sucursales',
-    // Concentración expresada con vocabulario coloquial (Q7)
+    // Concentración expresada con vocabulario coloquial
     'donde se junta', 'dónde se junta',
     'se junta más gente', 'se junta mas gente',
     'dónde se acumula gente', 'donde se acumula gente',
+    // Performance comercial de ubicaciones — lenguaje de negocio (Tarea 1, 2)
+    'cuál de mis locales', 'cual de mis locales',
+    'cuál de mis sucursales', 'cual de mis sucursales',
+    'cuáles de mis sucursales', 'cuales de mis sucursales',
+    'cuál de mis puntos', 'cual de mis puntos',
+    'recibe más visitas', 'recibe mas visitas',
+    'más visitas', 'mas visitas',
+    'genera más interacción', 'genera mas interaccion',
+    'más interacción', 'mas interaccion',
+    'funciona mejor', 'funcionan mejor',
+    'mejor desempeño', 'mejor desempeno',
+    'rendimiento comercial', 'mejor rendimiento',
+    'aporta valor', 'genera valor', 'genera resultados',
+    'sucursal más exitosa', 'sucursal mas exitosa',
+    'cadena de restaurantes',
+    // Lenguaje coloquial de afluencia (Tarea 5)
+    'concurrido', 'qué tan concurrido', 'que tan concurrido',
+    'se llena', 'se junta gente',
+    'tráfico de personas', 'trafico de personas',
+    'movimiento de personas', 'donde hay mas movimiento',
   ],
 }

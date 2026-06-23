@@ -26,13 +26,20 @@ export const brandActivationCampaign: UseCase = {
     'campaña en terreno', 'si la campaña funcionó', 'resultados de campaña',
     'evaluar campaña', 'medir campaña', 'rendimiento de campaña',
     'si funcionó la campaña', 'medir activación', 'evaluar activación',
-    // Demostrar que una activación presencial generó interacción (Q2)
+    // Demostrar que una activación presencial generó interacción
     'activación presencial', 'activacion presencial',
     'generó interacción', 'genero interaccion',
     'si generó interacción', 'si genero interaccion',
     'demostrar que funcionó', 'demostrar que funciono',
     'demostrar interacción', 'demostrar interaccion',
     'campaña generó interacción', 'campana genero interaccion',
+    // Efectividad y resultados de campañas — lenguaje comercial (Tarea 3)
+    'campaña generó resultados', 'campana genero resultados',
+    'demostrar resultados', 'demostrar impacto',
+    'medir impacto', 'medir efectividad',
+    'campaña funcionó', 'campana funciono',
+    'campaña exitosa', 'campana exitosa',
+    'activación exitosa', 'activacion exitosa',
   ],
 }
 

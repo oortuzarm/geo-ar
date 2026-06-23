@@ -32,10 +32,18 @@ export const presenceRegistration: UseCase = {
     'registro sin hardware', 'acceso sin hardware',
     // Personas llegando
     'personas que ingresan', 'cuando llega la persona', 'validar que llegó',
-    // Verificar que alguien realmente estuvo en un lugar (Q6)
+    // Verificar que alguien realmente estuvo en un lugar
     'estuvo en un lugar', 'alguien estuvo en',
     'comprobar que estuvo', 'realmente estuvo',
     'verificar que estuvo', 'validar que estuvo',
     'confirmar que estuvo', 'comprobar presencia',
+    // Presencia física, control de acceso y registro de visitas (Tarea 4)
+    'llegó físicamente', 'llego fisicamente',
+    'presencia física', 'presencia fisica',
+    'registrar visitas', 'registro de visitas',
+    'registrar visitas en terreno',
+    'control de acceso', 'acceso por ubicación', 'acceso por ubicacion',
+    'controlar acceso', 'acceso usando ubicación', 'acceso usando ubicacion',
+    'llegó al lugar', 'llego al lugar',
   ],
 }

@@ -1,0 +1,69 @@
+import type { UseCase } from '../types'
+
+export const tourismRoutes: UseCase = {
+  id: 'tourism-routes',
+  vertical: 'tourism',
+  title: 'Rutas turísticas con contenido que se activa por parada',
+  problem:
+    'Una ciudad, museo o operador turístico quiere que los visitantes ' +
+    'descubran información, audio o video de cada punto de interés ' +
+    'automáticamente al llegar, sin tener que escanear un QR ni abrir ' +
+    'una app dedicada.',
+  solution:
+    'Ubyca define un GeoPoint para cada parada de la ruta con el contenido ' +
+    'asociado. Cuando el visitante llega al área del punto, el contenido ' +
+    'se activa automáticamente. Puedes crear circuitos completos en Studio, ' +
+    'medir qué puntos generan más permanencia y cuáles son salteados, ' +
+    'y actualizar el contenido sin tocar la infraestructura.',
+  capabilities: ['geopoints', 'presence', 'analytics', 'smart-proxies'],
+  matchKeywords: [
+    'ruta turística', 'turismo', 'patrimonio', 'museo', 'circuito',
+    'guía de viaje', 'punto de interés', 'parada turística',
+    'tour autoguiado', 'audio guía', 'contenido por ubicación',
+  ],
+}
+
+export const tourismVerification: UseCase = {
+  id: 'tourism-verification',
+  vertical: 'tourism',
+  title: 'Verificación de visita a atractivos turísticos',
+  problem:
+    'Un operador de turismo o una oficina de turismo quiere certificar ' +
+    'que los visitantes realmente estuvieron en los lugares del itinerario, ' +
+    'para emitir sellos digitales, certificados o habilitar beneficios ' +
+    'en el siguiente punto.',
+  solution:
+    'Ubyca registra cada visita verificada en el servidor, con timestamp y ' +
+    'tiempo de permanencia. Puedes usar la API para emitir un certificado ' +
+    'o sello digital solo si el usuario completó la permanencia mínima ' +
+    'requerida en el sitio. El historial de visitas queda disponible en ' +
+    'analytics para reporting.',
+  capabilities: ['geopoints', 'presence', 'api', 'analytics'],
+  matchKeywords: [
+    'certificado de visita', 'sello turístico', 'verificar itinerario',
+    'comprobar presencia en atractivo', 'pasaporte turístico',
+    'recorrido completado', 'check-in turístico verificado',
+  ],
+}
+
+export const tourismCityAnalytics: UseCase = {
+  id: 'tourism-city-analytics',
+  vertical: 'tourism',
+  title: 'Análisis de flujo turístico en una ciudad',
+  problem:
+    'Una municipalidad o ente de turismo quiere entender cómo se mueven ' +
+    'los turistas: qué zonas visitan, cuánto tiempo permanecen, cuáles ' +
+    'son las rutas más frecuentes y cuáles los atractivos menos visitados.',
+  solution:
+    'Ubyca despliega GeoPoints en los atractivos de la ciudad y recolecta ' +
+    'datos de comportamiento espacial. Los mapas de intensidad muestran ' +
+    'dónde se concentran los visitantes. Puedes comparar flujo por zona, ' +
+    'horario y período, e identificar qué atractivos necesitan más promoción ' +
+    'o infraestructura.',
+  capabilities: ['geopoints', 'analytics', 'spatial-intelligence', 'live-visits'],
+  matchKeywords: [
+    'flujo turístico', 'análisis de visitantes ciudad', 'comportamiento turista',
+    'zonas más visitadas ciudad', 'destino turístico analytics',
+    'planificación turística', 'municipio y turismo',
+  ],
+}

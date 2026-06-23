@@ -14,6 +14,12 @@ export interface Capability {
   relatedCapabilities?: string[]
 }
 
+export interface SubIntention {
+  id: string
+  patterns: string[]
+  solution: string
+}
+
 export interface UseCase {
   id: string
   vertical: string
@@ -22,6 +28,7 @@ export interface UseCase {
   solution: string
   capabilities: string[]
   matchKeywords: string[]
+  subIntentions?: SubIntention[]
   relatedUseCases?: string[]
 }
 

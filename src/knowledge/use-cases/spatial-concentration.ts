@@ -72,4 +72,48 @@ export const spatialConcentration: UseCase = {
     'tráfico de personas', 'trafico de personas',
     'movimiento de personas', 'donde hay mas movimiento',
   ],
+  subIntentions: [
+    {
+      id: 'comparar-ubicaciones',
+      patterns: [
+        'cuál de mis locales', 'cual de mis locales',
+        'cuál de mis sucursales', 'cual de mis sucursales',
+        'cuáles de mis sucursales', 'cuales de mis sucursales',
+        'cuál de mis puntos', 'cual de mis puntos',
+        'funciona mejor', 'funcionan mejor',
+        'recibe más visitas', 'recibe mas visitas',
+        'genera más interacción', 'genera mas interaccion',
+        'aporta más valor', 'aporta mas valor',
+        'genera mejores resultados', 'rendimiento de sucursales',
+        'cadena de restaurantes', 'mejor desempeño', 'mejor desempeno',
+        'rendimiento comercial', 'mejor rendimiento',
+        'sucursal más exitosa', 'sucursal mas exitosa',
+      ],
+      solution:
+        'Sí. Puedes comparar sucursales, locales o puntos entre sí para identificar cuáles ' +
+        'reciben más visitas, en qué horarios concentran más personas y cuáles presentan mejor ' +
+        'permanencia. El sistema genera métricas de tráfico por ubicación — cantidad de visitas, ' +
+        'duración promedio y distribución horaria — exportables vía API para análisis comparativo ' +
+        'o dashboards propios.',
+    },
+    {
+      id: 'concurrencia-afluencia',
+      patterns: [
+        'concurrido', 'qué tan concurrido', 'que tan concurrido',
+        'se llena', 'se junta gente',
+        'se junta más gente', 'se junta mas gente',
+        'tráfico de personas', 'trafico de personas',
+        'movimiento de personas', 'donde hay mas movimiento',
+        'dónde hay más gente', 'donde hay mas gente',
+        'dónde se concentra', 'donde se concentra',
+        'donde se junta', 'dónde se junta',
+        'mayor afluencia', 'mapa de calor',
+      ],
+      solution:
+        'Sí. Puedes medir cuántas personas circulan por una zona, en qué horarios se producen ' +
+        'los picos de afluencia y cómo varía el patrón a lo largo del tiempo. El sistema genera ' +
+        'mapas de intensidad GPS que muestran qué áreas concentran más tráfico y en qué momentos ' +
+        '— sin hardware, sin sensores y sin encuestas.',
+    },
+  ],
 }

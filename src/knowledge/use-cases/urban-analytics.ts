@@ -40,6 +40,24 @@ export const urbanMobilityStudy: UseCase = {
     'abrir nuevo local', 'abrir una tienda',
     'elegir nueva ubicación', 'elegir nueva ubicacion',
   ],
+  subIntentions: [
+    {
+      id: 'apertura-nueva-ubicacion',
+      patterns: [
+        'nueva sucursal', 'abrir una nueva sucursal', 'abrir una sucursal',
+        'evaluar abrir', 'evaluar nueva sucursal',
+        'abrir nuevo local', 'abrir una tienda',
+        'elegir nueva ubicación', 'elegir nueva ubicacion',
+        'abrir un negocio', 'antes de abrir',
+      ],
+      solution:
+        'Sí. Puedes analizar el comportamiento real de personas en distintas zonas antes de ' +
+        'decidir dónde abrir. Mides cuántas personas circulan por cada área candidata, en qué ' +
+        'horarios y cuánto tiempo permanecen — comparando zonas entre sí con datos ' +
+        'observacionales concretos, no proyecciones. El resultado: una decisión de localización ' +
+        'basada en tráfico real, no en intuición.',
+    },
+  ],
 }
 
 export const fairMovementAnalysis: UseCase = {

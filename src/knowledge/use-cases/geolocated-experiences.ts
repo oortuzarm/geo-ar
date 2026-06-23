@@ -49,4 +49,40 @@ export const geolocationARExperience: UseCase = {
     'cosas aparezcan por ubicación', 'cosas aparezcan por ubicacion',
     'tengo una app y quiero', 'app y quiero que',
   ],
+  subIntentions: [
+    {
+      id: 'app-trigger-ubicacion',
+      patterns: [
+        'solo cuando alguien llegue', 'aparezcan solo cuando',
+        'ciertas cosas aparezcan', 'llegue a un lugar específico',
+        'llegue a un lugar especifico', 'alguien llegue a un lugar',
+        'tengo una app y quiero', 'app y quiero que',
+        'solo cuando el usuario esté', 'funciones por ubicación',
+        'funciones por ubicacion', 'habilitar funciones por ubicación',
+        'funciones disponibles en un lugar',
+      ],
+      solution:
+        'Sí. Puedes habilitar funciones de tu aplicación según la ubicación del usuario. ' +
+        'Tu app consulta la API de Ubyca antes de mostrar el contenido, y el servidor valida ' +
+        'la presencia real — no el GPS autogestionado del dispositivo. Funciona para cualquier ' +
+        'función que deba estar disponible solo en un lugar específico: contenido desbloqueado, ' +
+        'acceso a zonas, formularios o experiencias interactivas.',
+    },
+    {
+      id: 'experiencia-geolocalizada',
+      patterns: [
+        'realidad aumentada', 'mapa interactivo', 'contenido en mapa',
+        'experiencia geolocalizada', 'experiencia por puntos',
+        'activar experiencia', 'gymkhana', 'yincana',
+        'caza del tesoro', 'juego de pistas',
+        'WebXR', 'capa AR', 'experiencia que funcione en ubicaciones',
+      ],
+      solution:
+        'Sí. Puedes construir experiencias — realidad aumentada, mapas interactivos, ' +
+        'dinámicas por puntos — que funcionan únicamente en las ubicaciones que definas. ' +
+        'El contenido no aparece fuera del área, no puede compartirse ni accederse desde ' +
+        'otro lugar. Funciona sin app nativa instalada: cualquier navegador puede validar ' +
+        'la presencia a través de la API.',
+    },
+  ],
 }

@@ -1,5 +1,5 @@
 import { knowledge } from './index'
-import type { UseCase, FAQ, BusinessGoal } from './types'
+import type { UseCase, FAQ, BusinessGoal, SubIntention } from './types'
 
 export interface MatchResult {
   body: string
@@ -37,6 +37,16 @@ function scoreKeywords(patterns: string[], lower: string): number {
   return patterns
     .filter(k => lower.includes(normalize(k)))
     .reduce((sum, k) => sum + (normalize(k).includes(' ') ? 2 : 1), 0)
+}
+
+function detectSubIntention(subIntentions: SubIntention[], lower: string): SubIntention | null {
+  let best: SubIntention | null = null
+  let bestScore = 0
+  for (const sub of subIntentions) {
+    const score = scoreKeywords(sub.patterns, lower)
+    if (score > bestScore) { bestScore = score; best = sub }
+  }
+  return best
 }
 
 export function matchSolution(query: string): MatchResult {
@@ -107,8 +117,12 @@ export function matchSolution(query: string): MatchResult {
 
   if (!bestUc) return DEFAULT_SOLUTION
 
+  const subIntent = bestUc.subIntentions?.length
+    ? detectSubIntention(bestUc.subIntentions, lower)
+    : null
+
   return {
-    body: bestUc.solution,
+    body: subIntent?.solution ?? bestUc.solution,
     tags: bestUc.capabilities.map(id => CAPABILITY_TAG_LABELS[id] ?? id),
     matchedId: bestUc.id,
   }
@@ -130,6 +144,8 @@ export interface AuditResult {
   top3: AuditCandidate[]
   winner: AuditCandidate | null
   isFallback: boolean
+  subIntentionId?: string
+  subIntentionSolution?: string
 }
 
 function scoreWithMatches(
@@ -169,5 +185,19 @@ export function auditMatch(query: string): AuditResult {
   const top3 = candidates.filter(c => c.score > 0).slice(0, 3)
   const winner = top3.length > 0 ? top3[0] : null
 
-  return { query, normalized, top3, winner, isFallback: winner === null }
+  let subIntentionId: string | undefined
+  let subIntentionSolution: string | undefined
+
+  if (winner?.type === 'UseCase') {
+    const uc = knowledge.useCases.find(u => u.id === winner.id)
+    if (uc?.subIntentions?.length) {
+      const sub = detectSubIntention(uc.subIntentions, normalized)
+      if (sub) {
+        subIntentionId = sub.id
+        subIntentionSolution = sub.solution
+      }
+    }
+  }
+
+  return { query, normalized, top3, winner, isFallback: winner === null, subIntentionId, subIntentionSolution }
 }

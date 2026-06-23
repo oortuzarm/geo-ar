@@ -46,4 +46,51 @@ export const presenceRegistration: UseCase = {
     'controlar acceso', 'acceso usando ubicación', 'acceso usando ubicacion',
     'llegó al lugar', 'llego al lugar',
   ],
+  subIntentions: [
+    {
+      id: 'validar-llegada',
+      patterns: [
+        'llegó físicamente', 'llego fisicamente',
+        'llegó al lugar', 'llego al lugar',
+        'estuvo en un lugar', 'alguien estuvo en',
+        'comprobar que estuvo', 'realmente estuvo',
+        'verificar que estuvo', 'validar que estuvo',
+        'confirmar que estuvo', 'validar llegada',
+        'confirmar llegada', 'validar asistencia',
+      ],
+      solution:
+        'Sí. Puedes verificar si una persona llegó físicamente a una ubicación determinada ' +
+        '— con la hora exacta de llegada y el tiempo que permaneció. La validación ocurre en ' +
+        'el servidor con GPS; no es auto-declarada ni puede falsificarse. Los datos son ' +
+        'exportables vía API para auditorías o reportes de asistencia.',
+    },
+    {
+      id: 'registrar-visitas',
+      patterns: [
+        'registrar visitas', 'registrar visitas en terreno',
+        'registro de visitas', 'registro de ingreso',
+        'registrar ingreso', 'registro de llegada',
+        'quién ingresó', 'hora de ingreso',
+      ],
+      solution:
+        'Sí. Puedes registrar visitas en terreno automáticamente — con fecha, hora exacta y ' +
+        'duración de permanencia — sin partes manuales ni declaraciones del equipo. Cada ' +
+        'visita queda registrada cuando la persona llega al punto asignado. Los datos son ' +
+        'exportables para control de gestión o auditorías.',
+    },
+    {
+      id: 'controlar-acceso',
+      patterns: [
+        'controlar acceso', 'control de acceso',
+        'acceso usando ubicación', 'acceso usando ubicacion',
+        'acceso por ubicación', 'acceso por ubicacion',
+        'comprobar presencia', 'presencia física', 'presencia fisica',
+      ],
+      solution:
+        'Sí. Puedes usar la ubicación como condición para habilitar o restringir acceso a ' +
+        'contenido, recursos o zonas. Tu sistema consulta la API de Ubyca para verificar si ' +
+        'la persona está físicamente dentro del área autorizada antes de conceder el acceso ' +
+        '— sin hardware adicional, sin QR, sin tarjetas de proximidad.',
+    },
+  ],
 }

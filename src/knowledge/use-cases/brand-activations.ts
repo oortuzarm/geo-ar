@@ -41,6 +41,43 @@ export const brandActivationCampaign: UseCase = {
     'campaña exitosa', 'campana exitosa',
     'activación exitosa', 'activacion exitosa',
   ],
+  subIntentions: [
+    {
+      id: 'medir-resultados-campana',
+      patterns: [
+        'medir impacto', 'medir efectividad', 'medir campaña', 'medir campana',
+        'medir activación', 'medir activacion',
+        'evaluar campaña', 'evaluar campana',
+        'evaluar activación', 'evaluar activacion',
+        'si la campaña funcionó', 'si la campana funciono',
+        'campaña funcionó', 'campana funciono',
+        'rendimiento de campaña', 'rendimiento de campana',
+        'activación de marca', 'activacion de marca',
+      ],
+      solution:
+        'Sí. Puedes medir exactamente cuántas personas interactuaron con la campaña, desde ' +
+        'qué ubicaciones físicas, cuánto tiempo permanecieron y en qué horarios — con datos ' +
+        'reales de presencia, no estimaciones de alcance ni impresiones. Los datos son ' +
+        'exportables y permiten calcular el costo por interacción real.',
+    },
+    {
+      id: 'demostrar-resultados-campana',
+      patterns: [
+        'demostrar resultados', 'demostrar impacto',
+        'demostrar que funcionó', 'demostrar que funciono',
+        'demostrar interacción', 'demostrar interaccion',
+        'campaña generó resultados', 'campana genero resultados',
+        'campaña generó interacción', 'campana genero interaccion',
+        'generó interacción', 'genero interaccion',
+        'activación presencial', 'activacion presencial',
+      ],
+      solution:
+        'Sí. Puedes demostrar con datos auditables cuántas personas participaron en la ' +
+        'activación: desde qué puntos físicos, en qué horarios y cuánto tiempo estuvieron ' +
+        'presentes. No son estimaciones — son registros de presencia real, exportables vía ' +
+        'API y presentables a clientes o stakeholders como evidencia concreta.',
+    },
+  ],
 }
 
 export const brandActivationLaunch: UseCase = {

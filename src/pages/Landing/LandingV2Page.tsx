@@ -1235,7 +1235,6 @@ function SolutionMatcherSection() {
 
       <div className="max-w-2xl mx-auto relative">
         <Reveal className="text-center mb-10">
-          <SectionLabel>Experimental</SectionLabel>
           <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight">
             ¿Y esto para qué me sirve?
           </h2>

@@ -54,13 +54,14 @@ export const goalAttractCustomers: BusinessGoal = {
     'llevo personas al local', 'llevo más personas', 'llevo mas personas',
   ],
   solution:
-    'La gente ya está pasando cerca de tu local. El reto es convertir ese tráfico ' +
-    'en visitas reales. Puedes activar una promoción, mensaje o beneficio exclusivo ' +
-    'en tu sitio web o app cuando alguien entra al radio del local — visible en ese ' +
-    'momento, no después. Mides cuántas personas entraron, en qué horarios hay más ' +
-    'afluencia y cuánto tiempo permanecieron, para optimizar cuándo y cómo impactar. ' +
-    'La activación ocurre cuando el usuario ya está cerca e interactúa con la ' +
-    'experiencia — no es notificación push.',
+    'Si el objetivo es atraer más personas a una ubicación física, el primer paso ' +
+    'es saber qué acciones realmente generan visitas y cuáles no. Sin esa ' +
+    'información, las campañas y promociones se diseñan a ciegas. ' +
+    'Con datos reales de presencia podés medir qué mensajes o incentivos ' +
+    'efectivamente llevaron a alguien al local, en qué horarios hay más afluencia ' +
+    'natural y qué días necesitan mayor impulso. El resultado: decisiones de ' +
+    'activación basadas en comportamiento real, no en suposiciones sobre ' +
+    'cuándo y cómo impactar a tu audiencia.',
   capabilities: ['geopoints', 'presence', 'analytics', 'smart-proxies'],
 }
 
@@ -90,13 +91,13 @@ export const goalIncreaseSales: BusinessGoal = {
     'genero más ventas', 'genero mas ventas',
   ],
   solution:
-    'Vender más en tu local físico pasa por dos cosas: saber qué clientes tienes ' +
-    'de verdad y aprovechar el momento en que están presentes. Puedes activar ' +
-    'promociones exclusivas justo cuando el cliente llega al punto de venta, medir ' +
-    'cuántas personas entran y en qué horarios hay más tráfico, y diseñar incentivos ' +
-    'que conviertan visitas en compras. Con datos reales de comportamiento en tu ' +
-    'local — quién entra, cuánto permanece, en qué horarios — ajustas tu estrategia ' +
-    'con evidencia, no con intuición.',
+    'Aumentar ventas en puntos físicos requiere entender qué ocurre realmente dentro ' +
+    'del local: quién entra, en qué horarios hay más tráfico, cuánto tiempo ' +
+    'permanecen los visitantes y qué acciones los convierten en compradores. ' +
+    'Sin esos datos, las decisiones de promoción, disposición y horarios dependen ' +
+    'de intuición. Con información real de comportamiento en tienda, podés ' +
+    'identificar los momentos de mayor oportunidad, diseñar incentivos precisos ' +
+    'y ajustar la estrategia comercial con evidencia observable, no con estimaciones.',
   capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],
 }
 
@@ -151,13 +152,13 @@ export const goalImproveLoyalty: BusinessGoal = {
     'hago que vuelvan', 'hago que regresen',
   ],
   solution:
-    'La fidelización real parte de saber qué clientes vuelven, con qué frecuencia ' +
-    'y a qué sucursales. Puedes reconocer automáticamente cada visita de un cliente ' +
-    '— sin que tenga que declarar dónde está ni escanear nada — y premiarlo según ' +
-    'su comportamiento real: cuántas veces volvió, qué sucursales distintas visitó ' +
-    'o cuánto tiempo permaneció. Eso te permite diseñar beneficios que incentiven ' +
-    'exactamente lo que quieres lograr — mayor frecuencia, mayor amplitud de visitas ' +
-    '— con datos de comportamiento real, no estimaciones.',
+    'Un programa de fidelización efectivo premia el comportamiento real: cuántas ' +
+    'veces volvió un cliente, qué sucursales visitó, con qué frecuencia. No cuántos ' +
+    'correos abrió ni cuántos puntos acumuló en un formulario. Cuando los beneficios ' +
+    'se basan en visitas presenciales verificadas, el programa incentiva exactamente ' +
+    'lo que importa al negocio — mayor frecuencia de visita, mayor amplitud de ' +
+    'cobertura entre sucursales — y el cliente los recibe sin tener que escanear ' +
+    'nada ni declarar que estuvo allí.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api', 'integrations'],
 }
 
@@ -220,13 +221,14 @@ export const goalImproveOperations: BusinessGoal = {
     'controlo rutas', 'controlo mis rutas', 'audito personal',
   ],
   solution:
-    'Saber si tu equipo realmente estuvo donde debía es difícil sin depender de ' +
-    'reportes manuales que pueden falsificarse. Puedes confirmar automáticamente ' +
-    'que técnicos, vendedores, contratistas o cuadrillas llegaron a los puntos ' +
-    'asignados — con hora exacta y tiempo de permanencia — sin partes de papel ni ' +
-    'declaraciones del propio equipo. El supervisor ve la cobertura real y puede ' +
-    'auditar cualquier período histórico. Los datos son exportables para integración ' +
-    'con sistemas de gestión existentes.',
+    'En operaciones con equipos distribuidos en terreno, el punto ciego habitual ' +
+    'es no saber si las visitas realmente ocurrieron. Los reportes manuales ' +
+    'dependen de la honestidad del equipo y no pueden verificarse a posteriori. ' +
+    'Con registros automáticos de presencia, cada visita queda documentada con ' +
+    'hora de llegada y tiempo de permanencia, sin que el supervisor deba depender ' +
+    'de lo que le informan. Es posible auditar cualquier período histórico, ' +
+    'identificar brechas en la cobertura de rutas y tomar decisiones correctivas ' +
+    'con evidencia objetiva, no con percepciones.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api'],
 }
 
@@ -254,12 +256,14 @@ export const goalChooseLocation: BusinessGoal = {
     'zona más rentable', 'zona mas rentable',
   ],
   solution:
-    'Elegir dónde abrir o expandirse suele basarse en intuición o en datos de ' +
-    'mercado indirectos. Puedes medir cuántas personas circulan realmente por las ' +
-    'zonas candidatas, en qué horarios se concentra el tráfico y cuánto tiempo ' +
-    'permanecen — y comparar varias ubicaciones entre sí con datos observacionales ' +
-    'concretos. Eso convierte una decisión de inversión en algo respaldado por ' +
-    'evidencia real de comportamiento, no en una apuesta.',
+    'Elegir entre ubicaciones candidatas para abrir o expandirse es una de las ' +
+    'decisiones de mayor impacto y menor certeza en un negocio físico. Los estudios ' +
+    'de mercado dan una aproximación, pero no dicen cuántas personas circulan ' +
+    'realmente por cada zona en los horarios que importan. ' +
+    'Con datos reales de comportamiento en las ubicaciones candidatas — tráfico ' +
+    'por hora, tiempo de permanencia, distribución semanal — la decisión pasa de ' +
+    'ser una apuesta a ser un análisis. Es posible comparar zonas en igualdad de ' +
+    'condiciones y respaldar la elección con evidencia observable antes de invertir.',
   capabilities: ['geopoints', 'analytics', 'spatial-intelligence', 'live-visits'],
 }
 
@@ -303,14 +307,14 @@ export const goalCustomerExperience: BusinessGoal = {
     'hago más atractiva la visita', 'hago mas atractiva la visita',
   ],
   solution:
-    'Puedes transformar la llegada de un cliente a tu local en un momento ' +
-    'memorable: cuando alguien entra al radio del local, puedes activar ' +
-    'automáticamente un mensaje de bienvenida, contenido exclusivo de esa ' +
-    'ubicación, una promoción del día o información contextual relevante — ' +
-    'sin que el cliente tenga que buscar nada ni declarar dónde está. ' +
-    'El contenido puede ser diferente por local, por zona o por horario. ' +
-    'La activación ocurre directamente en tu sitio web o app, sin instalar ' +
-    'nada en el espacio físico.',
+    'Cuando alguien entra a un local, tiene expectativas. Lo que diferencia una ' +
+    'visita ordinaria de una experiencia memorable es que el espacio responda a ' +
+    'su presencia de forma relevante y oportuna. ' +
+    'Podés ofrecer una bienvenida personalizada, una promoción del día, información ' +
+    'exclusiva de esa ubicación o contenido contextual — activado automáticamente ' +
+    'en el momento en que el cliente llega, sin que tenga que buscar nada ni ' +
+    'declarar dónde está. El contenido puede variar por local, por zona o por ' +
+    'horario, y se entrega a través de tu sitio web o app existente.',
   capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],
 }
 
@@ -351,16 +355,14 @@ export const goalDecisionMaking: BusinessGoal = {
     'elegir una ubicación', 'elegir una ubicacion',
   ],
   solution:
-    'Puedes reemplazar opiniones, intuiciones o percepciones por datos reales de ' +
-    'comportamiento físico. Ubyca te ayuda a entender qué ubicaciones funcionan ' +
-    'mejor, dónde existe mayor oportunidad, qué campañas generan resultados y dónde ' +
-    'conviene concentrar recursos. El objetivo no es producir más métricas: es ' +
-    'ayudarte a tomar decisiones con evidencia. ' +
-    'Los datos provienen de presencia física verificada: cuántas personas estuvieron ' +
-    'en cada punto, cuánto tiempo permanecieron, en qué horarios y cómo se ' +
-    'distribuyeron entre ubicaciones. Puedes comparar el desempeño de sucursales, ' +
-    'validar una zona antes de expandirte, medir si una campaña generó visitas ' +
-    'reales y priorizar inversiones donde los datos indican mayor retorno.',
+    'Las decisiones más costosas en un negocio con presencia física — dónde ' +
+    'expandirse, qué sucursales priorizar, qué campañas escalar, dónde concentrar ' +
+    'recursos — suelen tomarse con información incompleta o basada en percepciones. ' +
+    'El antídoto es disponer de datos reales de comportamiento en cada ubicación: ' +
+    'cuántas personas estuvieron, cuánto tiempo, en qué horarios y cómo evolucionó ' +
+    'eso a lo largo del tiempo. Con esa base, comparar el desempeño de locales ' +
+    'deja de ser una discusión y se convierte en un dato. Validar una zona antes ' +
+    'de invertir deja de ser una apuesta y pasa a ser un análisis fundamentado.',
   capabilities: ['analytics', 'geopoints', 'presence', 'spatial-intelligence'],
 }
 
@@ -400,15 +402,14 @@ export const goalDigitalTransformation: BusinessGoal = {
     'llevar lo físico a lo digital', 'llevar lo fisico a lo digital',
   ],
   solution:
-    'El mundo físico y el digital ya no tienen que ser canales separados. Puedes ' +
-    'conectar tus espacios físicos — sucursales, locales, puntos de venta — con ' +
-    'experiencias digitales que responden en tiempo real a lo que ocurre en ese ' +
-    'espacio. Ubyca actúa como la capa de datos que vincula la presencia física ' +
-    'con tus sistemas digitales: detecta quién está en cada zona, genera eventos ' +
-    'que tus plataformas pueden procesar y activa contenido, reglas o notificaciones ' +
-    'basadas en ubicación verificada. Sin hardware adicional, sin instalaciones ' +
-    'físicas. Tu sitio web, app o backend recibe los datos de presencia y los ' +
-    'convierte en acciones digitales.',
+    'Tus sucursales, locales y puntos de venta generan actividad todos los días, ' +
+    'pero esa actividad suele quedar fuera de tus sistemas digitales: no hay datos, ' +
+    'no hay trazabilidad, no hay forma de actuar sobre ella en tiempo real. ' +
+    'Integrar el mundo físico con tus plataformas digitales significa que cuando ' +
+    'alguien llega a un punto específico, tus sistemas pueden saberlo y responder: ' +
+    'mostrar contenido relevante, registrar la visita, habilitar un beneficio o ' +
+    'disparar un flujo automático. Sin instalar hardware adicional ni modificar ' +
+    'la infraestructura física de ningún local.',
   capabilities: ['geopoints', 'presence', 'smart-proxies', 'api', 'analytics'],
 }
 
@@ -449,16 +450,16 @@ export const goalMeasurePhysical: BusinessGoal = {
     'cuántas personas visitan', 'cuantas personas visitan',
   ],
   solution:
-    'El comportamiento de las personas en el mundo físico genera muy pocos datos ' +
-    'comparado con lo que ocurre online. Ubyca cambia eso: registra cuántas ' +
-    'personas estuvieron en cada ubicación, cuánto tiempo permanecieron, en qué ' +
-    'horarios hay más actividad y cómo se distribuyeron entre zonas o sucursales. ' +
-    'Es analítica de comportamiento físico — el equivalente de lo que una herramienta ' +
-    'de analítica web hace en el mundo digital, aplicado al mundo real. Puedes ' +
-    'comparar el desempeño real de tus locales, identificar patrones de visita ' +
-    'y tomar decisiones con datos observacionales, no con estimaciones. ' +
-    'Ambas visiones pueden coexistir: lo digital te dice qué hicieron en tu sitio, ' +
-    'Ubyca te dice qué hicieron en tu espacio.',
+    'Lo que ocurre físicamente en tus locales — cuántas personas entran, cuánto ' +
+    'tiempo permanecen, en qué horarios hay más actividad, cómo se distribuyen ' +
+    'entre zonas — es información crítica de negocio que la mayoría de las ' +
+    'organizaciones sencillamente no tiene. ' +
+    'Disponer de esos datos cambia la forma en que se toman decisiones: podés ' +
+    'comparar el rendimiento real de sucursales, detectar patrones de comportamiento, ' +
+    'validar si una campaña generó visitas físicas reales y asignar recursos donde ' +
+    'los números lo justifican. Es analítica de comportamiento físico — el ' +
+    'equivalente de lo que una herramienta digital hace en el mundo online, ' +
+    'aplicado al mundo real.',
   capabilities: ['geopoints', 'presence', 'analytics', 'spatial-intelligence', 'live-visits'],
 }
 

@@ -256,6 +256,10 @@ export const goalChooseLocation: BusinessGoal = {
     'próxima tienda', 'proxima tienda',
     'zona con potencial', 'zona rentable',
     'zona más rentable', 'zona mas rentable',
+    // Siguiente apertura — vocabulario natural de expansión
+    'siguiente sucursal', 'nueva sucursal',
+    'abrir la siguiente', 'abrir otra sucursal',
+    'dónde abrir mi próxima', 'donde abrir mi proxima',
   ],
   solution:
     'Elegir entre ubicaciones candidatas para abrir o expandirse es una de las ' +
@@ -335,20 +339,52 @@ export const goalDecisionMaking: BusinessGoal = {
     'dónde invertir', 'donde invertir',
     'asignar recursos', 'asignación de recursos', 'asignacion de recursos',
     'priorizar inversiones', 'justificar inversiones',
-    // Qué local / sucursal rinde más
+    // Inversión — conjugaciones y vocabulario ejecutivo natural
+    'debería invertir', 'deberia invertir',
+    'dónde invertir primero', 'donde invertir primero',
+    'dónde asignar presupuesto', 'donde asignar presupuesto',
+    'dónde destinar recursos', 'donde destinar recursos',
+    'dónde concentrar recursos', 'donde concentrar recursos',
+    // Qué local / sucursal rinde más o merece recursos
     'qué local funciona mejor', 'que local funciona mejor',
     'qué sucursal funciona mejor', 'que sucursal funciona mejor',
     'cuál funciona mejor', 'cual funciona mejor',
     'decidir qué sucursal', 'decidir que sucursal',
+    'merece más recursos', 'merece mas recursos',
+    'merece más inversión', 'merece mas inversion',
+    'merece más atención', 'merece mas atencion',
+    'qué ubicación merece', 'que ubicacion merece',
+    'qué sucursal merece', 'que sucursal merece',
+    'qué local merece', 'que local merece',
+    // Priorización — conjugaciones primera persona
+    'priorizar inversiones', 'priorizar ubicaciones', 'priorizar mis ubicaciones',
+    'priorizo mis ubicaciones', 'priorizo ubicaciones',
+    'cómo priorizo', 'como priorizo',
     // Estrategia y validación de hipótesis
     'validar una estrategia', 'validar una hipótesis', 'validar una hipotesis',
     // Expansión y crecimiento
     'dónde expandirse', 'donde expandirse',
     'dónde crecer', 'donde crecer',
     'decidir dónde abrir', 'decidir donde abrir',
+    'expandirme', 'cómo expandirme', 'como expandirme',
+    'justificar una expansión', 'justificar una expansion',
+    'justifico una expansión', 'justifico una expansion',
+    'defender una expansión', 'defender una expansion',
+    'defender una inversión', 'defender una inversion',
+    'oportunidades de crecimiento',
     // Identificar oportunidades
     'identificar oportunidades',
     'dónde están las oportunidades', 'donde estan las oportunidades',
+    // Mi mejor ubicación
+    'mi mejor ubicación', 'mi mejor ubicacion',
+    'cuál es mi mejor', 'cual es mi mejor',
+    // Directorio / evidencia ejecutiva
+    'frente al directorio', 'ante el directorio',
+    'defender una decisión', 'defender una decision',
+    'defender ante el directorio', 'justificar ante el directorio',
+    'presentar evidencia', 'evidencia para inversión', 'evidencia para inversion',
+    'presentar al directorio',
+    'tomar decisiones con datos',
     // Comparar y evaluar
     'comparar el desempeño', 'comparar el desempeno',
     'comparar el rendimiento', 'comparar el desempeño de',

@@ -2474,7 +2474,7 @@ var goalMarketing = {
     "promoci\xF3n geolocalizada",
     "campa\xF1as de proximidad"
   ],
-  solution: "Marketing sin datos de presencia real es publicidad a ciegas. Puedes vincular tus campa\xF1as directamente a qui\xE9n estuvo f\xEDsicamente en el punto de venta, evento o zona que definas: el contenido, cup\xF3n o mensaje se activa solo cuando el consumidor est\xE1 presente. Mides cu\xE1ntas personas interactuaron con la campa\xF1a desde cada punto, cu\xE1nto tiempo permanecieron y en qu\xE9 horarios. El resultado: marketing medible en t\xE9rminos de presencia real, no de clics o impresiones.",
+  solution: "Puedes lanzar campa\xF1as que se activan solo cuando el consumidor est\xE1 f\xEDsicamente en el punto de venta, la zona o el evento que defines \u2014 sin que tenga que hacer nada para recibirlas. Cada activaci\xF3n queda registrada con ubicaci\xF3n, horario y tiempo de permanencia, lo que te permite demostrar el impacto real de cada acci\xF3n y concentrar el presupuesto en lo que realmente genera desplazamiento f\xEDsico, no solo clics. El resultado: campa\xF1as que se justifican con presencia real, no con estimaciones de alcance.",
   capabilities: ["geopoints", "presence", "smart-proxies", "analytics"]
 };
 var goalAttractCustomers = {
@@ -2561,7 +2561,7 @@ var goalAttractCustomers = {
     "mas personas al negocio",
     "llenar mesas"
   ],
-  solution: "Si el objetivo es atraer m\xE1s personas a una ubicaci\xF3n f\xEDsica, el primer paso es saber qu\xE9 acciones realmente generan visitas y cu\xE1les no. Sin esa informaci\xF3n, las campa\xF1as y promociones se dise\xF1an a ciegas. Con datos reales de presencia puedes medir qu\xE9 mensajes o incentivos efectivamente llevaron a alguien al local, en qu\xE9 horarios hay m\xE1s afluencia natural y qu\xE9 d\xEDas necesitan mayor impulso. El resultado: decisiones de activaci\xF3n basadas en comportamiento real, no en suposiciones sobre cu\xE1ndo y c\xF3mo impactar a tu audiencia.",
+  solution: "Puedes activar mensajes, ofertas o contenidos que aparecen autom\xE1ticamente cuando un potencial cliente est\xE1 cerca de tu local \u2014 sin depender de campa\xF1as digitales que no se traducen en visitas f\xEDsicas. Sabes exactamente qu\xE9 acciones generaron desplazamiento real: cu\xE1ntas personas llegaron, en qu\xE9 horarios hay mayor afluencia espont\xE1nea y qu\xE9 d\xEDas necesitan m\xE1s impulso. Con esa informaci\xF3n concentras tu inversi\xF3n en las activaciones que realmente llevan clientes al local y eliminas las que solo generan impresiones. El resultado: m\xE1s tr\xE1fico f\xEDsico con decisiones basadas en comportamiento observado.",
   capabilities: ["geopoints", "presence", "analytics", "smart-proxies"]
 };
 var goalIncreaseSales = {
@@ -2618,7 +2618,7 @@ var goalIncreaseSales = {
     "que compren m\xE1s",
     "que compren mas"
   ],
-  solution: "Aumentar ventas en puntos f\xEDsicos requiere entender qu\xE9 ocurre realmente dentro del local: cu\xE1ntas personas entran, en qu\xE9 horarios hay m\xE1s tr\xE1fico, cu\xE1nto tiempo permanecen los visitantes y qu\xE9 acciones los convierten en compradores. Sin esos datos, las decisiones de promoci\xF3n, disposici\xF3n y horarios dependen de intuici\xF3n. Con informaci\xF3n real de comportamiento en tienda, puedes identificar los momentos de mayor oportunidad, dise\xF1ar incentivos precisos y ajustar la estrategia comercial con evidencia observable, no con estimaciones.",
+  solution: "Puedes activar ofertas, descuentos o contenido exclusivo en el momento exacto en que el cliente llega a tu tienda \u2014 sin cupones impresos ni declaraciones de presencia. Eso convierte el tr\xE1fico que ya tienes en m\xE1s ventas: el est\xEDmulo correcto, entregado autom\xE1ticamente en el punto de venta cuando el cliente est\xE1 f\xEDsicamente presente. Tambi\xE9n puedes identificar los horarios de mayor flujo y los momentos donde la conversi\xF3n necesita impulso, para actuar con evidencia observada, no con intuici\xF3n. El resultado: mayor conversi\xF3n de visitas en compras.",
   capabilities: ["geopoints", "presence", "smart-proxies", "analytics"]
 };
 var goalInteractiveGame = {
@@ -2707,7 +2707,7 @@ var goalImproveLoyalty = {
     "hago que vuelvan",
     "hago que regresen"
   ],
-  solution: "Un programa de fidelizaci\xF3n efectivo premia el comportamiento real: cu\xE1ntas visitas se registran en cada punto, con qu\xE9 frecuencia se producen y en qu\xE9 horarios. No cu\xE1ntos correos abri\xF3 un contacto ni cu\xE1ntos puntos acumul\xF3 en un formulario. Cuando los beneficios se basan en visitas presenciales verificadas, el programa incentiva exactamente lo que importa al negocio \u2014 mayor frecuencia de visita, mayor cobertura entre sucursales \u2014 y el usuario los recibe sin tener que escanear nada ni declarar que estuvo all\xED. Para asociar visitas a personas identificadas, el sistema de loyalty del cliente debe gestionar la identidad de sus usuarios y vincularla via API.",
+  solution: "Puedes premiar visitas presenciales reales \u2014 no correos abiertos ni formularios completados \u2014 directamente a trav\xE9s de tu app o sitio web, sin que el cliente tenga que escanear nada ni declarar que estuvo. El programa incentiva exactamente lo que importa al negocio: mayor frecuencia de visita, mayor cobertura entre sucursales, menor tasa de abandono. Los beneficios se activan de forma autom\xE1tica por presencia verificada, lo que hace el programa m\xE1s confiable para el cliente y m\xE1s simple de administrar. Para asociar visitas a perfiles individuales y activar recompensas personalizadas, tu sistema de loyalty gestiona la identidad y se conecta via API.",
   capabilities: ["geopoints", "presence", "analytics", "api", "integrations"]
 };
 var goalMeasureMarketingROI = {
@@ -2759,7 +2759,7 @@ var goalMeasureMarketingROI = {
     "demuestro impacto",
     "demuestro el impacto"
   ],
-  solution: "Para justificar una campa\xF1a presencial o demostrar que una activaci\xF3n funcion\xF3, necesitas datos de presencia real \u2014 no alcance ni impresiones. Puedes saber exactamente cu\xE1ntas personas estuvieron f\xEDsicamente en cada punto de campa\xF1a, en qu\xE9 horarios y cu\xE1nto tiempo permanecieron. Esos registros son exportables y presentables como evidencia objetiva: costo por interacci\xF3n real, no costo por clic. El contenido se activa solo cuando alguien est\xE1 en el lugar \u2014 lo que garantiza que cada registro corresponde a presencia verificada.",
+  solution: "Puedes demostrar con evidencia objetiva que una campa\xF1a presencial funcion\xF3: cu\xE1ntas personas estuvieron f\xEDsicamente en cada punto de activaci\xF3n, en qu\xE9 horarios y cu\xE1nto tiempo permanecieron \u2014 sin depender de impresiones ni de estimaciones. Cada registro corresponde a presencia verificada en el servidor, no a una declaraci\xF3n del usuario, lo que hace los datos presentables ante clientes, directivos y patrocinadores. Puedes calcular el costo por interacci\xF3n real, comparar el rendimiento de distintas activaciones y decidir con evidencia qu\xE9 escalar y qu\xE9 detener. El resultado: ROI demostrable con comportamiento real, no con m\xE9tricas de alcance.",
   capabilities: ["geopoints", "presence", "smart-proxies", "analytics"]
 };
 var goalImproveOperations = {
@@ -2808,7 +2808,7 @@ var goalImproveOperations = {
     "controlo mis rutas",
     "audito personal"
   ],
-  solution: "En operaciones con equipos distribuidos en terreno, el punto ciego habitual es no saber si las visitas realmente ocurrieron. Los reportes manuales dependen de la honestidad del equipo y no pueden verificarse a posteriori. Con registros autom\xE1ticos de presencia, cada visita queda documentada con hora de llegada y tiempo de permanencia, sin que el supervisor deba depender de lo que le informan. Es posible auditar cualquier per\xEDodo hist\xF3rico, identificar brechas en la cobertura de rutas y tomar decisiones correctivas con evidencia objetiva, no con percepciones.",
+  solution: "Puedes verificar autom\xE1ticamente que cada t\xE9cnico, agente o inspector lleg\xF3 al punto asignado y permaneci\xF3 el tiempo m\xEDnimo requerido \u2014 sin depender de reportes que pueden falsificarse ni de trackeo continuo que los equipos perciben como invasivo. Cada visita queda documentada con hora de llegada y tiempo de permanencia; el historial es auditable para cualquier per\xEDodo pasado. Identificas brechas en la cobertura de rutas, tomas decisiones correctivas con evidencia concreta y reduces los puntos ciegos operativos sin aumentar la carga de supervisi\xF3n. El resultado: equipos en terreno verificados, con evidencia objetiva de cada visita realizada.",
   capabilities: ["geopoints", "presence", "analytics", "api"]
 };
 var goalChooseLocation = {
@@ -2858,7 +2858,7 @@ var goalChooseLocation = {
     "d\xF3nde abrir mi pr\xF3xima",
     "donde abrir mi proxima"
   ],
-  solution: "Elegir entre ubicaciones candidatas para abrir o expandirse es una de las decisiones de mayor impacto y menor certeza en un negocio f\xEDsico. Los estudios de mercado dan una aproximaci\xF3n, pero no dicen cu\xE1ntas personas circulan realmente por cada zona en los horarios que importan. Con datos reales de comportamiento en las ubicaciones candidatas \u2014 tr\xE1fico por hora, tiempo de permanencia, distribuci\xF3n semanal \u2014 la decisi\xF3n pasa de ser una apuesta a ser un an\xE1lisis. Es posible comparar zonas en igualdad de condiciones y respaldar la elecci\xF3n con evidencia observable antes de invertir.",
+  solution: "Puedes comparar zonas candidatas con datos reales de comportamiento \u2014 cu\xE1ntas personas circulan en los horarios que te importan, cu\xE1nto tiempo permanecen y c\xF3mo var\xEDa el flujo por d\xEDa \u2014 antes de comprometer inversi\xF3n en una apertura. Eso elimina la dependencia de estudios de mercado que no capturan el comportamiento real y te permite validar la hip\xF3tesis con evidencia observada en el terreno, no con estimaciones demogr\xE1ficas. Puedes comparar dos o m\xE1s ubicaciones en igualdad de condiciones y respaldar la decisi\xF3n con argumentos concretos frente a socios o directivos. El resultado: expansiones respaldadas por comportamiento real, no por apuestas.",
   capabilities: ["geopoints", "analytics", "spatial-intelligence", "live-visits"]
 };
 var goalCustomerExperience = {
@@ -2927,7 +2927,7 @@ var goalCustomerExperience = {
     "hago m\xE1s atractiva la visita",
     "hago mas atractiva la visita"
   ],
-  solution: "Cuando alguien entra a un local, tiene expectativas. Lo que diferencia una visita ordinaria de una experiencia memorable es que el espacio responda a su presencia de forma relevante y oportuna. Puedes ofrecer una bienvenida personalizada, una promoci\xF3n del d\xEDa, informaci\xF3n exclusiva de esa ubicaci\xF3n o contenido contextual \u2014 activado autom\xE1ticamente en el momento en que el cliente llega, sin que tenga que buscar nada ni declarar d\xF3nde est\xE1. El contenido puede variar por local, por zona o por horario, y se entrega a trav\xE9s de tu sitio web o app existente.",
+  solution: "Puedes diferenciar la experiencia en cada local de forma autom\xE1tica: una bienvenida personalizada, una oferta exclusiva de esa ubicaci\xF3n, informaci\xF3n contextual de la zona o contenido que solo aparece cuando el cliente llega \u2014 sin que tenga que buscar nada ni declarar d\xF3nde est\xE1. El contenido var\xEDa por local, por zona o por horario, y se entrega a trav\xE9s de tu app o sitio web existente sin necesidad de hardware adicional. Con eso cada visita se siente distinta dependiendo de d\xF3nde est\xE1 el cliente, lo que convierte la presencia f\xEDsica en una ventaja que el canal online no puede replicar. El resultado: experiencias m\xE1s memorables, mayor diferenciaci\xF3n entre locales y m\xE1s razones para volver.",
   capabilities: ["geopoints", "presence", "smart-proxies", "analytics"]
 };
 var goalDecisionMaking = {
@@ -3055,7 +3055,7 @@ var goalDecisionMaking = {
     "elegir una ubicaci\xF3n",
     "elegir una ubicacion"
   ],
-  solution: "Las decisiones m\xE1s costosas en un negocio con presencia f\xEDsica \u2014 d\xF3nde expandirse, qu\xE9 sucursales priorizar, qu\xE9 campa\xF1as escalar, d\xF3nde concentrar recursos \u2014 suelen tomarse con informaci\xF3n incompleta o basada en percepciones. El ant\xEDdoto es disponer de datos reales de comportamiento en cada ubicaci\xF3n: cu\xE1ntas personas estuvieron, cu\xE1nto tiempo, en qu\xE9 horarios y c\xF3mo evolucion\xF3 eso a lo largo del tiempo. Con esa base, comparar el desempe\xF1o de locales deja de ser una discusi\xF3n y se convierte en un dato. Validar una zona antes de invertir deja de ser una apuesta y pasa a ser un an\xE1lisis fundamentado.",
+  solution: "Puedes comparar el desempe\xF1o real de tus ubicaciones \u2014 cu\xE1nta gente lleg\xF3, cu\xE1nto tiempo permaneci\xF3 y c\xF3mo evolucion\xF3 con el tiempo \u2014 y tomar decisiones sobre d\xF3nde expandirse, qu\xE9 sucursales priorizar y d\xF3nde concentrar recursos con evidencia observable, no con percepciones. Cuando la pregunta de cu\xE1l local funciona mejor se responde con datos, las decisiones se aceleran y se justifican frente a directivos, inversores o socios sin necesidad de estimaciones. Tambi\xE9n puedes validar una zona antes de invertir y respaldar cada expansi\xF3n con un an\xE1lisis de comportamiento real en el terreno. El resultado: menos apuestas ciegas, m\xE1s decisiones que se defienden con evidencia.",
   capabilities: ["analytics", "geopoints", "presence", "spatial-intelligence"]
 };
 var goalDigitalTransformation = {
@@ -3110,7 +3110,7 @@ var goalDigitalTransformation = {
     "llevar lo f\xEDsico a lo digital",
     "llevar lo fisico a lo digital"
   ],
-  solution: "Tus sucursales, locales y puntos de venta generan actividad todos los d\xEDas, pero esa actividad suele quedar fuera de tus sistemas digitales: no hay datos, no hay trazabilidad, no hay forma de actuar sobre ella en tiempo real. Integrar el mundo f\xEDsico con tus plataformas digitales significa que cuando alguien llega a un punto espec\xEDfico, tus sistemas pueden saberlo y responder: mostrar contenido relevante, registrar la visita, habilitar un beneficio o disparar un flujo autom\xE1tico. Sin instalar hardware adicional ni modificar la infraestructura f\xEDsica de ning\xFAn local.",
+  solution: "Puedes conectar tus locales f\xEDsicos a tus sistemas digitales sin instalar hardware adicional: cuando alguien llega a un punto definido, tus plataformas lo saben y pueden responder \u2014 mostrar contenido relevante, registrar la visita, habilitar un beneficio o disparar un flujo autom\xE1tico. Eso transforma cada sucursal en un punto de contacto activo que genera datos, entrega experiencias contextuales y se integra con tu stack tecnol\xF3gico a trav\xE9s de API, sin modificar la infraestructura f\xEDsica de ning\xFAn local. El comportamiento f\xEDsico de tus clientes deja de ser invisible para tus sistemas y pasa a ser parte activa de tu estrategia digital.",
   capabilities: ["geopoints", "presence", "smart-proxies", "api", "analytics"]
 };
 var goalMeasurePhysical = {
@@ -3180,7 +3180,7 @@ var goalMeasurePhysical = {
     "concurrencia",
     "medir concurrencia"
   ],
-  solution: "Lo que ocurre f\xEDsicamente en tus locales \u2014 cu\xE1ntas personas entran, cu\xE1nto tiempo permanecen, en qu\xE9 horarios hay m\xE1s actividad, c\xF3mo se distribuyen entre zonas \u2014 es informaci\xF3n cr\xEDtica de negocio que la mayor\xEDa de las organizaciones sencillamente no tiene. Disponer de esos datos cambia la forma en que se toman decisiones: puedes comparar el rendimiento real de sucursales, detectar patrones de comportamiento, validar si una campa\xF1a gener\xF3 visitas f\xEDsicas reales y asignar recursos donde los n\xFAmeros lo justifican. Es anal\xEDtica de comportamiento f\xEDsico \u2014 el equivalente de lo que una herramienta digital hace en el mundo online, aplicado al mundo real.",
+  solution: "Puedes tener visibilidad completa sobre lo que ocurre en tus locales \u2014 cu\xE1ntas personas entran, en qu\xE9 horarios hay m\xE1s actividad, cu\xE1nto tiempo permanecen y c\xF3mo var\xEDa ese comportamiento entre ubicaciones \u2014 con la misma l\xF3gica anal\xEDtica que ya usas para el canal digital, aplicada al mundo f\xEDsico. Esa informaci\xF3n te permite comparar el desempe\xF1o real de tus sucursales, detectar cu\xE1les tienen demanda no cubierta y tomar decisiones de personal, horarios y campa\xF1as con evidencia concreta, sin depender de reportes manuales. Es el equivalente de Google Analytics para tus espacios f\xEDsicos: sin hardware, sin fricciones y con datos exportables a tus sistemas.",
   capabilities: ["geopoints", "presence", "analytics", "spatial-intelligence", "live-visits"]
 };
 var goalRetailStores = {
@@ -3241,7 +3241,7 @@ var goalRetailStores = {
     "concurrencia",
     "medir concurrencia"
   ],
-  solution: "Para una tienda o cadena de retail, la pregunta central es qu\xE9 genera tr\xE1fico real y qu\xE9 convierte ese tr\xE1fico en ventas. Sin datos de comportamiento en el punto de venta \u2014 cu\xE1ntas personas entran, en qu\xE9 horarios hay m\xE1s demanda, cu\xE1nto tiempo permanecen y c\xF3mo var\xEDa el rendimiento entre locales \u2014 las decisiones de promoci\xF3n, personal y expansi\xF3n se toman a ciegas. Con esa informaci\xF3n puedes comparar el desempe\xF1o de tus tiendas, identificar cu\xE1les necesitan intervenci\xF3n, optimizar horarios de atenci\xF3n y medir si una campa\xF1a local gener\xF3 visitas reales o solo impresiones.",
+  solution: "Puedes saber cu\xE1ntas personas entran a cada una de tus tiendas, en qu\xE9 horarios hay m\xE1s movimiento y c\xF3mo var\xEDa el rendimiento entre locales \u2014 y actuar sobre esa informaci\xF3n para mejorar operaciones, dise\xF1ar campa\xF1as locales efectivas y comparar el desempe\xF1o de tu cadena con datos reales, no con estimaciones. Identificas qu\xE9 tiendas necesitan intervenci\xF3n antes de que el problema se agrave, optimizas los horarios de atenci\xF3n seg\xFAn la demanda observada y mides si una campa\xF1a gener\xF3 visitas f\xEDsicas reales o solo impresiones digitales. El resultado: una cadena de tiendas gestionada con inteligencia operativa real.",
   capabilities: ["geopoints", "presence", "analytics", "smart-proxies"]
 };
 var goalGyms = {
@@ -3295,7 +3295,7 @@ var goalGyms = {
     "aumentar la asistencia",
     "baja asistencia"
   ],
-  solution: "El negocio de un gimnasio o cadena de fitness depende de dos m\xE9tricas clave: la frecuencia de asistencia y la permanencia. Sin datos reales de cu\xE1ndo se producen visitas, con qu\xE9 frecuencia y en qu\xE9 horarios se concentra la demanda, las decisiones de retenci\xF3n, staffing y programaci\xF3n se dise\xF1an a ciegas. Con informaci\xF3n real de comportamiento puedes detectar ca\xEDdas en la frecuencia general de visitas por franja horaria y per\xEDodo, optimizar la carga de personal seg\xFAn demanda real y dise\xF1ar beneficios que incentiven lo que quieres lograr: mayor asistencia, mayor fidelidad, menor tasa de abandono. Para vincular esos datos a socios individuales, el sistema de gesti\xF3n del gimnasio debe integrar su propia base de socios via API.",
+  solution: "Puedes detectar ca\xEDdas en la frecuencia de asistencia antes de que se conviertan en bajas, ajustar el staffing seg\xFAn la demanda observada en cada sede y dise\xF1ar beneficios que incentiven exactamente lo que m\xE1s importa \u2014 mayor frecuencia de visita, mayor fidelidad, menor tasa de abandono \u2014 con datos reales de comportamiento. Identificas qu\xE9 horarios concentran la demanda en cada local, qu\xE9 sedes tienen baja asistencia y en qu\xE9 momentos necesitas accionar para retener socios antes de perderlos. Para vincular esos datos a socios individuales y activar recompensas personalizadas, tu sistema de gesti\xF3n conecta su base de socios via API.",
   capabilities: ["geopoints", "presence", "analytics", "api"]
 };
 var goalRestaurants = {
@@ -3336,7 +3336,7 @@ var goalRestaurants = {
     "cu\xE1l restaurante funciona mejor",
     "cual restaurante funciona mejor"
   ],
-  solution: "Para un restaurante o cadena gastron\xF3mica, los datos que m\xE1s importan son los que ocurren en el local: qu\xE9 tan lleno est\xE1 realmente en cada franja horaria, c\xF3mo var\xEDa el flujo entre locales y qu\xE9 campa\xF1as de proximidad generan visitas reales versus impresiones digitales. Con esa informaci\xF3n puedes comparar el rendimiento real de tus locales, detectar cu\xE1les tienen demanda no cubierta, ajustar operaciones seg\xFAn comportamiento observado y demostrar el impacto de tus acciones de marketing con evidencia de presencia f\xEDsica, no solo con m\xE9tricas de pauta.",
+  solution: "Puedes saber cu\xE1l de tus locales concentra m\xE1s tr\xE1fico real en cada franja horaria, qu\xE9 campa\xF1as de proximidad efectivamente llevaron clientes al restaurante versus las que solo generaron impresiones y c\xF3mo var\xEDa el flujo entre locales a lo largo de la semana. Con esa informaci\xF3n comparas el rendimiento real de tu cadena, detectas cu\xE1les tienen capacidad no aprovechada y tomas decisiones de operaci\xF3n \u2014 personal, horarios, activaciones locales \u2014 con comportamiento observado. El resultado: una cadena gastron\xF3mica que act\xFAa sobre datos reales, no sobre la percepci\xF3n del equipo de sala.",
   capabilities: ["geopoints", "presence", "analytics", "smart-proxies"]
 };
 var goalEvents = {
@@ -3386,7 +3386,7 @@ var goalEvents = {
     "cuantas personas asistieron",
     "impacto del evento"
   ],
-  solution: "Organizar un evento, feria o activaci\xF3n implica asumir compromisos ante clientes, marcas y patrocinadores. El problema central es demostrar lo que realmente ocurri\xF3: cu\xE1ntas personas estuvieron f\xEDsicamente presentes, cu\xE1nto tiempo permanecieron en cada zona y cu\xE1l fue el alcance real de la experiencia. Con registros objetivos de asistencia y permanencia puedes presentar evidencia concreta ante sponsors, calcular el costo por interacci\xF3n real y ajustar el dise\xF1o de futuros eventos bas\xE1ndote en el comportamiento observado en cada edici\xF3n, no en estimaciones de aforo.",
+  solution: "Puedes demostrar con evidencia objetiva lo que ocurri\xF3 en tu evento: cu\xE1ntas personas estuvieron f\xEDsicamente presentes, cu\xE1nto tiempo permanecieron en cada zona y cu\xE1l fue el alcance real \u2014 sin depender de aforos estimados ni de declaraciones de asistentes. Con esos datos presentas el retorno real ante patrocinadores y clientes, calculas el costo por interacci\xF3n verificada y mejoras el dise\xF1o de futuros eventos con base en el comportamiento observado. El resultado: eventos con resultados demostrables y un dise\xF1o que mejora con cada edici\xF3n.",
   capabilities: ["geopoints", "presence", "analytics", "api"]
 };
 var goalShoppingCenters = {
@@ -3424,7 +3424,7 @@ var goalShoppingCenters = {
     "campa\xF1as del mall",
     "rendimiento por zona"
   ],
-  solution: "Un centro comercial gestiona m\xFAltiples zonas, niveles y locatarios con rendimientos muy distintos. Sin datos de tr\xE1fico por sector, los gerentes comerciales toman decisiones de asignaci\xF3n de espacios y campa\xF1as bas\xE1ndose en percepciones o en declaraciones de locatarios. Con informaci\xF3n real de comportamiento \u2014 cu\xE1ntas personas circulan por cada zona, en qu\xE9 horarios se concentra el flujo y c\xF3mo var\xEDa entre d\xEDas \u2014 puedes identificar las \xE1reas de mayor y menor desempe\xF1o, fundamentar negociaciones de renta y dise\xF1ar campa\xF1as que generen desplazamiento real hacia zonas con menor tr\xE1fico.",
+  solution: "Puedes saber en qu\xE9 zonas, pasillos y niveles de tu centro comercial se concentra el tr\xE1fico real \u2014 en qu\xE9 horarios, en qu\xE9 d\xEDas y c\xF3mo var\xEDa entre sectores \u2014 y usar esa informaci\xF3n para asignar espacios con criterios objetivos, negociar rentas con datos concretos y dise\xF1ar campa\xF1as que desplacen visitantes hacia las \xE1reas de menor actividad. Locatarios que cuestionan su ubicaci\xF3n o rendimiento reciben datos reales de tr\xE1fico por zona, lo que hace m\xE1s transparente y defendible cada decisi\xF3n comercial. El resultado: un centro comercial gestionado con inteligencia espacial, no con percepciones de flujo.",
   capabilities: ["geopoints", "analytics", "spatial-intelligence", "live-visits"]
 };
 var goalFranchises = {
@@ -3469,7 +3469,7 @@ var goalFranchises = {
     "estandarizaci\xF3n",
     "estandarizacion"
   ],
-  solution: "En una cadena de franquicias o red de sucursales, el desaf\xEDo no es solo saber que todas operan, sino entender cu\xE1les funcionan mejor y por qu\xE9. Sin datos comparables de tr\xE1fico real, las evaluaciones de desempe\xF1o dependen de ventas declaradas, reportes de franquiciados o visitas estimadas. Con informaci\xF3n objetiva de presencia y comportamiento en cada local puedes identificar las sucursales que est\xE1n por debajo de su potencial, detectar los patrones que diferencian a las m\xE1s exitosas y tomar decisiones de expansi\xF3n, cierre o intervenci\xF3n con evidencia observable, no con intuici\xF3n.",
+  solution: "Puedes identificar cu\xE1les de tus franquicias o sucursales est\xE1n rindiendo por debajo de su potencial con datos reales de presencia \u2014 no con ventas declaradas ni visitas estimadas \u2014 y tomar decisiones de expansi\xF3n, intervenci\xF3n o cierre con evidencia observable. Los patrones que distinguen a las sucursales m\xE1s exitosas se vuelven visibles, lo que los hace reproducibles en otros locales. El resultado: una red gestionada con criterios objetivos, donde cada decisi\xF3n se respalda con comportamiento real observado en terreno, no con percepciones del franquiciado.",
   capabilities: ["geopoints", "analytics", "presence", "api"]
 };
 var goalTourism = {
@@ -3518,7 +3518,7 @@ var goalTourism = {
     "excursi\xF3n",
     "excursion"
   ],
-  solution: "En un destino tur\xEDstico, parque o atractivo, entender c\xF3mo se mueven los visitantes es tan importante como atraerlos. Saber en qu\xE9 zonas se concentran, cu\xE1nto tiempo permanecen en cada punto, qu\xE9 recorridos siguen y cu\xE1ndo hay m\xE1s demanda permite tomar decisiones concretas: qu\xE9 experiencias reforzar, d\xF3nde concentrar el personal, qu\xE9 \xE1reas generan mayor permanencia y qu\xE9 contenidos contextualizar seg\xFAn la ubicaci\xF3n del visitante. Con datos reales de comportamiento presencial, la gesti\xF3n del destino pasa de ser reactiva a anticiparse a lo que los visitantes necesitan.",
+  solution: "Puedes comparar el inter\xE9s real que genera cada atractivo \u2014 cu\xE1ntas personas llegaron, cu\xE1nto tiempo permanecieron, qu\xE9 recorridos siguieron y qu\xE9 zonas concentraron m\xE1s atenci\xF3n \u2014 y redistribuir recursos hacia las experiencias que m\xE1s retienen visitantes. La gesti\xF3n del destino pasa de basarse en percepciones y conteos manuales a funcionar con datos reales de comportamiento en cada punto. Tambi\xE9n puedes activar contenido contextual seg\xFAn la ubicaci\xF3n del visitante: informaci\xF3n del lugar, gu\xEDas de recorrido o experiencias que se despliegan autom\xE1ticamente al llegar a cada punto. El resultado: un destino m\xE1s atractivo, m\xE1s f\xE1cil de gestionar y m\xE1s capaz de demostrar su impacto.",
   capabilities: ["geopoints", "presence", "analytics", "smart-proxies"]
 };
 var goalRealEstate = {
@@ -3560,7 +3560,7 @@ var goalRealEstate = {
     "comparar proyectos",
     "desempe\xF1o de proyectos"
   ],
-  solution: "Para una inmobiliaria o desarrolladora, la informaci\xF3n m\xE1s valiosa no es cu\xE1ntas personas vieron el aviso online, sino cu\xE1ntas llegaron f\xEDsicamente al proyecto, cu\xE1nto tiempo permanecieron en la sala de ventas o piloto y qu\xE9 proyectos generan mayor inter\xE9s real. Con esos datos puedes comparar el desempe\xF1o de tus salas de venta, identificar qu\xE9 campa\xF1as efectivamente llevan visitas f\xEDsicas y ajustar la estrategia de activaci\xF3n seg\xFAn el comportamiento observado, no seg\xFAn las m\xE9tricas de pauta digital o los registros manuales de los ejecutivos de venta.",
+  solution: "Puedes saber cu\xE1ntas personas llegaron f\xEDsicamente a cada sala de ventas o proyecto, cu\xE1nto tiempo permanecieron y c\xF3mo var\xEDa el inter\xE9s entre propiedades \u2014 sin depender de los registros del ejecutivo de venta ni de m\xE9tricas de pauta digital. Con esa informaci\xF3n comparas el desempe\xF1o real de tus proyectos, identificas qu\xE9 campa\xF1as efectivamente llevan visitas al terreno y presentas evidencia objetiva del inter\xE9s generado ante socios, inversores o la organizaci\xF3n. Tambi\xE9n puedes proteger tu material exclusivo \u2014 planos, precios, fichas t\xE9cnicas \u2014 activ\xE1ndolo solo cuando el interesado est\xE1 f\xEDsicamente en el proyecto. El resultado: decisiones comerciales m\xE1s fundamentadas y materiales mejor controlados.",
   capabilities: ["geopoints", "presence", "analytics", "api"]
 };
 var businessGoals = [

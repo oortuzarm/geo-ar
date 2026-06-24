@@ -707,7 +707,7 @@ function CapabilitiesSection() {
 const HOW_STEPS = [
   {
     title: 'Define tus ubicaciones',
-    desc: 'Crea GeoPoints, dibuja radios o traza polígonos sobre el mapa desde Studio, o gestiona ubicaciones directamente vía API. Cada zona tiene su propio conjunto de reglas: horarios, cupos, dwell time mínimo.',
+    desc: 'Define GeoPoints, radios y polígonos sobre el mapa. Cada ubicación puede tener reglas de horario, cupos y tiempo mínimo de permanencia.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
@@ -718,7 +718,7 @@ const HOW_STEPS = [
   },
   {
     title: 'Ubyca valida la presencia',
-    desc: 'Cuando un usuario envía sus coordenadas, Ubyca las contrasta en tiempo real contra tus GeoPoints activos. El resultado incluye: presente o no, distancia exacta, zona identificada y tiempo de permanencia acumulado.',
+    desc: 'Las coordenadas se contrastan en tiempo real contra tus GeoPoints activos. El resultado indica presencia válida, ubicación identificada y permanencia acumulada.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
@@ -728,7 +728,7 @@ const HOW_STEPS = [
   },
   {
     title: 'Actúa sobre el resultado en tiempo real',
-    desc: 'Visualiza los resultados en Studio mediante mapas, analítica espacial y activaciones en tiempo real. Si necesitas integrar, Ubyca también expone cada validación vía API con presencia confirmada y condiciones cumplidas.',
+    desc: 'Visualiza los resultados en Studio o intégralos vía API. Cada validación incluye presencia confirmada y condiciones cumplidas.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}

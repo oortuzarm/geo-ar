@@ -47,6 +47,11 @@ export const goalAttractCustomers: BusinessGoal = {
     'mas gente en mis locales', 'incremento el tráfico',
     'incremento el trafico', 'incrementar el tráfico en mis locales',
     'incrementar el trafico en mis locales', 'incrementar afluencia',
+    // Conjugaciones primera persona
+    'capto clientes', 'capto más clientes', 'capto mas clientes',
+    'capto personas', 'capto más personas', 'capto mas personas',
+    'genero tráfico', 'genero trafico', 'genero más tráfico', 'genero mas trafico',
+    'llevo personas al local', 'llevo más personas', 'llevo mas personas',
   ],
   solution:
     'La gente ya está pasando cerca de tu local. El reto es convertir ese tráfico ' +
@@ -79,6 +84,10 @@ export const goalIncreaseSales: BusinessGoal = {
     'mejorar resultados del local', 'mejorar los resultados de mi local',
     'generar mas ingresos', 'más ventas en mi tienda',
     'mas ventas en mi tienda',
+    // Conjugaciones primera persona
+    'aumento ventas', 'impulso ventas', 'impulso mis ventas', 'impulso las ventas',
+    'incremento ingresos', 'incremento mis ingresos',
+    'genero más ventas', 'genero mas ventas',
   ],
   solution:
     'Vender más en tu local físico pasa por dos cosas: saber qué clientes tienes ' +
@@ -136,6 +145,10 @@ export const goalImproveLoyalty: BusinessGoal = {
     'clientes recurrentes', 'retención de clientes', 'retener clientes',
     'fidelidad de clientes', 'más recurrencia', 'mas recurrencia',
     'mayor frecuencia de visita',
+    // Conjugaciones primera persona
+    'premio clientes', 'premio a mis clientes', 'premio clientes frecuentes', 'premio visitas',
+    'clientes frecuentes', 'incentivo que vuelvan', 'incentivo visitas',
+    'hago que vuelvan', 'hago que regresen',
   ],
   solution:
     'La fidelización real parte de saber qué clientes vuelven, con qué frecuencia ' +
@@ -165,6 +178,12 @@ export const goalMeasureMarketingROI: BusinessGoal = {
     'si funcionó la campaña', 'si funciono la campana',
     'probar que la campaña funcionó', 'probar que funciono',
     'evidencia de campaña', 'evidencia de la activacion',
+    // Conjugaciones primera persona
+    'justifico una inversión', 'justifico una inversion', 'justifico el gasto',
+    'justifico inversión', 'justifico inversion', 'justifico marketing',
+    'mido el retorno', 'mido el impacto', 'mido campañas', 'mido campanas',
+    'mido mis campañas', 'mido mis campanas',
+    'demuestro resultados', 'demuestro impacto', 'demuestro el impacto',
   ],
   solution:
     'Para justificar una campaña presencial o demostrar que una activación funcionó, ' +
@@ -192,6 +211,13 @@ export const goalImproveOperations: BusinessGoal = {
     'supervisar equipos en terreno', 'control de equipos en terreno',
     'verificar rondas', 'verificar recorridos',
     'saber si el equipo fue', 'saber si fueron al lugar',
+    // Conjugaciones primera persona
+    'controlo mis técnicos', 'controlo técnicos', 'controlo a mis técnicos',
+    'controlo tecnicos', 'controlo mis tecnicos', 'controlo a mis tecnicos',
+    'hago más eficiente', 'hago mas eficiente',
+    'hago más eficiente mi operación', 'hago mas eficiente mi operacion',
+    'reduzco errores', 'reduzco errores en terreno',
+    'controlo rutas', 'controlo mis rutas', 'audito personal',
   ],
   solution:
     'Saber si tu equipo realmente estuvo donde debía es difícil sin depender de ' +
@@ -220,6 +246,12 @@ export const goalChooseLocation: BusinessGoal = {
     'donde me conviene abrir', 'qué zona elegir', 'que zona elegir',
     'mejor zona para abrir', 'cuál es la mejor zona',
     'cual es la mejor zona',
+    // Conjugaciones primera persona y términos de expansión
+    'valido una zona', 'valido la zona',
+    'próxima sucursal', 'proxima sucursal',
+    'próxima tienda', 'proxima tienda',
+    'zona con potencial', 'zona rentable',
+    'zona más rentable', 'zona mas rentable',
   ],
   solution:
     'Elegir dónde abrir o expandirse suele basarse en intuición o en datos de ' +
@@ -262,6 +294,13 @@ export const goalCustomerExperience: BusinessGoal = {
     'mejorar la visita', 'visita más atractiva', 'visita mas atractiva',
     'hacer la visita más atractiva', 'hacer la visita mas atractiva',
     'hacer más atractiva la visita', 'hacer mas atractiva la visita',
+    // Conjugaciones primera persona
+    'personalizo la experiencia', 'personalizo mi experiencia',
+    'sorprendo a mis clientes', 'sorprendo al cliente',
+    'doy la bienvenida', 'doy una bienvenida',
+    'muestro contenido al llegar', 'muestro algo al llegar',
+    'mejoro la experiencia', 'mejoro la visita',
+    'hago más atractiva la visita', 'hago mas atractiva la visita',
   ],
   solution:
     'Puedes transformar la llegada de un cliente a tu local en un momento ' +

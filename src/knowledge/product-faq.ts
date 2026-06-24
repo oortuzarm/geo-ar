@@ -202,6 +202,63 @@ export const faqVsQR: FAQ = {
   tags: ['GeoPoints', 'Presencia física', 'Analytics'],
 }
 
+export const faqVsGoogleAnalytics: FAQ = {
+  id: 'faq-vs-google-analytics',
+  title: 'Diferencia entre Ubyca y Google Analytics (GA4)',
+  questionPatterns: [
+    // Catch-all — cualquier mención de Google Analytics o GA4
+    'google analytics', 'google analitycs', 'ga4', 'google analytics 4',
+    // Diferencia / comparación directa
+    'diferencia entre ubyca y google analytics',
+    'diferencia con google analytics',
+    'cual es la diferencia entre ubyca y google analytics',
+    'comparado con google analytics',
+    'versus google analytics', 'vs google analytics',
+    'ubyca vs google analytics', 'ubyca versus google analytics',
+    // Por qué usar Ubyca si ya tengo GA
+    'por qué usar ubyca si ya tengo google analytics',
+    'por que usar ubyca si ya tengo google analytics',
+    'para qué sirve si tengo google analytics',
+    'para que sirve si tengo google analytics',
+    'ya tengo google analytics', 'si ya tengo google analytics',
+    'tengo google analytics', 'uso google analytics',
+    'ya uso google analytics', 'con google analytics basta',
+    // Google Analytics hace lo mismo
+    'google analytics no hace lo mismo',
+    'google analytics hace lo mismo',
+    'no hace lo mismo que google analytics',
+    // ¿Es parecido / similar?
+    'es parecido a google analytics', 'parecido a google analytics',
+    'similar a google analytics', 'es lo mismo que google analytics',
+    'funciona como google analytics',
+    // ¿Qué aporta Ubyca que no tenga GA?
+    'qué aporta ubyca que no tenga google analytics',
+    'que aporta ubyca que no tenga google analytics',
+    'qué aporta ubyca que no tenga ga4',
+    'que aporta ubyca que no tenga ga4',
+    // ¿Reemplaza / sustituye / compite?
+    'reemplaza google analytics', 'sustituye google analytics',
+    'reemplazar google analytics', 'sustituir google analytics',
+    'ubyca compite con google analytics',
+    'compite con google analytics',
+  ],
+  answer:
+    'Google Analytics y Ubyca no compiten directamente: miden cosas distintas. ' +
+    'Google Analytics analiza el comportamiento digital dentro de un sitio web ' +
+    'o aplicación — páginas vistas, clics, sesiones y conversiones dentro de ' +
+    'una experiencia digital. Ubyca responde una pregunta diferente: ¿esta ' +
+    'persona estuvo físicamente en este lugar? Valida presencia en el mundo real, ' +
+    'registra cuándo ocurrió, cuánto tiempo permaneció el visitante y si una ' +
+    'activación presencial generó presencia verificada — independientemente de ' +
+    'si el usuario interactuó con un sitio web o no. ' +
+    'Muchas organizaciones usan ambas herramientas de forma complementaria: ' +
+    'Google Analytics para entender el comportamiento online y Ubyca para ' +
+    'entender lo que ocurre en sus puntos físicos. Si tu pregunta es "¿cuántas ' +
+    'personas visitaron mi sitio?", Google Analytics la responde. Si tu pregunta ' +
+    'es "¿cuántas personas estuvieron físicamente en mi local?", Ubyca la responde.',
+  tags: ['Analytics', 'Presencia física', 'GeoPoints'],
+}
+
 export const faqNoHardware: FAQ = {
   id: 'faq-no-hardware',
   title: 'Ubyca no requiere hardware, sensores ni dispositivos físicos',
@@ -308,6 +365,7 @@ export const productFaqs: FAQ[] = [
   faqIndoor,
   faqMonitoring,
   faqVsQR,
+  faqVsGoogleAnalytics,
   faqNoHardware,
   faqApiIntegration,
 ]

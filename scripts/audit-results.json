@@ -1,0 +1,1316 @@
+[
+  {
+    "profile": "1-GG",
+    "label": "Gerente General",
+    "q": "Quiero saber cuáles de mis sucursales están rindiendo mejor antes de decidir dónde abrir la próxima",
+    "winner": {
+      "id": "goal-decision-making",
+      "type": "BusinessGoal",
+      "title": "Toma de decisiones ejecutivas basadas en datos de presencia",
+      "score": 4
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-decision-making",
+        "type": "BusinessGoal",
+        "score": 4
+      },
+      {
+        "id": "spatial-concentration",
+        "type": "UseCase",
+        "score": 4
+      },
+      {
+        "id": "goal-franchises",
+        "type": "BusinessGoal",
+        "score": 1
+      }
+    ],
+    "responseBody": "Las decisiones más costosas en un negocio con presencia física — dónde expandirse, qué sucursales priorizar, qué campañas escalar, dónde concentrar recursos — suelen tomarse con información incompleta o basada en percepciones. El antídoto es disponer de datos reales de comportamiento en cada ubicación: cuántas personas estuvieron, cuánto tiempo, en qué horarios y cómo evolucionó eso a lo largo del tiempo. Con esa base, comparar el desempeño de locales deja de ser una discusión y se convierte en un dato. Validar una zona antes de invertir deja de ser una apuesta y pasa a ser un análisis fundamentado.",
+    "tags": [
+      "Analytics",
+      "GeoPoints",
+      "Presencia física",
+      "Inteligencia espacial"
+    ]
+  },
+  {
+    "profile": "1-GG",
+    "label": "Gerente General",
+    "q": "Necesito evidencia real para justificar una inversión en una nueva zona",
+    "winner": null,
+    "isFallback": true,
+    "subIntentionId": null,
+    "top3": [],
+    "responseBody": "Ubyca verifica si una persona estuvo físicamente en un lugar — con hora exacta, duración y sin posibilidad de falsificación. Eso habilita casos muy distintos: registrar visitas de equipos en terreno, activar contenido o beneficios por presencia, medir tráfico real en ubicaciones, controlar acceso sin hardware, o demostrar que una campaña generó presencia física. ¿Cuál de estos se acerca más a lo que necesitas?",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "1-GG",
+    "label": "Gerente General",
+    "q": "Tenemos 12 locales y no sé cuáles generan más valor",
+    "winner": null,
+    "isFallback": true,
+    "subIntentionId": null,
+    "top3": [],
+    "responseBody": "Ubyca verifica si una persona estuvo físicamente en un lugar — con hora exacta, duración y sin posibilidad de falsificación. Eso habilita casos muy distintos: registrar visitas de equipos en terreno, activar contenido o beneficios por presencia, medir tráfico real en ubicaciones, controlar acceso sin hardware, o demostrar que una campaña generó presencia física. ¿Cuál de estos se acerca más a lo que necesitas?",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "1-GG",
+    "label": "Gerente General",
+    "q": "Cómo decido si expandirme a una ciudad nueva sin tomar un riesgo ciego",
+    "winner": null,
+    "isFallback": true,
+    "subIntentionId": null,
+    "top3": [],
+    "responseBody": "Ubyca verifica si una persona estuvo físicamente en un lugar — con hora exacta, duración y sin posibilidad de falsificación. Eso habilita casos muy distintos: registrar visitas de equipos en terreno, activar contenido o beneficios por presencia, medir tráfico real en ubicaciones, controlar acceso sin hardware, o demostrar que una campaña generó presencia física. ¿Cuál de estos se acerca más a lo que necesitas?",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "1-GG",
+    "label": "Gerente General",
+    "q": "Mi directorio me pide datos concretos sobre el rendimiento de cada punto de venta",
+    "winner": {
+      "id": "field-sales-visits",
+      "type": "UseCase",
+      "title": "Visitas de vendedores a puntos de venta",
+      "score": 2
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "field-sales-visits",
+        "type": "UseCase",
+        "score": 2
+      }
+    ],
+    "responseBody": "Puedes obtener un historial real de visitas comerciales — hora exacta, tiempo de permanencia y frecuencia por punto de venta — sin depender de reportes manuales que pueden alterarse. La presencia se verifica automáticamente en el servidor cuando el vendedor llega al área, no es auto-declarada.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics"
+    ]
+  },
+  {
+    "profile": "2-GC",
+    "label": "Gerente Comercial",
+    "q": "Quiero saber si mis vendedores realmente visitan los clientes o solo reportan que lo hacen",
+    "winner": {
+      "id": "field-sales-visits",
+      "type": "UseCase",
+      "title": "Visitas de vendedores a puntos de venta",
+      "score": 1
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "field-sales-visits",
+        "type": "UseCase",
+        "score": 1
+      }
+    ],
+    "responseBody": "Puedes obtener un historial real de visitas comerciales — hora exacta, tiempo de permanencia y frecuencia por punto de venta — sin depender de reportes manuales que pueden alterarse. La presencia se verifica automáticamente en el servidor cuando el vendedor llega al área, no es auto-declarada.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics"
+    ]
+  },
+  {
+    "profile": "2-GC",
+    "label": "Gerente Comercial",
+    "q": "Necesito comparar el rendimiento de mis locales para saber cuáles necesitan intervención",
+    "winner": {
+      "id": "goal-decision-making",
+      "type": "BusinessGoal",
+      "title": "Toma de decisiones ejecutivas basadas en datos de presencia",
+      "score": 2
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-decision-making",
+        "type": "BusinessGoal",
+        "score": 2
+      }
+    ],
+    "responseBody": "Las decisiones más costosas en un negocio con presencia física — dónde expandirse, qué sucursales priorizar, qué campañas escalar, dónde concentrar recursos — suelen tomarse con información incompleta o basada en percepciones. El antídoto es disponer de datos reales de comportamiento en cada ubicación: cuántas personas estuvieron, cuánto tiempo, en qué horarios y cómo evolucionó eso a lo largo del tiempo. Con esa base, comparar el desempeño de locales deja de ser una discusión y se convierte en un dato. Validar una zona antes de invertir deja de ser una apuesta y pasa a ser un análisis fundamentado.",
+    "tags": [
+      "Analytics",
+      "GeoPoints",
+      "Presencia física",
+      "Inteligencia espacial"
+    ]
+  },
+  {
+    "profile": "2-GC",
+    "label": "Gerente Comercial",
+    "q": "Cómo mido si una campaña de descuentos generó tráfico real a la tienda",
+    "winner": {
+      "id": "goal-attract-customers",
+      "type": "BusinessGoal",
+      "title": "Atraer clientes y generar tráfico al local",
+      "score": 4
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-attract-customers",
+        "type": "BusinessGoal",
+        "score": 4
+      },
+      {
+        "id": "goal-retail-stores",
+        "type": "BusinessGoal",
+        "score": 1
+      }
+    ],
+    "responseBody": "Si el objetivo es atraer más personas a una ubicación física, el primer paso es saber qué acciones realmente generan visitas y cuáles no. Sin esa información, las campañas y promociones se diseñan a ciegas. Con datos reales de presencia puedes medir qué mensajes o incentivos efectivamente llevaron a alguien al local, en qué horarios hay más afluencia natural y qué días necesitan mayor impulso. El resultado: decisiones de activación basadas en comportamiento real, no en suposiciones sobre cuándo y cómo impactar a tu audiencia.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "Smart Proxies"
+    ]
+  },
+  {
+    "profile": "2-GC",
+    "label": "Gerente Comercial",
+    "q": "Quiero saber en qué horarios hay más personas en mis tiendas para ajustar al equipo de ventas",
+    "winner": {
+      "id": "goal-retail-stores",
+      "type": "BusinessGoal",
+      "title": "Retail y tiendas físicas",
+      "score": 4
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-retail-stores",
+        "type": "BusinessGoal",
+        "score": 4
+      }
+    ],
+    "responseBody": "Para una tienda o cadena de retail, la pregunta central es qué genera tráfico real y qué convierte ese tráfico en ventas. Sin datos de comportamiento en el punto de venta — cuántas personas entran, en qué horarios hay más demanda, cuánto tiempo permanecen y cómo varía el rendimiento entre locales — las decisiones de promoción, personal y expansión se toman a ciegas. Con esa información puedes comparar el desempeño de tus tiendas, identificar cuáles necesitan intervención, optimizar horarios de atención y medir si una campaña local generó visitas reales o solo impresiones.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "Smart Proxies"
+    ]
+  },
+  {
+    "profile": "2-GC",
+    "label": "Gerente Comercial",
+    "q": "Necesito demostrarle al dueño que nuestras acciones comerciales realmente generan visitas",
+    "winner": null,
+    "isFallback": true,
+    "subIntentionId": null,
+    "top3": [],
+    "responseBody": "Ubyca verifica si una persona estuvo físicamente en un lugar — con hora exacta, duración y sin posibilidad de falsificación. Eso habilita casos muy distintos: registrar visitas de equipos en terreno, activar contenido o beneficios por presencia, medir tráfico real en ubicaciones, controlar acceso sin hardware, o demostrar que una campaña generó presencia física. ¿Cuál de estos se acerca más a lo que necesitas?",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "3-GM",
+    "label": "Gerente de Marketing",
+    "q": "Lancé una activación en tres puntos de venta y no sé cuánta gente realmente participó",
+    "winner": null,
+    "isFallback": true,
+    "subIntentionId": null,
+    "top3": [],
+    "responseBody": "Ubyca verifica si una persona estuvo físicamente en un lugar — con hora exacta, duración y sin posibilidad de falsificación. Eso habilita casos muy distintos: registrar visitas de equipos en terreno, activar contenido o beneficios por presencia, medir tráfico real en ubicaciones, controlar acceso sin hardware, o demostrar que una campaña generó presencia física. ¿Cuál de estos se acerca más a lo que necesitas?",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "3-GM",
+    "label": "Gerente de Marketing",
+    "q": "Quiero mostrarle una promoción especial solo a los clientes que están en el local en ese momento",
+    "winner": null,
+    "isFallback": true,
+    "subIntentionId": null,
+    "top3": [],
+    "responseBody": "Ubyca verifica si una persona estuvo físicamente en un lugar — con hora exacta, duración y sin posibilidad de falsificación. Eso habilita casos muy distintos: registrar visitas de equipos en terreno, activar contenido o beneficios por presencia, medir tráfico real en ubicaciones, controlar acceso sin hardware, o demostrar que una campaña generó presencia física. ¿Cuál de estos se acerca más a lo que necesitas?",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "3-GM",
+    "label": "Gerente de Marketing",
+    "q": "Cómo demuestro el ROI de una campaña presencial a mi directorio",
+    "winner": {
+      "id": "brand-activation-campaign",
+      "type": "UseCase",
+      "title": "Campaña físico-digital activada por presencia",
+      "score": 4
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "brand-activation-campaign",
+        "type": "UseCase",
+        "score": 4
+      }
+    ],
+    "responseBody": "Sí. Puedes saber exactamente cuántas personas estuvieron físicamente en cada punto de campaña, en qué horarios y cuánto tiempo permanecieron — datos verificables, no estimaciones de alcance ni impresiones. El contenido se activa solo cuando el usuario está en el lugar, lo que garantiza que cada registro corresponde a una presencia real. Esos datos son exportables y presentables como evidencia del impacto de la campaña: costo por interacción real, no costo por clic. Para el equipo técnico: la implementación puede hacerse con Smart Proxy sobre una URL existente o vía API.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Smart Proxies",
+      "Analytics"
+    ]
+  },
+  {
+    "profile": "3-GM",
+    "label": "Gerente de Marketing",
+    "q": "Quiero que cuando alguien llegue a mi tienda le aparezca automáticamente una oferta del día",
+    "winner": {
+      "id": "goal-retail-stores",
+      "type": "BusinessGoal",
+      "title": "Retail y tiendas físicas",
+      "score": 5
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-retail-stores",
+        "type": "BusinessGoal",
+        "score": 5
+      }
+    ],
+    "responseBody": "Para una tienda o cadena de retail, la pregunta central es qué genera tráfico real y qué convierte ese tráfico en ventas. Sin datos de comportamiento en el punto de venta — cuántas personas entran, en qué horarios hay más demanda, cuánto tiempo permanecen y cómo varía el rendimiento entre locales — las decisiones de promoción, personal y expansión se toman a ciegas. Con esa información puedes comparar el desempeño de tus tiendas, identificar cuáles necesitan intervención, optimizar horarios de atención y medir si una campaña local generó visitas reales o solo impresiones.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "Smart Proxies"
+    ]
+  },
+  {
+    "profile": "3-GM",
+    "label": "Gerente de Marketing",
+    "q": "Necesito saber cuánto tiempo pasan las personas en cada zona de mis eventos para mejorarlos",
+    "winner": {
+      "id": "goal-events",
+      "type": "BusinessGoal",
+      "title": "Eventos, ferias y activaciones",
+      "score": 2
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-events",
+        "type": "BusinessGoal",
+        "score": 2
+      },
+      {
+        "id": "events-access",
+        "type": "UseCase",
+        "score": 1
+      }
+    ],
+    "responseBody": "Organizar un evento, feria o activación implica asumir compromisos ante clientes, marcas y patrocinadores. El problema central es demostrar lo que realmente ocurrió: cuántas personas estuvieron físicamente presentes, cuánto tiempo permanecieron en cada zona y cuál fue el alcance real de la experiencia. Con registros objetivos de asistencia y permanencia puedes presentar evidencia concreta ante sponsors, calcular el costo por interacción real y ajustar el diseño de futuros eventos basándote en el comportamiento observado en cada edición, no en estimaciones de aforo.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "4-GO",
+    "label": "Gerente de Operaciones",
+    "q": "Mis técnicos deben hacer rondas de mantenimiento y necesito saber si realmente fueron a cada punto",
+    "winner": {
+      "id": "field-sales-supervision",
+      "type": "UseCase",
+      "title": "Supervisión de equipo en terreno",
+      "score": 1
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "field-sales-supervision",
+        "type": "UseCase",
+        "score": 1
+      }
+    ],
+    "responseBody": "Puedes ver en tiempo real qué zonas está cubriendo tu equipo y cuál es la cobertura real — sin que nadie haga check-ins manuales. Cuando cada integrante está autenticado en tu app y su dispositivo valida presencia en la zona asignada, tu sistema puede asociar ese evento al perfil del empleado correspondiente via API. El historial completo de cobertura por zona y horario queda disponible para revisión posterior.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "Visitas en vivo",
+      "Inteligencia espacial"
+    ]
+  },
+  {
+    "profile": "4-GO",
+    "label": "Gerente de Operaciones",
+    "q": "Tengo personal distribuido en distintas zonas y no tengo forma de verificar que cumplieron su ruta",
+    "winner": null,
+    "isFallback": true,
+    "subIntentionId": null,
+    "top3": [],
+    "responseBody": "Ubyca verifica si una persona estuvo físicamente en un lugar — con hora exacta, duración y sin posibilidad de falsificación. Eso habilita casos muy distintos: registrar visitas de equipos en terreno, activar contenido o beneficios por presencia, medir tráfico real en ubicaciones, controlar acceso sin hardware, o demostrar que una campaña generó presencia física. ¿Cuál de estos se acerca más a lo que necesitas?",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "4-GO",
+    "label": "Gerente de Operaciones",
+    "q": "Necesito auditar si los agentes sanitarios cubrieron todas las zonas asignadas esta semana",
+    "winner": null,
+    "isFallback": true,
+    "subIntentionId": null,
+    "top3": [],
+    "responseBody": "Ubyca verifica si una persona estuvo físicamente en un lugar — con hora exacta, duración y sin posibilidad de falsificación. Eso habilita casos muy distintos: registrar visitas de equipos en terreno, activar contenido o beneficios por presencia, medir tráfico real en ubicaciones, controlar acceso sin hardware, o demostrar que una campaña generó presencia física. ¿Cuál de estos se acerca más a lo que necesitas?",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "4-GO",
+    "label": "Gerente de Operaciones",
+    "q": "Quiero saber si mis repartidores pasaron por todos los puntos de entrega con la hora exacta",
+    "winner": {
+      "id": "field-sales-delivery",
+      "type": "UseCase",
+      "title": "Control de rutas de reparto y distribución",
+      "score": 1
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "field-sales-delivery",
+        "type": "UseCase",
+        "score": 1
+      }
+    ],
+    "responseBody": "Puedes verificar que tus conductores o repartidores pasaron por los puntos de entrega asignados, con hora exacta y tiempo de permanencia — sin depender de declaraciones del propio equipo. Ves la cobertura de rutas en tiempo real desde Studio y exportas los datos vía API a tu sistema logístico existente.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "4-GO",
+    "label": "Gerente de Operaciones",
+    "q": "Cómo registro de forma confiable que un inspector municipal hizo su recorrido completo",
+    "winner": {
+      "id": "municipalities-inspection",
+      "type": "UseCase",
+      "title": "Control de inspectores y agentes en terreno",
+      "score": 2
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "municipalities-inspection",
+        "type": "UseCase",
+        "score": 2
+      }
+    ],
+    "responseBody": "Puedes verificar que inspectores y agentes cubrieron sus recorridos asignados, con hora y tiempo de permanencia por punto — sin partes escritos que pueden falsificarse. El supervisor ve la cobertura real en Studio y exporta el historial a los sistemas municipales.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "5-RT",
+    "label": "Dueño Retail",
+    "q": "Quiero saber cuánta gente entra a mi tienda y en qué horas hay más movimiento",
+    "winner": {
+      "id": "goal-retail-stores",
+      "type": "BusinessGoal",
+      "title": "Retail y tiendas físicas",
+      "score": 5
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-retail-stores",
+        "type": "BusinessGoal",
+        "score": 5
+      },
+      {
+        "id": "goal-measure-physical",
+        "type": "BusinessGoal",
+        "score": 4
+      }
+    ],
+    "responseBody": "Para una tienda o cadena de retail, la pregunta central es qué genera tráfico real y qué convierte ese tráfico en ventas. Sin datos de comportamiento en el punto de venta — cuántas personas entran, en qué horarios hay más demanda, cuánto tiempo permanecen y cómo varía el rendimiento entre locales — las decisiones de promoción, personal y expansión se toman a ciegas. Con esa información puedes comparar el desempeño de tus tiendas, identificar cuáles necesitan intervención, optimizar horarios de atención y medir si una campaña local generó visitas reales o solo impresiones.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "Smart Proxies"
+    ]
+  },
+  {
+    "profile": "5-RT",
+    "label": "Dueño Retail",
+    "q": "Cómo hago para que una promoción especial solo funcione dentro del local",
+    "winner": null,
+    "isFallback": true,
+    "subIntentionId": null,
+    "top3": [],
+    "responseBody": "Ubyca verifica si una persona estuvo físicamente en un lugar — con hora exacta, duración y sin posibilidad de falsificación. Eso habilita casos muy distintos: registrar visitas de equipos en terreno, activar contenido o beneficios por presencia, medir tráfico real en ubicaciones, controlar acceso sin hardware, o demostrar que una campaña generó presencia física. ¿Cuál de estos se acerca más a lo que necesitas?",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "5-RT",
+    "label": "Dueño Retail",
+    "q": "Quiero entender cuánto tiempo pasan mis clientes en la tienda",
+    "winner": {
+      "id": "goal-retail-stores",
+      "type": "BusinessGoal",
+      "title": "Retail y tiendas físicas",
+      "score": 1
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-retail-stores",
+        "type": "BusinessGoal",
+        "score": 1
+      }
+    ],
+    "responseBody": "Para una tienda o cadena de retail, la pregunta central es qué genera tráfico real y qué convierte ese tráfico en ventas. Sin datos de comportamiento en el punto de venta — cuántas personas entran, en qué horarios hay más demanda, cuánto tiempo permanecen y cómo varía el rendimiento entre locales — las decisiones de promoción, personal y expansión se toman a ciegas. Con esa información puedes comparar el desempeño de tus tiendas, identificar cuáles necesitan intervención, optimizar horarios de atención y medir si una campaña local generó visitas reales o solo impresiones.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "Smart Proxies"
+    ]
+  },
+  {
+    "profile": "5-RT",
+    "label": "Dueño Retail",
+    "q": "Tengo una tienda física y también un sitio web, quiero saber si los que visitan el sitio también vinieron al local",
+    "winner": {
+      "id": "goal-retail-stores",
+      "type": "BusinessGoal",
+      "title": "Retail y tiendas físicas",
+      "score": 5
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-retail-stores",
+        "type": "BusinessGoal",
+        "score": 5
+      }
+    ],
+    "responseBody": "Para una tienda o cadena de retail, la pregunta central es qué genera tráfico real y qué convierte ese tráfico en ventas. Sin datos de comportamiento en el punto de venta — cuántas personas entran, en qué horarios hay más demanda, cuánto tiempo permanecen y cómo varía el rendimiento entre locales — las decisiones de promoción, personal y expansión se toman a ciegas. Con esa información puedes comparar el desempeño de tus tiendas, identificar cuáles necesitan intervención, optimizar horarios de atención y medir si una campaña local generó visitas reales o solo impresiones.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "Smart Proxies"
+    ]
+  },
+  {
+    "profile": "5-RT",
+    "label": "Dueño Retail",
+    "q": "Cómo atraigo a las personas que pasan por la puerta de mi local",
+    "winner": {
+      "id": "local-business-proximity-promo",
+      "type": "UseCase",
+      "title": "Promociones y experiencias por proximidad para negocios locales",
+      "score": 4
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "local-business-proximity-promo",
+        "type": "UseCase",
+        "score": 4
+      }
+    ],
+    "responseBody": "Cuando una persona entra al radio de tu local, puedes mostrarle automáticamente una promoción, cupón o mensaje contextual dentro de tu sitio web o app. Puedes configurarlo con o sin verificación de presencia: con verificación, el beneficio se habilita solo dentro del radio; sin verificación, funciona como capa informativa geolocalizada disponible para cualquiera que la abra cerca. Ubyca no envía notificaciones push automáticas: la activación ocurre cuando el usuario ya está cerca e interactúa con la experiencia. Sin app nativa para el cliente final.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "Studio"
+    ]
+  },
+  {
+    "profile": "6-GYM",
+    "label": "Cadena de Gimnasios",
+    "q": "Quiero saber en qué horarios se concentra más la asistencia en cada sede",
+    "winner": {
+      "id": "education-attendance",
+      "type": "UseCase",
+      "title": "Registro de asistencia sin pasar lista",
+      "score": 1
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "education-attendance",
+        "type": "UseCase",
+        "score": 1
+      }
+    ],
+    "responseBody": "Puedes registrar la asistencia automáticamente cuando el alumno llega al campus o aula — sin pasar lista y sin que el alumno pueda declarar una presencia que no ocurrió. La verificación es en el servidor, no es auto-declarada. Puedes definir ventanas horarias por materia o turno y exportar el historial al sistema académico existente.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "6-GYM",
+    "label": "Cadena de Gimnasios",
+    "q": "Necesito comparar la frecuencia de asistencia entre mis diferentes gimnasios",
+    "winner": {
+      "id": "goal-gyms",
+      "type": "BusinessGoal",
+      "title": "Gimnasios y centros deportivos",
+      "score": 4
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-gyms",
+        "type": "BusinessGoal",
+        "score": 4
+      },
+      {
+        "id": "education-attendance",
+        "type": "UseCase",
+        "score": 1
+      },
+      {
+        "id": "local-business-proximity-promo",
+        "type": "UseCase",
+        "score": 1
+      }
+    ],
+    "responseBody": "El negocio de un gimnasio o cadena de fitness depende de dos métricas clave: la frecuencia de asistencia y la permanencia. Sin datos reales de cuándo se producen visitas, con qué frecuencia y en qué horarios se concentra la demanda, las decisiones de retención, staffing y programación se diseñan a ciegas. Con información real de comportamiento puedes detectar caídas en la frecuencia general de visitas por franja horaria y período, optimizar la carga de personal según demanda real y diseñar beneficios que incentiven lo que quieres lograr: mayor asistencia, mayor fidelidad, menor tasa de abandono. Para vincular esos datos a socios individuales, el sistema de gestión del gimnasio debe integrar su propia base de socios via API.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "6-GYM",
+    "label": "Cadena de Gimnasios",
+    "q": "Cómo detecto qué sedes tienen baja asistencia para tomar acción antes de que sea un problema",
+    "winner": {
+      "id": "education-attendance",
+      "type": "UseCase",
+      "title": "Registro de asistencia sin pasar lista",
+      "score": 1
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "education-attendance",
+        "type": "UseCase",
+        "score": 1
+      }
+    ],
+    "responseBody": "Puedes registrar la asistencia automáticamente cuando el alumno llega al campus o aula — sin pasar lista y sin que el alumno pueda declarar una presencia que no ocurrió. La verificación es en el servidor, no es auto-declarada. Puedes definir ventanas horarias por materia o turno y exportar el historial al sistema académico existente.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "6-GYM",
+    "label": "Cadena de Gimnasios",
+    "q": "Quiero dar beneficios a los socios según cuántas veces vinieron al gimnasio este mes",
+    "winner": {
+      "id": "goal-gyms",
+      "type": "BusinessGoal",
+      "title": "Gimnasios y centros deportivos",
+      "score": 2
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-gyms",
+        "type": "BusinessGoal",
+        "score": 2
+      },
+      {
+        "id": "local-business-proximity-promo",
+        "type": "UseCase",
+        "score": 1
+      }
+    ],
+    "responseBody": "El negocio de un gimnasio o cadena de fitness depende de dos métricas clave: la frecuencia de asistencia y la permanencia. Sin datos reales de cuándo se producen visitas, con qué frecuencia y en qué horarios se concentra la demanda, las decisiones de retención, staffing y programación se diseñan a ciegas. Con información real de comportamiento puedes detectar caídas en la frecuencia general de visitas por franja horaria y período, optimizar la carga de personal según demanda real y diseñar beneficios que incentiven lo que quieres lograr: mayor asistencia, mayor fidelidad, menor tasa de abandono. Para vincular esos datos a socios individuales, el sistema de gestión del gimnasio debe integrar su propia base de socios via API.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "6-GYM",
+    "label": "Cadena de Gimnasios",
+    "q": "Necesito saber si mis campañas de retención están generando más visitas presenciales",
+    "winner": {
+      "id": "spatial-concentration",
+      "type": "UseCase",
+      "title": "Concentración de personas y detección de zonas de mayor afluencia",
+      "score": 4
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "spatial-concentration",
+        "type": "UseCase",
+        "score": 4
+      }
+    ],
+    "responseBody": "Sí. Puedes comparar tus ubicaciones entre sí con datos objetivos: cuántas personas llegaron a cada una, cuánto tiempo permanecieron y en qué horarios se concentra el tráfico. Eso te permite identificar qué puntos rinden bien, cuáles están subutilizados y dónde hay oportunidades de mejora — sin depender de ventas ni de opinión del equipo. Los datos son exportables por punto, por período y por horario.",
+    "tags": [
+      "GeoPoints",
+      "Analytics",
+      "Inteligencia espacial",
+      "Visitas en vivo"
+    ]
+  },
+  {
+    "profile": "7-RST",
+    "label": "Cadena de Restaurantes",
+    "q": "Quiero saber cuál de mis locales recibe más tráfico en la hora del almuerzo",
+    "winner": {
+      "id": "spatial-concentration",
+      "type": "UseCase",
+      "title": "Concentración de personas y detección de zonas de mayor afluencia",
+      "score": 4
+    },
+    "isFallback": false,
+    "subIntentionId": "comparar-ubicaciones",
+    "top3": [
+      {
+        "id": "spatial-concentration",
+        "type": "UseCase",
+        "score": 4
+      }
+    ],
+    "responseBody": "Sí. Puedes ver con datos exactos qué sucursales atraen más visitas, cuáles retienen más tiempo a los visitantes y cuáles quedan rezagadas — sin depender de ventas ni de la percepción del equipo. Eso te da una base objetiva para decidir dónde reforzar, dónde optimizar horarios y cuáles pueden estar mal posicionadas. Los datos se comparan por punto, por período y por horario, y son exportables para análisis propios.",
+    "tags": [
+      "GeoPoints",
+      "Analytics",
+      "Inteligencia espacial",
+      "Visitas en vivo"
+    ]
+  },
+  {
+    "profile": "7-RST",
+    "label": "Cadena de Restaurantes",
+    "q": "Necesito comparar el flujo de personas entre mis diferentes restaurantes",
+    "winner": {
+      "id": "goal-restaurants",
+      "type": "BusinessGoal",
+      "title": "Restaurantes y gastronomía",
+      "score": 2
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-restaurants",
+        "type": "BusinessGoal",
+        "score": 2
+      },
+      {
+        "id": "events-analytics",
+        "type": "UseCase",
+        "score": 2
+      },
+      {
+        "id": "local-business-proximity-promo",
+        "type": "UseCase",
+        "score": 1
+      }
+    ],
+    "responseBody": "Para un restaurante o cadena gastronómica, los datos que más importan son los que ocurren en el local: qué tan lleno está realmente en cada franja horaria, cómo varía el flujo entre locales y qué campañas de proximidad generan visitas reales versus impresiones digitales. Con esa información puedes comparar el rendimiento real de tus locales, detectar cuáles tienen demanda no cubierta, ajustar operaciones según comportamiento observado y demostrar el impacto de tus acciones de marketing con evidencia de presencia física, no solo con métricas de pauta.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "Smart Proxies"
+    ]
+  },
+  {
+    "profile": "7-RST",
+    "label": "Cadena de Restaurantes",
+    "q": "Cómo sé si mi campaña de descuentos de lunes generó más visitas que el lunes anterior",
+    "winner": {
+      "id": "spatial-concentration",
+      "type": "UseCase",
+      "title": "Concentración de personas y detección de zonas de mayor afluencia",
+      "score": 4
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "spatial-concentration",
+        "type": "UseCase",
+        "score": 4
+      }
+    ],
+    "responseBody": "Sí. Puedes comparar tus ubicaciones entre sí con datos objetivos: cuántas personas llegaron a cada una, cuánto tiempo permanecieron y en qué horarios se concentra el tráfico. Eso te permite identificar qué puntos rinden bien, cuáles están subutilizados y dónde hay oportunidades de mejora — sin depender de ventas ni de opinión del equipo. Los datos son exportables por punto, por período y por horario.",
+    "tags": [
+      "GeoPoints",
+      "Analytics",
+      "Inteligencia espacial",
+      "Visitas en vivo"
+    ]
+  },
+  {
+    "profile": "7-RST",
+    "label": "Cadena de Restaurantes",
+    "q": "Quiero mostrar una oferta especial solo cuando el cliente esté cerca del restaurante",
+    "winner": {
+      "id": "goal-restaurants",
+      "type": "BusinessGoal",
+      "title": "Restaurantes y gastronomía",
+      "score": 1
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-restaurants",
+        "type": "BusinessGoal",
+        "score": 1
+      },
+      {
+        "id": "local-business-proximity-promo",
+        "type": "UseCase",
+        "score": 1
+      }
+    ],
+    "responseBody": "Para un restaurante o cadena gastronómica, los datos que más importan son los que ocurren en el local: qué tan lleno está realmente en cada franja horaria, cómo varía el flujo entre locales y qué campañas de proximidad generan visitas reales versus impresiones digitales. Con esa información puedes comparar el rendimiento real de tus locales, detectar cuáles tienen demanda no cubierta, ajustar operaciones según comportamiento observado y demostrar el impacto de tus acciones de marketing con evidencia de presencia física, no solo con métricas de pauta.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "Smart Proxies"
+    ]
+  },
+  {
+    "profile": "7-RST",
+    "label": "Cadena de Restaurantes",
+    "q": "Necesito demostrar a mis inversores que la nueva sucursal está generando el tráfico proyectado",
+    "winner": {
+      "id": "urban-mobility-study",
+      "type": "UseCase",
+      "title": "Análisis de movilidad urbana y evaluación territorial",
+      "score": 2
+    },
+    "isFallback": false,
+    "subIntentionId": "apertura-nueva-ubicacion",
+    "top3": [
+      {
+        "id": "urban-mobility-study",
+        "type": "UseCase",
+        "score": 2
+      }
+    ],
+    "responseBody": "Sí. Puedes analizar el comportamiento real de personas en distintas zonas antes de decidir dónde abrir. Mides cuántas personas circulan por cada área candidata, en qué horarios y cuánto tiempo permanecen — comparando zonas entre sí con datos observacionales concretos, no proyecciones. El resultado: una decisión de localización basada en tráfico real, no en intuición.",
+    "tags": [
+      "GeoPoints",
+      "Analytics",
+      "Inteligencia espacial",
+      "Visitas en vivo"
+    ]
+  },
+  {
+    "profile": "8-CC",
+    "label": "Centro Comercial",
+    "q": "Quiero saber qué zonas del mall tienen más tráfico y en qué horarios",
+    "winner": {
+      "id": "goal-shopping-centers",
+      "type": "BusinessGoal",
+      "title": "Centros comerciales y malls",
+      "score": 3
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-shopping-centers",
+        "type": "BusinessGoal",
+        "score": 3
+      },
+      {
+        "id": "faq-indoor",
+        "type": "FAQ",
+        "score": 1
+      }
+    ],
+    "responseBody": "Un centro comercial gestiona múltiples zonas, niveles y locatarios con rendimientos muy distintos. Sin datos de tráfico por sector, los gerentes comerciales toman decisiones de asignación de espacios y campañas basándose en percepciones o en declaraciones de locatarios. Con información real de comportamiento — cuántas personas circulan por cada zona, en qué horarios se concentra el flujo y cómo varía entre días — puedes identificar las áreas de mayor y menor desempeño, fundamentar negociaciones de renta y diseñar campañas que generen desplazamiento real hacia zonas con menor tráfico.",
+    "tags": [
+      "GeoPoints",
+      "Analytics",
+      "Inteligencia espacial",
+      "Visitas en vivo"
+    ]
+  },
+  {
+    "profile": "8-CC",
+    "label": "Centro Comercial",
+    "q": "Necesito comparar el flujo de personas entre el sector A y el sector B para negociar rentas",
+    "winner": {
+      "id": "events-analytics",
+      "type": "UseCase",
+      "title": "Métricas de asistencia y comportamiento en eventos",
+      "score": 2
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "events-analytics",
+        "type": "UseCase",
+        "score": 2
+      }
+    ],
+    "responseBody": "Después del evento puedes saber exactamente cuánta gente pasó por cada zona, cuánto tiempo permanecieron, cuál fue el stand más visitado y cuál fue el pico de tráfico — datos reales, no estimaciones. Los mapas de intensidad muestran dónde se concentró la gente. Exportas todos los datos vía API o los analizas directamente en Studio.",
+    "tags": [
+      "GeoPoints",
+      "Analytics",
+      "Inteligencia espacial",
+      "Visitas en vivo"
+    ]
+  },
+  {
+    "profile": "8-CC",
+    "label": "Centro Comercial",
+    "q": "Cómo sé cuáles son los pasillos y sectores más y menos visitados de mi centro comercial",
+    "winner": {
+      "id": "goal-shopping-centers",
+      "type": "BusinessGoal",
+      "title": "Centros comerciales y malls",
+      "score": 4
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-shopping-centers",
+        "type": "BusinessGoal",
+        "score": 4
+      },
+      {
+        "id": "faq-indoor",
+        "type": "FAQ",
+        "score": 2
+      }
+    ],
+    "responseBody": "Un centro comercial gestiona múltiples zonas, niveles y locatarios con rendimientos muy distintos. Sin datos de tráfico por sector, los gerentes comerciales toman decisiones de asignación de espacios y campañas basándose en percepciones o en declaraciones de locatarios. Con información real de comportamiento — cuántas personas circulan por cada zona, en qué horarios se concentra el flujo y cómo varía entre días — puedes identificar las áreas de mayor y menor desempeño, fundamentar negociaciones de renta y diseñar campañas que generen desplazamiento real hacia zonas con menor tráfico.",
+    "tags": [
+      "GeoPoints",
+      "Analytics",
+      "Inteligencia espacial",
+      "Visitas en vivo"
+    ]
+  },
+  {
+    "profile": "8-CC",
+    "label": "Centro Comercial",
+    "q": "Quiero ver en tiempo real cuánta gente hay en cada piso o zona del mall",
+    "winner": {
+      "id": "faq-indoor",
+      "type": "FAQ",
+      "title": "Precisión GPS en recintos cerrados e interiores",
+      "score": 1
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "faq-indoor",
+        "type": "FAQ",
+        "score": 1
+      },
+      {
+        "id": "goal-shopping-centers",
+        "type": "BusinessGoal",
+        "score": 1
+      }
+    ],
+    "responseBody": "Ubyca funciona en recintos cerrados, pero con limitaciones que es importante conocer. El GPS en entornos indoor tiene una precisión de 10 a 50 metros según el tipo de construcción y la señal disponible. Esto significa que Ubyca puede delimitar zonas amplias — pisos, pabellones, sectores separados al menos 30-50 metros — pero no puede distinguir con fiabilidad entre zonas más cercanas entre sí. En exteriores, la precisión es de 3-10 metros y el rendimiento es significativamente mejor. Para casos indoor que requieren alta densidad de zonas pequeñas, se recomienda evaluar el caso concreto antes de implementar.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física"
+    ]
+  },
+  {
+    "profile": "8-CC",
+    "label": "Centro Comercial",
+    "q": "Necesito generar un reporte de afluencia por zona para presentar a los locatarios",
+    "winner": {
+      "id": "goal-shopping-centers",
+      "type": "BusinessGoal",
+      "title": "Centros comerciales y malls",
+      "score": 1
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-shopping-centers",
+        "type": "BusinessGoal",
+        "score": 1
+      },
+      {
+        "id": "local-business-footfall",
+        "type": "UseCase",
+        "score": 1
+      }
+    ],
+    "responseBody": "Un centro comercial gestiona múltiples zonas, niveles y locatarios con rendimientos muy distintos. Sin datos de tráfico por sector, los gerentes comerciales toman decisiones de asignación de espacios y campañas basándose en percepciones o en declaraciones de locatarios. Con información real de comportamiento — cuántas personas circulan por cada zona, en qué horarios se concentra el flujo y cómo varía entre días — puedes identificar las áreas de mayor y menor desempeño, fundamentar negociaciones de renta y diseñar campañas que generen desplazamiento real hacia zonas con menor tráfico.",
+    "tags": [
+      "GeoPoints",
+      "Analytics",
+      "Inteligencia espacial",
+      "Visitas en vivo"
+    ]
+  },
+  {
+    "profile": "9-INM",
+    "label": "Inmobiliaria",
+    "q": "Quiero saber cuántas personas visitaron mi sala de ventas esta semana y cuánto tiempo estuvieron",
+    "winner": {
+      "id": "goal-real-estate",
+      "type": "BusinessGoal",
+      "title": "Inmobiliarias y desarrolladoras",
+      "score": 4
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-real-estate",
+        "type": "BusinessGoal",
+        "score": 4
+      },
+      {
+        "id": "retail-dwell-time",
+        "type": "UseCase",
+        "score": 2
+      },
+      {
+        "id": "real-estate-open-house",
+        "type": "UseCase",
+        "score": 2
+      }
+    ],
+    "responseBody": "Para una inmobiliaria o desarrolladora, la información más valiosa no es cuántas personas vieron el aviso online, sino cuántas llegaron físicamente al proyecto, cuánto tiempo permanecieron en la sala de ventas o piloto y qué proyectos generan mayor interés real. Con esos datos puedes comparar el desempeño de tus salas de venta, identificar qué campañas efectivamente llevan visitas físicas y ajustar la estrategia de activación según el comportamiento observado, no según las métricas de pauta digital o los registros manuales de los ejecutivos de venta.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "9-INM",
+    "label": "Inmobiliaria",
+    "q": "Cómo mido el interés real en cada uno de mis proyectos inmobiliarios",
+    "winner": {
+      "id": "goal-real-estate",
+      "type": "BusinessGoal",
+      "title": "Inmobiliarias y desarrolladoras",
+      "score": 2
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-real-estate",
+        "type": "BusinessGoal",
+        "score": 2
+      }
+    ],
+    "responseBody": "Para una inmobiliaria o desarrolladora, la información más valiosa no es cuántas personas vieron el aviso online, sino cuántas llegaron físicamente al proyecto, cuánto tiempo permanecieron en la sala de ventas o piloto y qué proyectos generan mayor interés real. Con esos datos puedes comparar el desempeño de tus salas de venta, identificar qué campañas efectivamente llevan visitas físicas y ajustar la estrategia de activación según el comportamiento observado, no según las métricas de pauta digital o los registros manuales de los ejecutivos de venta.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "9-INM",
+    "label": "Inmobiliaria",
+    "q": "Quiero que los planos y precios se activen automáticamente cuando un interesado llega al proyecto",
+    "winner": null,
+    "isFallback": true,
+    "subIntentionId": null,
+    "top3": [],
+    "responseBody": "Ubyca verifica si una persona estuvo físicamente en un lugar — con hora exacta, duración y sin posibilidad de falsificación. Eso habilita casos muy distintos: registrar visitas de equipos en terreno, activar contenido o beneficios por presencia, medir tráfico real en ubicaciones, controlar acceso sin hardware, o demostrar que una campaña generó presencia física. ¿Cuál de estos se acerca más a lo que necesitas?",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "9-INM",
+    "label": "Inmobiliaria",
+    "q": "Necesito comparar cuántas visitas recibió cada sala de ventas sin depender del reporte del ejecutivo",
+    "winner": {
+      "id": "goal-real-estate",
+      "type": "BusinessGoal",
+      "title": "Inmobiliarias y desarrolladoras",
+      "score": 4
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-real-estate",
+        "type": "BusinessGoal",
+        "score": 4
+      },
+      {
+        "id": "real-estate-open-house",
+        "type": "UseCase",
+        "score": 2
+      }
+    ],
+    "responseBody": "Para una inmobiliaria o desarrolladora, la información más valiosa no es cuántas personas vieron el aviso online, sino cuántas llegaron físicamente al proyecto, cuánto tiempo permanecieron en la sala de ventas o piloto y qué proyectos generan mayor interés real. Con esos datos puedes comparar el desempeño de tus salas de venta, identificar qué campañas efectivamente llevan visitas físicas y ajustar la estrategia de activación según el comportamiento observado, no según las métricas de pauta digital o los registros manuales de los ejecutivos de venta.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "9-INM",
+    "label": "Inmobiliaria",
+    "q": "Cómo evito que el material exclusivo de mi open house circule fuera del proyecto",
+    "winner": {
+      "id": "real-estate-visits",
+      "type": "UseCase",
+      "title": "Registro de visitas a propiedades en venta o alquiler",
+      "score": 2
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "real-estate-visits",
+        "type": "UseCase",
+        "score": 2
+      },
+      {
+        "id": "real-estate-open-house",
+        "type": "UseCase",
+        "score": 2
+      }
+    ],
+    "responseBody": "Puedes saber cuántos eventos de visita se registraron en cada propiedad, cuánto tiempo permanecieron los interesados y qué propiedades acumulan mayor interés — datos reales que informan el precio y la estrategia de marketing, sin depender del corredor. La presencia se verifica automáticamente en el servidor.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics"
+    ]
+  },
+  {
+    "profile": "10-CTO",
+    "label": "CTO / Tecnología",
+    "q": "Cómo se integra esto con nuestro sistema existente, tenemos un backend propio",
+    "winner": {
+      "id": "faq-api-integration",
+      "type": "FAQ",
+      "title": "API, integración e implementación técnica de Ubyca",
+      "score": 6
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "faq-api-integration",
+        "type": "FAQ",
+        "score": 6
+      }
+    ],
+    "responseBody": "Sí. Ubyca dispone de una API REST que permite validar presencia física desde cualquier aplicación, backend o plataforma web — sin SDK propietario ni infraestructura especial. Tu sistema llama a un endpoint HTTP, recibe la validación en menos de 80 ms y decide qué hacer con ella. Para casos sin código: Smart Proxies envuelven una URL existente con validación de presencia geográfica sin modificar tu plataforma — configurables desde Studio sin escribir una línea. Para integración personalizada: tu equipo técnico conecta la API con cualquier backend, app iOS o Android, o sistema web mediante llamadas HTTP estándar. No existe SDK nativo oficial — se usa cualquier cliente HTTP. El esfuerzo depende del caso: un Smart Proxy puede activarse en horas; una integración backend completa, de un día a una semana.",
+    "tags": [
+      "API",
+      "Studio",
+      "Smart Proxies"
+    ]
+  },
+  {
+    "profile": "10-CTO",
+    "label": "CTO / Tecnología",
+    "q": "Necesito entender qué datos entrega el sistema y en qué formato",
+    "winner": {
+      "id": "field-sales-delivery",
+      "type": "UseCase",
+      "title": "Control de rutas de reparto y distribución",
+      "score": 1
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "field-sales-delivery",
+        "type": "UseCase",
+        "score": 1
+      }
+    ],
+    "responseBody": "Puedes verificar que tus conductores o repartidores pasaron por los puntos de entrega asignados, con hora exacta y tiempo de permanencia — sin depender de declaraciones del propio equipo. Ves la cobertura de rutas en tiempo real desde Studio y exportas los datos vía API a tu sistema logístico existente.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "10-CTO",
+    "label": "CTO / Tecnología",
+    "q": "Tenemos una app mobile propia en iOS y Android, cómo incorporamos la validación de ubicación",
+    "winner": null,
+    "isFallback": true,
+    "subIntentionId": null,
+    "top3": [],
+    "responseBody": "Ubyca verifica si una persona estuvo físicamente en un lugar — con hora exacta, duración y sin posibilidad de falsificación. Eso habilita casos muy distintos: registrar visitas de equipos en terreno, activar contenido o beneficios por presencia, medir tráfico real en ubicaciones, controlar acceso sin hardware, o demostrar que una campaña generó presencia física. ¿Cuál de estos se acerca más a lo que necesitas?",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  },
+  {
+    "profile": "10-CTO",
+    "label": "CTO / Tecnología",
+    "q": "Necesito integrar los datos de visitas con nuestro Salesforce",
+    "winner": {
+      "id": "goal-measure-physical",
+      "type": "BusinessGoal",
+      "title": "Medir el comportamiento físico en ubicaciones reales",
+      "score": 4
+    },
+    "isFallback": false,
+    "subIntentionId": null,
+    "top3": [
+      {
+        "id": "goal-measure-physical",
+        "type": "BusinessGoal",
+        "score": 4
+      },
+      {
+        "id": "crm-integration",
+        "type": "UseCase",
+        "score": 1
+      }
+    ],
+    "responseBody": "Lo que ocurre físicamente en tus locales — cuántas personas entran, cuánto tiempo permanecen, en qué horarios hay más actividad, cómo se distribuyen entre zonas — es información crítica de negocio que la mayoría de las organizaciones sencillamente no tiene. Disponer de esos datos cambia la forma en que se toman decisiones: puedes comparar el rendimiento real de sucursales, detectar patrones de comportamiento, validar si una campaña generó visitas físicas reales y asignar recursos donde los números lo justifican. Es analítica de comportamiento físico — el equivalente de lo que una herramienta digital hace en el mundo online, aplicado al mundo real.",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "Inteligencia espacial",
+      "Visitas en vivo"
+    ]
+  },
+  {
+    "profile": "10-CTO",
+    "label": "CTO / Tecnología",
+    "q": "Qué diferencia hay entre esto y simplemente leer la geolocalización del dispositivo nosotros mismos",
+    "winner": null,
+    "isFallback": true,
+    "subIntentionId": null,
+    "top3": [],
+    "responseBody": "Ubyca verifica si una persona estuvo físicamente en un lugar — con hora exacta, duración y sin posibilidad de falsificación. Eso habilita casos muy distintos: registrar visitas de equipos en terreno, activar contenido o beneficios por presencia, medir tráfico real en ubicaciones, controlar acceso sin hardware, o demostrar que una campaña generó presencia física. ¿Cuál de estos se acerca más a lo que necesitas?",
+    "tags": [
+      "GeoPoints",
+      "Presencia física",
+      "Analytics",
+      "API"
+    ]
+  }
+]

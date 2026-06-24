@@ -17,9 +17,22 @@ export const educationAttendance: UseCase = {
     'exportar el historial al sistema académico existente.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api'],
   matchKeywords: [
-    'asistencia', 'registro de asistencia', 'control de asistencia',
-    'alumno presente', 'pasar lista', 'campus universitario',
-    'escuela', 'universidad', 'colegio', 'estudiante',
+    // Patrones inequívocos de educación (multi-palabra = 2pts)
+    'registro de asistencia', 'control de asistencia',
+    'registrar asistencia', 'controlar asistencia',
+    'gestionar asistencia', 'validar asistencia',
+    'asistencia de alumnos', 'asistencia escolar',
+    'asistencia universitaria', 'asistencia estudiantil',
+    'asistencia en clases', 'asistencia en clase',
+    'asistencia en campus', 'asistencia de estudiantes',
+    'presencia de estudiantes', 'presencia de alumnos',
+    'alumno presente', 'pasar lista',
+    // Entidades educativas (single-palabra, señal fuerte)
+    'campus universitario',
+    'escuela', 'universidad', 'colegio',
+    'estudiante', 'alumno',
+    // NOTA: 'asistencia' bare fue eliminado — era demasiado amplio y
+    // causaba colisiones con gimnasios, sucursales y contextos comerciales.
   ],
 }
 

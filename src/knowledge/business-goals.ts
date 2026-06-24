@@ -450,6 +450,11 @@ export const goalMeasurePhysical: BusinessGoal = {
     'cuántas personas entran', 'cuantas personas entran',
     'cuánta gente entra', 'cuanta gente entra',
     'cuántas personas visitan', 'cuantas personas visitan',
+    // Asistencia de clientes — contexto comercial, no educativo
+    'asistencia de clientes', 'medir asistencia de clientes',
+    'medir asistencia',
+    // Concurrencia — vocabulario de negocio
+    'concurrencia', 'medir concurrencia',
   ],
   solution:
     'Lo que ocurre físicamente en tus locales — cuántas personas entran, cuánto ' +
@@ -489,6 +494,8 @@ export const goalRetailStores: BusinessGoal = {
     'comparar mis tiendas', 'comparar tiendas',
     'tráfico en tienda', 'trafico en tienda',
     'rendimiento de mis tiendas', 'desempeño de mis tiendas',
+    // Múltiples locales / concurrencia
+    'varios locales', 'concurrencia', 'medir concurrencia',
   ],
   solution:
     'Para una tienda o cadena de retail, la pregunta central es qué genera ' +
@@ -520,6 +527,13 @@ export const goalGyms: BusinessGoal = {
     'frecuencia de asistencia', 'asistencia al gimnasio',
     // Horarios
     'horarios punta', 'horas pico', 'horarios de alta demanda', 'hora pico',
+    // Sedes — vocabulario propio de cadenas de gimnasios
+    'sedes', 'mis sedes', 'en cada sede',
+    // Asistencia en contexto de gimnasio / sin la palabra "gimnasio"
+    'asistencia en cada sede', 'asistencia entre sedes',
+    'asistencia por sede', 'asistencia en mis sedes',
+    'asistencia a mis gimnasios', 'aumentar la asistencia',
+    'baja asistencia',
   ],
   solution:
     'El negocio de un gimnasio o cadena de fitness depende de dos métricas ' +

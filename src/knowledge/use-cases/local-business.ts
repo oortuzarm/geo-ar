@@ -38,6 +38,15 @@ export const localBusinessProximityPromo: UseCase = {
     'captar clientes', 'atraer clientes', 'captar clientes cerca',
     'mensaje al pasar', 'contenido al pasar', 'promoción al pasar',
     'campaña de proximidad', 'marketing de proximidad', 'promociones cuando pasen',
+    // Activación al llegar (no solo al pasar)
+    'cuando alguien llegue', 'cuando llegue al local', 'al llegar al local',
+    'al llegar a mi tienda', 'al llegar al negocio',
+    // Ofertas que aparecen automáticamente
+    'aparezca automáticamente', 'aparezca al llegar', 'le aparezca',
+    'oferta del día', 'oferta del dia',
+    'oferta al llegar', 'mostrar oferta al llegar',
+    'automáticamente al llegar', 'automáticamente cuando llegue',
+    'aparezca cuando llegue', 'mostrar promoción al llegar',
   ],
 }
 
@@ -95,5 +104,16 @@ export const localBusinessContextualMessage: UseCase = {
     'experiencia contextual', 'personalizar por ubicación',
     'activar contenido por zona', 'información al acercarme',
     'mensaje al acercarse', 'contenido al acercarse',
+    // Contenido diferente según ubicación
+    'contenido diferente', 'contenido diferente por zona',
+    'contenido diferente dependiendo', 'dependiendo de donde esté',
+    'dependiendo de donde este', 'contenido según dónde esté',
+    // Solo aparezca cuando alguien entre
+    'solo aparezca cuando', 'cuando alguien entre',
+    'solo aparezca', 'aparezca cuando alguien entre',
+    'información solo aparezca', 'que cierta información',
+    // Desbloquear información por zona
+    'desbloquear información', 'información exclusiva por ubicación',
+    'contenido exclusivo en el lugar',
   ],
 }

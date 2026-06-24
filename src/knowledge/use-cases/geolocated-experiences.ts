@@ -51,6 +51,12 @@ export const geolocationARExperience: UseCase = {
     // Vocabulario adicional — apps existentes integrando Ubyca
     'ya tengo una app',
     'qué agrega ubyca', 'que agrega ubyca',
+    // Desbloquear contenido por ubicación
+    'desbloquear contenido', 'desbloquear por ubicación',
+    'desbloquear por ubicacion', 'desbloquear al llegar',
+    'únicamente cuando llegue', 'unicamente cuando llegue',
+    'persona llegue a una ubicación', 'persona llegue a una ubicacion',
+    'contenido desbloqueado', 'acceso desbloqueado por ubicación',
   ],
   subIntentions: [
     {
@@ -63,6 +69,10 @@ export const geolocationARExperience: UseCase = {
         'solo cuando el usuario esté', 'funciones por ubicación',
         'funciones por ubicacion', 'habilitar funciones por ubicación',
         'funciones disponibles en un lugar',
+        // Desbloquear contenido por ubicación
+        'desbloquear contenido', 'desbloquear al llegar',
+        'únicamente cuando llegue', 'unicamente cuando llegue',
+        'persona llegue a una ubicación', 'persona llegue a una ubicacion',
       ],
       solution:
         'La diferencia clave con usar el GPS del dispositivo directamente: Ubyca valida en ' +

@@ -46,6 +46,16 @@ export const realEstateOpenHouse: UseCase = {
     'showroom', 'sala de ventas', 'visita a sala de ventas',
     'planos en proyecto', 'precios en sitio', 'catálogo inmobiliario',
     'desarrollo inmobiliario', 'unidades en venta',
+    // Se activan al llegar
+    'planos y precios', 'planos y precios se activen',
+    'se activen automáticamente', 'se activen al llegar',
+    'activen cuando llegue', 'activen cuando llega',
+    'cuando un interesado llega', 'interesado llega al proyecto',
+    'cuando llegue al proyecto', 'cuando lleguen al proyecto',
+    // Material que circule solo en el proyecto
+    'material circule fuera', 'material exclusivo',
+    'circule fuera del proyecto', 'que no circule fuera',
+    'material de open house', 'contenido del open house',
   ],
 }
 

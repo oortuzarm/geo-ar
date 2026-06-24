@@ -47,6 +47,18 @@ export const retailPromotion: UseCase = {
   matchKeywords: [
     'promoción en local', 'descuento presencial', 'oferta por ubicación',
     'beneficio al llegar', 'cupón por presencia', 'solo en tienda',
+    // Dentro del local / validación de presencia
+    'solo funcione dentro del local', 'funcione dentro del local',
+    'solo dentro del local', 'solo en el local',
+    'dentro de la tienda', 'que funcione dentro',
+    'funcione solo dentro',
+    // Clientes presentes en el momento
+    'clientes que están en el local', 'están en el local en ese momento',
+    'clientes en el local en ese momento', 'presentes en el local',
+    'solo a los clientes que están', 'en el local en ese momento',
+    // Descriptores naturales
+    'promoción especial', 'oferta exclusiva en tienda',
+    'descuento solo en tienda', 'beneficio solo en tienda',
   ],
 }
 

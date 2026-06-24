@@ -231,6 +231,50 @@ export const goalChooseLocation: BusinessGoal = {
   capabilities: ['geopoints', 'analytics', 'spatial-intelligence', 'live-visits'],
 }
 
+export const goalCustomerExperience: BusinessGoal = {
+  id: 'goal-customer-experience',
+  title: 'Personalización y experiencia presencial del cliente',
+  matchKeywords: [
+    // Mejorar la experiencia
+    'mejorar la experiencia', 'mejorar experiencia en tienda',
+    'mejorar la experiencia en tienda', 'mejorar la experiencia en el local',
+    'experiencia de cliente', 'experiencia del cliente',
+    'la experiencia de clientes', 'experiencia en tienda',
+    'experiencia en el local', 'experiencia presencial',
+    // Personalización
+    'personalizar la experiencia', 'experiencia personalizada',
+    'personalización por ubicación', 'personalizacion por ubicacion',
+    'experiencia diferente', 'experiencia diferente en mis sucursales',
+    // Sorprender / Bienvenida
+    'sorprender al cliente', 'sorprender a mis clientes',
+    'sorprender a los clientes',
+    'bienvenida automática', 'bienvenida automatica',
+    'mensaje de bienvenida', 'dar una bienvenida',
+    // Contenido contextual y activaciones al llegar
+    'contenido al llegar', 'contenido contextual',
+    'cuando alguien llega', 'mostrar contenido cuando',
+    'mostrar contenido al llegar', 'mostrar algo al llegar',
+    'activar contenido al llegar', 'activar contenido cuando',
+    'activar al llegar',
+    'experiencia contextual', 'experiencia geolocalizada',
+    'experiencia según ubicación', 'experiencia segun ubicacion',
+    // Hacer la visita más atractiva
+    'mejorar la visita', 'visita más atractiva', 'visita mas atractiva',
+    'hacer la visita más atractiva', 'hacer la visita mas atractiva',
+    'hacer más atractiva la visita', 'hacer mas atractiva la visita',
+  ],
+  solution:
+    'Puedes transformar la llegada de un cliente a tu local en un momento ' +
+    'memorable: cuando alguien entra al radio del local, puedes activar ' +
+    'automáticamente un mensaje de bienvenida, contenido exclusivo de esa ' +
+    'ubicación, una promoción del día o información contextual relevante — ' +
+    'sin que el cliente tenga que buscar nada ni declarar dónde está. ' +
+    'El contenido puede ser diferente por local, por zona o por horario. ' +
+    'La activación ocurre directamente en tu sitio web o app, sin instalar ' +
+    'nada en el espacio físico.',
+  capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],
+}
+
 export const businessGoals: BusinessGoal[] = [
   goalMarketing,
   goalAttractCustomers,
@@ -240,4 +284,5 @@ export const businessGoals: BusinessGoal[] = [
   goalMeasureMarketingROI,
   goalImproveOperations,
   goalChooseLocation,
+  goalCustomerExperience,
 ]

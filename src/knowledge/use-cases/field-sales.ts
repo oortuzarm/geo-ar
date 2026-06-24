@@ -30,10 +30,12 @@ export const fieldSalesSupervision: UseCase = {
     'real, sin tener que llamar a cada persona ni confiar en reportes de posición ' +
     'auto-declarados.',
   solution:
-    'Puedes ver en tiempo real qué zonas está cubriendo tu equipo, quién está ' +
-    'presente en cada punto y cuál es la cobertura real — sin que nadie haga ' +
-    'check-ins manuales. El sistema registra el historial completo de cobertura ' +
-    'por persona, zona y horario para revisión posterior.',
+    'Puedes ver en tiempo real qué zonas está cubriendo tu equipo y cuál es la ' +
+    'cobertura real — sin que nadie haga check-ins manuales. Cuando cada integrante ' +
+    'está autenticado en tu app y su dispositivo valida presencia en la zona asignada, ' +
+    'tu sistema puede asociar ese evento al perfil del empleado correspondiente via API. ' +
+    'El historial completo de cobertura por zona y horario queda disponible para ' +
+    'revisión posterior.',
   capabilities: ['geopoints', 'presence', 'analytics', 'live-visits', 'spatial-intelligence'],
   matchKeywords: [
     'supervisor', 'supervisar', 'supervisión', 'ronda', 'cobertura de zona',

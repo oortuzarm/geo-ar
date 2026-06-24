@@ -32,14 +32,14 @@ export const loyaltyMultiLocation: UseCase = {
     'visita cualquier sucursal, acumule visitas y entregue beneficios ' +
     'de forma centralizada.',
   solution:
-    'Sí. Puedes reconocer automáticamente cuando un cliente visita cualquier ' +
-    'sucursal de la cadena — sin que tenga que declarar dónde está ni escanear ' +
-    'nada — y acumular esas visitas en un perfil unificado. Eso te permite premiar ' +
-    'la frecuencia y la amplitud de visitas: el cliente que va a tres sucursales ' +
-    'distintas puede recibir un beneficio distinto al que siempre va a la misma. ' +
-    'El historial se integra vía API a tu CRM o sistema de loyalty existente. Los ' +
-    'datos de comportamiento — qué sucursales visita cada cliente, con qué frecuencia ' +
-    'y en qué horarios — informan decisiones de personalización que antes no tenías.',
+    'Sí. Puedes registrar eventos de presencia verificada en cualquier sucursal de ' +
+    'la cadena — sin que el usuario tenga que declarar dónde está ni escanear nada. ' +
+    'Cuando tu sistema de loyalty gestiona la identidad de tus usuarios (login propio), ' +
+    'puede asociar cada evento de presencia al perfil correspondiente via API: cuántas ' +
+    'visitas se registraron en cada sucursal, con qué frecuencia y en qué horarios. ' +
+    'Eso permite premiar la frecuencia y la amplitud de visitas según criterios ' +
+    'configurables en tu plataforma. Ubyca registra el evento de presencia; ' +
+    'tu sistema determina a quién pertenece y actúa en consecuencia.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api', 'integrations'],
   matchKeywords: [
     'cadena de locales', 'sucursales', 'multi-local', 'franquicia',

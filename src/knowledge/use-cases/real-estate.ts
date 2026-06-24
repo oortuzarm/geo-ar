@@ -5,15 +5,15 @@ export const realEstateVisits: UseCase = {
   vertical: 'real-estate',
   title: 'Registro de visitas a propiedades en venta o alquiler',
   problem:
-    'Una inmobiliaria necesita saber cuántas personas visitaron cada propiedad, ' +
-    'cuánto tiempo permanecieron y si regresaron. Los registros manuales ' +
-    'del corredor son incompletos y no permiten comparar el interés real ' +
-    'entre propiedades.',
+    'Una inmobiliaria necesita saber cuántos eventos de visita ocurrieron en cada ' +
+    'propiedad, cuánto tiempo permanecieron los interesados y qué propiedades ' +
+    'generan más interés real. Los registros manuales del corredor son incompletos ' +
+    'y no permiten comparar el interés real entre propiedades.',
   solution:
-    'Puedes saber cuántos interesados visitaron cada propiedad, cuánto tiempo ' +
-    'permanecieron y cuáles generan más visitas repetidas — datos reales que ' +
-    'informan el precio y la estrategia de marketing, sin depender del corredor. ' +
-    'La presencia se verifica automáticamente en el servidor.',
+    'Puedes saber cuántos eventos de visita se registraron en cada propiedad, ' +
+    'cuánto tiempo permanecieron los interesados y qué propiedades acumulan mayor ' +
+    'interés — datos reales que informan el precio y la estrategia de marketing, ' +
+    'sin depender del corredor. La presencia se verifica automáticamente en el servidor.',
   capabilities: ['geopoints', 'presence', 'analytics'],
   matchKeywords: [
     'inmobiliaria', 'propiedad', 'visita a propiedad', 'open house',
@@ -35,10 +35,10 @@ export const realEstateOpenHouse: UseCase = {
     'Sí. Puedes crear una experiencia para tu sala de ventas u open house donde ' +
     'el catálogo, planos y precios se activan automáticamente cuando el visitante ' +
     'llega al proyecto — sin que el material circule fuera del sitio ni llegue a ' +
-    'quien no estuvo presente. Registras cuántos visitantes llegaron, cuánto tiempo ' +
-    'permanecieron y si regresaron — datos reales, no reportes del corredor. Todo ' +
-    'se configura desde Studio sin modificar tu sitio web actual y sin que el ' +
-    'visitante tenga que instalar nada.',
+    'quien no estuvo presente. Registras cuántos eventos de visita se produjeron, ' +
+    'cuánto tiempo permaneció cada uno y en qué jornadas hubo mayor afluencia — ' +
+    'datos reales, no reportes del corredor. Todo se configura desde Studio sin ' +
+    'modificar tu sitio web actual y sin que el visitante tenga que instalar nada.',
   capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],
   matchKeywords: [
     'open house', 'puertas abiertas', 'proyecto inmobiliario',
@@ -86,14 +86,16 @@ export const realEstateBuilding: UseCase = {
   title: 'Control de acceso y presencia en edificios comerciales',
   problem:
     'Una administración de edificio u oficina comercial necesita registrar ' +
-    'quién accede a qué áreas, con qué frecuencia y cuánto tiempo permanece, ' +
-    'sin instalar hardware costoso.',
+    'qué áreas registran actividad, con qué frecuencia y cuánto tiempo permanecen ' +
+    'los ocupantes — sin instalar hardware costoso.',
   solution:
-    'Puedes saber quién accede a cada área del edificio, cuándo y cuánto tiempo ' +
-    'permanece — sin hardware de acceso, lectores de tarjetas ni infraestructura ' +
-    'fija. La presencia se valida vía API directamente desde el dispositivo del ' +
-    'usuario. Los datos de uso informan decisiones sobre amenities, seguridad y ' +
-    'mantenimiento.',
+    'Puedes registrar eventos de presencia en cada área del edificio, cuándo ' +
+    'ocurren y cuánto tiempo duran — sin hardware de acceso, lectores de tarjetas ' +
+    'ni infraestructura fija. La presencia se valida vía API directamente desde el ' +
+    'dispositivo del usuario. Para saber a quién corresponde cada evento, el sistema ' +
+    'del edificio debe gestionar la autenticación de los usuarios e incluir el ' +
+    'identificador al llamar la API. Los datos de uso informan decisiones sobre ' +
+    'amenities, seguridad y mantenimiento.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api'],
   matchKeywords: [
     'edificio', 'oficina comercial', 'control de acceso edificio',

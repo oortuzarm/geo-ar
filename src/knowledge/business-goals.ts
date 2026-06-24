@@ -57,7 +57,7 @@ export const goalAttractCustomers: BusinessGoal = {
     'Si el objetivo es atraer más personas a una ubicación física, el primer paso ' +
     'es saber qué acciones realmente generan visitas y cuáles no. Sin esa ' +
     'información, las campañas y promociones se diseñan a ciegas. ' +
-    'Con datos reales de presencia podés medir qué mensajes o incentivos ' +
+    'Con datos reales de presencia puedes medir qué mensajes o incentivos ' +
     'efectivamente llevaron a alguien al local, en qué horarios hay más afluencia ' +
     'natural y qué días necesitan mayor impulso. El resultado: decisiones de ' +
     'activación basadas en comportamiento real, no en suposiciones sobre ' +
@@ -92,10 +92,10 @@ export const goalIncreaseSales: BusinessGoal = {
   ],
   solution:
     'Aumentar ventas en puntos físicos requiere entender qué ocurre realmente dentro ' +
-    'del local: quién entra, en qué horarios hay más tráfico, cuánto tiempo ' +
+    'del local: cuántas personas entran, en qué horarios hay más tráfico, cuánto tiempo ' +
     'permanecen los visitantes y qué acciones los convierten en compradores. ' +
     'Sin esos datos, las decisiones de promoción, disposición y horarios dependen ' +
-    'de intuición. Con información real de comportamiento en tienda, podés ' +
+    'de intuición. Con información real de comportamiento en tienda, puedes ' +
     'identificar los momentos de mayor oportunidad, diseñar incentivos precisos ' +
     'y ajustar la estrategia comercial con evidencia observable, no con estimaciones.',
   capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],
@@ -153,12 +153,14 @@ export const goalImproveLoyalty: BusinessGoal = {
   ],
   solution:
     'Un programa de fidelización efectivo premia el comportamiento real: cuántas ' +
-    'veces volvió un cliente, qué sucursales visitó, con qué frecuencia. No cuántos ' +
-    'correos abrió ni cuántos puntos acumuló en un formulario. Cuando los beneficios ' +
-    'se basan en visitas presenciales verificadas, el programa incentiva exactamente ' +
-    'lo que importa al negocio — mayor frecuencia de visita, mayor amplitud de ' +
-    'cobertura entre sucursales — y el cliente los recibe sin tener que escanear ' +
-    'nada ni declarar que estuvo allí.',
+    'visitas se registran en cada punto, con qué frecuencia se producen y en qué ' +
+    'horarios. No cuántos correos abrió un contacto ni cuántos puntos acumuló en ' +
+    'un formulario. Cuando los beneficios se basan en visitas presenciales ' +
+    'verificadas, el programa incentiva exactamente lo que importa al negocio — ' +
+    'mayor frecuencia de visita, mayor cobertura entre sucursales — y el usuario ' +
+    'los recibe sin tener que escanear nada ni declarar que estuvo allí. Para ' +
+    'asociar visitas a personas identificadas, el sistema de loyalty del cliente ' +
+    'debe gestionar la identidad de sus usuarios y vincularla via API.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api', 'integrations'],
 }
 
@@ -310,7 +312,7 @@ export const goalCustomerExperience: BusinessGoal = {
     'Cuando alguien entra a un local, tiene expectativas. Lo que diferencia una ' +
     'visita ordinaria de una experiencia memorable es que el espacio responda a ' +
     'su presencia de forma relevante y oportuna. ' +
-    'Podés ofrecer una bienvenida personalizada, una promoción del día, información ' +
+    'Puedes ofrecer una bienvenida personalizada, una promoción del día, información ' +
     'exclusiva de esa ubicación o contenido contextual — activado automáticamente ' +
     'en el momento en que el cliente llega, sin que tenga que buscar nada ni ' +
     'declarar dónde está. El contenido puede variar por local, por zona o por ' +
@@ -454,7 +456,7 @@ export const goalMeasurePhysical: BusinessGoal = {
     'tiempo permanecen, en qué horarios hay más actividad, cómo se distribuyen ' +
     'entre zonas — es información crítica de negocio que la mayoría de las ' +
     'organizaciones sencillamente no tiene. ' +
-    'Disponer de esos datos cambia la forma en que se toman decisiones: podés ' +
+    'Disponer de esos datos cambia la forma en que se toman decisiones: puedes ' +
     'comparar el rendimiento real de sucursales, detectar patrones de comportamiento, ' +
     'validar si una campaña generó visitas físicas reales y asignar recursos donde ' +
     'los números lo justifican. Es analítica de comportamiento físico — el ' +
@@ -491,10 +493,10 @@ export const goalRetailStores: BusinessGoal = {
   solution:
     'Para una tienda o cadena de retail, la pregunta central es qué genera ' +
     'tráfico real y qué convierte ese tráfico en ventas. Sin datos de ' +
-    'comportamiento en el punto de venta — quién entra, en qué horarios hay ' +
+    'comportamiento en el punto de venta — cuántas personas entran, en qué horarios hay ' +
     'más demanda, cuánto tiempo permanecen y cómo varía el rendimiento entre ' +
     'locales — las decisiones de promoción, personal y expansión se toman a ' +
-    'ciegas. Con esa información podés comparar el desempeño de tus tiendas, ' +
+    'ciegas. Con esa información puedes comparar el desempeño de tus tiendas, ' +
     'identificar cuáles necesitan intervención, optimizar horarios de atención ' +
     'y medir si una campaña local generó visitas reales o solo impresiones.',
   capabilities: ['geopoints', 'presence', 'analytics', 'smart-proxies'],
@@ -521,14 +523,15 @@ export const goalGyms: BusinessGoal = {
   ],
   solution:
     'El negocio de un gimnasio o cadena de fitness depende de dos métricas ' +
-    'clave: la frecuencia de asistencia de los socios y su permanencia. Sin ' +
-    'datos reales de cuándo vienen, con qué frecuencia lo hacen y en qué ' +
-    'horarios se concentra la demanda, las decisiones de retención, staffing ' +
-    'y programación se diseñan a ciegas. Con información real de comportamiento ' +
-    'podés identificar socios que están bajando su frecuencia antes de que ' +
-    'cancelen, optimizar la carga de personal por franja horaria y diseñar ' +
-    'beneficios que incentiven exactamente lo que querés lograr: mayor ' +
-    'asistencia, mayor fidelidad, menor tasa de abandono.',
+    'clave: la frecuencia de asistencia y la permanencia. Sin datos reales de ' +
+    'cuándo se producen visitas, con qué frecuencia y en qué horarios se ' +
+    'concentra la demanda, las decisiones de retención, staffing y programación ' +
+    'se diseñan a ciegas. Con información real de comportamiento puedes detectar ' +
+    'caídas en la frecuencia general de visitas por franja horaria y período, ' +
+    'optimizar la carga de personal según demanda real y diseñar beneficios que ' +
+    'incentiven lo que quieres lograr: mayor asistencia, mayor fidelidad, menor ' +
+    'tasa de abandono. Para vincular esos datos a socios individuales, el sistema ' +
+    'de gestión del gimnasio debe integrar su propia base de socios via API.',
   capabilities: ['geopoints', 'presence', 'analytics', 'api'],
 }
 
@@ -556,7 +559,7 @@ export const goalRestaurants: BusinessGoal = {
     'los que ocurren en el local: qué tan lleno está realmente en cada franja ' +
     'horaria, cómo varía el flujo entre locales y qué campañas de proximidad ' +
     'generan visitas reales versus impresiones digitales. Con esa información ' +
-    'podés comparar el rendimiento real de tus locales, detectar cuáles tienen ' +
+    'puedes comparar el rendimiento real de tus locales, detectar cuáles tienen ' +
     'demanda no cubierta, ajustar operaciones según comportamiento observado y ' +
     'demostrar el impacto de tus acciones de marketing con evidencia de ' +
     'presencia física, no solo con métricas de pauta.',
@@ -589,7 +592,7 @@ export const goalEvents: BusinessGoal = {
     'clientes, marcas y patrocinadores. El problema central es demostrar lo ' +
     'que realmente ocurrió: cuántas personas estuvieron físicamente presentes, ' +
     'cuánto tiempo permanecieron en cada zona y cuál fue el alcance real de la ' +
-    'experiencia. Con registros objetivos de asistencia y permanencia podés ' +
+    'experiencia. Con registros objetivos de asistencia y permanencia puedes ' +
     'presentar evidencia concreta ante sponsors, calcular el costo por ' +
     'interacción real y ajustar el diseño de futuros eventos basándote en el ' +
     'comportamiento observado en cada edición, no en estimaciones de aforo.',
@@ -622,7 +625,7 @@ export const goalShoppingCenters: BusinessGoal = {
     'basándose en percepciones o en declaraciones de locatarios. Con ' +
     'información real de comportamiento — cuántas personas circulan por cada ' +
     'zona, en qué horarios se concentra el flujo y cómo varía entre días — ' +
-    'podés identificar las áreas de mayor y menor desempeño, fundamentar ' +
+    'puedes identificar las áreas de mayor y menor desempeño, fundamentar ' +
     'negociaciones de renta y diseñar campañas que generen desplazamiento real ' +
     'hacia zonas con menor tráfico.',
   capabilities: ['geopoints', 'analytics', 'spatial-intelligence', 'live-visits'],
@@ -657,7 +660,7 @@ export const goalFranchises: BusinessGoal = {
     'Sin datos comparables de tráfico real, las evaluaciones de desempeño ' +
     'dependen de ventas declaradas, reportes de franquiciados o visitas ' +
     'estimadas. Con información objetiva de presencia y comportamiento en cada ' +
-    'local podés identificar las sucursales que están por debajo de su ' +
+    'local puedes identificar las sucursales que están por debajo de su ' +
     'potencial, detectar los patrones que diferencian a las más exitosas y ' +
     'tomar decisiones de expansión, cierre o intervención con evidencia ' +
     'observable, no con intuición.',
@@ -722,7 +725,7 @@ export const goalRealEstate: BusinessGoal = {
     'Para una inmobiliaria o desarrolladora, la información más valiosa no es ' +
     'cuántas personas vieron el aviso online, sino cuántas llegaron físicamente ' +
     'al proyecto, cuánto tiempo permanecieron en la sala de ventas o piloto y ' +
-    'qué proyectos generan mayor interés real. Con esos datos podés comparar el ' +
+    'qué proyectos generan mayor interés real. Con esos datos puedes comparar el ' +
     'desempeño de tus salas de venta, identificar qué campañas efectivamente ' +
     'llevan visitas físicas y ajustar la estrategia de activación según el ' +
     'comportamiento observado, no según las métricas de pauta digital o los ' +

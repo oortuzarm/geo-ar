@@ -202,6 +202,46 @@ export const faqVsQR: FAQ = {
   tags: ['GeoPoints', 'Presencia física', 'Analytics'],
 }
 
+export const faqNoHardware: FAQ = {
+  id: 'faq-no-hardware',
+  title: 'Ubyca no requiere hardware, sensores ni dispositivos físicos',
+  questionPatterns: [
+    // Pregunta directa sobre hardware
+    'necesito hardware', 'requiere hardware', 'necesitan hardware',
+    'necesita hardware', 'hay hardware', 'tiene hardware',
+    // Instalar algo
+    'necesito instalar algo', 'instalar algo en el local',
+    'instalar algo físico', 'hay que instalar algo',
+    'instalar algo', 'necesito instalar', 'hay que instalar',
+    'qué hay que instalar', 'que hay que instalar',
+    // Dispositivos y sensores
+    'necesito beacons', 'requiere beacons', 'necesito sensores',
+    'requiere sensores', 'dispositivos físicos', 'dispositivos especiales',
+    'necesito dispositivos', 'requiere dispositivos',
+    'equipos físicos', 'equipos especiales',
+    // Sin hardware — confirmaciones positivas
+    'sin hardware', 'sin sensores', 'sin beacons',
+    'sin torniquetes', 'sin lectores', 'sin infraestructura',
+    'sin dispositivos', 'sin equipos físicos',
+    'sin infraestructura adicional', 'sin nada físico',
+    // Funcionamiento sin hardware
+    'funciona sin hardware', 'funciona sin instalar',
+    'funciona sin sensores', 'funciona sin beacons',
+    'funciona sin dispositivos',
+    // Algo físico (formulación genérica)
+    'algo físico', 'algo fisico', 'necesito algo físico',
+    'necesito algo fisico',
+  ],
+  answer:
+    'No. Ubyca no requiere hardware, sensores, beacons ni dispositivos físicos ' +
+    'instalados en ningún punto. La validación de presencia se realiza a partir ' +
+    'de la ubicación GPS del teléfono del usuario y se procesa en los servidores ' +
+    'de Ubyca — sin equipos que instalar, calibrar ni mantener. ' +
+    'Puedes comenzar con tu sitio web, app o una integración vía API sin modificar ' +
+    'la infraestructura física de ningún local.',
+  tags: ['GeoPoints', 'Presencia física', 'API'],
+}
+
 export const productFaqs: FAQ[] = [
   faqWhatIsUbyca,
   faqCapabilities,
@@ -210,4 +250,5 @@ export const productFaqs: FAQ[] = [
   faqIndoor,
   faqMonitoring,
   faqVsQR,
+  faqNoHardware,
 ]

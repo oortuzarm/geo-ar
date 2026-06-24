@@ -52,6 +52,23 @@ export const goalAttractCustomers: BusinessGoal = {
     'capto personas', 'capto más personas', 'capto mas personas',
     'genero tráfico', 'genero trafico', 'genero más tráfico', 'genero mas trafico',
     'llevo personas al local', 'llevo más personas', 'llevo mas personas',
+    // P4 — intención de atracción cuando se combina industria + objetivo comercial
+    'que las personas vayan', 'que más personas vayan', 'que mas personas vayan',
+    'personas vayan',
+    'quiero atraer',
+    'quiero atraer más clientes', 'quiero atraer mas clientes',
+    'atraer más personas', 'atraer mas personas',
+    'atraer más gente', 'atraer mas gente',
+    'llevar más personas', 'llevar mas personas',
+    'llevar más clientes', 'llevar mas clientes',
+    'más gente', 'mas gente',
+    'más visitas', 'mas visitas',
+    'generar más visitas', 'generar mas visitas',
+    'aumentar visitas',
+    'más personas al local', 'mas personas al local',
+    'más personas a la tienda', 'mas personas a la tienda',
+    'más personas al negocio', 'mas personas al negocio',
+    'llenar mesas',
   ],
   solution:
     'Si el objetivo es atraer más personas a una ubicación física, el primer paso ' +
@@ -89,6 +106,13 @@ export const goalIncreaseSales: BusinessGoal = {
     'aumento ventas', 'impulso ventas', 'impulso mis ventas', 'impulso las ventas',
     'incremento ingresos', 'incremento mis ingresos',
     'genero más ventas', 'genero mas ventas',
+    // P4 — conversión y ventas cuando se combina industria + objetivo comercial
+    'que compren', 'hacer que compren',
+    'convertir visitas en ventas',
+    'quiero aumentar ventas',
+    'que la gente compre',
+    'compren más', 'compren mas',
+    'que compren más', 'que compren mas',
   ],
   solution:
     'Aumentar ventas en puntos físicos requiere entender qué ocurre realmente dentro ' +
@@ -345,6 +369,7 @@ export const goalDecisionMaking: BusinessGoal = {
     'dónde asignar presupuesto', 'donde asignar presupuesto',
     'dónde destinar recursos', 'donde destinar recursos',
     'dónde concentrar recursos', 'donde concentrar recursos',
+    'dónde concentrar', 'donde concentrar',
     // Qué local / sucursal rinde más o merece recursos
     'qué local funciona mejor', 'que local funciona mejor',
     'qué sucursal funciona mejor', 'que sucursal funciona mejor',

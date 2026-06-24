@@ -314,6 +314,56 @@ export const goalCustomerExperience: BusinessGoal = {
   capabilities: ['geopoints', 'presence', 'smart-proxies', 'analytics'],
 }
 
+export const goalDecisionMaking: BusinessGoal = {
+  id: 'goal-decision-making',
+  title: 'Toma de decisiones ejecutivas basadas en datos de presencia',
+  matchKeywords: [
+    // Decisiones generales
+    'tomar mejores decisiones', 'tomar decisiones',
+    'decisiones basadas en datos', 'decision basada en datos',
+    'tomar decisiones comerciales', 'tomar decisiones de negocio',
+    'decidir una estrategia', 'validar una decisión', 'validar una decision',
+    // Inversión y asignación de recursos
+    'decidir dónde invertir', 'decidir donde invertir',
+    'saber dónde invertir', 'saber donde invertir',
+    'dónde invertir', 'donde invertir',
+    'asignar recursos', 'asignación de recursos', 'asignacion de recursos',
+    'priorizar inversiones', 'justificar inversiones',
+    // Qué local / sucursal rinde más
+    'qué local funciona mejor', 'que local funciona mejor',
+    'qué sucursal funciona mejor', 'que sucursal funciona mejor',
+    'cuál funciona mejor', 'cual funciona mejor',
+    'decidir qué sucursal', 'decidir que sucursal',
+    // Estrategia y validación de hipótesis
+    'validar una estrategia', 'validar una hipótesis', 'validar una hipotesis',
+    // Expansión y crecimiento
+    'dónde expandirse', 'donde expandirse',
+    'dónde crecer', 'donde crecer',
+    'decidir dónde abrir', 'decidir donde abrir',
+    // Identificar oportunidades
+    'identificar oportunidades',
+    'dónde están las oportunidades', 'donde estan las oportunidades',
+    // Comparar y evaluar
+    'comparar el desempeño', 'comparar el desempeno',
+    'comparar el rendimiento', 'comparar el desempeño de',
+    'comparar sucursales', 'comparar locales', 'comparar ubicaciones',
+    'evaluar ubicaciones', 'evaluar rendimiento',
+    'elegir una ubicación', 'elegir una ubicacion',
+  ],
+  solution:
+    'Puedes reemplazar opiniones, intuiciones o percepciones por datos reales de ' +
+    'comportamiento físico. Ubyca te ayuda a entender qué ubicaciones funcionan ' +
+    'mejor, dónde existe mayor oportunidad, qué campañas generan resultados y dónde ' +
+    'conviene concentrar recursos. El objetivo no es producir más métricas: es ' +
+    'ayudarte a tomar decisiones con evidencia. ' +
+    'Los datos provienen de presencia física verificada: cuántas personas estuvieron ' +
+    'en cada punto, cuánto tiempo permanecieron, en qué horarios y cómo se ' +
+    'distribuyeron entre ubicaciones. Puedes comparar el desempeño de sucursales, ' +
+    'validar una zona antes de expandirte, medir si una campaña generó visitas ' +
+    'reales y priorizar inversiones donde los datos indican mayor retorno.',
+  capabilities: ['analytics', 'geopoints', 'presence', 'spatial-intelligence'],
+}
+
 export const businessGoals: BusinessGoal[] = [
   goalMarketing,
   goalAttractCustomers,
@@ -324,4 +374,5 @@ export const businessGoals: BusinessGoal[] = [
   goalImproveOperations,
   goalChooseLocation,
   goalCustomerExperience,
+  goalDecisionMaking,
 ]

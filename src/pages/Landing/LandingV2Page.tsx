@@ -728,7 +728,7 @@ const HOW_STEPS = [
   },
   {
     title: 'Actúa sobre el resultado en tiempo real',
-    desc: 'Visualiza los resultados en Studio: mapa de visitas activas, analytics espaciales y activaciones en vivo. Si necesitas integrar, Ubyca también devuelve cada validación vía API con presencia confirmada, condiciones cumplidas y tiempo de permanencia.',
+    desc: 'Visualiza los resultados en Studio mediante mapas, analítica espacial y activaciones en tiempo real. Si necesitas integrar, Ubyca también expone cada validación vía API con presencia confirmada y condiciones cumplidas.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
@@ -1108,7 +1108,7 @@ function ApiSection() {
             <Reveal>
               <SectionLabel>API</SectionLabel>
               <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight mb-4">
-                Una API para validar presencia física en tiempo real.
+                Integra validación de presencia en cualquier sistema.
               </h2>
               <p className="text-slate-400 leading-relaxed mb-8">
                 Integra validación GPS, reglas de disponibilidad y datos espaciales en cualquier

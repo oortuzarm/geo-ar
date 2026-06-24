@@ -463,6 +463,273 @@ export const goalMeasurePhysical: BusinessGoal = {
   capabilities: ['geopoints', 'presence', 'analytics', 'spatial-intelligence', 'live-visits'],
 }
 
+export const goalRetailStores: BusinessGoal = {
+  id: 'goal-retail-stores',
+  title: 'Retail y tiendas físicas',
+  matchKeywords: [
+    // Tipo de establecimiento
+    'tienda', 'tiendas', 'mi tienda', 'mis tiendas',
+    'tienda física', 'tienda fisica',
+    'tienda de muebles', 'tienda de ropa', 'tienda de electrónica',
+    'tienda de electronica', 'tienda de moda',
+    'varias tiendas', 'cadena de tiendas',
+    'showroom', 'sala de exhibición', 'sala de exhibicion',
+    'retail', 'punto de venta físico', 'punto de venta fisico',
+    'local comercial', 'locales comerciales',
+    // Rubros
+    'muebles', 'electrónica', 'electronica', 'moda', 'indumentaria',
+    'electrodomésticos', 'electrodomesticos', 'decoración', 'decoracion',
+    // Objetivos en tienda
+    'a mi tienda', 'personas a mi tienda', 'clientes a mi tienda',
+    'mas personas a mi tienda', 'más personas a mi tienda',
+    'atraer a mi tienda', 'tráfico a mi tienda', 'trafico a mi tienda',
+    'visitas a mi tienda', 'visitas a mis tiendas',
+    'comparar mis tiendas', 'comparar tiendas',
+    'tráfico en tienda', 'trafico en tienda',
+    'rendimiento de mis tiendas', 'desempeño de mis tiendas',
+  ],
+  solution:
+    'Para una tienda o cadena de retail, la pregunta central es qué genera ' +
+    'tráfico real y qué convierte ese tráfico en ventas. Sin datos de ' +
+    'comportamiento en el punto de venta — quién entra, en qué horarios hay ' +
+    'más demanda, cuánto tiempo permanecen y cómo varía el rendimiento entre ' +
+    'locales — las decisiones de promoción, personal y expansión se toman a ' +
+    'ciegas. Con esa información podés comparar el desempeño de tus tiendas, ' +
+    'identificar cuáles necesitan intervención, optimizar horarios de atención ' +
+    'y medir si una campaña local generó visitas reales o solo impresiones.',
+  capabilities: ['geopoints', 'presence', 'analytics', 'smart-proxies'],
+}
+
+export const goalGyms: BusinessGoal = {
+  id: 'goal-gyms',
+  title: 'Gimnasios y centros deportivos',
+  matchKeywords: [
+    // Tipo de establecimiento
+    'gimnasio', 'gimnasios', 'mi gimnasio', 'cadena de gimnasios',
+    'centro deportivo', 'centros deportivos', 'centro de fitness',
+    'centros de fitness', 'club deportivo', 'fitness center', 'gym',
+    // Socios y retención
+    'socios', 'mis socios', 'retener socios', 'retención de socios',
+    'retencion de socios', 'socios activos', 'socios inactivos',
+    'socios frecuentes', 'comportamiento de socios',
+    // Frecuencia — más cobertura que goalImproveLoyalty para ganar en score
+    'frecuencia de visita', 'la frecuencia de visita',
+    'aumentar la frecuencia de visita', 'mayor frecuencia de visita',
+    'frecuencia de asistencia', 'asistencia al gimnasio',
+    // Horarios
+    'horarios punta', 'horas pico', 'horarios de alta demanda', 'hora pico',
+  ],
+  solution:
+    'El negocio de un gimnasio o cadena de fitness depende de dos métricas ' +
+    'clave: la frecuencia de asistencia de los socios y su permanencia. Sin ' +
+    'datos reales de cuándo vienen, con qué frecuencia lo hacen y en qué ' +
+    'horarios se concentra la demanda, las decisiones de retención, staffing ' +
+    'y programación se diseñan a ciegas. Con información real de comportamiento ' +
+    'podés identificar socios que están bajando su frecuencia antes de que ' +
+    'cancelen, optimizar la carga de personal por franja horaria y diseñar ' +
+    'beneficios que incentiven exactamente lo que querés lograr: mayor ' +
+    'asistencia, mayor fidelidad, menor tasa de abandono.',
+  capabilities: ['geopoints', 'presence', 'analytics', 'api'],
+}
+
+export const goalRestaurants: BusinessGoal = {
+  id: 'goal-restaurants',
+  title: 'Restaurantes y gastronomía',
+  matchKeywords: [
+    // Tipo de establecimiento
+    'restaurante', 'restaurantes', 'mi restaurante', 'cadena de restaurantes',
+    'cafetería', 'cafeterias', 'café', 'cafe', 'bar', 'bares',
+    'food court', 'patio de comidas', 'local gastronómico',
+    'local gastronomico', 'negocio gastronómico', 'negocio gastronomico',
+    // Comparar locales — dos frases para ganarle score a goalDecisionMaking
+    'saber que local', 'saber qué local',
+    'que local funciona mejor', 'qué local funciona mejor',
+    // Campañas y tráfico
+    'campañas locales', 'campanas locales',
+    'horarios del restaurante', 'flujo del restaurante',
+    'tráfico del restaurante', 'trafico del restaurante',
+    'comparar restaurantes', 'comparar mis restaurantes',
+    'cuál restaurante funciona mejor', 'cual restaurante funciona mejor',
+  ],
+  solution:
+    'Para un restaurante o cadena gastronómica, los datos que más importan son ' +
+    'los que ocurren en el local: qué tan lleno está realmente en cada franja ' +
+    'horaria, cómo varía el flujo entre locales y qué campañas de proximidad ' +
+    'generan visitas reales versus impresiones digitales. Con esa información ' +
+    'podés comparar el rendimiento real de tus locales, detectar cuáles tienen ' +
+    'demanda no cubierta, ajustar operaciones según comportamiento observado y ' +
+    'demostrar el impacto de tus acciones de marketing con evidencia de ' +
+    'presencia física, no solo con métricas de pauta.',
+  capabilities: ['geopoints', 'presence', 'analytics', 'smart-proxies'],
+}
+
+export const goalEvents: BusinessGoal = {
+  id: 'goal-events',
+  title: 'Eventos, ferias y activaciones',
+  matchKeywords: [
+    // Tipo de evento
+    'evento', 'eventos', 'organizar eventos', 'organizo eventos',
+    'feria', 'ferias', 'congreso', 'congresos',
+    'exposición', 'exposicion', 'exposiciones',
+    'activación de marca', 'activacion de marca', 'activaciones de marca',
+    'evento corporativo', 'eventos corporativos',
+    'conferencia', 'conferencias', 'jornada', 'jornadas',
+    // Patrocinadores
+    'patrocinadores', 'patrocinador', 'sponsor', 'sponsors',
+    'justificar patrocinadores', 'justificar sponsors',
+    'demostrar a patrocinadores', 'roi del evento', 'roi de eventos',
+    // Asistencia y evidencia
+    'asistencia real', 'asistentes reales', 'aforo real', 'aforo',
+    'demostrar asistencia', 'evidencia de asistencia',
+    'asistencia verificada', 'cuántas personas asistieron',
+    'cuantas personas asistieron', 'impacto del evento',
+  ],
+  solution:
+    'Organizar un evento, feria o activación implica asumir compromisos ante ' +
+    'clientes, marcas y patrocinadores. El problema central es demostrar lo ' +
+    'que realmente ocurrió: cuántas personas estuvieron físicamente presentes, ' +
+    'cuánto tiempo permanecieron en cada zona y cuál fue el alcance real de la ' +
+    'experiencia. Con registros objetivos de asistencia y permanencia podés ' +
+    'presentar evidencia concreta ante sponsors, calcular el costo por ' +
+    'interacción real y ajustar el diseño de futuros eventos basándote en el ' +
+    'comportamiento observado en cada edición, no en estimaciones de aforo.',
+  capabilities: ['geopoints', 'presence', 'analytics', 'api'],
+}
+
+export const goalShoppingCenters: BusinessGoal = {
+  id: 'goal-shopping-centers',
+  title: 'Centros comerciales y malls',
+  matchKeywords: [
+    // Tipo de establecimiento
+    'mall', 'centro comercial', 'centros comerciales', 'un centro comercial',
+    'shopping', 'shopping center', 'plaza comercial', 'galería comercial',
+    'galeria comercial', 'mi mall', 'mi centro comercial',
+    // Tráfico y zonas
+    'tráfico por zona', 'trafico por zona',
+    'tráfico por sector', 'trafico por sector',
+    'zonas del mall', 'zonas del centro comercial',
+    'sectores del mall', 'sector del mall',
+    'comparar sectores', 'comparar zonas del mall',
+    'comparar sectores del mall',
+    // Locatarios
+    'locatarios', 'locales del mall', 'locales del centro comercial',
+    'campañas del mall', 'rendimiento por zona',
+  ],
+  solution:
+    'Un centro comercial gestiona múltiples zonas, niveles y locatarios con ' +
+    'rendimientos muy distintos. Sin datos de tráfico por sector, los gerentes ' +
+    'comerciales toman decisiones de asignación de espacios y campañas ' +
+    'basándose en percepciones o en declaraciones de locatarios. Con ' +
+    'información real de comportamiento — cuántas personas circulan por cada ' +
+    'zona, en qué horarios se concentra el flujo y cómo varía entre días — ' +
+    'podés identificar las áreas de mayor y menor desempeño, fundamentar ' +
+    'negociaciones de renta y diseñar campañas que generen desplazamiento real ' +
+    'hacia zonas con menor tráfico.',
+  capabilities: ['geopoints', 'analytics', 'spatial-intelligence', 'live-visits'],
+}
+
+export const goalFranchises: BusinessGoal = {
+  id: 'goal-franchises',
+  title: 'Franquicias y cadenas de locales',
+  matchKeywords: [
+    // Tipo de negocio
+    'franquicia', 'franquicias', 'mi franquicia', 'mis franquicias',
+    'franquiciado', 'franquiciados', 'franquiciador',
+    'cadena de locales', 'red de locales',
+    'red de sucursales', 'multisucursal', 'multi-sucursal',
+    // Comparar y evaluar — "sucursales" sola + "comparar sucursales" superan a goalDecisionMaking
+    'sucursales', 'comparar sucursales', 'comparar mis sucursales',
+    'comparar franquicias', 'comparar mis franquicias',
+    'desempeño de sucursales', 'rendimiento de sucursales',
+    'desempeño de franquicias', 'rendimiento de franquicias',
+    // Identificar problemas
+    'locales débiles', 'locales debiles',
+    'detectar locales débiles', 'detectar locales debiles',
+    'sucursales débiles', 'sucursales debiles',
+    'sucursales con bajo rendimiento',
+    // Expansión
+    'expansión de franquicia', 'expansion de franquicia',
+    'estandarizar operaciones', 'estandarización', 'estandarizacion',
+  ],
+  solution:
+    'En una cadena de franquicias o red de sucursales, el desafío no es solo ' +
+    'saber que todas operan, sino entender cuáles funcionan mejor y por qué. ' +
+    'Sin datos comparables de tráfico real, las evaluaciones de desempeño ' +
+    'dependen de ventas declaradas, reportes de franquiciados o visitas ' +
+    'estimadas. Con información objetiva de presencia y comportamiento en cada ' +
+    'local podés identificar las sucursales que están por debajo de su ' +
+    'potencial, detectar los patrones que diferencian a las más exitosas y ' +
+    'tomar decisiones de expansión, cierre o intervención con evidencia ' +
+    'observable, no con intuición.',
+  capabilities: ['geopoints', 'analytics', 'presence', 'api'],
+}
+
+export const goalTourism: BusinessGoal = {
+  id: 'goal-tourism',
+  title: 'Turismo y destinos',
+  matchKeywords: [
+    // Tipo de destino
+    'turismo', 'turista', 'turistas', 'sector turístico', 'sector turistico',
+    'atractivo turístico', 'atractivo turistico',
+    'atractivos turísticos', 'atractivos turisticos',
+    'destino turístico', 'destino turistico',
+    'parque temático', 'parque tematico', 'parque de atracciones',
+    'museo', 'museos', 'monumento', 'monumentos',
+    'parque natural', 'reserva natural',
+    'ruta turística', 'ruta turistica', 'circuito turístico', 'circuito turistico',
+    // Visitantes y recorridos
+    'visitantes', 'flujo de visitantes', 'recorrido de visitantes',
+    'comportamiento de visitantes', 'recorrido turístico', 'recorrido turistico',
+    // Experiencia turística — supera a goalCustomerExperience con dos frases
+    'experiencia turística', 'experiencia turistica',
+    'mejorar la experiencia turística', 'mejorar la experiencia turistica',
+    'tour', 'tours', 'excursión', 'excursion',
+  ],
+  solution:
+    'En un destino turístico, parque o atractivo, entender cómo se mueven los ' +
+    'visitantes es tan importante como atraerlos. Saber en qué zonas se ' +
+    'concentran, cuánto tiempo permanecen en cada punto, qué recorridos siguen ' +
+    'y cuándo hay más demanda permite tomar decisiones concretas: qué ' +
+    'experiencias reforzar, dónde concentrar el personal, qué áreas generan ' +
+    'mayor permanencia y qué contenidos contextualizar según la ubicación del ' +
+    'visitante. Con datos reales de comportamiento presencial, la gestión del ' +
+    'destino pasa de ser reactiva a anticiparse a lo que los visitantes ' +
+    'necesitan.',
+  capabilities: ['geopoints', 'presence', 'analytics', 'smart-proxies'],
+}
+
+export const goalRealEstate: BusinessGoal = {
+  id: 'goal-real-estate',
+  title: 'Inmobiliarias y desarrolladoras',
+  matchKeywords: [
+    // Tipo de negocio
+    'inmobiliaria', 'inmobiliarias', 'sector inmobiliario',
+    'desarrolladora', 'desarrolladora inmobiliaria',
+    'proyecto inmobiliario', 'proyectos inmobiliarios',
+    'desarrollo inmobiliario', 'emprendimiento inmobiliario',
+    // Salas de venta y pilotos
+    'sala de venta', 'salas de venta', 'sala de ventas', 'salas de ventas',
+    'piloto', 'pilotos', 'departamento piloto', 'casa piloto', 'sala piloto',
+    // Medición específica
+    'visitas a salas de venta', 'visitas a la sala de venta',
+    'medir visitas a salas de venta', 'medir visitas al piloto',
+    'visitas al proyecto', 'interés por proyecto', 'interes por proyecto',
+    'qué proyecto genera más interés', 'que proyecto genera mas interes',
+    'qué proyecto genera más visitas', 'que proyecto genera mas visitas',
+    'comparar proyectos', 'desempeño de proyectos',
+  ],
+  solution:
+    'Para una inmobiliaria o desarrolladora, la información más valiosa no es ' +
+    'cuántas personas vieron el aviso online, sino cuántas llegaron físicamente ' +
+    'al proyecto, cuánto tiempo permanecieron en la sala de ventas o piloto y ' +
+    'qué proyectos generan mayor interés real. Con esos datos podés comparar el ' +
+    'desempeño de tus salas de venta, identificar qué campañas efectivamente ' +
+    'llevan visitas físicas y ajustar la estrategia de activación según el ' +
+    'comportamiento observado, no según las métricas de pauta digital o los ' +
+    'registros manuales de los ejecutivos de venta.',
+  capabilities: ['geopoints', 'presence', 'analytics', 'api'],
+}
+
 export const businessGoals: BusinessGoal[] = [
   goalMarketing,
   goalAttractCustomers,
@@ -476,4 +743,12 @@ export const businessGoals: BusinessGoal[] = [
   goalDecisionMaking,
   goalDigitalTransformation,
   goalMeasurePhysical,
+  goalRetailStores,
+  goalGyms,
+  goalRestaurants,
+  goalEvents,
+  goalShoppingCenters,
+  goalFranchises,
+  goalTourism,
+  goalRealEstate,
 ]

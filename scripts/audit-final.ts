@@ -55,7 +55,7 @@ const queries: Query[] = [
   { profile: 'Comercial',  q: '¿Cómo comparar el desempeño de mis ubicaciones?',       expected: 'goal-decision-making' },
   { profile: 'Comercial',  q: '¿Cómo decidir dónde abrir una nueva sucursal?',         expected: 'goal-decision-making' },
   { profile: 'Comercial',  q: '¿Cómo validar una estrategia antes de invertir?',       expected: 'goal-decision-making' },
-  { profile: 'Comercial',  q: '¿Cómo comparar sucursales?',                            expected: 'goal-decision-making' },
+  { profile: 'Comercial',  q: '¿Cómo comparar sucursales?',                            expected: 'goal-franchises' },
   { profile: 'Comercial',  q: '¿Cuál es la mejor zona para abrir?',                   expected: 'goal-choose-location' },
 
   // ── Tecnología (10) ──────────────────────────────────────────────────────

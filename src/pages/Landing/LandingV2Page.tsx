@@ -1,11 +1,49 @@
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Reveal, SectionLabel, BrowserChrome } from '../../components/landing/LandingPrimitives'
 import LandingNavBar from '../../components/landing/LandingNavBar'
 import SiteFooter from '../../components/landing/SiteFooter'
 import { matchSolution } from '../../knowledge/solutionMatcher'
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
+
+const ROTATING_WORDS = [
+  'clientes', 'visitantes', 'asistentes', 'estudiantes',
+  'colaboradores', 'ciudadanos', 'audiencia', 'comunidad', 'usuarios',
+]
+
+function RotatingWord() {
+  const [index, setIndex] = useState(0)
+  const prefersReduced = useReducedMotion()
+
+  useEffect(() => {
+    const id = setInterval(() => setIndex(i => (i + 1) % ROTATING_WORDS.length), 2000)
+    return () => clearInterval(id)
+  }, [])
+
+  const word = ROTATING_WORDS[index]
+
+  return (
+    <span className="relative inline-block" aria-live="polite">
+      {/* Invisible spacer anchored to the longest word — prevents layout shift */}
+      <span className="invisible pointer-events-none select-none" aria-hidden="true">
+        colaboradores
+      </span>
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={word}
+          initial={prefersReduced ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={prefersReduced ? { opacity: 0 } : { opacity: 0, y: -8 }}
+          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute left-0 top-0 bottom-0 flex items-center"
+        >
+          {word}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  )
+}
 
 // @ts-ignore -- Preserved for reference, not currently used as Hero visual.
 function HeroCodePanel() {
@@ -231,7 +269,7 @@ function HeroSection() {
             className="mt-6 font-black text-white tracking-tight leading-[1.04]
                        text-[2.2rem] sm:text-[2.8rem] lg:text-[3rem]"
           >
-            Conoce en tiempo real dónde están tus usuarios.
+            Conoce en tiempo real dónde están tus <RotatingWord />.
           </motion.h1>
 
           <motion.p

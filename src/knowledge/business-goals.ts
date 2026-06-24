@@ -364,6 +364,104 @@ export const goalDecisionMaking: BusinessGoal = {
   capabilities: ['analytics', 'geopoints', 'presence', 'spatial-intelligence'],
 }
 
+export const goalDigitalTransformation: BusinessGoal = {
+  id: 'goal-digital-transformation',
+  title: 'Digitalización de espacios físicos y puente físico-digital',
+  matchKeywords: [
+    // Digitalizar sucursales / puntos físicos
+    'digitalizar sucursales', 'digitalizo mis sucursales',
+    'digitalizar mis sucursales', 'digitalización de sucursales',
+    'digitalizacion de sucursales',
+    'digitalizar puntos físicos', 'digitalizar puntos fisicos',
+    'digitalizar puntos de venta', 'digitalizar mis locales',
+    'digitalizar la experiencia física', 'digitalizar la experiencia fisica',
+    'digitalizar la experiencia presencial',
+    // Conectar mundo físico y digital
+    'conectar mundo físico y digital', 'conectar mundo fisico y digital',
+    'conectar lo físico con lo digital', 'conectar lo fisico con lo digital',
+    'conectar el mundo físico con el digital',
+    'conectar el mundo fisico con el digital',
+    'conectar fisico con digital',
+    'mundo físico y digital', 'mundo fisico y digital',
+    'físico y digital', 'fisico y digital',
+    'puente entre físico y digital', 'puente fisico digital',
+    // Modernizar / transformar
+    'modernizar experiencia presencial',
+    'modernizar mis sucursales', 'modernizar mis locales',
+    'transformación digital', 'transformacion digital',
+    'transformación digital de mis locales',
+    'transformacion digital de mis locales',
+    'digitalización física', 'digitalizacion fisica',
+    // Datos del mundo físico
+    'datos del mundo físico', 'datos del mundo fisico',
+    'llevar analítica al mundo real', 'llevar analitica al mundo real',
+    'inteligencia del mundo físico', 'inteligencia del mundo fisico',
+    'convertir presencia en datos',
+    'llevar lo físico a lo digital', 'llevar lo fisico a lo digital',
+  ],
+  solution:
+    'El mundo físico y el digital ya no tienen que ser canales separados. Puedes ' +
+    'conectar tus espacios físicos — sucursales, locales, puntos de venta — con ' +
+    'experiencias digitales que responden en tiempo real a lo que ocurre en ese ' +
+    'espacio. Ubyca actúa como la capa de datos que vincula la presencia física ' +
+    'con tus sistemas digitales: detecta quién está en cada zona, genera eventos ' +
+    'que tus plataformas pueden procesar y activa contenido, reglas o notificaciones ' +
+    'basadas en ubicación verificada. Sin hardware adicional, sin instalaciones ' +
+    'físicas. Tu sitio web, app o backend recibe los datos de presencia y los ' +
+    'convierte en acciones digitales.',
+  capabilities: ['geopoints', 'presence', 'smart-proxies', 'api', 'analytics'],
+}
+
+export const goalMeasurePhysical: BusinessGoal = {
+  id: 'goal-measure-physical',
+  title: 'Medir el comportamiento físico en ubicaciones reales',
+  matchKeywords: [
+    // Medir lo que ocurre físicamente
+    'medir lo que ocurre físicamente', 'medir lo que ocurre fisicamente',
+    'medir lo que pasa en mis locales', 'medir lo que ocurre en mis locales',
+    // Saber qué pasa en locales
+    'saber qué pasa en mis locales', 'saber que pasa en mis locales',
+    'qué pasa en mis locales', 'que pasa en mis locales',
+    'qué ocurre en mis locales', 'que ocurre en mis locales',
+    'qué pasa en mis sucursales', 'que pasa en mis sucursales',
+    'qué ocurre en mis puntos', 'que ocurre en mis puntos',
+    // Comportamiento presencial
+    'datos del comportamiento presencial', 'comportamiento presencial',
+    'comportamiento en tienda', 'comportamiento en el local',
+    'entender el comportamiento en el mundo real',
+    // Medir actividad / presencia
+    'medir actividad física en ubicaciones', 'medir actividad fisica',
+    'medir actividad en mis locales',
+    'medir presencia', 'medir visitas presenciales', 'medir visitas',
+    'medir tráfico físico', 'medir trafico fisico',
+    // Medir permanencia
+    'medir permanencia', 'tiempo de permanencia', 'dwell time',
+    'cuánto tiempo permanecen', 'cuanto tiempo permanecen',
+    // Métricas de ubicaciones
+    'métricas de ubicaciones físicas', 'metricas de ubicaciones fisicas',
+    'métricas de mis locales', 'metricas de mis locales',
+    'analítica de presencia', 'analitica de presencia',
+    'analítica del mundo físico', 'analitica del mundo fisico',
+    'datos de visita', 'datos de visitas',
+    // Cuántas personas
+    'cuántas personas entran', 'cuantas personas entran',
+    'cuánta gente entra', 'cuanta gente entra',
+    'cuántas personas visitan', 'cuantas personas visitan',
+  ],
+  solution:
+    'El comportamiento de las personas en el mundo físico genera muy pocos datos ' +
+    'comparado con lo que ocurre online. Ubyca cambia eso: registra cuántas ' +
+    'personas estuvieron en cada ubicación, cuánto tiempo permanecieron, en qué ' +
+    'horarios hay más actividad y cómo se distribuyeron entre zonas o sucursales. ' +
+    'Es analítica de comportamiento físico — el equivalente de lo que una herramienta ' +
+    'de analítica web hace en el mundo digital, aplicado al mundo real. Puedes ' +
+    'comparar el desempeño real de tus locales, identificar patrones de visita ' +
+    'y tomar decisiones con datos observacionales, no con estimaciones. ' +
+    'Ambas visiones pueden coexistir: lo digital te dice qué hicieron en tu sitio, ' +
+    'Ubyca te dice qué hicieron en tu espacio.',
+  capabilities: ['geopoints', 'presence', 'analytics', 'spatial-intelligence', 'live-visits'],
+}
+
 export const businessGoals: BusinessGoal[] = [
   goalMarketing,
   goalAttractCustomers,
@@ -375,4 +473,6 @@ export const businessGoals: BusinessGoal[] = [
   goalChooseLocation,
   goalCustomerExperience,
   goalDecisionMaking,
+  goalDigitalTransformation,
+  goalMeasurePhysical,
 ]

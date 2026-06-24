@@ -26,6 +26,53 @@ export const faqWhatIsUbyca: FAQ = {
   tags: ['Studio', 'API', 'GeoPoints', 'Presencia física'],
 }
 
+export const faqWhyUbyca: FAQ = {
+  id: 'faq-why-ubyca',
+  title: 'Por qué implementar Ubyca: valor, beneficios y diferenciador',
+  questionPatterns: [
+    // Por qué usar / implementar
+    'por qué debería usar ubyca', 'por que deberia usar ubyca',
+    'por qué debería implementar ubyca', 'por que deberia implementar ubyca',
+    'por qué implementar ubyca', 'por que implementar ubyca',
+    'por qué contratar ubyca', 'por que contratar ubyca',
+    'por qué ubyca', 'por que ubyca',
+    // Qué gano / beneficio
+    'qué gano con ubyca', 'que gano con ubyca',
+    'qué gano implementándolo', 'que gano implementandolo',
+    'qué beneficio tiene para mi negocio', 'que beneficio tiene para mi negocio',
+    'beneficios de ubyca', 'beneficio de ubyca',
+    'ventajas de ubyca', 'ventaja de ubyca',
+    // Por qué cambiar
+    'por qué no seguir haciendo lo mismo', 'por que no seguir haciendo lo mismo',
+    'por qué cambiar lo que hago', 'por que cambiar lo que hago',
+    'qué cambia realmente con ubyca', 'que cambia realmente con ubyca',
+    'qué cambia con ubyca', 'que cambia con ubyca',
+    // Qué problema / valor / propuesta
+    'qué problema resuelve', 'que problema resuelve',
+    'qué valor aporta ubyca', 'que valor aporta ubyca',
+    'valor de ubyca', 'propuesta de valor de ubyca',
+    'qué aporta ubyca', 'que aporta ubyca',
+    // Justificación y ROI
+    'justificar la inversión en ubyca', 'justificar la inversion en ubyca',
+    'justificar implementar ubyca', 'justificar ubyca',
+    'vale la pena ubyca', 'vale la pena implementar',
+    'me conviene ubyca', 'conviene usar ubyca',
+    'retorno de ubyca', 'roi de ubyca',
+  ],
+  answer:
+    'La mayoría de las herramientas te dicen qué hizo alguien en tu sitio web. ' +
+    'Ubyca te dice qué hizo alguien en el mundo físico: si estuvo realmente en ' +
+    'tu local, cuánto tiempo permaneció, en qué horarios hay más actividad y qué ' +
+    'ubicaciones generan más valor. El resultado es visibilidad completa sobre lo ' +
+    'que ocurre en tus puntos físicos — sin depender de reportes manuales, ' +
+    'declaraciones del personal ni estimaciones. ' +
+    'Con esos datos puedes tomar mejores decisiones de inversión, demostrar el ' +
+    'impacto real de tus campañas presenciales, controlar equipos en terreno y ' +
+    'optimizar la experiencia de quien visita tus espacios. ' +
+    'Lo que cambia con Ubyca es que el mundo físico deja de ser una caja negra.',
+  tags: ['Presencia física', 'Analytics', 'GeoPoints', 'Studio'],
+}
+
 export const faqCapabilities: FAQ = {
   id: 'faq-capabilities',
   title: 'Capacidades y componentes de Ubyca',
@@ -359,6 +406,7 @@ export const faqApiIntegration: FAQ = {
 
 export const productFaqs: FAQ[] = [
   faqWhatIsUbyca,
+  faqWhyUbyca,
   faqCapabilities,
   faqAppIntegration,
   faqStadium,

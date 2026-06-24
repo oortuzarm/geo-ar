@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 const NAV_LINKS: [string, string][] = [
-  ['Plataforma',     '/studio'],
+  ['Studio',     '/studio'],
   ['Documentación',  '/docs'],
   ['Precios',        '/precios'],
   ['Contacto',       '/contact'],

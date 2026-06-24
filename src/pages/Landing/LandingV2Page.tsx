@@ -269,7 +269,7 @@ function HeroSection() {
             className="mt-6 font-black text-white tracking-tight leading-[1.04]
                        text-[2.2rem] sm:text-[2.8rem] lg:text-[3rem]"
           >
-            Conoce en tiempo real dónde están tus <RotatingWord />.
+            Conoce en tiempo real dónde están tus <RotatingWord />
           </motion.h1>
 
           <motion.p
@@ -602,7 +602,7 @@ const CAPABILITIES = [
   },
   {
     label: 'Valida',
-    desc: 'Cada presencia se verifica server-side contra las coordenadas reales del dispositivo. No auto-declarada. No estimada. GPS contrastado contra tus ubicaciones en tiempo real.',
+    desc: 'Cada presencia se verifica en tiempo real utilizando la ubicación autorizada por el usuario y las condiciones que hayas definido para cada ubicación.',
     visual: (
       <div className="w-full rounded-xl border border-white/[0.08] bg-[#080b14] overflow-hidden mb-5">
         <div className="px-4 py-3.5 space-y-2.5">
@@ -628,7 +628,7 @@ const CAPABILITIES = [
   },
   {
     label: 'Actúa',
-    desc: 'Visualiza el resultado en Studio, activa experiencias geolocalizadas y analiza el comportamiento de tus visitantes. Ubyca evalúa condiciones — horario, dwell time, cupos — y también expone cada resultado vía API para integraciones externas.',
+    desc: 'Convierte la presencia física en acciones. Activa experiencias, contenido, promociones o integraciones cuando se cumplen las condiciones que definas.',
     visual: (
       <div className="w-full rounded-xl border border-white/[0.08] bg-[#080b14] overflow-hidden mb-5">
         <div className="px-4 pt-4 pb-3">

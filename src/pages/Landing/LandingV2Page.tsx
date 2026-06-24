@@ -1396,42 +1396,6 @@ function UseCasesSection() {
   )
 }
 
-// ─── Final CTA ────────────────────────────────────────────────────────────────
-
-function FinalCTASection() {
-  return (
-    <section className="py-20 sm:py-24 px-5 bg-[#050810] relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 55% 70% at 50% 50%, rgba(14,165,233,0.07) 0%, transparent 65%)',
-      }} />
-      <div className="relative z-10 max-w-2xl mx-auto text-center">
-        <Reveal>
-          <h2 className="text-3xl sm:text-4xl font-black text-white mb-5">
-            Crea tu primera experiencia geolocalizada
-          </h2>
-          <p className="text-slate-400 mb-10 text-lg leading-relaxed">
-            Prueba Ubyca creando un proyecto real desde el editor.
-          </p>
-          <a
-            href="https://studio.ubyca.com/register"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl
-                       bg-brand-600 hover:bg-brand-500 active:scale-[0.98]
-                       text-white font-bold text-base transition-all duration-150
-                       shadow-[0_4px_32px_rgba(2,132,199,0.45)]">
-            Crear experiencia gratis
-            <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" clipRule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
-            </svg>
-          </a>
-        </Reveal>
-      </div>
-    </section>
-  )
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LandingV2Page() {
@@ -1453,7 +1417,6 @@ export default function LandingV2Page() {
       <ApiSection />
       <UseCasesSection />
       <SolutionMatcherSection />
-      <FinalCTASection />
       <SiteFooter />
     </div>
   )

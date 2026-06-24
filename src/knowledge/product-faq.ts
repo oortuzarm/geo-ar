@@ -242,6 +242,64 @@ export const faqNoHardware: FAQ = {
   tags: ['GeoPoints', 'Presencia física', 'API'],
 }
 
+export const faqApiIntegration: FAQ = {
+  id: 'faq-api-integration',
+  title: 'API, integración e implementación técnica de Ubyca',
+  questionPatterns: [
+    // ¿Tiene API?
+    'tiene api', 'tienen api', 'tiene una api', 'tiene api rest',
+    'api disponible', 'expone api',
+    // Cómo se integra
+    'se integra', 'como se integra', 'cómo se integra',
+    'se integra con mi sistema', 'integra con mi sistema',
+    'se puede integrar', 'puedo integrarlo', 'puedo integrarla',
+    'cómo integro ubyca', 'como integro ubyca',
+    // Conectar
+    'conecto ubyca', 'conectar ubyca con',
+    'cómo conecto ubyca', 'como conecto ubyca',
+    'conectar con mi sistema', 'conectar con mi plataforma',
+    // Funciona con mi app / web / sistema
+    'funciona con mi app', 'funciona con mi aplicación',
+    'funciona con mi aplicacion', 'funciona con mi web',
+    'funciona con mi sistema', 'funciona con mi plataforma',
+    'compatible con mi sistema', 'compatible con mi plataforma',
+    // SDK
+    'necesito un sdk', 'necesito sdk', 'hay sdk', 'tiene sdk',
+    'requiere sdk', 'sin sdk',
+    // Desarrollador y programación
+    'necesito un desarrollador', 'necesito desarrollador',
+    'hace falta un desarrollador', 'hace falta desarrollador',
+    'hace falta programar', 'falta programar',
+    'hace falta desarrollo', 'requiere desarrollo',
+    'sin desarrollador', 'sin programador', 'sin programar',
+    'sin código', 'sin codigo',
+    'necesito programar', 'necesito saber programar',
+    // Tiempo de implementación
+    'cuánto tarda implementarlo', 'cuanto tarda implementarlo',
+    'tarda implementarlo', 'cuánto tarda la integración',
+    'cuanto tarda la integracion', 'tiempo de implementación',
+    'tiempo de implementacion', 'cuánto tiempo tarda',
+    'cuanto tiempo tarda', 'cuánto lleva implementarlo',
+    'cuanto lleva implementarlo',
+    // Smart Proxy
+    'smart proxy', 'smart proxies',
+  ],
+  answer:
+    'Sí. Ubyca dispone de una API REST que permite validar presencia física desde ' +
+    'cualquier aplicación, backend o plataforma web — sin SDK propietario ni ' +
+    'infraestructura especial. Tu sistema llama a un endpoint HTTP, recibe la ' +
+    'validación en menos de 80 ms y decide qué hacer con ella. ' +
+    'Para casos sin código: Smart Proxies envuelven una URL existente con ' +
+    'validación de presencia geográfica sin modificar tu plataforma — ' +
+    'configurables desde Studio sin escribir una línea. ' +
+    'Para integración personalizada: tu equipo técnico conecta la API con cualquier ' +
+    'backend, app iOS o Android, o sistema web mediante llamadas HTTP estándar. ' +
+    'No existe SDK nativo oficial — se usa cualquier cliente HTTP. ' +
+    'El esfuerzo depende del caso: un Smart Proxy puede activarse en horas; ' +
+    'una integración backend completa, de un día a una semana.',
+  tags: ['API', 'Studio', 'Smart Proxies'],
+}
+
 export const productFaqs: FAQ[] = [
   faqWhatIsUbyca,
   faqCapabilities,
@@ -251,4 +309,5 @@ export const productFaqs: FAQ[] = [
   faqMonitoring,
   faqVsQR,
   faqNoHardware,
+  faqApiIntegration,
 ]

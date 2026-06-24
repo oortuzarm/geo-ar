@@ -858,7 +858,7 @@ function StudioMobilePanel() {
 
       {/* Secondary phone — behind, desktop only */}
       <div className="relative z-0 hidden lg:block flex-shrink-0"
-           style={{ width: 168, height: 336, marginTop: 36, marginRight: -50 }}>
+           style={{ width: 200, height: 400, marginTop: 36, marginRight: -50 }}>
         <div className="relative w-full h-full overflow-hidden rounded-[2.4rem]
                         border-[2.5px] border-white/[0.10]
                         shadow-[0_4px_6px_rgba(0,0,0,0.2),0_16px_48px_rgba(0,0,0,0.5),0_0_0_1px_rgba(14,165,233,0.04)]">
@@ -876,7 +876,7 @@ function StudioMobilePanel() {
       </div>
 
       {/* Primary phone — in front */}
-      <div className="relative z-10 mt-4 flex-shrink-0" style={{ width: 210, height: 420 }}>
+      <div className="relative z-10 mt-4 flex-shrink-0" style={{ width: 250, height: 500 }}>
         <div className="w-full h-full overflow-hidden rounded-[2.8rem]
                         border-[2.5px] border-white/[0.15]
                         shadow-[0_4px_6px_rgba(0,0,0,0.3),0_24px_80px_rgba(0,0,0,0.65),0_0_0_1px_rgba(14,165,233,0.07)]">

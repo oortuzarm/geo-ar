@@ -8,8 +8,7 @@ import { matchSolution } from '../../knowledge/solutionMatcher'
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
 const ROTATING_WORDS = [
-  'clientes', 'visitantes', 'asistentes', 'estudiantes',
-  'colaboradores', 'ciudadanos', 'audiencia', 'comunidad', 'usuarios',
+  'clientes', 'visitantes', 'asistentes', 'colaboradores', 'ciudadanos', 'usuarios',
 ]
 
 function RotatingWord() {
@@ -563,7 +562,7 @@ function PlatformSplitSection() {
 const CAPABILITIES = [
   {
     label: 'Detecta',
-    desc: 'Define GeoPoints, radios y polígonos sobre cualquier mapa. Ubyca monitorea entradas, permanencia y salidas por zona — sin hardware, sin balizas, sin infraestructura física adicional.',
+    desc: 'Define ubicaciones sobre cualquier mapa y monitorea entradas, permanencia y salidas en cada zona. Sin hardware, balizas ni infraestructura física adicional.',
     visual: (
       <div className="w-full rounded-xl overflow-hidden border border-white/[0.08] bg-[#070a12] mb-5">
         <div className="relative h-28">
@@ -628,7 +627,7 @@ const CAPABILITIES = [
   },
   {
     label: 'Actúa',
-    desc: 'Convierte la presencia física en acciones. Activa experiencias, contenido, promociones o integraciones cuando se cumplen las condiciones que definas.',
+    desc: 'Convierte la presencia física en acciones. Activa experiencias, contenido, beneficios o integraciones cuando se cumplen las condiciones que definas.',
     visual: (
       <div className="w-full rounded-xl border border-white/[0.08] bg-[#080b14] overflow-hidden mb-5">
         <div className="px-4 pt-4 pb-3">

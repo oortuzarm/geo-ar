@@ -584,15 +584,26 @@ function ScopesPage() {
 function ConceptSessionsPage() {
   return (
     <div>
-      <PageTitle title="Sessions" badge="Core Concepts" subtitle="Un session_id identifica la sesión de un usuario final en el sistema." />
+      <PageTitle title="Sessions" badge="Getting Started" subtitle="Un session_id identifica la sesión de un usuario final en el sistema." />
       <P>El <code className="font-mono text-xs text-gray-300">session_id</code> es generado por el cliente — cualquier string no vacío es válido. Ubyca lo usa para:</P>
       <ul className="list-disc list-inside space-y-1 text-sm text-gray-400 my-4 ml-2">
         <li>Rastrear visitas en vivo (<code className="font-mono text-xs">liveVisitsCurrent</code> excluye la sesión que hace el request).</li>
         <li>Deduplicar eventos de analytics.</li>
       </ul>
+
       <H2>Recomendaciones</H2>
-      <P>Usa un identificador estable por sesión de usuario — un UUID v4 generado al inicio de la sesión funciona bien.</P>
+      <P>Genera un nuevo <code className="font-mono text-xs text-gray-300">session_id</code> por cada sesión de usuario. Un UUID v4 generado al inicio de la sesión es la opción recomendada:</P>
       <CodeBlock code={`{\n  "location_id": "660e8400-e29b-41d4-a716-446655440001",\n  "session_id": "sess_a1b2c3d4-e5f6-7890-abcd-ef1234567890",\n  "coordinates": { "latitude": -33.4372, "longitude": -70.6506 }\n}`} />
+
+      <H2>Reutilización</H2>
+      <P>Reutilizar el mismo <code className="font-mono text-xs text-gray-300">session_id</code> en múltiples llamadas a Presence dentro de la misma sesión de usuario es el comportamiento esperado — Ubyca usa esa continuidad para rastrear visitas en vivo y deduplicar eventos de analytics. No generes un <code className="font-mono text-xs text-gray-300">session_id</code> nuevo en cada request.</P>
+
+      <H2>Session Lifetime</H2>
+      <Callout type="info">
+        <strong className="font-semibold">Session lifetime is not part of the public API contract.</strong>{' '}
+        The API does not document a TTL, expiration, or automatic invalidation for session IDs. Generate a new <code className="font-mono text-xs">session_id</code> for each distinct user session — typically at app launch or when a user starts a new interaction.
+      </Callout>
+
       <DocNav prev={{ label: 'API Key Scopes', path: 'scopes' }} next={{ label: 'The Project Object', path: 'resources/projects' }} />
     </div>
   )
@@ -652,19 +663,21 @@ function ResourcesProjectsPage() {
       <P>Ver <DocLink to="resources/locations/list">List Locations</DocLink> para obtener todas las Locations de un proyecto, y <DocLink to="resources/locations/object">The Location Object</DocLink> para la referencia completa de cada Location.</P>
 
       <H2>Endpoints</H2>
-      <div className="space-y-0 border border-white/[0.07] rounded-xl overflow-hidden">
-        {[
-          { method: 'GET' as const, path: '/projects',     desc: 'List all projects'   },
-          { method: 'GET' as const, path: '/projects/{id}', desc: 'Get a project'      },
-        ].map((ep, i) => (
-          <div key={ep.path} className={`flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3 ${i > 0 ? 'border-t border-white/[0.05]' : ''}`}>
-            <MethodBadge method={ep.method} />
-            <span className="font-mono text-xs text-gray-300 flex-1 min-w-0">{ep.path}</span>
-            <ScopeBadge scope="projects:read" />
-            <span className="text-xs text-gray-500 w-full sm:w-auto">{ep.desc}</span>
-          </div>
-        ))}
-      </div>
+
+      <H3>List Projects</H3>
+      <EndpointBadge method="GET" path="/projects" />
+      <div className="flex gap-2 mb-4"><ScopeBadge scope="projects:read" /></div>
+      <P>Returns all projects in the workspace ordered by creation date.</P>
+      <CodeBlock label="List Projects" code={`curl ${BASE}/projects \\\n  -u "ubk_live_xxx:sk_live_xxx"`} />
+      <CodeBlock label="Response" code={`{\n  "data": [\n    {\n      "id": "550e8400-e29b-41d4-a716-446655440000",\n      "title": "Circuito Histórico",\n      "subtitle": null,\n      "description": null,\n      "status": "active",\n      "communityEnabled": false,\n      "locationCount": 3,\n      "createdAt": "2026-06-01T10:00:00.000Z",\n      "updatedAt": "2026-06-20T14:30:00.000Z"\n    }\n  ],\n  "meta": { "count": 1 }\n}`} />
+
+      <H3>Get a Project</H3>
+      <EndpointBadge method="GET" path="/projects/{id}" />
+      <div className="flex gap-2 mb-4"><ScopeBadge scope="projects:read" /></div>
+      <P>Returns a single Project by UUID. Must belong to the organization associated with the API Key.</P>
+      <AttrTable rows={[{ name: 'id', type: 'string (uuid)', req: true, desc: 'UUID del proyecto. Path parameter.' }]} />
+      <CodeBlock label="Get a Project" code={`curl ${BASE}/projects/550e8400-e29b-41d4-a716-446655440000 \\\n  -u "ubk_live_xxx:sk_live_xxx"`} />
+      <CodeBlock label="Response" code={projectExample} />
 
       <DocNav prev={{ label: 'Sessions', path: 'concepts/sessions' }} next={{ label: 'The Location Object', path: 'resources/locations/object' }} />
     </div>
@@ -1507,7 +1520,9 @@ function AnalyticsPage() {
       <Divider />
 
       {/* ── Summary ── */}
-      <H2>GET /projects/{'{id}'}/analytics</H2>
+      <H2>Summary</H2>
+      <EndpointBadge method="GET" path="/projects/{id}/analytics" />
+      <div className="flex gap-2 mb-4"><ScopeBadge scope="analytics:read" /></div>
       <P>Métricas agregadas del proyecto más el estado de visitas en vivo. Filtra por rango de fecha y/o location_id.</P>
       <CodeBlock code={summaryExample} label="Analytics Summary" />
 
@@ -1529,7 +1544,9 @@ function AnalyticsPage() {
       <Divider />
 
       {/* ── Locations ── */}
-      <H2>GET /projects/{'{id}'}/analytics/locations</H2>
+      <H2>Locations</H2>
+      <EndpointBadge method="GET" path="/projects/{id}/analytics/locations" />
+      <div className="flex gap-2 mb-4"><ScopeBadge scope="analytics:read" /></div>
       <P>Breakdown de métricas por Location. Incluye todas las Locations del proyecto, incluso las que tienen cero eventos. No soporta filtro por <code className="font-mono text-xs text-gray-300">location_id</code>.</P>
       <CodeBlock code={locationsExample} label="Analytics Locations" />
       <AttrTable rows={[
@@ -1544,7 +1561,9 @@ function AnalyticsPage() {
       <Divider />
 
       {/* ── Distribution ── */}
-      <H2>GET /projects/{'{id}'}/analytics/distribution</H2>
+      <H2>Distribution</H2>
+      <EndpointBadge method="GET" path="/projects/{id}/analytics/distribution" />
+      <div className="flex gap-2 mb-4"><ScopeBadge scope="analytics:read" /></div>
       <P>Distribución de eventos en tres dimensiones: hora del día (0–23), día de la semana (0=Dom, 6=Sáb) y geografía (país, ciudad, comuna). Solo se incluyen horas/días con al menos un evento.</P>
       <CodeBlock code={distributionExample} label="Analytics Distribution" />
       <H3>geo</H3>
@@ -1558,7 +1577,9 @@ function AnalyticsPage() {
       <Divider />
 
       {/* ── Intensity ── */}
-      <H2>GET /projects/{'{id}'}/analytics/intensity</H2>
+      <H2>Intensity</H2>
+      <EndpointBadge method="GET" path="/projects/{id}/analytics/intensity" />
+      <div className="flex gap-2 mb-4"><ScopeBadge scope="analytics:read" /></div>
       <P>Conteo histórico de entradas por Location con sus coordenadas. Útil para heatmaps. Siempre devuelve el total histórico — no soporta filtros de fecha ni <code className="font-mono text-xs text-gray-300">location_id</code>.</P>
       <CodeBlock code={intensityExample} label="Analytics Intensity" />
       <AttrTable rows={[
@@ -1572,7 +1593,9 @@ function AnalyticsPage() {
       <Divider />
 
       {/* ── Outside Areas ── */}
-      <H2>GET /projects/{'{id}'}/analytics/outside_areas</H2>
+      <H2>Outside Areas</H2>
+      <EndpointBadge method="GET" path="/projects/{id}/analytics/outside_areas" />
+      <div className="flex gap-2 mb-4"><ScopeBadge scope="analytics:read" /></div>
       <P>Coordenadas GPS registradas fuera de todas las áreas activas del proyecto, agrupadas en hotspots. Soporta dos modos:</P>
       <div className="my-4 grid sm:grid-cols-2 gap-3">
         <div className="px-4 py-3 bg-gray-900/40 border border-white/[0.06] rounded-xl">
@@ -1686,6 +1709,14 @@ function ErrorsPage() {
         { name: 'dwell_required',                  type: 'HTTP 200', desc: 'La Location requiere permanencia y dwell_elapsed_seconds no fue enviado.' },
         { name: 'dwell_time_not_met',              type: 'HTTP 200', desc: 'El tiempo de permanencia enviado es menor al mínimo requerido.' },
       ]} />
+
+      <Divider />
+
+      <H2>Server Errors (5xx)</H2>
+      <P>5xx responses indicate an unexpected error on the server side. These are not caused by the client request and do not require modifying the request before retrying.</P>
+      <Callout type="info">
+        If you receive a 5xx response, retry the request using exponential backoff: start with a short wait, double on each failure, and add random jitter to avoid synchronized retries across clients.
+      </Callout>
 
       <DocNav prev={{ label: 'Analytics', path: 'resources/analytics' }} next={{ label: 'Rate Limits', path: 'rate-limits' }} />
     </div>

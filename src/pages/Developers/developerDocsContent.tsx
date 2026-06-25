@@ -1413,7 +1413,7 @@ function RateLimitsPage() {
       <PageTitle
         title="Rate Limits"
         badge="Reference"
-        subtitle="La API aplica dos límites independientes: por IP de origen y por API credential. El primero que se alcanza bloquea la request con HTTP 429."
+        subtitle="La API aplica dos límites independientes: por IP de origen y por API Key. El primero que se alcanza bloquea la request con HTTP 429."
       />
 
       <H2>Límites actuales</H2>
@@ -1433,7 +1433,7 @@ function RateLimitsPage() {
               <td className="py-2.5 text-gray-500">Todos los endpoints de API v1</td>
             </tr>
             <tr>
-              <td className="py-2.5 pr-6 text-gray-300 font-medium">API credential</td>
+              <td className="py-2.5 pr-6 text-gray-300 font-medium">API Key</td>
               <td className="py-2.5 pr-6 font-mono text-brand-400">120 req / min</td>
               <td className="py-2.5 text-gray-500">Todos los endpoints excepto <code className="font-mono text-gray-400">GET /health</code></td>
             </tr>
@@ -1441,7 +1441,10 @@ function RateLimitsPage() {
         </table>
       </div>
       <Callout type="info">
-        Los dos límites son independientes. Una misma request puede ser bloqueada por cualquiera de los dos, el que se alcance primero. <code className="font-mono text-xs">GET /health</code> está excluido del límite por credential, pero sigue sujeto al límite por IP.
+        Los dos límites son independientes. Una misma request puede ser bloqueada por cualquiera de los dos, el que se alcance primero. <code className="font-mono text-xs">GET /health</code> está excluido del límite por API Key, pero sigue sujeto al límite por IP.
+      </Callout>
+      <Callout type="info">
+        <strong className="font-semibold">No rate limit headers.</strong> Ubyca no expone los headers <code className="font-mono text-xs">X-RateLimit-Limit</code>, <code className="font-mono text-xs">X-RateLimit-Remaining</code> ni <code className="font-mono text-xs">X-RateLimit-Reset</code>. Las respuestas normales no incluyen información de cuota restante. El único header relacionado con rate limiting es <code className="font-mono text-xs">Retry-After</code>, y solo aparece cuando la API responde con HTTP 429.
       </Callout>
 
       <Divider />
@@ -1492,7 +1495,7 @@ await new Promise(resolve => setTimeout(resolve, waitMs))
           },
           {
             title: 'Evitar polling agresivo',
-            desc: 'No consultes analytics o listas de ubicaciones en bucles cortos. Con 120 req/min por credential, un bucle de 2 segundos agota el cupo en 4 minutos aunque no haya actividad real.',
+            desc: 'No consultes analytics o listas de ubicaciones en bucles cortos. Con 120 req/min por API Key, un bucle de 2 segundos agota el cupo en 4 minutos aunque no haya actividad real.',
           },
           {
             title: 'Cachear respuestas de lectura',

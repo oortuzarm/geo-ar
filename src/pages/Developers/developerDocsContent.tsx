@@ -113,8 +113,8 @@ export function CodeBlock({ code, label }: { code: string; label?: string }) {
   }
 
   return (
-    <div className="relative group my-4">
-      <pre className="bg-gray-950 border border-gray-800 rounded-xl px-4 py-3.5 text-[11.5px] font-mono text-gray-300 overflow-x-auto leading-relaxed whitespace-pre">
+    <div className="relative group my-4 min-w-0">
+      <pre className="bg-gray-950 border border-gray-800 rounded-xl px-4 py-3.5 text-[11.5px] font-mono text-gray-300 overflow-x-auto leading-relaxed whitespace-pre max-w-full">
         {code}
       </pre>
       <button
@@ -215,7 +215,7 @@ export interface AttrRow { name: string; type: string; req?: boolean; desc: stri
 
 export function AttrTable({ rows }: { rows: AttrRow[] }) {
   return (
-    <div className="my-4 border border-white/[0.07] rounded-xl overflow-hidden">
+    <div className="my-4 border border-white/[0.07] rounded-xl overflow-x-auto">
       <table className="w-full text-xs">
         <thead>
           <tr className="bg-gray-900/60 border-b border-white/[0.06]">
@@ -240,9 +240,9 @@ export function AttrTable({ rows }: { rows: AttrRow[] }) {
 
 export function EndpointBadge({ method, path }: { method: 'GET' | 'POST'; path: string }) {
   return (
-    <div className="flex items-center gap-2 my-4 px-4 py-3 bg-gray-900/60 border border-white/[0.07] rounded-xl">
+    <div className="flex items-center gap-2 my-4 px-4 py-3 bg-gray-900/60 border border-white/[0.07] rounded-xl overflow-x-auto">
       <MethodBadge method={method} />
-      <span className="font-mono text-xs text-gray-300">{path}</span>
+      <span className="font-mono text-xs text-gray-300 whitespace-nowrap">{path}</span>
     </div>
   )
 }
@@ -250,17 +250,17 @@ export function EndpointBadge({ method, path }: { method: 'GET' | 'POST'; path: 
 export function DocNav({ prev, next }: { prev?: { label: string; path: string }; next?: { label: string; path: string } }) {
   const { basePath } = useDocsCtx()
   return (
-    <div className="flex justify-between mt-12 pt-6 border-t border-gray-800">
+    <div className="flex flex-wrap justify-between gap-4 mt-12 pt-6 border-t border-gray-800">
       {prev ? (
-        <Link to={`${basePath}/${prev.path}`} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-300 transition-colors">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+        <Link to={`${basePath}/${prev.path}`} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-300 transition-colors shrink-0">
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
           {prev.label}
         </Link>
       ) : <div />}
       {next ? (
-        <Link to={`${basePath}/${next.path}`} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-300 transition-colors">
+        <Link to={`${basePath}/${next.path}`} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-300 transition-colors shrink-0 ml-auto">
           {next.label}
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
         </Link>
       ) : <div />}
     </div>
@@ -283,9 +283,9 @@ function OverviewPage() {
 
       <P>La Ubyca API te permite validar la presencia física de un usuario en una ubicación GPS, descubrir proyectos y ubicaciones, y consultar métricas de tráfico y conversión en tiempo real.</P>
 
-      <div className="my-4 flex items-center gap-3 px-4 py-3 bg-gray-900/60 border border-white/[0.07] rounded-xl">
-        <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider">Base URL</span>
-        <span className="font-mono text-xs text-gray-300 select-all">{BASE}</span>
+      <div className="my-4 flex items-center gap-3 px-4 py-3 bg-gray-900/60 border border-white/[0.07] rounded-xl overflow-x-auto">
+        <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider flex-shrink-0">Base URL</span>
+        <span className="font-mono text-xs text-gray-300 select-all whitespace-nowrap">{BASE}</span>
       </div>
 
       <H2>Cómo funciona</H2>
@@ -295,11 +295,11 @@ function OverviewPage() {
           { n: 2, title: 'Validar presencia', desc: `POST ${BASE}/presence/validate — enviar coordenadas GPS y session_id para obtener valid: true/false.` },
           { n: 3, title: 'Consultar analytics', desc: `GET ${BASE}/projects/{id}/analytics — métricas de entradas, conversión y visitas activas.` },
         ].map((s) => (
-          <li key={s.n} className="flex gap-4">
+          <li key={s.n} className="flex gap-4 min-w-0">
             <span className="w-6 h-6 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-[11px] font-bold text-gray-400 flex-shrink-0 mt-0.5">{s.n}</span>
-            <div>
+            <div className="min-w-0">
               <span className="text-sm font-medium text-gray-200">{s.title} — </span>
-              <span className="text-xs text-gray-500 font-mono">{s.desc}</span>
+              <span className="text-xs text-gray-500 font-mono break-all">{s.desc}</span>
             </div>
           </li>
         ))}
@@ -382,18 +382,18 @@ function QuickStartPage() {
 
       <div className="space-y-8 mt-6">
         {STEPS.map((s) => (
-          <div key={s.n} className="relative pl-10">
+          <div key={s.n} className="relative pl-10 min-w-0">
             <div className="absolute left-0 top-0.5 w-6 h-6 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-[11px] font-bold text-gray-400 flex-shrink-0">{s.n}</div>
             <p className="text-sm font-semibold text-gray-100 mb-1">{s.title}</p>
             {s.note && <p className="text-xs text-gray-500 mb-2">{s.note}</p>}
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 overflow-x-auto">
               <MethodBadge method={s.method} />
-              <span className="font-mono text-xs text-gray-400">{s.path}</span>
+              <span className="font-mono text-xs text-gray-400 whitespace-nowrap">{s.path}</span>
             </div>
             <CodeBlock code={s.code} label={s.title} />
-            <div className="mt-2">
+            <div className="mt-2 min-w-0">
               <p className="text-[10px] font-medium text-gray-600 uppercase tracking-wider mb-1.5">Respuesta</p>
-              <pre className="bg-gray-950/60 border border-gray-800/60 rounded-xl px-4 py-3 text-[11.5px] font-mono text-gray-500 overflow-x-auto leading-relaxed whitespace-pre">{s.response}</pre>
+              <pre className="bg-gray-950/60 border border-gray-800/60 rounded-xl px-4 py-3 text-[11.5px] font-mono text-gray-500 overflow-x-auto leading-relaxed whitespace-pre max-w-full">{s.response}</pre>
             </div>
           </div>
         ))}
@@ -469,7 +469,7 @@ function ScopesPage() {
           <div key={s.value} className="border border-white/[0.06] rounded-xl px-4 py-4 bg-gray-900/40">
             <ScopeBadge scope={s.value} />
             <p className="text-sm text-gray-300 mt-2 mb-1">{s.desc}</p>
-            <p className="text-[11px] font-mono text-gray-600">{s.endpoints}</p>
+            <p className="text-[11px] font-mono text-gray-600 break-all">{s.endpoints}</p>
           </div>
         ))}
       </div>
@@ -563,11 +563,11 @@ function ResourcesProjectsPage() {
           { method: 'GET' as const, path: '/projects',     desc: 'List all projects'   },
           { method: 'GET' as const, path: '/projects/{id}', desc: 'Get a project'      },
         ].map((ep, i) => (
-          <div key={ep.path} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-white/[0.05]' : ''}`}>
+          <div key={ep.path} className={`flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3 ${i > 0 ? 'border-t border-white/[0.05]' : ''}`}>
             <MethodBadge method={ep.method} />
-            <span className="font-mono text-xs text-gray-300 flex-1">{ep.path}</span>
+            <span className="font-mono text-xs text-gray-300 flex-1 min-w-0">{ep.path}</span>
             <ScopeBadge scope="projects:read" />
-            <span className="text-xs text-gray-500">{ep.desc}</span>
+            <span className="text-xs text-gray-500 w-full sm:w-auto">{ep.desc}</span>
           </div>
         ))}
       </div>
@@ -879,8 +879,8 @@ function PresenceOverviewPage() {
       </Callout>
 
       <H2>Check vs. Validate</H2>
-      <div className="my-4 border border-white/[0.07] rounded-xl overflow-hidden">
-        <table className="w-full text-xs">
+      <div className="my-4 border border-white/[0.07] rounded-xl overflow-x-auto">
+        <table className="w-full text-xs min-w-[480px]">
           <thead>
             <tr className="bg-gray-900/60 border-b border-white/[0.06]">
               <th className="text-left px-4 py-2.5 font-semibold text-gray-500 w-40"></th>
@@ -1075,16 +1075,16 @@ function AnalyticsPage() {
       <H2>Endpoints</H2>
       <div className="space-y-0 border border-white/[0.07] rounded-xl overflow-hidden">
         {[
-          { method: 'GET' as const, path: '/projects/{id}/analytics',              desc: 'Métricas agregadas + live visits' },
-          { method: 'GET' as const, path: '/projects/{id}/analytics/locations',    desc: 'Breakdown por Location'           },
-          { method: 'GET' as const, path: '/projects/{id}/analytics/distribution', desc: 'Por hora, día y geografía'        },
-          { method: 'GET' as const, path: '/projects/{id}/analytics/intensity',    desc: 'Entradas con coordenadas'         },
-          { method: 'GET' as const, path: '/projects/{id}/analytics/outside_areas', desc: 'GPS fuera de áreas definidas'   },
+          { method: 'GET' as const, path: '/projects/{id}/analytics',               desc: 'Métricas agregadas + live visits' },
+          { method: 'GET' as const, path: '/projects/{id}/analytics/locations',     desc: 'Breakdown por Location'           },
+          { method: 'GET' as const, path: '/projects/{id}/analytics/distribution',  desc: 'Por hora, día y geografía'        },
+          { method: 'GET' as const, path: '/projects/{id}/analytics/intensity',     desc: 'Entradas con coordenadas'         },
+          { method: 'GET' as const, path: '/projects/{id}/analytics/outside_areas', desc: 'GPS fuera de áreas definidas'    },
         ].map((ep, i) => (
-          <div key={ep.path} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-white/[0.05]' : ''}`}>
+          <div key={ep.path} className={`flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3 ${i > 0 ? 'border-t border-white/[0.05]' : ''}`}>
             <MethodBadge method={ep.method} />
-            <span className="font-mono text-xs text-gray-300 flex-1">{ep.path}</span>
-            <span className="text-xs text-gray-500">{ep.desc}</span>
+            <span className="font-mono text-xs text-gray-300 flex-1 min-w-0 break-all">{ep.path}</span>
+            <span className="text-xs text-gray-500 w-full sm:w-auto">{ep.desc}</span>
           </div>
         ))}
       </div>

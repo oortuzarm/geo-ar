@@ -85,8 +85,8 @@ export default function DeveloperDocsLayout({ basePath, isPublic }: Props) {
             </aside>
 
             {/* Content */}
-            <main className="flex-1">
-              <div className="max-w-3xl mx-auto px-6 py-10">
+            <main className="flex-1 min-w-0 overflow-x-hidden">
+              <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
                 <DocContent section={section} />
               </div>
             </main>
@@ -146,8 +146,8 @@ export default function DeveloperDocsLayout({ basePath, isPublic }: Props) {
           </aside>
 
           {/* Content */}
-          <main className="flex-1">
-            <div className="max-w-3xl mx-auto px-6 py-10">
+          <main className="flex-1 min-w-0 overflow-x-hidden">
+            <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
               <DocContent section={section} />
             </div>
           </main>

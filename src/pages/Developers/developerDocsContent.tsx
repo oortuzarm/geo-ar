@@ -60,8 +60,9 @@ export const NAV: NavGroup[] = [
   {
     group: 'Reference',
     items: [
-      { label: 'Errors',       path: 'errors'       },
-      { label: 'Rate Limits',  path: 'rate-limits'  },
+      { label: 'Errors',       path: 'errors'                },
+      { label: 'Rate Limits',  path: 'rate-limits'           },
+      { label: 'Versioning',   path: 'reference/versioning'  },
     ],
   },
 ]
@@ -1794,7 +1795,57 @@ await new Promise(resolve => setTimeout(resolve, waitMs))
         ))}
       </div>
 
-      <DocNav prev={{ label: 'Errors', path: 'errors' }} />
+      <DocNav prev={{ label: 'Errors', path: 'errors' }} next={{ label: 'Versioning', path: 'reference/versioning' }} />
+    </div>
+  )
+}
+
+// ── PAGE: Reference — Versioning ─────────────────────────────────────────────
+
+function VersioningPage() {
+  return (
+    <div>
+      <PageTitle
+        title="Versioning"
+        badge="Reference"
+        subtitle="How Ubyca versions its public API and what changes you can expect."
+      />
+
+      <H2>Current Version</H2>
+      <P>Current API version: <code className="font-mono text-xs text-gray-300">v1</code></P>
+      <CodeBlock code="https://api.ubyca.com/api/v1" />
+      <P>All public endpoints documented today belong to API v1.</P>
+
+      <H2>Non-Breaking Changes</H2>
+      <P>Ubyca may introduce compatible changes within v1 at any time. These do not require updates to existing integrations:</P>
+      <ul className="list-disc list-inside space-y-1 text-sm text-gray-400 my-4 ml-2">
+        <li>New endpoints</li>
+        <li>New fields in responses</li>
+        <li>New optional request parameters</li>
+        <li>New documented examples</li>
+        <li>Documentation improvements</li>
+      </ul>
+      <Callout type="info">Clients should ignore unknown response fields to remain forward compatible.</Callout>
+
+      <H2>Breaking Changes</H2>
+      <P>The following changes are considered breaking and will not be introduced within v1:</P>
+      <ul className="list-disc list-inside space-y-1 text-sm text-gray-400 my-4 ml-2">
+        <li>Removal of endpoints</li>
+        <li>Removal of response fields</li>
+        <li>Incompatible behavior changes</li>
+        <li>Authentication mechanism changes</li>
+      </ul>
+      <Callout type="warning">Breaking changes require a new major API version.</Callout>
+
+      <H2>Future Versions</H2>
+      <P>Future major versions will be released under a new base path:</P>
+      <CodeBlock code={`https://api.ubyca.com/api/v1\nhttps://api.ubyca.com/api/v2`} />
+      <P>Multiple versions will coexist during a transition period to give integrators time to migrate.</P>
+
+      <H2>Staying Informed</H2>
+      <P>Changes to the public API are announced through the <DocLink to="reference/changelog">API Changelog</DocLink>.</P>
+
+      <DocNav prev={{ label: 'Rate Limits', path: 'rate-limits' }} />
     </div>
   )
 }
@@ -1820,6 +1871,7 @@ export function DocContent({ section }: { section: string }) {
     case 'resources/analytics':         return <AnalyticsPage />
     case 'errors':                      return <ErrorsPage />
     case 'rate-limits':                 return <RateLimitsPage />
+    case 'reference/versioning':        return <VersioningPage />
     default:                            return <OverviewPage />
   }
 }

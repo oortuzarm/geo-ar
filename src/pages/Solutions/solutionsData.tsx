@@ -266,73 +266,73 @@ const retail: IndustryData = {
   shortDesc: 'Activa experiencias cuando el cliente entra a la tienda',
   accentColor: '#0ea5e9',
   meta: {
-    title: 'Ubyca para Retail — Presencia física en punto de venta',
-    description: 'Detecta la presencia de tus clientes en tienda y activa ofertas, contenido y experiencias en el momento exacto en que llegan. Sin apps adicionales.',
+    title: 'Ubyca para Retail — Activa experiencias cuando tus clientes están en tienda',
+    description: 'Detecta la presencia de tus clientes en el punto de venta y activa mensajes, beneficios y experiencias en el momento de mayor intención de compra. Sin hardware. Sin apps.',
   },
   hero: {
     label: 'RETAIL',
-    title: 'Interactúa con tu cliente cuando entra a la tienda',
-    subtitle: 'Ubyca detecta la presencia física de tus clientes y te permite activar experiencias, ofertas y contenido en el momento exacto en que llegan a tus puntos de venta.',
+    title: 'El cliente ya tomó la decisión de venir. ¿Estás aprovechando ese momento?',
+    subtitle: 'Ubyca detecta la presencia de cada cliente en tus puntos de venta y activa mensajes, beneficios o experiencias exactamente cuando están dentro del local y listos para comprar.',
   },
   intro: {
-    headline: 'Cada visita es una oportunidad que hoy estás perdiendo',
-    body: 'Los clientes entran a tus tiendas sin que tu marca los reconozca. No hay un saludo, no hay una oferta contextual, no hay forma de saber cuánto tiempo permanecen ni en qué zonas se detienen. Ubyca convierte cada visita física en un momento de contacto digital medible.',
+    headline: 'El canal más efectivo para el retail no es digital. Es físico.',
+    body: 'Cuando un cliente entra a tu tienda, su intención de compra ya está activa. Es el momento más valioso de su recorrido, y hoy pasa sin que tu marca haga nada. Ubyca convierte ese instante físico en una interacción medible: un mensaje, un beneficio, un motivo para comprar más o para volver.',
   },
   useCases: [
     {
-      category: 'BIENVENIDA EN TIENDA',
-      title: 'Dale la bienvenida cuando cruza la puerta',
-      description: 'Detecta la entrada de cada cliente y activa mensajes personalizados, ofertas de bienvenida o contenido exclusivo en el momento exacto en que ingresa al local. Sin QR. Sin beacons. Sin infraestructura adicional.',
+      category: 'MOMENTO DE ENTRADA',
+      title: 'Reconoce a cada cliente cuando cruza la puerta',
+      description: 'En el momento en que un cliente entra al radio de tu tienda, Ubyca activa la experiencia que definiste: un saludo personalizado, una oferta activa solo en ese local, o el acceso a un beneficio exclusivo. El cliente siente que la tienda lo esperaba. Sin escanear nada. Sin abrir una app.',
       visual: (
         <PushNotificationPanel
-          brand="Tu Tienda"
-          title="¡Bienvenido de vuelta!"
-          message="Tienes un 15% de descuento esperándote. Solo hoy en nuestra nueva colección."
+          brand="Nova Moda"
+          title="Hola, qué bueno que volviste"
+          message="Tu descuento de cliente frecuente está activo hoy: 20% en toda la nueva temporada."
           accentColor="#0ea5e9"
-          eventLabel="entered_place · Tienda Centro"
+          eventLabel="entered_place · Nova Moda · Av. Corrientes"
         />
       ),
     },
     {
-      category: 'FIDELIZACIÓN CONTEXTUAL',
-      title: 'Suma puntos por estar en el lugar correcto',
-      description: 'Integra la presencia física en tu programa de fidelización. Los clientes acumulan beneficios simplemente por visitar tus tiendas, sin escanear nada ni abrir apps adicionales. Cada visita validada suma automáticamente.',
+      category: 'LEALTAD QUE SE CONSTRUYE EN TIENDA',
+      title: 'Suma puntos por venir, no solo por comprar',
+      description: 'La mayoría de los programas de fidelización premian la transacción. Ubyca te permite premiar la visita. Cada entrada física validada puede traducirse en puntos, un beneficio o un mensaje de reconocimiento. Los clientes que visitan más, reciben más. Y vuelven.',
       visual: (
         <MetricsPanelVisual
           stats={[
-            { label: 'Visitas validadas hoy', value: '124', sub: '+18% vs. semana anterior' },
-            { label: 'Puntos emitidos', value: '3.720', sub: 'en las últimas 24h' },
-            { label: 'Tiempo promedio en tienda', value: '22min' },
+            { label: 'Clientes que volvieron en 30 días', value: '64%', sub: '+11 pp vs. grupo sin activación' },
+            { label: 'Visitas promedio por cliente / mes', value: '3.8', sub: 'era 1.9 antes de Ubyca' },
+            { label: 'Tiempo promedio en tienda', value: '21 min', sub: 'clientes con activación activa' },
           ]}
           accentColor="#0ea5e9"
         />
       ),
     },
     {
-      category: 'INTELIGENCIA ESPACIAL',
-      title: 'Entiende cómo se mueven tus clientes',
-      description: 'Visualiza el tiempo de permanencia por zona, los flujos de entrada y salida, y los patrones de visita a lo largo del día. Datos reales para decisiones operacionales concretas: disposición de productos, turnos del personal, horarios óptimos.',
-      visual: (
-        <GeoMapVisual
-          zones={[
-            { name: 'Zona principal · 150m', status: '11 visitantes activos' },
-            { name: 'Sector moda · 80m', status: '4 visitantes activos' },
-          ]}
-          accentColor="#0ea5e9"
-        />
-      ),
-    },
-    {
-      category: 'CONQUISTA COMPETITIVA',
-      title: 'Actúa cuando tu cliente visita a tu competidor',
-      description: 'Define zonas alrededor de los locales de tu competencia y activa mensajes con ofertas comparativas para atraer clientes en el momento exacto en que están tomando la decisión de compra.',
+      category: 'CONQUISTA EN CAMPO',
+      title: 'Llega a tu cliente antes de que le compre a otro',
+      description: 'Define las zonas de tus principales competidores. Cuando un cliente tuyo ingresa en esa área, activa automáticamente una oferta comparativa o un beneficio diferencial. El mensaje llega en el único momento en que todavía puede cambiar de destino.',
       visual: (
         <FlowVisual
           steps={[
-            { label: 'Cliente entra a zona competidor', value: 'entered_place' },
-            { label: 'Ubyca detecta presencia', value: '< 80ms', highlight: true },
-            { label: 'Activa oferta comparativa', value: 'webhook →' },
-            { label: 'Cliente recibe mensaje', value: '200 OK', highlight: true },
+            { label: 'Tu cliente entra a zona del competidor', value: 'entered_place' },
+            { label: 'Ubyca detecta y valida presencia', value: '< 80ms', highlight: true },
+            { label: 'Tu oferta comparativa se activa', value: 'mensaje enviado' },
+            { label: 'Click-through en primeras 24 h', value: '31%', highlight: true },
+          ]}
+          accentColor="#0ea5e9"
+        />
+      ),
+    },
+    {
+      category: 'INTELIGENCIA DE OPERACIONES',
+      title: 'Por fin, datos reales de lo que pasa en el local',
+      description: 'Cuánto tiempo permanece un cliente en cada zona, qué horarios concentran mayor afluencia, qué locales funcionan mejor y por qué. Ubyca transforma la presencia física en datos que informan desde la disposición del espacio hasta la planificación de personal y la inversión en campañas.',
+      visual: (
+        <GeoMapVisual
+          zones={[
+            { name: 'Acceso principal · radio 80m', status: '18 clientes activos ahora' },
+            { name: 'Sector temporada · radio 50m', status: 'dwell time: 14 min promedio' },
           ]}
           accentColor="#0ea5e9"
         />
@@ -341,46 +341,50 @@ const retail: IndustryData = {
   ],
   benefits: [
     {
-      icon: <BenefitIcon.NoApp />,
-      title: 'Sin apps adicionales',
-      description: 'Tus clientes no necesitan instalar nada. Ubyca funciona desde el navegador del dispositivo móvil.',
+      icon: <BenefitIcon.Chart />,
+      title: 'Más conversión en el momento que más importa',
+      description: 'Un mensaje relevante en el instante de mayor intención. Ningún canal digital puede competir con el timing de la presencia física.',
     },
     {
-      icon: <BenefitIcon.Chart />,
-      title: 'Datos de presencia reales',
-      description: 'No estimaciones. Presencia GPS verificada en servidor con métricas de dwell time por zona.',
+      icon: <BenefitIcon.Star />,
+      title: 'Mayor frecuencia de visitas',
+      description: 'Los clientes que reciben reconocimiento al visitar una tienda vuelven más seguido. La visita pasa a ser parte del programa de fidelización, no solo la compra.',
     },
     {
       icon: <BenefitIcon.Link />,
-      title: 'Integra con tu CRM',
-      description: 'Conecta los datos de presencia física con tus sistemas de marketing y fidelización existentes.',
+      title: 'Campañas con resultados medibles',
+      description: 'Cada activación entrega métricas reales: cuántos clientes activaron la experiencia, cuánto tiempo permanecieron, cuántos convirtieron. Resultados concretos, no estimaciones.',
     },
     {
       icon: <BenefitIcon.Clock />,
-      title: 'Activo desde el primer día',
-      description: 'Define tus ubicaciones en el mapa y empieza a detectar presencia el mismo día. Sin semanas de integración.',
+      title: 'Decisiones operacionales con datos reales',
+      description: 'Flujos de visita por local, zonas de mayor permanencia, comportamiento por horario. Información que hoy no tienes y que cambia cómo planificás el espacio y el equipo.',
     },
   ],
   faq: [
     {
-      question: '¿Los clientes necesitan instalar una app?',
-      answer: 'No. Ubyca valida la presencia desde el navegador del dispositivo, utilizando la ubicación que el usuario autoriza voluntariamente. No se requiere ninguna descarga adicional.',
+      question: '¿Necesito instalar algo en la tienda?',
+      answer: 'No. No hay hardware, balizas ni dispositivos que instalar. Ubyca trabaja con el GPS del smartphone del cliente. Solo necesitás crear las zonas en Studio, lo cual toma minutos.',
     },
     {
-      question: '¿Cómo funciona la detección de presencia exactamente?',
-      answer: 'Ubyca recibe las coordenadas GPS del dispositivo y las valida en el servidor contra los GeoPoints que configuraste en Studio. La validación incluye distancia, tiempo de permanencia y las condiciones de horario y capacidad que hayas definido.',
+      question: '¿Tengo que cambiar mi app actual?',
+      answer: 'No necesariamente. Ubyca puede integrarse en tu app existente a través de la API REST, o funcionar de forma independiente desde el navegador del cliente sin ninguna descarga adicional.',
     },
     {
-      question: '¿Se puede integrar con nuestro sistema de fidelización?',
-      answer: 'Sí. Ubyca expone una API REST documentada en OpenAPI 3.1 que puedes llamar desde cualquier sistema. También puedes recibir eventos de presencia vía webhook en tiempo real.',
+      question: '¿El cliente necesita hacer algo para recibir la experiencia?',
+      answer: 'Solo necesita haber autorizado el acceso a su ubicación una vez. A partir de ahí, la experiencia se activa automáticamente cada vez que entra al local. Sin fricciones, sin escaneos.',
     },
     {
-      question: '¿Qué métricas entrega Ubyca para retail?',
-      answer: 'Visitas por ubicación y zona, tiempo de permanencia (dwell time), flujos de entrada y salida, patrones horarios, y comparativas entre períodos. Todo accesible desde Studio o vía API de Analytics.',
+      question: '¿Cómo mido si las activaciones están funcionando?',
+      answer: 'Studio entrega métricas por activación y por local: clientes alcanzados, tiempo de permanencia en tienda y frecuencia de visita. Si integrás tu sistema de ventas vía API, también podés medir la conversión directa de cada campaña.',
     },
     {
-      question: '¿Es compatible con múltiples sucursales?',
-      answer: 'Sí. Puedes gestionar todas tus ubicaciones desde un único proyecto en Studio. Cada tienda tiene su propio GeoPoint con configuración independiente de radio, horario y reglas de activación.',
+      question: '¿Funciona con múltiples sucursales?',
+      answer: 'Sí. Cada tienda tiene su propia configuración —radio, horario, reglas de activación— pero todas se gestionan desde un único proyecto en Studio. Podés ver el desempeño global o desglosado por local.',
+    },
+    {
+      question: '¿Cuánto tarda en estar operativo?',
+      answer: 'El primer GeoPoint puede estar activo en menos de 10 minutos. Definís la zona, configurás la experiencia y comenzás a medir desde el mismo día. Sin semanas de integración ni equipos técnicos dedicados.',
     },
   ],
 }

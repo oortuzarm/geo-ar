@@ -66,7 +66,10 @@ export const NAV: NavGroup[] = [
   },
   {
     group: 'Reference',
-    items: [{ label: 'Errors', path: 'errors' }],
+    items: [
+      { label: 'Errors',       path: 'errors'       },
+      { label: 'Rate Limits',  path: 'rate-limits'  },
+    ],
   },
 ]
 
@@ -187,6 +190,35 @@ function StudioIntegrationsBtn() {
   )
 }
 
+// ── OpenAPI download ──────────────────────────────────────────────────────────
+
+const OPENAPI_URL = '/openapi.yaml'
+
+function OpenAPIDownloadCard() {
+  return (
+    <a
+      href={OPENAPI_URL}
+      target="_blank"
+      rel="noreferrer"
+      download="openapi.yaml"
+      className="my-4 flex items-center gap-3 px-4 py-3.5 bg-gray-900/60 border border-white/[0.07] rounded-xl hover:border-white/[0.14] hover:bg-gray-900/80 transition-all group"
+    >
+      <div className="w-8 h-8 bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:border-gray-600 transition-colors">
+        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold text-gray-200 group-hover:text-white transition-colors">OpenAPI Specification</p>
+        <p className="text-[11px] text-gray-600 font-mono">{OPENAPI_URL}</p>
+      </div>
+      <svg className="w-4 h-4 text-gray-600 group-hover:text-gray-400 flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+      </svg>
+    </a>
+  )
+}
+
 // ── Doc primitives ────────────────────────────────────────────────────────────
 
 export function PageTitle({ title, badge, subtitle }: { title: string; badge?: string; subtitle?: string }) {
@@ -287,6 +319,8 @@ function OverviewPage() {
         <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider flex-shrink-0">Base URL</span>
         <span className="font-mono text-xs text-gray-300 select-all whitespace-nowrap">{BASE}</span>
       </div>
+
+      <OpenAPIDownloadCard />
 
       <H2>Cómo funciona</H2>
       <ol className="space-y-3 my-4">
@@ -426,6 +460,10 @@ function AuthenticationPage() {
 
       <H2>Respuesta de error</H2>
       <CodeBlock code={`HTTP/1.1 401 Unauthorized\n\n{\n  "error": "Invalid or missing API credentials"\n}`} />
+
+      <H2>OpenAPI Specification</H2>
+      <P>El spec completo en OpenAPI 3.1.0 describe todos los endpoints, schemas y ejemplos.</P>
+      <OpenAPIDownloadCard />
 
       <DocNav prev={{ label: 'Quick Start', path: 'quickstart' }} next={{ label: 'API Key Scopes', path: 'scopes' }} />
     </div>
@@ -1054,46 +1092,245 @@ function PresenceValidatePage() {
 // ── PAGE: Analytics ───────────────────────────────────────────────────────────
 
 function AnalyticsPage() {
+  const summaryExample = `{
+  "data": {
+    "summary": {
+      "radiusEntries": 3,
+      "clicks": 2,
+      "conversionPct": 67
+    },
+    "liveVisits": {
+      "activeNow": 1,
+      "mostActiveLocation": {
+        "locationId": "660e8400-e29b-41d4-a716-446655440001",
+        "locationName": "Punto Central",
+        "activeNow": 1
+      },
+      "lastHourDeltaPct": 15,
+      "peakToday": {
+        "label": "14:00–15:00",
+        "count": 34
+      }
+    }
+  }
+}`
+
+  const locationsExample = `{
+  "data": [
+    {
+      "locationId": "660e8400-e29b-41d4-a716-446655440001",
+      "locationName": "Punto Central",
+      "radiusEntries": 2,
+      "clicks": 2,
+      "conversionPct": 100,
+      "activeNow": 1
+    },
+    {
+      "locationId": "660e8400-e29b-41d4-a716-446655440002",
+      "locationName": "Punto Norte",
+      "radiusEntries": 1,
+      "clicks": 0,
+      "conversionPct": 0,
+      "activeNow": 0
+    }
+  ]
+}`
+
+  const distributionExample = `{
+  "data": {
+    "byHour": [
+      { "hour": 9,  "count": 5  },
+      { "hour": 14, "count": 12 },
+      { "hour": 18, "count": 3  }
+    ],
+    "byDayOfWeek": [
+      { "day": 1, "count": 7 },
+      { "day": 3, "count": 4 },
+      { "day": 5, "count": 9 }
+    ],
+    "geo": {
+      "countries": [
+        { "label": "Chile",     "count": 18, "pct": 90 },
+        { "label": "Argentina", "count": 2,  "pct": 10 }
+      ],
+      "cities": [
+        { "label": "Santiago", "count": 15, "pct": 75 }
+      ],
+      "communes": [
+        { "label": "Providencia", "count": 10, "pct": 50 }
+      ]
+    }
+  }
+}`
+
+  const intensityExample = `{
+  "data": [
+    {
+      "locationId": "660e8400-e29b-41d4-a716-446655440001",
+      "locationName": "Punto Central",
+      "lat": -33.4372,
+      "lng": -70.6506,
+      "entryCount": 42
+    },
+    {
+      "locationId": "660e8400-e29b-41d4-a716-446655440002",
+      "locationName": "Punto Norte",
+      "lat": -33.4200,
+      "lng": -70.6400,
+      "entryCount": 17
+    }
+  ]
+}`
+
+  const outsideAreasExample = `{
+  "data": {
+    "mode": "historical",
+    "hotspots": [
+      {
+        "lat": -35.0,
+        "lng": -59.0,
+        "count": 3,
+        "intensity": 1.0,
+        "radiusMeters": 8
+      },
+      {
+        "lat": -35.01,
+        "lng": -59.01,
+        "count": 1,
+        "intensity": 0.3333,
+        "radiusMeters": 8
+      }
+    ],
+    "meta": {
+      "totalPoints": 5,
+      "outsidePoints": 4,
+      "activeGeoPointsCount": 2
+    }
+  }
+}`
+
   return (
     <div>
-      <PageTitle title="Analytics" badge="Resources / Analytics" subtitle="Métricas históricas y en vivo para proyectos y ubicaciones." />
-      <div className="flex gap-2 mb-6"><ScopeBadge scope="analytics:read" /></div>
+      <PageTitle
+        title="Analytics"
+        badge="Resources / Analytics"
+        subtitle="Transforma eventos de presencia en métricas agregadas. Cubre tráfico histórico, conversión, distribución temporal, heatmaps de entradas, y actividad GPS fuera de áreas definidas."
+      />
+      <div className="flex gap-2 mb-4"><ScopeBadge scope="analytics:read" /></div>
 
-      <P>Los endpoints de analytics cubren dos tipos de eventos:</P>
-      <ul className="list-disc list-inside space-y-1 text-sm text-gray-400 my-3 ml-2">
-        <li><strong className="text-gray-300">Eventos de entrada:</strong> <code className="font-mono text-xs">radius_enter</code>, <code className="font-mono text-xs">presence.validated</code> → <code className="font-mono text-xs">radiusEntries</code>.</li>
-        <li><strong className="text-gray-300">Eventos de conversión:</strong> <code className="font-mono text-xs">point_click</code>, <code className="font-mono text-xs">destination.delivered</code> → <code className="font-mono text-xs">clicks</code> y <code className="font-mono text-xs">conversionPct</code>.</li>
-      </ul>
-
-      <H2>Query parameters</H2>
-      <AttrTable rows={[
-        { name: 'from',        type: 'string (date)', desc: 'Inicio del rango (inclusive), formato YYYY-MM-DD.' },
-        { name: 'to',          type: 'string (date)', desc: 'Fin del rango (inclusive), formato YYYY-MM-DD.' },
-        { name: 'location_id', type: 'string (uuid)', desc: 'Filtrar por una Location específica. Disponible en summary, distribution y outside_areas.' },
-      ]} />
-
-      <H2>Endpoints</H2>
-      <div className="space-y-0 border border-white/[0.07] rounded-xl overflow-hidden">
+      <P>Los endpoints de analytics consumen dos tipos de eventos registrados por Presence Validate:</P>
+      <div className="my-4 grid sm:grid-cols-2 gap-3">
         {[
-          { method: 'GET' as const, path: '/projects/{id}/analytics',               desc: 'Métricas agregadas + live visits' },
-          { method: 'GET' as const, path: '/projects/{id}/analytics/locations',     desc: 'Breakdown por Location'           },
-          { method: 'GET' as const, path: '/projects/{id}/analytics/distribution',  desc: 'Por hora, día y geografía'        },
-          { method: 'GET' as const, path: '/projects/{id}/analytics/intensity',     desc: 'Entradas con coordenadas'         },
-          { method: 'GET' as const, path: '/projects/{id}/analytics/outside_areas', desc: 'GPS fuera de áreas definidas'    },
-        ].map((ep, i) => (
-          <div key={ep.path} className={`flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3 ${i > 0 ? 'border-t border-white/[0.05]' : ''}`}>
-            <MethodBadge method={ep.method} />
-            <span className="font-mono text-xs text-gray-300 flex-1 min-w-0 break-all">{ep.path}</span>
-            <span className="text-xs text-gray-500 w-full sm:w-auto">{ep.desc}</span>
+          { label: 'Eventos de entrada', events: 'radius_enter, presence.validated', field: 'radiusEntries' },
+          { label: 'Eventos de conversión', events: 'point_click, destination.delivered', field: 'clicks, conversionPct' },
+        ].map((t) => (
+          <div key={t.label} className="px-4 py-3 bg-gray-900/40 border border-white/[0.06] rounded-xl">
+            <p className="text-xs font-semibold text-gray-300 mb-1">{t.label}</p>
+            <p className="text-[11px] font-mono text-gray-600 break-all">{t.events}</p>
+            <p className="text-[11px] text-gray-600 mt-1">→ <code className="font-mono">{t.field}</code></p>
           </div>
         ))}
       </div>
 
-      <H2>Summary metrics</H2>
+      <H2>Parámetros comunes</H2>
       <AttrTable rows={[
-        { name: 'radiusEntries', type: 'integer', desc: 'Número de eventos de entrada (radius_enter + presence.validated).' },
-        { name: 'clicks',        type: 'integer', desc: 'Número de eventos de conversión (point_click + destination.delivered).' },
-        { name: 'conversionPct', type: 'integer', desc: 'Tasa de conversión: unique clickers / unique enterers × 100, redondeado.' },
+        { name: 'from',        type: 'string (date)', desc: 'Inicio del rango, inclusive, formato YYYY-MM-DD. Aplica al event_date del evento.' },
+        { name: 'to',          type: 'string (date)', desc: 'Fin del rango, inclusive, formato YYYY-MM-DD.' },
+        { name: 'location_id', type: 'string (uuid)', desc: 'Filtrar por una Location. Disponible en summary, distribution y outside_areas. Error 404 si no pertenece al proyecto.' },
+      ]} />
+
+      <Divider />
+
+      {/* ── Summary ── */}
+      <H2>GET /projects/{'{id}'}/analytics</H2>
+      <P>Métricas agregadas del proyecto más el estado de visitas en vivo. Filtra por rango de fecha y/o location_id.</P>
+      <CodeBlock code={summaryExample} label="Analytics Summary" />
+
+      <H3>summary</H3>
+      <AttrTable rows={[
+        { name: 'radiusEntries', type: 'integer',      desc: 'Entradas únicas contadas por radius_enter + presence.validated.' },
+        { name: 'clicks',        type: 'integer',      desc: 'Conversiones contadas por point_click + destination.delivered.' },
+        { name: 'conversionPct', type: 'integer 0–100', desc: 'unique clickers / unique enterers × 100, redondeado. 0 si no hay entradas.' },
+      ]} />
+
+      <H3>liveVisits</H3>
+      <AttrTable rows={[
+        { name: 'activeNow',           type: 'integer',      desc: 'Sesiones activas en este momento en todas las Locations del proyecto.' },
+        { name: 'mostActiveLocation',  type: 'object | null', desc: 'Location con más sesiones activas ahora. null cuando activeNow es 0.' },
+        { name: 'lastHourDeltaPct',    type: 'integer | null', desc: 'Cambio porcentual de sesiones activas vs. hace 1 hora. null si no hay dato previo.' },
+        { name: 'peakToday',           type: 'object | null', desc: 'Ventana de 1 hora con más actividad hoy (label: "14:00–15:00"). null si no hay datos.' },
+      ]} />
+
+      <Divider />
+
+      {/* ── Locations ── */}
+      <H2>GET /projects/{'{id}'}/analytics/locations</H2>
+      <P>Breakdown de métricas por Location. Incluye todas las Locations del proyecto, incluso las que tienen cero eventos. No soporta filtro por <code className="font-mono text-xs text-gray-300">location_id</code>.</P>
+      <CodeBlock code={locationsExample} label="Analytics Locations" />
+      <AttrTable rows={[
+        { name: 'locationId',    type: 'string (uuid)', desc: 'UUID de la Location.' },
+        { name: 'locationName',  type: 'string',        desc: 'Nombre de la Location.' },
+        { name: 'radiusEntries', type: 'integer',       desc: 'Entradas en esta Location.' },
+        { name: 'clicks',        type: 'integer',       desc: 'Conversiones en esta Location.' },
+        { name: 'conversionPct', type: 'integer 0–100', desc: 'Tasa de conversión para esta Location.' },
+        { name: 'activeNow',     type: 'integer',       desc: 'Sesiones activas ahora en esta Location.' },
+      ]} />
+
+      <Divider />
+
+      {/* ── Distribution ── */}
+      <H2>GET /projects/{'{id}'}/analytics/distribution</H2>
+      <P>Distribución de eventos en tres dimensiones: hora del día (0–23), día de la semana (0=Dom, 6=Sáb) y geografía (país, ciudad, comuna). Solo se incluyen horas/días con al menos un evento.</P>
+      <CodeBlock code={distributionExample} label="Analytics Distribution" />
+      <H3>geo</H3>
+      <AttrTable rows={[
+        { name: 'label', type: 'string',       desc: 'Nombre del país, ciudad o comuna.' },
+        { name: 'count', type: 'integer',      desc: 'Eventos atribuidos a esta entidad geográfica.' },
+        { name: 'pct',   type: 'integer 0–100', desc: 'Porcentaje del total de eventos, redondeado.' },
+      ]} />
+      <Callout type="info">Solo se incluyen eventos con geocodificación resuelta. Eventos sin coordenadas geocodificadas quedan excluidos de <code className="font-mono text-xs">geo</code>.</Callout>
+
+      <Divider />
+
+      {/* ── Intensity ── */}
+      <H2>GET /projects/{'{id}'}/analytics/intensity</H2>
+      <P>Conteo histórico de entradas por Location con sus coordenadas. Útil para heatmaps. Siempre devuelve el total histórico — no soporta filtros de fecha ni <code className="font-mono text-xs text-gray-300">location_id</code>.</P>
+      <CodeBlock code={intensityExample} label="Analytics Intensity" />
+      <AttrTable rows={[
+        { name: 'locationId',   type: 'string (uuid)', desc: 'UUID de la Location.' },
+        { name: 'locationName', type: 'string',        desc: 'Nombre de la Location.' },
+        { name: 'lat',          type: 'number',        desc: 'Latitud del centro de la Location.' },
+        { name: 'lng',          type: 'number',        desc: 'Longitud del centro de la Location.' },
+        { name: 'entryCount',   type: 'integer',       desc: 'Total histórico de entradas (radius_enter + presence.validated).' },
+      ]} />
+
+      <Divider />
+
+      {/* ── Outside Areas ── */}
+      <H2>GET /projects/{'{id}'}/analytics/outside_areas</H2>
+      <P>Coordenadas GPS registradas fuera de todas las áreas activas del proyecto, agrupadas en hotspots. Soporta dos modos:</P>
+      <div className="my-4 grid sm:grid-cols-2 gap-3">
+        <div className="px-4 py-3 bg-gray-900/40 border border-white/[0.06] rounded-xl">
+          <p className="text-xs font-semibold text-gray-300 mb-1"><code className="font-mono">mode=historical</code> (default)</p>
+          <p className="text-xs text-gray-500">GPS de eventos pasados con <code className="font-mono text-xs">had_outside_position: true</code>. Acepta filtros de fecha.</p>
+        </div>
+        <div className="px-4 py-3 bg-gray-900/40 border border-white/[0.06] rounded-xl">
+          <p className="text-xs font-semibold text-gray-300 mb-1"><code className="font-mono">mode=live</code></p>
+          <p className="text-xs text-gray-500">Posiciones GPS actuales de sesiones activas. Los filtros de fecha se ignoran.</p>
+        </div>
+      </div>
+      <P>Los hotspots están agrupados en una grilla de ~11 m de precisión, ordenados descendente por count. <code className="font-mono text-xs text-gray-300">intensity</code> está normalizado 0.0–1.0 relativo al hotspot con mayor count. <code className="font-mono text-xs text-gray-300">radiusMeters</code> es siempre 8.</P>
+      <CodeBlock code={outsideAreasExample} label="Analytics Outside Areas" />
+      <AttrTable rows={[
+        { name: 'mode',                    type: '"historical" | "live"', desc: 'Modo aplicado a la respuesta.' },
+        { name: 'hotspots[].lat',          type: 'number',               desc: 'Latitud del centroide del cluster.' },
+        { name: 'hotspots[].lng',          type: 'number',               desc: 'Longitud del centroide del cluster.' },
+        { name: 'hotspots[].count',        type: 'integer',              desc: 'Puntos GPS en este cluster.' },
+        { name: 'hotspots[].intensity',    type: 'number 0.0–1.0',       desc: 'Intensidad normalizada. El cluster más denso siempre tiene 1.0.' },
+        { name: 'hotspots[].radiusMeters', type: 'integer',              desc: 'Radio visual del dot. Siempre 8.' },
+        { name: 'meta.totalPoints',        type: 'integer',              desc: 'Total de puntos GPS evaluados.' },
+        { name: 'meta.outsidePoints',      type: 'integer',              desc: 'Puntos que cayeron fuera de todas las áreas activas.' },
+        { name: 'meta.activeGeoPointsCount', type: 'integer',            desc: 'Número de Locations activas usadas como límites de exclusión.' },
       ]} />
 
       <DocNav prev={{ label: 'Validate Presence', path: 'resources/presence/validate' }} next={{ label: 'Errors', path: 'errors' }} />
@@ -1163,7 +1400,85 @@ function ErrorsPage() {
         { name: 'dwell_time_not_met',              type: 'HTTP 200', desc: 'El tiempo de permanencia enviado es menor al mínimo requerido.' },
       ]} />
 
-      <DocNav prev={{ label: 'Analytics', path: 'resources/analytics' }} />
+      <DocNav prev={{ label: 'Analytics', path: 'resources/analytics' }} next={{ label: 'Rate Limits', path: 'rate-limits' }} />
+    </div>
+  )
+}
+
+// ── PAGE: Rate Limits ─────────────────────────────────────────────────────────
+
+function RateLimitsPage() {
+  return (
+    <div>
+      <PageTitle
+        title="Rate Limits"
+        badge="Reference"
+        subtitle="La API aplica límites de tasa por API key. Cuando se excede el límite, la API responde con HTTP 429 y los headers indican cuándo reintentar."
+      />
+
+      <H2>Response headers</H2>
+      <P>Cada respuesta exitosa incluye estos headers:</P>
+      <AttrTable rows={[
+        { name: 'X-RateLimit-Limit',     type: 'integer', desc: 'Número máximo de requests permitidos en la ventana actual.' },
+        { name: 'X-RateLimit-Remaining', type: 'integer', desc: 'Requests restantes en la ventana actual.' },
+        { name: 'X-RateLimit-Reset',     type: 'integer (Unix timestamp)', desc: 'Momento en que la ventana se reinicia y el contador vuelve al límite.' },
+      ]} />
+
+      <Divider />
+
+      <H2>429 Too Many Requests</H2>
+      <P>Cuando se agota el cupo, la API devuelve HTTP 429 con el mismo header <code className="font-mono text-xs text-gray-300">X-RateLimit-Reset</code> para indicar cuándo vuelve a estar disponible.</P>
+      <CodeBlock code={`HTTP/1.1 429 Too Many Requests
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1719878400
+
+{
+  "error": "Rate limit exceeded"
+}`} label="429 Too Many Requests" />
+
+      <Divider />
+
+      <H2>Manejo de 429</H2>
+      <Callout type="warning">
+        No reintentes inmediatamente. Espera hasta que el timestamp de <code className="font-mono text-xs">X-RateLimit-Reset</code> haya pasado antes de reintentar.
+      </Callout>
+      <CodeBlock code={`// Leer el timestamp de reset
+const reset = parseInt(response.headers.get('X-RateLimit-Reset') ?? '0', 10)
+const waitMs = Math.max(0, reset * 1000 - Date.now())
+
+await new Promise(resolve => setTimeout(resolve, waitMs))
+
+// Reintentar el request`} label="Esperar el reset" />
+
+      <H2>Buenas prácticas</H2>
+      <div className="space-y-3 my-4">
+        {[
+          {
+            title: 'Leer X-RateLimit-Remaining',
+            desc: 'Monitorea el header en cada respuesta. Cuando se acerque a 0, reduce la frecuencia de requests antes de recibir un 429.',
+          },
+          {
+            title: 'Backoff exponencial',
+            desc: 'Si recibes 429 de forma inesperada (por ejemplo, por un burst), aplica backoff exponencial con jitter: espera 2ⁿ segundos más un valor aleatorio antes de cada reintento.',
+          },
+          {
+            title: 'Evita polling agresivo',
+            desc: 'No consultes analytics o listas de ubicaciones en bucles cortos. Usa intervalos razonables según la frecuencia de actualización que necesita tu aplicación.',
+          },
+          {
+            title: 'Cachea resultados',
+            desc: 'Los endpoints de analytics y de lista de proyectos/ubicaciones son apropiados para cachear del lado del cliente. Reduce requests innecesarios y mantiene un margen cómodo sobre el límite.',
+          },
+        ].map((t) => (
+          <div key={t.title} className="px-4 py-3 bg-gray-900/40 border border-white/[0.06] rounded-xl">
+            <p className="text-xs font-semibold text-gray-300 mb-1">{t.title}</p>
+            <p className="text-xs text-gray-500">{t.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      <DocNav prev={{ label: 'Errors', path: 'errors' }} />
     </div>
   )
 }
@@ -1188,6 +1503,7 @@ export function DocContent({ section }: { section: string }) {
     case 'resources/presence/validate': return <PresenceValidatePage />
     case 'resources/analytics':         return <AnalyticsPage />
     case 'errors':                      return <ErrorsPage />
+    case 'rate-limits':                 return <RateLimitsPage />
     default:                            return <OverviewPage />
   }
 }
@@ -1221,25 +1537,42 @@ export function Sidebar({ current, onNavigate }: { current: string; onNavigate?:
   }
 
   return (
-    <nav className="py-4 space-y-5">
-      {NAV.map((group) => (
-        <div key={group.group}>
-          <p className="px-3 mb-1 text-[10px] font-semibold text-gray-600 uppercase tracking-widest">{group.group}</p>
-          {group.items && (
-            <div className="space-y-0.5">
-              {group.items.map((item) => <NavItem key={item.path} item={item} />)}
-            </div>
-          )}
-          {group.sub && group.sub.map((sub) => (
-            <div key={sub.label} className="mt-3">
-              <p className="px-3 mb-1 text-[10px] font-medium text-gray-600">{sub.label}</p>
+    <nav className="flex flex-col py-4">
+      <div className="space-y-5 flex-1">
+        {NAV.map((group) => (
+          <div key={group.group}>
+            <p className="px-3 mb-1 text-[10px] font-semibold text-gray-600 uppercase tracking-widest">{group.group}</p>
+            {group.items && (
               <div className="space-y-0.5">
-                {sub.items.map((item) => <NavItem key={item.path} item={item} />)}
+                {group.items.map((item) => <NavItem key={item.path} item={item} />)}
               </div>
-            </div>
-          ))}
-        </div>
-      ))}
+            )}
+            {group.sub && group.sub.map((sub) => (
+              <div key={sub.label} className="mt-3">
+                <p className="px-3 mb-1 text-[10px] font-medium text-gray-600">{sub.label}</p>
+                <div className="space-y-0.5">
+                  {sub.items.map((item) => <NavItem key={item.path} item={item} />)}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Persistent OpenAPI spec download */}
+      <div className="mt-6 px-3 pb-2">
+        <a
+          href={OPENAPI_URL}
+          download="openapi.yaml"
+          className="flex items-center gap-2 w-full px-3 py-2 rounded-lg border border-white/[0.07] text-xs text-gray-500 hover:text-gray-300 hover:border-white/[0.15] hover:bg-gray-800/40 transition-colors"
+        >
+          <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span>OpenAPI Spec</span>
+          <span className="ml-auto text-[10px] font-mono text-gray-700">yaml</span>
+        </a>
+      </div>
     </nav>
   )
 }

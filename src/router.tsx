@@ -78,7 +78,7 @@ const protectedChildren = [
       { path: 'settings',   element: <SettingsPage /> },
       { path: 'plans',         element: <PlansPage /> },
       { path: 'integrations',  element: <IntegrationsPage /> },
-      { path: 'developers',    element: <DevelopersPage /> },
+      { path: 'developers/*',   element: <DevelopersPage /> },
       { path: 'smart-proxies',           element: <SmartProxiesPage /> },
       { path: 'smart-proxies/new',       element: <SmartProxyFormPage /> },
       { path: 'smart-proxies/:id',       element: <SmartProxyDetailPage /> },

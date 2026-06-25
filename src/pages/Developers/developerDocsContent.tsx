@@ -1413,62 +1413,90 @@ function RateLimitsPage() {
       <PageTitle
         title="Rate Limits"
         badge="Reference"
-        subtitle="La API aplica límites de tasa por API key. Cuando se excede el límite, la API responde con HTTP 429 y los headers indican cuándo reintentar."
+        subtitle="La API aplica dos límites independientes: por IP de origen y por API credential. El primero que se alcanza bloquea la request con HTTP 429."
       />
 
-      <H2>Response headers</H2>
-      <P>Cada respuesta exitosa incluye estos headers:</P>
-      <AttrTable rows={[
-        { name: 'X-RateLimit-Limit',     type: 'integer', desc: 'Número máximo de requests permitidos en la ventana actual.' },
-        { name: 'X-RateLimit-Remaining', type: 'integer', desc: 'Requests restantes en la ventana actual.' },
-        { name: 'X-RateLimit-Reset',     type: 'integer (Unix timestamp)', desc: 'Momento en que la ventana se reinicia y el contador vuelve al límite.' },
-      ]} />
+      <H2>Límites actuales</H2>
+      <div className="my-4 overflow-x-auto">
+        <table className="w-full text-xs border-collapse">
+          <thead>
+            <tr className="border-b border-white/[0.08]">
+              <th className="text-left py-2 pr-6 text-gray-500 font-medium">Límite</th>
+              <th className="text-left py-2 pr-6 text-gray-500 font-medium">Valor</th>
+              <th className="text-left py-2 text-gray-500 font-medium">Aplica a</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="border-b border-white/[0.04]">
+              <td className="py-2.5 pr-6 text-gray-300 font-medium">IP de origen</td>
+              <td className="py-2.5 pr-6 font-mono text-brand-400">300 req / min</td>
+              <td className="py-2.5 text-gray-500">Todos los endpoints de API v1</td>
+            </tr>
+            <tr>
+              <td className="py-2.5 pr-6 text-gray-300 font-medium">API credential</td>
+              <td className="py-2.5 pr-6 font-mono text-brand-400">120 req / min</td>
+              <td className="py-2.5 text-gray-500">Todos los endpoints excepto <code className="font-mono text-gray-400">GET /health</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <Callout type="info">
+        Los dos límites son independientes. Una misma request puede ser bloqueada por cualquiera de los dos, el que se alcance primero. <code className="font-mono text-xs">GET /health</code> está excluido del límite por credential, pero sigue sujeto al límite por IP.
+      </Callout>
 
       <Divider />
 
       <H2>429 Too Many Requests</H2>
-      <P>Cuando se agota el cupo, la API devuelve HTTP 429 con el mismo header <code className="font-mono text-xs text-gray-300">X-RateLimit-Reset</code> para indicar cuándo vuelve a estar disponible.</P>
+      <P>Al exceder cualquiera de los dos límites, la API responde con HTTP 429. La respuesta incluye el header <code className="font-mono text-xs text-gray-300">Retry-After</code> con la duración de la ventana de throttle en segundos.</P>
       <CodeBlock code={`HTTP/1.1 429 Too Many Requests
-X-RateLimit-Limit: 60
-X-RateLimit-Remaining: 0
-X-RateLimit-Reset: 1719878400
+Content-Type: application/json
+Retry-After: 60
 
 {
-  "error": "Rate limit exceeded"
+  "error": "Demasiadas solicitudes. Intenta nuevamente más tarde."
 }`} label="429 Too Many Requests" />
+
+      <H3>Header Retry-After</H3>
+      <AttrTable rows={[
+        {
+          name: 'Retry-After',
+          type: 'integer (segundos)',
+          desc: 'Tiempo mínimo a esperar antes de reintentar. Solo presente en respuestas 429. Valor actual: 60. Las respuestas normales no incluyen headers informativos de rate limiting.',
+        },
+      ]} />
 
       <Divider />
 
       <H2>Manejo de 429</H2>
       <Callout type="warning">
-        No reintentes inmediatamente. Espera hasta que el timestamp de <code className="font-mono text-xs">X-RateLimit-Reset</code> haya pasado antes de reintentar.
+        No reintentes inmediatamente. Lee el header <code className="font-mono text-xs">Retry-After</code> y espera esa cantidad de segundos antes de reintentar.
       </Callout>
-      <CodeBlock code={`// Leer el timestamp de reset
-const reset = parseInt(response.headers.get('X-RateLimit-Reset') ?? '0', 10)
-const waitMs = Math.max(0, reset * 1000 - Date.now())
+      <CodeBlock code={`// Leer Retry-After y esperar
+const retryAfter = parseInt(response.headers.get('Retry-After') ?? '60', 10)
+const waitMs = retryAfter * 1000
 
 await new Promise(resolve => setTimeout(resolve, waitMs))
 
-// Reintentar el request`} label="Esperar el reset" />
+// Reintentar el request`} label="Respetar Retry-After" />
 
       <H2>Buenas prácticas</H2>
       <div className="space-y-3 my-4">
         {[
           {
-            title: 'Leer X-RateLimit-Remaining',
-            desc: 'Monitorea el header en cada respuesta. Cuando se acerque a 0, reduce la frecuencia de requests antes de recibir un 429.',
+            title: 'Respetar Retry-After',
+            desc: 'Cuando recibes un 429, lee el header Retry-After y espera exactamente esa cantidad de segundos antes de reintentar. El valor actual es 60.',
           },
           {
             title: 'Backoff exponencial',
-            desc: 'Si recibes 429 de forma inesperada (por ejemplo, por un burst), aplica backoff exponencial con jitter: espera 2ⁿ segundos más un valor aleatorio antes de cada reintento.',
+            desc: 'Si continúas recibiendo 429 tras el primer retry, aplica backoff exponencial con jitter: espera 2ⁿ segundos más un valor aleatorio antes de cada reintento adicional.',
           },
           {
-            title: 'Evita polling agresivo',
-            desc: 'No consultes analytics o listas de ubicaciones en bucles cortos. Usa intervalos razonables según la frecuencia de actualización que necesita tu aplicación.',
+            title: 'Evitar polling agresivo',
+            desc: 'No consultes analytics o listas de ubicaciones en bucles cortos. Con 120 req/min por credential, un bucle de 2 segundos agota el cupo en 4 minutos aunque no haya actividad real.',
           },
           {
-            title: 'Cachea resultados',
-            desc: 'Los endpoints de analytics y de lista de proyectos/ubicaciones son apropiados para cachear del lado del cliente. Reduce requests innecesarios y mantiene un margen cómodo sobre el límite.',
+            title: 'Cachear respuestas de lectura',
+            desc: 'Los endpoints GET de proyectos, locations y analytics son adecuados para cachear del lado del cliente. Reduce el consumo de cupo y protege contra bursts involuntarios.',
           },
         ].map((t) => (
           <div key={t.title} className="px-4 py-3 bg-gray-900/40 border border-white/[0.06] rounded-xl">

@@ -372,36 +372,49 @@ function OverviewPage() {
 // ── PAGE: Quick Start ─────────────────────────────────────────────────────────
 
 function QuickStartPage() {
-  const STEPS = [
+  const { basePath } = useDocsCtx()
+
+  const STEPS: {
+    n: number
+    title: string
+    method: 'GET' | 'POST'
+    path: string
+    note?: string
+    chainNote?: string
+    code: string
+    response: string
+  }[] = [
     {
-      n: 1, title: 'Verificar estado', method: 'GET' as const,
+      n: 1, title: 'Verificar estado', method: 'GET',
       path: `${BASE}/health`,
       code: `curl ${BASE}/health`,
       response: `{"status":"ok","version":"v1"}`,
     },
     {
-      n: 2, title: 'Listar proyectos', method: 'GET' as const,
+      n: 2, title: 'Listar proyectos', method: 'GET',
       path: `${BASE}/projects`,
-      note: 'Requiere scope projects:read.',
+      note: 'Requiere scope projects:read. Reemplaza ubk_live_xxx con tu API Key y sk_live_xxx con tu Secret — ambos disponibles en Studio → Integraciones.',
       code: `curl ${BASE}/projects \\\n  -u "ubk_live_xxx:sk_live_xxx"`,
       response: `{\n  "data": [\n    {\n      "id": "550e8400-e29b-41d4-a716-446655440000",\n      "title": "Circuito Histórico",\n      "status": "active",\n      "locationCount": 3\n    }\n  ],\n  "meta": { "count": 1 }\n}`,
+      chainNote: '→ Copia el valor de data[0].id. Lo usarás como {project_id} en el Paso 3.',
     },
     {
-      n: 3, title: 'Listar ubicaciones', method: 'GET' as const,
+      n: 3, title: 'Listar ubicaciones', method: 'GET',
       path: `${BASE}/projects/{project_id}/locations`,
       note: 'Requiere scope projects:read.',
       code: `curl "${BASE}/projects/550e8400-e29b-41d4-a716-446655440000/locations" \\\n  -u "ubk_live_xxx:sk_live_xxx"`,
       response: `{\n  "data": [\n    {\n      "id": "660e8400-e29b-41d4-a716-446655440001",\n      "name": "Punto Central",\n      "latitude": -33.4372,\n      "longitude": -70.6506,\n      "boundary": { "type": "radius", "radiusMeters": 50 },\n      "active": true\n    }\n  ],\n  "meta": { "count": 1 }\n}`,
+      chainNote: '→ El campo data[0].id de la ubicación es tu location_id para los Pasos 4 y 5.',
     },
     {
-      n: 4, title: 'Verificar presencia (dry-run)', method: 'POST' as const,
+      n: 4, title: 'Verificar presencia (dry-run)', method: 'POST',
       path: `${BASE}/presence/check`,
       note: 'Requiere scope presence:check. No consume quota, no registra eventos.',
       code: `curl -X POST ${BASE}/presence/check \\\n  -u "ubk_live_xxx:sk_live_xxx" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "location_id": "660e8400-e29b-41d4-a716-446655440001",\n    "session_id": "session-abc-123",\n    "coordinates": {\n      "latitude": -33.4372,\n      "longitude": -70.6506\n    }\n  }'`,
       response: `{\n  "valid": true,\n  "locationId": "660e8400-e29b-41d4-a716-446655440001",\n  "sessionId": "session-abc-123",\n  "checks": {\n    "locationActive": true,\n    "insideBoundary": true,\n    "boundaryType": "radius",\n    "distanceMeters": 34.7\n  },\n  "destination": { "type": "url", "url": "https://example.com/contenido" },\n  "failureReason": null,\n  "eventId": null\n}`,
     },
     {
-      n: 5, title: 'Validar presencia GPS', method: 'POST' as const,
+      n: 5, title: 'Validar presencia GPS', method: 'POST',
       path: `${BASE}/presence/validate`,
       note: 'Requiere scope presence:validate. Registra eventos y consume quota.',
       code: `curl -X POST ${BASE}/presence/validate \\\n  -u "ubk_live_xxx:sk_live_xxx" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "location_id": "660e8400-e29b-41d4-a716-446655440001",\n    "session_id": "session-abc-123",\n    "coordinates": {\n      "latitude": -33.4372,\n      "longitude": -70.6506,\n      "accuracy_meters": 8.0\n    }\n  }'`,
@@ -414,6 +427,12 @@ function QuickStartPage() {
       <PageTitle title="Quick Start" badge="Getting Started" subtitle="Integra el flujo completo de presencia en 5 llamadas." />
       <P>Necesitas una API Key con los scopes <code className="font-mono text-xs text-gray-300">projects:read</code>, <code className="font-mono text-xs text-gray-300">presence:check</code> y <code className="font-mono text-xs text-gray-300">presence:validate</code>. Créala desde <StudioIntegrationsLink>Studio → Integraciones</StudioIntegrationsLink>.</P>
 
+      {/* Base URL */}
+      <div className="flex items-center gap-3 my-4 px-4 py-3 bg-gray-900/40 border border-white/[0.06] rounded-xl">
+        <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest flex-shrink-0">Base URL</span>
+        <code className="font-mono text-xs text-gray-300 break-all">{BASE}</code>
+      </div>
+
       <div className="space-y-8 mt-6">
         {STEPS.map((s) => (
           <div key={s.n} className="relative pl-10 min-w-0">
@@ -424,11 +443,47 @@ function QuickStartPage() {
               <MethodBadge method={s.method} />
               <span className="font-mono text-xs text-gray-400 whitespace-nowrap">{s.path}</span>
             </div>
+
+            {/* Step 4: session_id explanation before curl */}
+            {s.n === 4 && (
+              <p className="text-xs text-gray-500 mb-2">
+                El <code className="font-mono text-xs text-gray-400">session_id</code> lo genera tu aplicación — puede ser cualquier string único por sesión de usuario. Recomendado: UUID v4.{' '}
+                <a href={`${basePath}/concepts/sessions`} className="text-brand-400 hover:text-brand-300 underline underline-offset-2">Ver Sessions.</a>
+              </p>
+            )}
+
             <CodeBlock code={s.code} label={s.title} />
             <div className="mt-2 min-w-0">
               <p className="text-[10px] font-medium text-gray-600 uppercase tracking-wider mb-1.5">Respuesta</p>
               <pre className="bg-gray-950/60 border border-gray-800/60 rounded-xl px-4 py-3 text-[11.5px] font-mono text-gray-500 overflow-x-auto leading-relaxed whitespace-pre max-w-full">{s.response}</pre>
             </div>
+
+            {/* Chaining annotation */}
+            {s.chainNote && (
+              <p className="mt-2 text-xs text-brand-400/80 font-mono">{s.chainNote}</p>
+            )}
+
+            {/* Step 5: response interpretation + valid:false callout */}
+            {s.n === 5 && (
+              <div className="mt-3 space-y-3">
+                <div className="flex flex-col gap-1.5 text-xs">
+                  <div className="flex items-start gap-2">
+                    <span className="font-mono text-green-400 flex-shrink-0">valid: true</span>
+                    <span className="text-gray-500">→ entrega el contenido de <code className="font-mono text-gray-400">destination.url</code> al usuario.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-mono text-red-400 flex-shrink-0">valid: false</span>
+                    <span className="text-gray-500">→ revisa <code className="font-mono text-gray-400">failureReason</code> para saber qué condición no se cumplió.{' '}
+                      <a href={`${basePath}/resources/presence/overview`} className="text-brand-400 hover:text-brand-300 underline underline-offset-2">Ver Presence Overview.</a>
+                    </span>
+                  </div>
+                </div>
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+                  <p className="text-xs font-semibold text-amber-300 mb-1">valid: false is expected</p>
+                  <p className="text-xs text-gray-500">Si las coordenadas enviadas no están dentro del área configurada para la ubicación, la API responderá HTTP 200 con <code className="font-mono text-xs text-gray-400">valid: false</code> y <code className="font-mono text-xs text-gray-400">failureReason: "outside_boundary"</code>. Esto es un resultado de negocio esperado, no un error HTTP.</p>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

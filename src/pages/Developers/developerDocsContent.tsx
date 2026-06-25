@@ -401,7 +401,7 @@ function QuickStartPage() {
     {
       n: 3, title: 'Listar ubicaciones', method: 'GET',
       path: `${BASE}/projects/{project_id}/locations`,
-      note: 'Requiere scope projects:read.',
+      note: 'Usa el project_id obtenido en el Paso 2. Requiere scope projects:read.',
       code: `curl "${BASE}/projects/550e8400-e29b-41d4-a716-446655440000/locations" \\\n  -u "ubk_live_xxx:sk_live_xxx"`,
       response: `{\n  "data": [\n    {\n      "id": "660e8400-e29b-41d4-a716-446655440001",\n      "name": "Punto Central",\n      "latitude": -33.4372,\n      "longitude": -70.6506,\n      "boundary": { "type": "radius", "radiusMeters": 50 },\n      "active": true\n    }\n  ],\n  "meta": { "count": 1 }\n}`,
       chainNote: '→ El campo data[0].id de la ubicación es tu location_id para los Pasos 4 y 5.',
@@ -416,7 +416,7 @@ function QuickStartPage() {
     {
       n: 5, title: 'Validar presencia GPS', method: 'POST',
       path: `${BASE}/presence/validate`,
-      note: 'Requiere scope presence:validate. Registra eventos y consume quota.',
+      note: 'Usa el mismo location_id y session_id del Paso 4. Requiere scope presence:validate. Registra eventos y consume quota.',
       code: `curl -X POST ${BASE}/presence/validate \\\n  -u "ubk_live_xxx:sk_live_xxx" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "location_id": "660e8400-e29b-41d4-a716-446655440001",\n    "session_id": "session-abc-123",\n    "coordinates": {\n      "latitude": -33.4372,\n      "longitude": -70.6506,\n      "accuracy_meters": 8.0\n    }\n  }'`,
       response: `{\n  "valid": true,\n  "locationId": "660e8400-e29b-41d4-a716-446655440001",\n  "sessionId": "session-abc-123",\n  "checks": {\n    "locationActive": true,\n    "insideBoundary": true,\n    "boundaryType": "radius",\n    "distanceMeters": 34.7\n  },\n  "destination": { "type": "url", "url": "https://example.com/contenido" },\n  "failureReason": null,\n  "eventId": "770e8400-e29b-41d4-a716-446655440010"\n}`,
     },
@@ -482,6 +482,7 @@ function QuickStartPage() {
                   <p className="text-xs font-semibold text-amber-300 mb-1">valid: false is expected</p>
                   <p className="text-xs text-gray-500">Si las coordenadas enviadas no están dentro del área configurada para la ubicación, la API responderá HTTP 200 con <code className="font-mono text-xs text-gray-400">valid: false</code> y <code className="font-mono text-xs text-gray-400">failureReason: "outside_boundary"</code>. Esto es un resultado de negocio esperado, no un error HTTP.</p>
                 </div>
+                <p className="text-xs text-gray-500">Con esto ya tienes el flujo básico completo: descubrir una ubicación, verificar presencia y registrar una validación real.</p>
               </div>
             )}
           </div>

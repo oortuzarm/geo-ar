@@ -838,6 +838,12 @@ function LocationObjectPage() {
 
       <P>Los campos de <code className="font-mono text-xs text-gray-300">checks</code> correspondientes a checks no alcanzados están ausentes de la respuesta.</P>
 
+      <Callout type="info">
+        <p className="font-semibold mb-1.5">Live visits check (paso 5)</p>
+        <p>Algunas ubicaciones pueden requerir un mínimo de usuarios concurrentes activos antes de permitir una validación exitosa. Cuando esta condición está configurada y no se cumple, la API responde con <code className="font-mono text-xs">failureReason: "minimum_live_visits_not_reached"</code>.</p>
+        <p className="mt-2">Esta configuración se administra desde Ubyca Studio. No existe un atributo <code className="font-mono text-xs">liveVisits</code> en el Location Object de la API — no debe enviarse nada adicional en requests de Presence para este check. Ver la referencia completa de <code className="font-mono text-xs">checks.liveVisitsMet</code> y demás campos de diagnóstico en <DocLink to="resources/presence/overview">Presence Overview → The checks object</DocLink>.</p>
+      </Callout>
+
       <DocNav prev={{ label: 'The Project Object', path: 'resources/projects' }} next={{ label: 'List Locations', path: 'resources/locations/list' }} />
     </div>
   )

@@ -634,9 +634,26 @@ function ConceptPresencePage() {
 // ── PAGE: Resources — Projects ────────────────────────────────────────────────
 
 function ResourcesProjectsPage() {
+  const projectExample = `{
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "title": "Circuito Histórico",
+    "subtitle": null,
+    "description": null,
+    "status": "active",
+    "communityEnabled": false,
+    "locationCount": 3,
+    "createdAt": "2026-06-01T10:00:00.000Z",
+    "updatedAt": "2026-06-20T14:30:00.000Z"
+  }
+}`
+
   return (
     <div>
       <PageTitle title="The Project Object" badge="Resources / Projects" subtitle="Un Project agrupa un conjunto de Locations bajo una experiencia compartida." />
+
+      <H2>Example</H2>
+      <CodeBlock code={projectExample} label="Project Object" />
 
       <H2>Attributes</H2>
       <AttrTable rows={[
@@ -650,6 +667,22 @@ function ResourcesProjectsPage() {
         { name: 'createdAt',        type: 'string (datetime)', req: true,  desc: 'ISO 8601, precisión de milisegundo.' },
         { name: 'updatedAt',        type: 'string (datetime)', req: true,  desc: 'ISO 8601, precisión de milisegundo.' },
       ]} />
+
+      <H2>Relación con Locations</H2>
+      <P>Un Project es el contenedor de una o más <DocLink to="resources/locations/object">Locations</DocLink>. Cada Location pertenece a exactamente un Project.</P>
+      <div className="my-4 space-y-2">
+        {[
+          { title: 'Contenedor',  desc: 'Un Project puede tener una o más Locations. El campo locationCount refleja el total de Locations asociadas.' },
+          { title: 'Pertenencia', desc: 'Cada Location pertenece a exactamente un Project y no se comparte entre proyectos.' },
+          { title: 'Presencia',   desc: 'La validación de presencia ocurre siempre contra una Location — nunca directamente contra un Project.' },
+        ].map((item) => (
+          <div key={item.title} className="flex gap-3 px-4 py-2.5 bg-gray-900/40 border border-white/[0.05] rounded-lg">
+            <span className="text-xs font-semibold text-gray-300 w-24 flex-shrink-0">{item.title}</span>
+            <span className="text-xs text-gray-500">{item.desc}</span>
+          </div>
+        ))}
+      </div>
+      <P>Ver <DocLink to="resources/locations/list">List Locations</DocLink> para obtener todas las Locations de un proyecto, y <DocLink to="resources/locations/object">The Location Object</DocLink> para la referencia completa de cada Location.</P>
 
       <H2>Endpoints</H2>
       <div className="space-y-0 border border-white/[0.07] rounded-xl overflow-hidden">

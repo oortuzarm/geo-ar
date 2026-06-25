@@ -1,4 +1,10 @@
 import React from 'react'
+import {
+  RetailEntryVisual,
+  RetailLoyaltyVisual,
+  RetailCompetitorVisual,
+  RetailAnalyticsVisual,
+} from './visuals/RetailVisuals'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -283,60 +289,25 @@ const retail: IndustryData = {
       category: 'MOMENTO DE ENTRADA',
       title: 'Reconoce a cada cliente cuando cruza la puerta',
       description: 'En el momento en que un cliente entra al radio de tu tienda, Ubyca activa la experiencia que definiste: un saludo personalizado, una oferta activa solo en ese local, o el acceso a un beneficio exclusivo. El cliente siente que la tienda lo esperaba. Sin escanear nada. Sin abrir una app.',
-      visual: (
-        <PushNotificationPanel
-          brand="Nova Moda"
-          title="Hola, qué bueno que volviste"
-          message="Tu descuento de cliente frecuente está activo hoy: 20% en toda la nueva temporada."
-          accentColor="#0ea5e9"
-          eventLabel="entered_place · Nova Moda · Av. Corrientes"
-        />
-      ),
+      visual: <RetailEntryVisual />,
     },
     {
       category: 'LEALTAD QUE SE CONSTRUYE EN TIENDA',
       title: 'Suma puntos por venir, no solo por comprar',
       description: 'La mayoría de los programas de fidelización premian la transacción. Ubyca te permite premiar la visita. Cada entrada física validada puede traducirse en puntos, un beneficio o un mensaje de reconocimiento. Los clientes que visitan más, reciben más. Y vuelven.',
-      visual: (
-        <MetricsPanelVisual
-          stats={[
-            { label: 'Clientes que volvieron en 30 días', value: '64%', sub: '+11 pp vs. grupo sin activación' },
-            { label: 'Visitas promedio por cliente / mes', value: '3.8', sub: 'era 1.9 antes de Ubyca' },
-            { label: 'Tiempo promedio en tienda', value: '21 min', sub: 'clientes con activación activa' },
-          ]}
-          accentColor="#0ea5e9"
-        />
-      ),
+      visual: <RetailLoyaltyVisual />,
     },
     {
       category: 'CONQUISTA EN CAMPO',
       title: 'Llega a tu cliente antes de que le compre a otro',
       description: 'Define las zonas de tus principales competidores. Cuando un cliente tuyo ingresa en esa área, activa automáticamente una oferta comparativa o un beneficio diferencial. El mensaje llega en el único momento en que todavía puede cambiar de destino.',
-      visual: (
-        <FlowVisual
-          steps={[
-            { label: 'Tu cliente entra a zona del competidor', value: 'entered_place' },
-            { label: 'Ubyca detecta y valida presencia', value: '< 80ms', highlight: true },
-            { label: 'Tu oferta comparativa se activa', value: 'mensaje enviado' },
-            { label: 'Click-through en primeras 24 h', value: '31%', highlight: true },
-          ]}
-          accentColor="#0ea5e9"
-        />
-      ),
+      visual: <RetailCompetitorVisual />,
     },
     {
       category: 'INTELIGENCIA DE OPERACIONES',
       title: 'Por fin, datos reales de lo que pasa en el local',
       description: 'Cuánto tiempo permanece un cliente en cada zona, qué horarios concentran mayor afluencia, qué locales funcionan mejor y por qué. Ubyca transforma la presencia física en datos que informan desde la disposición del espacio hasta la planificación de personal y la inversión en campañas.',
-      visual: (
-        <GeoMapVisual
-          zones={[
-            { name: 'Acceso principal · radio 80m', status: '18 clientes activos ahora' },
-            { name: 'Sector temporada · radio 50m', status: 'dwell time: 14 min promedio' },
-          ]}
-          accentColor="#0ea5e9"
-        />
-      ),
+      visual: <RetailAnalyticsVisual />,
     },
   ],
   benefits: [

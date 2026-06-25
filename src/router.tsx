@@ -34,6 +34,8 @@ import PricingPage              from './pages/Landing/PricingPage'
 import StudioPage               from './pages/Landing/StudioPage'
 import LandingDevelopersPage    from './pages/Landing/LandingDevelopersPage'
 import CommunityPage            from './pages/Community/CommunityPage'
+import SolutionsIndexPage       from './pages/Solutions/SolutionsIndexPage'
+import IndustryPage             from './pages/Solutions/IndustryPage'
 import ProtectedRoute           from './components/auth/ProtectedRoute'
 import AdminRoute               from './components/auth/AdminRoute'
 import RootLayout               from './components/routing/RootLayout'
@@ -107,16 +109,18 @@ export const landingRouter = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      { path: '/contact',      element: <ContactPage /> },
-      { path: '/precios',      element: <PricingPage /> },
-      { path: '/studio',       element: <StudioPage /> },
-      { path: '/community',    element: <CommunityPage /> },
-      { path: '/docs/*',         element: <LandingDevelopersPage /> },
-      { path: '/developers',    element: <Navigate to="/docs" replace /> },
-      { path: '/landing-v2',   element: <LandingV2Page /> },
-      { path: '/landing-old',  element: <LandingPage /> },
+      { path: '/contact',              element: <ContactPage /> },
+      { path: '/precios',              element: <PricingPage /> },
+      { path: '/studio',               element: <StudioPage /> },
+      { path: '/community',            element: <CommunityPage /> },
+      { path: '/docs/*',               element: <LandingDevelopersPage /> },
+      { path: '/developers',           element: <Navigate to="/docs" replace /> },
+      { path: '/solutions',            element: <SolutionsIndexPage /> },
+      { path: '/solutions/:slug',      element: <IndustryPage /> },
+      { path: '/landing-v2',           element: <LandingV2Page /> },
+      { path: '/landing-old',          element: <LandingPage /> },
       ...legalRoutes,
-      { path: '*',             element: <LandingV2Page /> },
+      { path: '*',                     element: <LandingV2Page /> },
     ],
   },
 ])
@@ -147,14 +151,16 @@ export const devRouter = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      { path: '/',             element: <LandingV2Page /> },
-      { path: '/contact',      element: <ContactPage /> },
-      { path: '/precios',      element: <PricingPage /> },
-      { path: '/studio',       element: <StudioPage /> },
-      { path: '/docs/*',         element: <LandingDevelopersPage /> },
-      { path: '/developers',    element: <Navigate to="/docs" replace /> },
-      { path: '/landing-v2',   element: <LandingV2Page /> },
-      { path: '/landing-old',  element: <LandingPage /> },
+      { path: '/',                     element: <LandingV2Page /> },
+      { path: '/contact',              element: <ContactPage /> },
+      { path: '/precios',              element: <PricingPage /> },
+      { path: '/studio',               element: <StudioPage /> },
+      { path: '/docs/*',               element: <LandingDevelopersPage /> },
+      { path: '/developers',           element: <Navigate to="/docs" replace /> },
+      { path: '/solutions',            element: <SolutionsIndexPage /> },
+      { path: '/solutions/:slug',      element: <IndustryPage /> },
+      { path: '/landing-v2',           element: <LandingV2Page /> },
+      { path: '/landing-old',          element: <LandingPage /> },
       ...authRoutes,
       ...publicRoutes,
       ...legalRoutes,

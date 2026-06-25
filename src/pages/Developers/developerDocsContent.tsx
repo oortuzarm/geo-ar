@@ -21,18 +21,11 @@ export const NAV: NavGroup[] = [
   {
     group: 'Getting Started',
     items: [
-      { label: 'Overview',       path: 'overview'       },
-      { label: 'Quick Start',    path: 'quickstart'     },
-      { label: 'Authentication', path: 'authentication' },
-      { label: 'API Key Scopes', path: 'scopes'         },
-    ],
-  },
-  {
-    group: 'Core Concepts',
-    items: [
-      { label: 'Locations',           path: 'concepts/locations' },
-      { label: 'Sessions',            path: 'concepts/sessions'  },
-      { label: 'Presence Validation', path: 'concepts/presence'  },
+      { label: 'Overview',       path: 'overview'          },
+      { label: 'Quick Start',    path: 'quickstart'        },
+      { label: 'Authentication', path: 'authentication'    },
+      { label: 'API Key Scopes', path: 'scopes'            },
+      { label: 'Sessions',       path: 'concepts/sessions' },
     ],
   },
   {
@@ -579,21 +572,7 @@ function ScopesPage() {
       <H2>Error de scope</H2>
       <CodeBlock code={`HTTP/1.1 403 Forbidden\n\n{\n  "error": "insufficient_scope",\n  "required": "presence:validate"\n}`} />
 
-      <DocNav prev={{ label: 'Authentication', path: 'authentication' }} next={{ label: 'Locations', path: 'concepts/locations' }} />
-    </div>
-  )
-}
-
-// ── PAGE: Concept — Locations ─────────────────────────────────────────────────
-
-function ConceptLocationsPage() {
-  return (
-    <div>
-      <PageTitle title="Locations" badge="Core Concepts" subtitle="Una Location (GeoPoint) es la entidad central de la API." />
-      <P>Cada Location define un punto geográfico con reglas de disponibilidad. Es el objeto al que se valida la presencia de un usuario. Agrupa boundary, schedule, quota, dwell y destination en un único recurso.</P>
-      <P>El campo <code className="font-mono text-xs text-gray-300">id</code> de una Location es el valor que debes pasar como <code className="font-mono text-xs text-gray-300">location_id</code> en cada llamada a Presence.</P>
-      <Callout type="tip">Ver <DocLink to="resources/locations/object">The Location Object</DocLink> para la referencia completa de atributos, ejemplos JSON y la cadena de evaluación.</Callout>
-      <DocNav prev={{ label: 'API Key Scopes', path: 'scopes' }} next={{ label: 'Sessions', path: 'concepts/sessions' }} />
+      <DocNav prev={{ label: 'Authentication', path: 'authentication' }} next={{ label: 'Sessions', path: 'concepts/sessions' }} />
     </div>
   )
 }
@@ -612,21 +591,7 @@ function ConceptSessionsPage() {
       <H2>Recomendaciones</H2>
       <P>Usa un identificador estable por sesión de usuario — un UUID v4 generado al inicio de la sesión funciona bien.</P>
       <CodeBlock code={`{\n  "location_id": "660e8400-e29b-41d4-a716-446655440001",\n  "session_id": "sess_a1b2c3d4-e5f6-7890-abcd-ef1234567890",\n  "coordinates": { "latitude": -33.4372, "longitude": -70.6506 }\n}`} />
-      <DocNav prev={{ label: 'Locations', path: 'concepts/locations' }} next={{ label: 'Presence Validation', path: 'concepts/presence' }} />
-    </div>
-  )
-}
-
-// ── PAGE: Concept — Presence ──────────────────────────────────────────────────
-
-function ConceptPresencePage() {
-  return (
-    <div>
-      <PageTitle title="Presence Validation" badge="Core Concepts" subtitle="Ubyca valida la presencia de un usuario contra las reglas de una Location." />
-      <P>La API de Presence usa un modelo pull: tu backend envía las coordenadas GPS del usuario y Ubyca evalúa si se cumplen todas las condiciones de disponibilidad. El resultado es <code className="font-mono text-xs text-gray-300">valid: true</code> o <code className="font-mono text-xs text-gray-300">valid: false</code> — siempre en HTTP 200.</P>
-      <P>Hay dos endpoints: <code className="font-mono text-xs text-gray-300">/presence/check</code> para dry-run sin efectos secundarios, y <code className="font-mono text-xs text-gray-300">/presence/validate</code> para la validación real.</P>
-      <Callout type="tip">Ver <DocLink to="resources/presence/overview">Presence Overview</DocLink> para la referencia completa del flujo, el objeto checks, los failure reasons e idempotencia.</Callout>
-      <DocNav prev={{ label: 'Sessions', path: 'concepts/sessions' }} next={{ label: 'The Project Object', path: 'resources/projects' }} />
+      <DocNav prev={{ label: 'API Key Scopes', path: 'scopes' }} next={{ label: 'The Project Object', path: 'resources/projects' }} />
     </div>
   )
 }
@@ -699,7 +664,7 @@ function ResourcesProjectsPage() {
         ))}
       </div>
 
-      <DocNav prev={{ label: 'Presence Validation', path: 'concepts/presence' }} next={{ label: 'The Location Object', path: 'resources/locations/object' }} />
+      <DocNav prev={{ label: 'Sessions', path: 'concepts/sessions' }} next={{ label: 'The Location Object', path: 'resources/locations/object' }} />
     </div>
   )
 }
@@ -1842,9 +1807,9 @@ export function DocContent({ section }: { section: string }) {
     case 'quickstart':                  return <QuickStartPage />
     case 'authentication':              return <AuthenticationPage />
     case 'scopes':                      return <ScopesPage />
-    case 'concepts/locations':          return <ConceptLocationsPage />
+    case 'concepts/locations':          return <LocationObjectPage />
     case 'concepts/sessions':           return <ConceptSessionsPage />
-    case 'concepts/presence':           return <ConceptPresencePage />
+    case 'concepts/presence':           return <PresenceOverviewPage />
     case 'resources/projects':          return <ResourcesProjectsPage />
     case 'resources/locations/object':  return <LocationObjectPage />
     case 'resources/locations/list':    return <LocationListPage />

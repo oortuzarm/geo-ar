@@ -1120,6 +1120,64 @@ function PresenceCheckPage() {
 // ── PAGE: Validate Presence ───────────────────────────────────────────────────
 
 function PresenceValidatePage() {
+  const requestExample = `curl -X POST ${BASE}/presence/validate \\
+  -u "ubk_live_xxx:sk_live_xxx" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "location_id": "660e8400-e29b-41d4-a716-446655440001",
+    "session_id": "session-abc-123",
+    "coordinates": {
+      "latitude": -33.4372,
+      "longitude": -70.6506,
+      "accuracy_meters": 8.0
+    },
+    "dwell_elapsed_seconds": 120,
+    "timestamp": "2026-06-19T15:30:00Z",
+    "context": {
+      "user_ref": "user-xyz",
+      "metadata": { "channel": "mobile" }
+    }
+  }'`
+
+  const validResponse = `{
+  "valid": true,
+  "locationId": "660e8400-e29b-41d4-a716-446655440001",
+  "sessionId": "session-abc-123",
+  "checks": {
+    "locationActive": true,
+    "insideBoundary": true,
+    "boundaryType": "radius",
+    "distanceMeters": 34.7,
+    "scheduleActive": true,
+    "quotaAvailable": true,
+    "quotaRemaining": 9,
+    "liveVisitsEnabled": false,
+    "liveVisitsMet": true,
+    "dwellRequired": false
+  },
+  "destination": {
+    "type": "url",
+    "url": "https://example.com/contenido"
+  },
+  "failureReason": null,
+  "eventId": "770e8400-e29b-41d4-a716-446655440010"
+}`
+
+  const failResponse = `{
+  "valid": false,
+  "locationId": "660e8400-e29b-41d4-a716-446655440001",
+  "sessionId": "session-abc-123",
+  "checks": {
+    "locationActive": true,
+    "insideBoundary": false,
+    "boundaryType": "radius",
+    "distanceMeters": 312.4
+  },
+  "destination": null,
+  "failureReason": "outside_boundary",
+  "eventId": "770e8400-e29b-41d4-a716-446655440011"
+}`
+
   return (
     <div>
       <PageTitle title="Validate Presence" badge="Resources / Presence" subtitle="Validación de presencia GPS con efectos secundarios completos." />
@@ -1129,7 +1187,46 @@ function PresenceValidatePage() {
       <Callout type="warning">HTTP 200 es devuelto tanto cuando <code className="font-mono text-xs">valid: true</code> como cuando <code className="font-mono text-xs">valid: false</code>. Los efectos secundarios ocurren en ambos casos.</Callout>
 
       <H2>Request</H2>
-      <P>Ver <DocLink to="resources/presence/overview">Presence Overview → The request</DocLink> para todos los campos. Soporta el header <code className="font-mono text-xs text-gray-300">Idempotency-Key</code>.</P>
+      <P>Ver <DocLink to="resources/presence/overview">Presence Overview → The request</DocLink> para la referencia completa de todos los campos. Soporta el header <code className="font-mono text-xs text-gray-300">Idempotency-Key</code>.</P>
+      <CodeBlock code={requestExample} label="Validate Presence" />
+
+      <H2>Response</H2>
+      <P>La respuesta siempre es HTTP 200. Usa el campo <code className="font-mono text-xs text-gray-300">valid</code> — no el código HTTP — para determinar el resultado. Ver <DocLink to="resources/presence/overview">Presence Overview → The response</DocLink> para la referencia completa de campos y el objeto <code className="font-mono text-xs text-gray-300">checks</code>.</P>
+
+      <H3>valid: true</H3>
+      <CodeBlock code={validResponse} />
+
+      <H3>valid: false</H3>
+      <CodeBlock code={failResponse} />
+
+      <Divider />
+
+      <H2>Side Effects</H2>
+      <P>Validate Presence produce efectos secundarios que persisten en el sistema. A diferencia de <DocLink to="resources/presence/check">Check Presence</DocLink>, cada llamada válida a este endpoint:</P>
+      <div className="my-4 space-y-2">
+        {[
+          { label: 'Registra eventos',      desc: 'presence.validated y destination.delivered se graban en analytics.' },
+          { label: 'Consume quota',         desc: 'Si quota.enabled: true, descuenta una unidad de remaining.' },
+          { label: 'Actualiza live visits', desc: 'La sesión queda activa en el conteo de visitas en vivo del proyecto.' },
+        ].map((item) => (
+          <div key={item.label} className="flex gap-3 px-4 py-2.5 bg-gray-900/40 border border-white/[0.05] rounded-lg">
+            <span className="text-xs font-semibold text-gray-300 w-36 flex-shrink-0">{item.label}</span>
+            <span className="text-xs text-gray-500">{item.desc}</span>
+          </div>
+        ))}
+      </div>
+      <Callout type="info">
+        Los efectos secundarios ocurren tanto cuando <code className="font-mono text-xs">valid: true</code> como cuando <code className="font-mono text-xs">valid: false</code>. No ocurren ante errores HTTP 4xx (credenciales inválidas, scope insuficiente, parámetros inválidos). <DocLink to="resources/presence/check">Check Presence</DocLink> nunca produce efectos secundarios.
+      </Callout>
+
+      <Divider />
+
+      <H2>Idempotency</H2>
+      <P>Soporta el header <code className="font-mono text-xs text-gray-300">Idempotency-Key</code> (TTL: 24h, máx. 255 chars). Reenviar la misma clave con el mismo request devuelve la respuesta original sin producir efectos secundarios adicionales.</P>
+      <CodeBlock code={`curl -X POST ${BASE}/presence/validate \\\n  -u "ubk_live_xxx:sk_live_xxx" \\\n  -H "Content-Type: application/json" \\\n  -H "Idempotency-Key: req_a1b2c3d4-e5f6-7890-abcd-ef1234567890" \\\n  -d '{ "location_id": "...", "session_id": "...", "coordinates": {...} }'`} label="Idempotency-Key" />
+      <P>Si la misma clave está en progreso → <code className="font-mono text-xs text-gray-300">409 Conflict</code> con <code className="font-mono text-xs text-gray-300">retryAfter</code> en segundos. Ver <DocLink to="errors">Errors → Idempotency errors</DocLink>.</P>
+
+      <Divider />
 
       <H2>Errors</H2>
       <AttrTable rows={[

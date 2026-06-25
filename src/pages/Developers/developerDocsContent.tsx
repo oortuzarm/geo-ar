@@ -1631,6 +1631,28 @@ function AnalyticsPage() {
         { name: 'meta.activeGeoPointsCount', type: 'integer',            desc: 'Número de Locations activas usadas como límites de exclusión.' },
       ]} />
 
+      <Divider />
+
+      <H2>Time Range</H2>
+      <P>Los parámetros <code className="font-mono text-xs text-gray-300">from</code> y <code className="font-mono text-xs text-gray-300">to</code> son opcionales y aplican al campo <code className="font-mono text-xs text-gray-300">event_date</code> de los eventos registrados. Los valores inválidos son ignorados silenciosamente.</P>
+      <Callout type="info">
+        The default time range is not part of the public API contract. Clients should explicitly provide <code className="font-mono text-xs">from</code> and <code className="font-mono text-xs">to</code> when requesting analytics.
+      </Callout>
+      <Callout type="tip">
+        <strong className="font-semibold">Best Practice.</strong>{' '}For predictable reporting and reproducible results, always send both <code className="font-mono text-xs">from</code> and <code className="font-mono text-xs">to</code> parameters rather than relying on defaults.
+      </Callout>
+
+      <Divider />
+
+      <H2>Errors</H2>
+      <P>Todos los endpoints de Analytics pueden devolver los siguientes errores. Ver <DocLink to="errors">Errors</DocLink> y <DocLink to="rate-limits">Rate Limits</DocLink> para más detalles.</P>
+      <AttrTable rows={[
+        { name: '401', type: 'Unauthorized',      desc: 'Missing or invalid API credentials.' },
+        { name: '403', type: 'Forbidden',         desc: 'Missing analytics:read scope.' },
+        { name: '404', type: 'Not Found',         desc: 'Resource not found or inaccessible. Also applies when the location_id filter references a location not belonging to the project.' },
+        { name: '429', type: 'Too Many Requests', desc: 'Rate limit exceeded. See Rate Limits for retry guidance.' },
+      ]} />
+
       <DocNav prev={{ label: 'Validate Presence', path: 'resources/presence/validate' }} next={{ label: 'Errors', path: 'errors' }} />
     </div>
   )

@@ -1172,20 +1172,82 @@ function PresenceOverviewPage() {
 // ── PAGE: Check Presence ──────────────────────────────────────────────────────
 
 function PresenceCheckPage() {
+  const checkResponse = `{
+  "valid": true,
+  "locationId": "660e8400-e29b-41d4-a716-446655440001",
+  "sessionId": "session-abc-123",
+  "checks": {
+    "locationActive": true,
+    "insideBoundary": true,
+    "boundaryType": "radius",
+    "distanceMeters": 34.7,
+    "scheduleActive": true,
+    "quotaAvailable": true,
+    "quotaRemaining": 9,
+    "liveVisitsEnabled": false,
+    "liveVisitsMet": true,
+    "dwellRequired": false
+  },
+  "destination": {
+    "type": "url",
+    "url": "https://example.com/contenido"
+  },
+  "failureReason": null,
+  "eventId": null
+}`
+
   return (
     <div>
       <PageTitle title="Check Presence" badge="Resources / Presence" subtitle="Dry-run de validación de presencia sin efectos secundarios." />
       <EndpointBadge method="POST" path="/presence/check" />
       <div className="flex gap-2 mb-4"><ScopeBadge scope="presence:check" /></div>
       <P>Evalúa la cadena completa de checks sin producir efectos secundarios. No consume quota, no registra eventos, no actualiza live visits. <code className="font-mono text-xs text-gray-300">eventId</code> es siempre <code className="font-mono text-xs text-gray-300">null</code>.</P>
+      <Callout type="warning">HTTP 200 es devuelto tanto cuando <code className="font-mono text-xs">valid: true</code> como cuando <code className="font-mono text-xs">valid: false</code>. Usa el campo <code className="font-mono text-xs">valid</code> — no el código HTTP — para determinar el resultado.</Callout>
 
       <H2>Request</H2>
       <P>Mismos campos que <DocLink to="resources/presence/validate">Validate Presence</DocLink>. No soporta <code className="font-mono text-xs text-gray-300">Idempotency-Key</code>.</P>
       <CodeBlock label="Check" code={`curl -X POST ${BASE}/presence/check \\\n  -u "ubk_live_xxx:sk_live_xxx" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "location_id": "660e8400-e29b-41d4-a716-446655440001",\n    "session_id": "session-abc-123",\n    "coordinates": { "latitude": -33.4372, "longitude": -70.6506 }\n  }'`} />
 
       <H2>Response</H2>
-      <P>Idéntica a Validate Presence, con <code className="font-mono text-xs text-gray-300">eventId: null</code> siempre.</P>
-      <CodeBlock code={`{\n  "valid": true,\n  "checks": { "locationActive": true, "insideBoundary": true, "boundaryType": "radius", "distanceMeters": 34.7 },\n  "destination": { "type": "url", "url": "https://example.com/contenido" },\n  "failureReason": null,\n  "eventId": null\n}`} />
+      <P>Returns the same business evaluation used by Validate Presence, but does not record events. Ver <DocLink to="resources/presence/overview">Presence Overview → The response</DocLink> para la referencia completa de campos y el objeto <code className="font-mono text-xs text-gray-300">checks</code>.</P>
+      <CodeBlock code={checkResponse} />
+
+      <Divider />
+
+      <H2>Check vs Validate</H2>
+      <div className="my-4 border border-white/[0.07] rounded-xl overflow-x-auto">
+        <table className="w-full text-xs min-w-[400px]">
+          <thead>
+            <tr className="bg-gray-900/60 border-b border-white/[0.06]">
+              <th className="text-left px-4 py-2.5 font-semibold text-gray-500 flex-1">Capability</th>
+              <th className="text-center px-4 py-2.5 font-semibold text-gray-400 w-24">Check</th>
+              <th className="text-center px-4 py-2.5 font-semibold text-gray-400 w-24">Validate</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/[0.04]">
+            {[
+              { label: 'Evaluates rules',     check: '✓',    validate: '✓'    },
+              { label: 'Returns destination', check: '✓',    validate: '✓'    },
+              { label: 'Returns checks',      check: '✓',    validate: '✓'    },
+              { label: 'Records event',       check: '✗',    validate: '✓'    },
+              { label: 'Consumes quota',      check: '✗',    validate: '✓'    },
+              { label: 'eventId',             check: 'null', validate: 'UUID' },
+            ].map((row) => (
+              <tr key={row.label}>
+                <td className="px-4 py-2.5 text-gray-400">{row.label}</td>
+                <td className={`px-4 py-2.5 text-center font-mono ${row.check === '✓' ? 'text-emerald-400' : row.check === '✗' ? 'text-red-400/70' : 'text-gray-500'}`}>{row.check}</td>
+                <td className={`px-4 py-2.5 text-center font-mono ${row.validate === '✓' ? 'text-emerald-400' : row.validate === '✗' ? 'text-red-400/70' : 'text-gray-500'}`}>{row.validate}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <Callout type="tip">
+        <strong className="font-semibold">Use Check before Validate.</strong>{' '}Check Presence is ideal for previews, eligibility checks, and client-side validation before performing a real validation. Use <DocLink to="resources/presence/validate">Validate Presence</DocLink> when you want to register the event and consume quota.
+      </Callout>
+
+      <Divider />
 
       <H2>Errors</H2>
       <AttrTable rows={[

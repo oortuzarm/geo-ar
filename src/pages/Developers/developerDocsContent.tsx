@@ -63,6 +63,7 @@ export const NAV: NavGroup[] = [
       { label: 'Errors',       path: 'errors'                },
       { label: 'Rate Limits',  path: 'rate-limits'           },
       { label: 'Versioning',   path: 'reference/versioning'  },
+      { label: 'Changelog',    path: 'reference/changelog'   },
     ],
   },
 ]
@@ -1845,7 +1846,58 @@ function VersioningPage() {
       <H2>Staying Informed</H2>
       <P>Changes to the public API are announced through the <DocLink to="reference/changelog">API Changelog</DocLink>.</P>
 
-      <DocNav prev={{ label: 'Rate Limits', path: 'rate-limits' }} />
+      <DocNav prev={{ label: 'Rate Limits', path: 'rate-limits' }} next={{ label: 'Changelog', path: 'reference/changelog' }} />
+    </div>
+  )
+}
+
+// ── PAGE: Reference — Changelog ───────────────────────────────────────────────
+
+function ChangelogPage() {
+  return (
+    <div>
+      <PageTitle
+        title="API Changelog"
+        badge="Reference"
+        subtitle="The API Changelog tracks notable additions and improvements to Ubyca's public API and developer documentation."
+      />
+
+      <P>Use this page to stay informed about new capabilities, documentation updates, and compatibility-related changes.</P>
+
+      <Callout type="info">The changelog highlights notable public-facing changes. Minor internal improvements may not appear here.</Callout>
+
+      <H2>2026-06</H2>
+
+      <H3>Documentation</H3>
+      <ul className="list-disc list-inside space-y-1 text-sm text-gray-400 my-4 ml-2">
+        <li>Added comprehensive Presence Check documentation.</li>
+        <li>Added comprehensive Presence Validate documentation.</li>
+        <li>Expanded Quick Start with an end-to-end integration flow.</li>
+        <li>Added Rate Limits documentation aligned with the production API.</li>
+        <li>Added Versioning documentation.</li>
+        <li>Added Analytics error handling and time range guidance.</li>
+        <li>Expanded Project and Location reference pages.</li>
+      </ul>
+
+      <H3>Developer Experience</H3>
+      <ul className="list-disc list-inside space-y-1 text-sm text-gray-400 my-4 ml-2">
+        <li>Added OpenAPI download access from the documentation sidebar.</li>
+        <li>Improved mobile documentation navigation.</li>
+        <li>Simplified documentation structure by removing redundant concepts.</li>
+      </ul>
+
+      <Divider />
+
+      <H2>2026-05</H2>
+
+      <H3>Initial Release</H3>
+      <ul className="list-disc list-inside space-y-1 text-sm text-gray-400 my-4 ml-2">
+        <li>Public API v1 released.</li>
+        <li>Authentication via API Key and Secret.</li>
+        <li>Projects, Locations, Presence and Analytics endpoints available.</li>
+      </ul>
+
+      <DocNav prev={{ label: 'Versioning', path: 'reference/versioning' }} />
     </div>
   )
 }
@@ -1872,6 +1924,7 @@ export function DocContent({ section }: { section: string }) {
     case 'errors':                      return <ErrorsPage />
     case 'rate-limits':                 return <RateLimitsPage />
     case 'reference/versioning':        return <VersioningPage />
+    case 'reference/changelog':         return <ChangelogPage />
     default:                            return <OverviewPage />
   }
 }

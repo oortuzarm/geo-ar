@@ -914,6 +914,46 @@ function LocationListPage() {
 // ── PAGE: Get a Location ──────────────────────────────────────────────────────
 
 function LocationGetPage() {
+  const locationGetExample = `{
+  "data": {
+    "id": "660e8400-e29b-41d4-a716-446655440001",
+    "name": "Punto Central",
+    "description": "Acceso principal al recorrido.",
+    "instructions": null,
+    "active": true,
+    "order": 0,
+    "latitude": -33.4372,
+    "longitude": -70.6506,
+    "boundary": {
+      "type": "radius",
+      "radiusMeters": 50
+    },
+    "schedule": {
+      "enabled": false,
+      "days": [],
+      "startTime": null,
+      "endTime": null
+    },
+    "quota": {
+      "enabled": false,
+      "limit": null,
+      "used": 0,
+      "remaining": null
+    },
+    "dwell": {
+      "enabled": false,
+      "seconds": 0
+    },
+    "destination": {
+      "type": "url",
+      "url": "https://example.com/contenido"
+    },
+    "destinationCategory": "website",
+    "pointCategory": "tourism",
+    "createdAt": "2026-06-01T10:00:00.000Z"
+  }
+}`
+
   return (
     <div>
       <PageTitle title="Get a Location" badge="Resources / Locations" />
@@ -925,7 +965,11 @@ function LocationGetPage() {
       <AttrTable rows={[{ name: 'id', type: 'string (uuid)', req: true, desc: 'UUID de la Location.' }]} />
 
       <H2>Response</H2>
-      <P>Un <DocLink to="resources/locations/object">Location object</DocLink> en <code className="font-mono text-xs text-gray-300">data</code>.</P>
+      <P>Un <DocLink to="resources/locations/object">Location object</DocLink> en <code className="font-mono text-xs text-gray-300">data</code>. Returns a single Location object wrapped in data.</P>
+      <CodeBlock code={locationGetExample} label="Get a Location" />
+      <Callout type="info">
+        If the location exists but belongs to another organization, the API returns 404 rather than exposing its existence.
+      </Callout>
 
       <H2>Errors</H2>
       <AttrTable rows={[

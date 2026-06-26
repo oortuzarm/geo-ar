@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { searchPOIs } from '../../services/poiSearchService'
+import { searchMapQuery, looksLikeAddress } from '../../services/poiSearchService'
 import { haversineDistance } from '../../features/geolocation/haversine'
 import Modal from '../ui/Modal'
 import type { PoiSearchResult, MapBounds, GeoPoint } from '../../types'
@@ -24,6 +24,7 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
   const [creatingAll, setCreatingAll] = useState(false)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const latestRequestRef = useRef(0)
   const containerRef = useRef<HTMLDivElement>(null)
   // Stable refs so the debounced callback always sees the latest values
   const mapBoundsRef = useRef(mapBounds)
@@ -40,7 +41,7 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
 
-    if (query.length < 3) {
+    if (query.trim().length < 4) {
       setResults([])
       setOpen(false)
       setSearchState('idle')
@@ -51,24 +52,22 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
     setSearchState('searching')
 
     debounceRef.current = setTimeout(async () => {
-      if (!mapBoundsRef.current) {
-        setSearchState('error')
-        setOpen(true)
-        return
-      }
+      const reqId = ++latestRequestRef.current
       try {
-        const found = await searchPOIs(query, mapBoundsRef.current)
+        const found = await searchMapQuery(query, mapBoundsRef.current)
+        if (latestRequestRef.current !== reqId) return
         setResults(found)
         onResultsChangeRef.current(found)
         setSearchState(found.length > 0 ? 'results' : 'no-results')
         setOpen(true)
       } catch {
+        if (latestRequestRef.current !== reqId) return
         setResults([])
         onResultsChangeRef.current([])
         setSearchState('error')
         setOpen(true)
       }
-    }, 300)
+    }, 500)
   }, [query])
 
   useEffect(() => {
@@ -255,9 +254,14 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
           )}
 
           {searchState === 'no-results' && (
-            <p className="px-4 py-3 text-sm text-gray-500">
-              No encontramos resultados en esta área del mapa.
-            </p>
+            <div className="px-4 py-3">
+              <p className="text-sm text-gray-400">No encontramos una coincidencia exacta.</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {looksLikeAddress(query)
+                  ? 'Prueba ajustar la búsqueda o selecciona el punto manualmente en el mapa.'
+                  : 'No encontramos lugares con ese nombre en esta zona del mapa.'}
+              </p>
+            </div>
           )}
 
           {searchState === 'error' && (

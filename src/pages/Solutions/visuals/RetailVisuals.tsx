@@ -258,16 +258,13 @@ export function RetailLoyaltyVisual() {
         <circle cx={240} cy={175} r={5} fill={`${ACCENT}20`} />
         <circle cx={240} cy={175} r={2.5} fill={`${ACCENT}40`} />
       </svg>
-      <div className="absolute" style={{ top: 10, left: '50%', transform: 'translateX(-50%)' }}>
+      <div className="absolute inset-x-0 flex justify-center" style={{ top: 18 }}>
         <PhoneWebShell url="exp.ubyca.com/nova-moda" width={164}>
           <UbycaExperienceCard
             brand="Nova Moda"
             accent={ACCENT}
             message="Hay un beneficio disponible en esta tienda. Actívalo antes de salir."
-            buttons={[
-              { label: 'Reclamar en WhatsApp', icon: 'whatsapp', primary: true },
-              { label: 'Ver menú', icon: 'link', primary: false },
-            ]}
+            buttons={[{ label: 'Reclamar en WhatsApp', icon: 'whatsapp' }]}
           />
         </PhoneWebShell>
       </div>
@@ -321,77 +318,80 @@ export function RetailCompetitorVisual() {
   )
 }
 
-// ─── Visual 4: Analytics dashboard ───────────────────────────────────────────
+// ─── Visual 4: People presence map ───────────────────────────────────────────
+// Story: Ubyca shows who is inside right now — no speculation, no estimates.
 
 export function RetailAnalyticsVisual() {
-  const hotDots  = [{ cx: 278, cy: 126 }, { cx: 295, cy: 138 }, { cx: 308, cy: 128 }, { cx: 284, cy: 150 }, { cx: 318, cy: 142 }, { cx: 298, cy: 155 }, { cx: 274, cy: 144 }]
-  const midDots  = [{ cx: 182, cy: 198 }, { cx: 200, cy: 212 }, { cx: 172, cy: 208 }, { cx: 193, cy: 222 }]
-  const coolDots = [{ cx: 122, cy: 142 }, { cx: 140, cy: 152 }]
+  const dots = [
+    { cx: 192, cy: 155 }, { cx: 215, cy: 148 }, { cx: 238, cy: 161 },
+    { cx: 180, cy: 176 }, { cx: 210, cy: 172 }, { cx: 234, cy: 168 },
+    { cx: 252, cy: 182 }, { cx: 196, cy: 196 }, { cx: 222, cy: 200 },
+    { cx: 246, cy: 194 }, { cx: 168, cy: 162 }, { cx: 260, cy: 154 },
+  ]
 
   return (
     <div className="relative rounded-2xl overflow-hidden border border-white/[0.08]" style={{ height: 340, background: '#060910' }}>
+
+      {/* Warm ambient glow — indicates activity */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(ellipse 52% 48% at 46% 50%, rgba(251,146,60,0.07) 0%, transparent 68%)',
+      }} />
+
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 480 340" preserveAspectRatio="xMidYMid slice">
         <StreetGrid />
-        <circle cx={215} cy={178} r={135} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={1} strokeDasharray="4 4" />
-        <ellipse cx={292} cy={138} rx={88} ry={66} fill="rgba(251,146,60,0.05)" />
-        <ellipse cx={292} cy={138} rx={62} ry={46} fill="rgba(251,146,60,0.09)" />
-        <ellipse cx={292} cy={138} rx={38} ry={28} fill="rgba(251,146,60,0.15)" />
-        <ellipse cx={292} cy={138} rx={18} ry={13} fill="rgba(251,146,60,0.25)" />
-        <ellipse cx={185} cy={208} rx={72} ry={52} fill={`${ACCENT}06`} transform="rotate(-10 185 208)" />
-        <ellipse cx={185} cy={208} rx={48} ry={34} fill={`${ACCENT}10`} transform="rotate(-10 185 208)" />
-        <ellipse cx={185} cy={208} rx={26} ry={18} fill={`${ACCENT}17`} transform="rotate(-10 185 208)" />
-        <ellipse cx={124} cy={145} rx={50} ry={38} fill="rgba(139,92,246,0.06)" />
-        <ellipse cx={124} cy={145} rx={30} ry={22} fill="rgba(139,92,246,0.11)" />
-        <StorePinSVG cx={215} cy={178} color={ACCENT} />
-        {hotDots.map((d, i) => (
-          <g key={`h${i}`}>
-            <circle cx={d.cx} cy={d.cy} r={5.5} fill="rgba(251,146,60,0.16)" />
-            <circle cx={d.cx} cy={d.cy} r={3.2} fill="rgba(251,146,60,0.82)" />
-            <circle cx={d.cx} cy={d.cy} r={1.3} fill="white" />
-          </g>
-        ))}
-        {midDots.map((d, i) => (
-          <g key={`m${i}`}>
-            <circle cx={d.cx} cy={d.cy} r={5.5} fill={`${ACCENT}15`} />
-            <circle cx={d.cx} cy={d.cy} r={3.2} fill={`${ACCENT}cc`} />
-            <circle cx={d.cx} cy={d.cy} r={1.3} fill="white" />
-          </g>
-        ))}
-        {coolDots.map((d, i) => (
-          <g key={`c${i}`}>
-            <circle cx={d.cx} cy={d.cy} r={5.5} fill="rgba(139,92,246,0.15)" />
-            <circle cx={d.cx} cy={d.cy} r={3.2} fill="rgba(139,92,246,0.80)" />
-            <circle cx={d.cx} cy={d.cy} r={1.3} fill="white" />
+
+        {/* Store boundary */}
+        <circle cx={215} cy={175} r={128} fill="rgba(255,255,255,0.015)" />
+        <circle cx={215} cy={175} r={128} fill="none" stroke="rgba(255,255,255,0.09)" strokeWidth={1} strokeDasharray="5 4" />
+
+        {/* Heat — single warm center, three opacity rings */}
+        <circle cx={220} cy={168} r={72} fill="rgba(251,146,60,0.04)" />
+        <circle cx={220} cy={168} r={44} fill="rgba(251,146,60,0.08)" />
+        <circle cx={220} cy={168} r={22} fill="rgba(251,146,60,0.13)" />
+
+        {/* People inside — uniform white dots */}
+        {dots.map((d, i) => (
+          <g key={i}>
+            <circle cx={d.cx} cy={d.cy} r={8}  fill="rgba(255,255,255,0.04)" />
+            <circle cx={d.cx} cy={d.cy} r={4.5} fill="rgba(255,255,255,0.16)" />
+            <circle cx={d.cx} cy={d.cy} r={2.2} fill="rgba(255,255,255,0.82)" />
           </g>
         ))}
       </svg>
 
-      <div className="absolute top-0 left-0 right-0 flex items-center justify-between"
-        style={{ padding: '11px 14px', background: 'linear-gradient(to bottom, #060910e8 55%, transparent)' }}>
-        <div className="flex items-center gap-2">
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80' }} />
-          <span style={{ fontSize: 9, fontFamily: 'monospace', fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.06em' }}>EN VIVO</span>
-          <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.18)', fontFamily: 'monospace' }}>· 14:32</span>
-        </div>
-        <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.18)', fontFamily: 'system-ui' }}>Nova Moda · Av. Corrientes</span>
+      {/* Live indicator */}
+      <div className="absolute flex items-center gap-2" style={{ top: 14, left: 16 }}>
+        <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4ade80' }} />
+        <span style={{ fontSize: 9, fontFamily: 'monospace', fontWeight: 700, color: 'rgba(255,255,255,0.32)', letterSpacing: '0.08em' }}>EN VIVO</span>
       </div>
 
-      {[
-        { label: 'Visitantes hoy',  value: '1.248', delta: '+18% vs ayer', valueColor: 'rgba(251,146,60,0.95)', deltaColor: 'rgba(251,146,60,0.55)' },
-        { label: 'Tiempo promedio', value: '24 min', delta: '+6% vs ayer',  valueColor: ACCENT,                 deltaColor: `${ACCENT}55` },
-        { label: 'Zonas calientes', value: '3',      delta: '+1 vs ayer',   valueColor: 'rgba(139,92,246,0.90)', deltaColor: 'rgba(139,92,246,0.48)' },
-      ].map((card, i) => (
-        <div key={i} className="absolute rounded-xl border" style={{
-          top: 38 + i * 82, right: 14,
-          padding: '8px 12px', minWidth: 108,
-          background: 'rgba(6,9,16,0.92)', borderColor: 'rgba(255,255,255,0.07)',
-          backdropFilter: 'blur(14px)',
+      {/* Two metric cards — editorial, no deltas */}
+      <div className="absolute flex flex-col gap-3" style={{ bottom: 16, right: 16 }}>
+        <div style={{
+          padding: '11px 16px',
+          background: 'rgba(6,9,16,0.90)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: 14,
+          backdropFilter: 'blur(16px)',
+          minWidth: 116,
         }}>
-          <p style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.30)', marginBottom: 3, fontFamily: 'system-ui' }}>{card.label}</p>
-          <p style={{ fontSize: 22, fontWeight: 900, color: card.valueColor, lineHeight: 1, fontFamily: 'system-ui', letterSpacing: '-0.01em' }}>{card.value}</p>
-          <p style={{ fontSize: 7, color: card.deltaColor, marginTop: 3, fontFamily: 'system-ui' }}>{card.delta}</p>
+          <p style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', fontFamily: 'system-ui', marginBottom: 5, letterSpacing: '0.02em' }}>Personas dentro</p>
+          <p style={{ fontSize: 32, fontWeight: 900, color: 'rgba(255,255,255,0.88)', lineHeight: 1, fontFamily: 'system-ui', letterSpacing: '-0.02em' }}>28</p>
         </div>
-      ))}
+        <div style={{
+          padding: '11px 16px',
+          background: 'rgba(6,9,16,0.90)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: 14,
+          backdropFilter: 'blur(16px)',
+          minWidth: 116,
+        }}>
+          <p style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', fontFamily: 'system-ui', marginBottom: 5, letterSpacing: '0.02em' }}>Permanencia promedio</p>
+          <p style={{ fontSize: 32, fontWeight: 900, color: ACCENT, lineHeight: 1, fontFamily: 'system-ui', letterSpacing: '-0.02em' }}>
+            18 <span style={{ fontSize: 14, fontWeight: 600, color: `${ACCENT}70` }}>min</span>
+          </p>
+        </div>
+      </div>
     </div>
   )
 }

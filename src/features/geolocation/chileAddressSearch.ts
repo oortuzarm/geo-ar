@@ -1,5 +1,5 @@
 import { searchAddress } from './geocoding'
-import type { NominatimResult } from '../../types'
+import type { NominatimResult, AddressConfidence } from '../../types'
 
 // ── Abbreviation expansion ────────────────────────────────────────────────────
 // Dot-versions first (more specific); plain-versions after.
@@ -70,7 +70,7 @@ export interface ParsedAddress {
  * Decomposes a raw address query into its semantic parts.
  * Distinguishes Chilean postal codes (7 digits) from street numbers (3–6 digits).
  *
- * Example: "Av. Nueva Costanera 3987, 7630268 Santiago, Vitacura, Región Metropolitana"
+ * "Av. Nueva Costanera 3987, 7630268 Santiago, Vitacura, Región Metropolitana"
  *   → { streetName: "Av. Nueva Costanera", streetNumber: "3987",
  *       postalCode: "7630268", commune: "Vitacura", region: "Región Metropolitana" }
  */
@@ -224,7 +224,7 @@ function deduplicateResults(results: NominatimResult[], commune: string | null):
     )
     if (tooClose) continue
 
-    // Same road name within the same commune → keep only the first (best-positioned) result.
+    // Same road name within the same commune → keep only the first occurrence.
     // This avoids showing multiple "Avenida X" segments from the same street.
     if (commune) {
       const road = r.display_name.split(',')[0].trim().toLowerCase()
@@ -244,7 +244,34 @@ function deduplicateResults(results: NominatimResult[], commune: string | null):
   return kept
 }
 
-// ── Relevance scoring ─────────────────────────────────────────────────────────
+// ── Confidence scoring ────────────────────────────────────────────────────────
+
+function computeConfidence(r: NominatimResult, parsed: ParsedAddress): AddressConfidence {
+  const dn = r.display_name.toLowerCase()
+
+  // Exact: number match (also check address.house_number when Nominatim returns it)
+  if (parsed.streetNumber) {
+    const hasNumberInDisplay = dn.includes(parsed.streetNumber)
+    const hasNumberInAddress = r.address?.house_number === parsed.streetNumber
+    if (hasNumberInDisplay || hasNumberInAddress) return 'exact'
+
+    // No number → approximate or low_confidence based on road+commune match
+    const roadLc = parsed.streetName.toLowerCase()
+    const roadExpLc = expandAbbreviations(parsed.streetName).toLowerCase()
+    const hasRoad = dn.includes(roadLc) || dn.includes(roadExpLc)
+    const hasCommune = parsed.commune ? dn.includes(parsed.commune.toLowerCase()) : false
+
+    if (hasRoad && hasCommune) return 'approximate'
+    return 'low_confidence'
+  }
+
+  // No number in query: road+commune match is sufficient for 'exact'
+  const roadLc = parsed.streetName.toLowerCase()
+  const roadExpLc = expandAbbreviations(parsed.streetName).toLowerCase()
+  const hasRoad = dn.includes(roadLc) || dn.includes(roadExpLc)
+  if (hasRoad) return 'exact'
+  return 'approximate'
+}
 
 function scoreResult(r: NominatimResult, parsed: ParsedAddress): number {
   const dn = r.display_name.toLowerCase()
@@ -269,11 +296,15 @@ function filterByNumber(
   }
 
   const num = parsed.streetNumber
-  const exact = sortedResults.filter(r => r.display_name.includes(num))
+  const exact = sortedResults.filter(r =>
+    r.display_name.includes(num) || r.address?.house_number === num
+  )
 
   if (exact.length > 0) {
     if (import.meta.env.DEV) {
-      const discarded = sortedResults.filter(r => !r.display_name.includes(num))
+      const discarded = sortedResults.filter(r =>
+        !r.display_name.includes(num) && r.address?.house_number !== num
+      )
       if (discarded.length > 0) {
         console.log('[AddressSearch] discarded (no number match):', discarded.map(r => r.display_name))
       }
@@ -300,7 +331,9 @@ function isSufficientBatch(results: NominatimResult[], parsed: ParsedAddress): b
   if (inChile.length === 0) return false
 
   if (parsed.streetNumber) {
-    const hasNumber = inChile.some(r => r.display_name.includes(parsed.streetNumber!))
+    const hasNumber = inChile.some(r =>
+      r.display_name.includes(parsed.streetNumber!) || r.address?.house_number === parsed.streetNumber
+    )
     if (!hasNumber && inChile.length < 2) return false
   }
 
@@ -313,11 +346,17 @@ function isSufficientBatch(results: NominatimResult[], parsed: ParsedAddress): b
   return true
 }
 
+// ── Scored address result ─────────────────────────────────────────────────────
+
+export interface ScoredAddress {
+  nominatim: NominatimResult
+  confidence: AddressConfidence
+}
+
 // ── In-memory session cache ───────────────────────────────────────────────────
 
 interface CachedSearch {
-  results: NominatimResult[]
-  hasApproximate: boolean
+  results: ScoredAddress[]
 }
 
 const MAX_CACHE_SIZE = 50
@@ -335,25 +374,16 @@ function setCache(key: string, value: CachedSearch): void {
   queryCache.set(key, value)
 }
 
-// ── Search metadata ───────────────────────────────────────────────────────────
-
-/**
- * Updated after every searchAddressChile call.
- * Read immediately after awaiting the function — before the next search starts.
- */
-export const lastSearchMeta = { hasApproximate: false }
-
 // ── Main export ───────────────────────────────────────────────────────────────
 
 const MAX_VARIANTS_PER_SEARCH = 5
 const MAX_ADDRESS_RESULTS = 3
 
-export async function searchAddressChile(rawQuery: string): Promise<NominatimResult[]> {
+export async function searchAddressChile(rawQuery: string): Promise<ScoredAddress[]> {
   const key = cacheKey(rawQuery)
   const cached = queryCache.get(key)
   if (cached) {
     if (import.meta.env.DEV) console.log('[AddressSearch] cache hit:', key)
-    lastSearchMeta.hasApproximate = cached.hasApproximate
     return cached.results
   }
 
@@ -397,34 +427,38 @@ export async function searchAddressChile(rawQuery: string): Promise<NominatimRes
   return finalize(deduped, parsed, key)
 }
 
-function finalize(deduped: NominatimResult[], parsed: ParsedAddress, key: string): NominatimResult[] {
+function finalize(deduped: NominatimResult[], parsed: ParsedAddress, key: string): ScoredAddress[] {
   deduped.sort((a, b) => scoreResult(b, parsed) - scoreResult(a, parsed))
 
   const { exact, approximate } = filterByNumber(deduped, parsed)
 
-  let final: NominatimResult[]
-  let hasApproximate = false
+  let final: ScoredAddress[]
 
   if (exact.length > 0) {
-    final = exact.slice(0, MAX_ADDRESS_RESULTS)
+    final = exact.slice(0, MAX_ADDRESS_RESULTS).map(r => ({
+      nominatim: r,
+      confidence: computeConfidence(r, parsed),
+    }))
     if (import.meta.env.DEV) {
       console.log(`[AddressSearch] ${exact.length} exact match(es), returning ${final.length}`)
+      final.forEach(r => console.log(`  confidence=${r.confidence}:`, r.nominatim.display_name))
     }
   } else if (approximate) {
-    final = [approximate]
-    hasApproximate = true
+    const confidence = computeConfidence(approximate, parsed)
+    final = [{ nominatim: approximate, confidence }]
     if (import.meta.env.DEV) {
-      console.log('[AddressSearch] no exact match → 1 approximate fallback:', approximate.display_name)
+      console.log(`[AddressSearch] no exact match → ${confidence} fallback:`, approximate.display_name)
     }
   } else {
-    final = deduped.slice(0, MAX_ADDRESS_RESULTS)
+    final = deduped.slice(0, MAX_ADDRESS_RESULTS).map(r => ({
+      nominatim: r,
+      confidence: computeConfidence(r, parsed),
+    }))
     if (import.meta.env.DEV) {
       console.log(`[AddressSearch] no street number in query, returning ${final.length} results`)
     }
   }
 
-  lastSearchMeta.hasApproximate = hasApproximate
-
-  if (final.length > 0) setCache(key, { results: final, hasApproximate })
+  if (final.length > 0) setCache(key, { results: final })
   return final
 }

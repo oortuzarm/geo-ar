@@ -1,5 +1,6 @@
 import { searchAddressChile } from '../features/geolocation/chileAddressSearch'
-import type { PoiSearchResult, MapBounds, NominatimResult } from '../types'
+import type { ScoredAddress } from '../features/geolocation/chileAddressSearch'
+import type { PoiSearchResult, MapBounds } from '../types'
 
 const OVERPASS_ENDPOINT = 'https://overpass-api.de/api/interpreter'
 const NOMINATIM_ENDPOINT = 'https://nominatim.openstreetmap.org/search'
@@ -35,16 +36,17 @@ export function looksLikeAddress(rawQuery: string): boolean {
   return false
 }
 
-// ── NominatimResult → PoiSearchResult ────────────────────────────────────────
+// ── ScoredAddress → PoiSearchResult ──────────────────────────────────────────
 
-function nominatimToPoiResults(results: NominatimResult[]): PoiSearchResult[] {
-  return results.map(r => ({
+function nominatimToPoiResults(items: ScoredAddress[]): PoiSearchResult[] {
+  return items.map(({ nominatim: r, confidence }) => ({
     id: `addr-${r.place_id}`,
     name: r.display_name.split(',')[0].trim(),
     displayName: r.display_name,
     lat: parseFloat(r.lat),
     lng: parseFloat(r.lon),
     source: 'nominatim' as const,
+    confidence,
   }))
 }
 

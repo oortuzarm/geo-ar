@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { searchMapQuery, looksLikeAddress } from '../../services/poiSearchService'
-import { lastSearchMeta } from '../../features/geolocation/chileAddressSearch'
 import { haversineDistance } from '../../features/geolocation/haversine'
+import CoordinatePasteInput from './CoordinatePasteInput'
 import Modal from '../ui/Modal'
 import type { PoiSearchResult, MapBounds, GeoPoint } from '../../types'
 
@@ -23,16 +23,18 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
   const [creatingIds, setCreatingIds] = useState<Set<string>>(new Set())
   const [confirmBulk, setConfirmBulk] = useState(false)
   const [creatingAll, setCreatingAll] = useState(false)
-  const [hasApproximate, setHasApproximate] = useState(false)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const latestRequestRef = useRef(0)
   const containerRef = useRef<HTMLDivElement>(null)
-  // Stable refs so the debounced callback always sees the latest values
   const mapBoundsRef = useRef(mapBounds)
   mapBoundsRef.current = mapBounds
   const onResultsChangeRef = useRef(onResultsChange)
   onResultsChangeRef.current = onResultsChange
+
+  const isAddressQuery = looksLikeAddress(query)
+  const hasApproximate = isAddressQuery && results.some(r => r.confidence && r.confidence !== 'exact')
+  const showCoordPaste = isAddressQuery && (hasApproximate || searchState === 'no-results')
 
   function isDuplicate(result: PoiSearchResult): boolean {
     return existingPoints.some(
@@ -52,7 +54,6 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
     }
 
     setSearchState('searching')
-    setHasApproximate(false)
 
     debounceRef.current = setTimeout(async () => {
       const reqId = ++latestRequestRef.current
@@ -61,14 +62,12 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
         if (latestRequestRef.current !== reqId) return
         setResults(found)
         onResultsChangeRef.current(found)
-        setHasApproximate(looksLikeAddress(query) && lastSearchMeta.hasApproximate)
         setSearchState(found.length > 0 ? 'results' : 'no-results')
         setOpen(true)
       } catch {
         if (latestRequestRef.current !== reqId) return
         setResults([])
         onResultsChangeRef.current([])
-        setHasApproximate(false)
         setSearchState('error')
         setOpen(true)
       }
@@ -124,16 +123,30 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
     setOpen(false)
   }
 
+  async function handleCreateFromCoords(lat: number, lng: number) {
+    const streetName = query.split(',')[0].trim() || 'Punto GPS'
+    const syntheticResult: PoiSearchResult = {
+      id: `coords-${lat.toFixed(6)}-${lng.toFixed(6)}`,
+      name: streetName,
+      displayName: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+      lat,
+      lng,
+      source: 'nominatim',
+      confidence: 'exact',
+    }
+    onFlyTo(lat, lng)
+    await onCreatePoint(syntheticResult)
+    setOpen(false)
+  }
+
   function handleClear() {
     setQuery('')
     setResults([])
     onResultsChangeRef.current([])
     setOpen(false)
     setSearchState('idle')
-    setHasApproximate(false)
   }
 
-  // Prevent map from receiving pointer/keyboard events through the search widget
   function stopProp(e: React.SyntheticEvent) {
     e.stopPropagation()
   }
@@ -202,18 +215,26 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
                 {results.map((r) => {
                   const dup = isDuplicate(r)
                   const creating = creatingIds.has(r.id)
+                  const isApprox = r.confidence && r.confidence !== 'exact'
+
                   return (
                     <li
                       key={r.id}
                       className="flex items-start gap-2.5 px-3 py-2.5 hover:bg-gray-800/50 transition-colors"
                     >
-                      {/* Clicking the name/address flies to that location */}
                       <button
                         onClick={() => onFlyTo(r.lat, r.lng)}
                         className="flex-1 text-left min-w-0"
                         title="Ver en mapa"
                       >
-                        <p className="text-sm text-gray-200 truncate">{r.name}</p>
+                        <p className={`text-sm truncate ${isApprox ? 'text-gray-400' : 'text-gray-200'}`}>
+                          {r.name}
+                          {isApprox && (
+                            <span className="ml-1.5 text-xs text-amber-500 italic font-normal">
+                              · ubicación aproximada
+                            </span>
+                          )}
+                        </p>
                         {r.displayName !== r.name && (
                           <p className="text-xs text-gray-500 truncate mt-0.5">{r.displayName}</p>
                         )}
@@ -223,6 +244,15 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
                         <span className="flex-shrink-0 text-xs text-gray-600 mt-0.5 italic">
                           Ya existe
                         </span>
+                      ) : isApprox ? (
+                        <button
+                          onClick={() => handleCreate(r)}
+                          disabled={creating || creatingAll}
+                          className="flex-shrink-0 text-xs font-medium text-amber-500 hover:text-amber-400
+                                     disabled:opacity-40 disabled:cursor-wait transition-colors mt-0.5"
+                        >
+                          {creating ? 'Creando…' : 'Usar aprox.'}
+                        </button>
                       ) : (
                         <button
                           onClick={() => handleCreate(r)}
@@ -238,7 +268,7 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
                 })}
               </ul>
 
-              {/* Approximate fallback notice */}
+              {/* Approximate warning */}
               {hasApproximate && (
                 <div className="border-t border-gray-800 px-3 py-2">
                   <p className="text-xs text-amber-400">
@@ -247,8 +277,8 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
                 </div>
               )}
 
-              {/* Footer: summary + bulk action (hidden for address queries) */}
-              {!looksLikeAddress(query) && (
+              {/* Footer: summary + bulk action — hidden for address queries */}
+              {!isAddressQuery && (
                 <div className="border-t border-gray-800 px-3 py-2 flex items-center justify-between gap-2">
                   <span className="text-xs text-gray-600">
                     {results.length} resultado{results.length !== 1 ? 's' : ''}
@@ -285,6 +315,16 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
             <p className="px-4 py-3 text-sm text-red-400">
               No se pudo realizar la búsqueda. Intenta nuevamente.
             </p>
+          )}
+
+          {/* Coordinate paste — shown for address queries with no exact result */}
+          {showCoordPaste && (
+            <div className="border-t border-gray-800 px-3 py-2.5">
+              <CoordinatePasteInput
+                onConfirm={handleCreateFromCoords}
+                confirmLabel="Fijar y agregar punto"
+              />
+            </div>
           )}
         </div>
       )}

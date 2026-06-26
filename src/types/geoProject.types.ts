@@ -164,12 +164,22 @@ export interface GeoPoint {
   socialLinks?: SocialLinks
 }
 
+export type AddressConfidence = 'exact' | 'approximate' | 'low_confidence'
+
 export type NominatimResult = {
   place_id: number
   display_name: string
   lat: string
   lon: string
   boundingbox: string[]
+  address?: {
+    house_number?: string
+    road?: string
+    suburb?: string
+    city?: string
+    state?: string
+    country?: string
+  }
 }
 
 export type LocationStatus = 'idle' | 'requesting' | 'active' | 'denied' | 'unavailable'
@@ -189,6 +199,7 @@ export type PoiSearchResult = {
   lng: number
   category?: string
   source: 'overpass' | 'nominatim'
+  confidence?: AddressConfidence
 }
 
 export type UserLocation = {

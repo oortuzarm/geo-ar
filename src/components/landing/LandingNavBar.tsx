@@ -72,13 +72,14 @@ function SolutionsMegaMenu({ onClose }: { onClose: () => void }) {
   return (
     <div
       className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[680px] max-w-[calc(100vw-2rem)]
-                 rounded-2xl border border-white/[0.08] bg-[#080c18]/96 backdrop-blur-2xl
-                 shadow-[0_24px_64px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)]
-                 overflow-hidden z-50"
+                 rounded-2xl border border-white/[0.14]
+                 bg-[#0b1020]
+                 shadow-[0_4px_8px_rgba(0,0,0,0.5),0_20px_48px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.07),inset_0_1px_0_rgba(255,255,255,0.06)]
+                 overflow-hidden z-[60]"
     >
       {/* Header */}
       <div className="px-5 pt-4 pb-3 border-b border-white/[0.06]">
-        <p className="text-[10px] font-bold tracking-widest uppercase text-slate-600">
+        <p className="text-[10px] font-bold tracking-widest uppercase text-slate-500">
           Soluciones por industria
         </p>
       </div>
@@ -109,7 +110,7 @@ function SolutionsMegaMenu({ onClose }: { onClose: () => void }) {
                              transition-colors duration-150 leading-none mb-1">
                 {s.name}
               </p>
-              <p className="text-[11px] text-slate-500 leading-snug">{s.desc}</p>
+              <p className="text-[11px] text-slate-400 leading-snug">{s.desc}</p>
             </div>
           </Link>
         ))}
@@ -117,7 +118,7 @@ function SolutionsMegaMenu({ onClose }: { onClose: () => void }) {
 
       {/* Footer */}
       <div className="px-5 py-3 border-t border-white/[0.06] flex items-center justify-between">
-        <p className="text-[11px] text-slate-600">
+        <p className="text-[11px] text-slate-500">
           Ubyca funciona en cualquier industria donde la ubicación importe.
         </p>
         <Link

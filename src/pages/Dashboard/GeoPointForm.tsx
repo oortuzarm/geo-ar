@@ -340,6 +340,44 @@ function AvailabilityRules({
   )
 }
 
+// ─── Action card ─────────────────────────────────────────────────────────────
+
+function ActionCard({
+  title,
+  description,
+  enabled,
+  onToggle,
+  children,
+}: {
+  title: string
+  description: string
+  enabled: boolean
+  onToggle: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <div className="border border-gray-800 rounded-xl overflow-hidden bg-gray-900/40">
+      <div className="flex items-start justify-between px-4 py-3 gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-200 leading-snug">{title}</p>
+          <p className="text-xs text-gray-500 mt-0.5 leading-snug">{description}</p>
+        </div>
+        <div className="flex-shrink-0 mt-0.5">
+          <Toggle enabled={enabled} onToggle={onToggle} />
+        </div>
+      </div>
+      {enabled && (
+        <>
+          <div className="h-px bg-gray-800" />
+          <div className="px-4 py-4 space-y-4">
+            {children}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 // ─── Main form ────────────────────────────────────────────────────────────────
 
 function isMediaContentData(data: GeoPoint['contentData']): data is MediaContentData {
@@ -460,6 +498,13 @@ export default function GeoPointForm({
   useEffect(() => {
     setCollectionEnabled((point.requiredPointIds?.length ?? 0) > 0)
   }, [point.id])
+
+  // ── Acciones section state ────────────────────────────────────────────────
+  const [ctaEnabled,      setCtaEnabled]      = useState(true)
+  const [welcomeEnabled,  setWelcomeEnabled]  = useState(false)
+  const [welcomeTitle,    setWelcomeTitle]    = useState('')
+  const [welcomeMessage,  setWelcomeMessage]  = useState('')
+  const [welcomeButton,   setWelcomeButton]   = useState('')
 
   const geoTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -775,6 +820,13 @@ export default function GeoPointForm({
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
 
+        {/* ════ SECCIÓN 1: INFORMACIÓN ════════════════════════════════════ */}
+        <div className="pb-1">
+          <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
+            Información
+          </p>
+        </div>
+
         {/* Nombre */}
         <div className="flex flex-col gap-1">
           <Input
@@ -856,547 +908,634 @@ export default function GeoPointForm({
           </div>
         </div>
 
-        {/* ── Área GPS ──────────────────────────────────────────────────── */}
-        <div className="space-y-2">
-          <div>
-            <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-              Área GPS
-            </span>
-            <p className="text-xs text-gray-600 mt-0.5">
-              Se utiliza para mediciones y analíticas geolocalizadas.
+        {/* ════ SECCIÓN 2: DISPONIBILIDAD ════════════════════════════════ */}
+        <div className="border-t border-gray-800 pt-5 space-y-4">
+          <div className="space-y-0.5">
+            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
+              Disponibilidad
+            </p>
+            <p className="text-xs text-gray-600 leading-snug">
+              Define cuándo puede activarse esta experiencia.
             </p>
           </div>
 
-          {/* Zona de activación — Circular o Polígono personalizado */}
-          {(() => {
-            const mode = point.activationMode ?? 'radius'
-            const hasPolygon = Boolean(point.activationPolygon)
-            return (
-              <div className="bg-gray-800/50 border border-brand-500/30 rounded-lg p-3 space-y-3">
-                {/* Header */}
+          {/* ── Área GPS ────────────────────────────────────────────────── */}
+          <div className="space-y-2">
+            <div>
+              <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                Área GPS
+              </span>
+              <p className="text-xs text-gray-600 mt-0.5">
+                Se utiliza para mediciones y analíticas geolocalizadas.
+              </p>
+            </div>
+
+            {(() => {
+              const mode = point.activationMode ?? 'radius'
+              const hasPolygon = Boolean(point.activationPolygon)
+              return (
+                <div className="bg-gray-800/50 border border-brand-500/30 rounded-lg p-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0" />
+                      <span className="text-sm text-gray-300">Zona de activación</span>
+                      <InfoTooltip text={RADIUS_TOOLTIP} />
+                    </div>
+                    <span className="text-xs text-brand-400 font-medium">
+                      {pointMode === 'informative' ? 'Siempre visible' : 'Siempre activo'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {([
+                      { value: 'radius',  label: 'Radio' },
+                      { value: 'polygon', label: 'Área personalizada' },
+                    ] as { value: 'radius' | 'polygon'; label: string }[]).map(({ value, label }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => {
+                          if (value === mode) return
+                          if (value === 'radius') {
+                            onChange({ activationMode: 'radius' })
+                          } else {
+                            onChange({ activationMode: 'polygon' })
+                          }
+                        }}
+                        className={[
+                          'py-1.5 rounded-md border text-xs font-medium transition-all',
+                          mode === value
+                            ? 'border-brand-500 bg-brand-500/15 text-brand-300'
+                            : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600 hover:text-gray-300',
+                        ].join(' ')}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {mode === 'radius' && (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="range"
+                        min={5} max={1000} step={5}
+                        value={point.activationRadius}
+                        onChange={(e) => onChange({ activationRadius: parseInt(e.target.value) })}
+                        className="flex-1 accent-brand-500"
+                      />
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min={1}
+                          value={point.activationRadius}
+                          onChange={(e) => onChange({ activationRadius: parseInt(e.target.value) || 10 })}
+                          className="w-16 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm
+                                     text-gray-100 text-center focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        />
+                        <span className="text-xs text-gray-500">m</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {mode === 'polygon' && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${hasPolygon ? 'bg-emerald-500' : 'bg-gray-600'}`} />
+                        <span className={`text-xs ${hasPolygon ? 'text-emerald-400' : 'text-gray-500'}`}>
+                          {hasPolygon ? 'Polígono creado' : 'Sin polígono dibujado'}
+                        </span>
+                      </div>
+
+                      {polygonDrawMode === 'drawing' && (
+                        <div className="space-y-2">
+                          <p className="text-xs text-brand-300 animate-pulse leading-relaxed">
+                            Dibujando… haz clic en el mapa para agregar vértices. Cierra el polígono haciendo clic en el primer punto o presionando Enter.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={onCancelPolygonDraw}
+                            className="w-full py-2 rounded-lg border border-gray-700 bg-gray-800
+                                       text-xs font-medium text-gray-400 hover:border-gray-600
+                                       hover:text-gray-200 transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      )}
+
+                      {polygonDrawMode === 'editing' && (
+                        <div className="space-y-1.5">
+                          <p className="text-xs text-amber-300">
+                            Modo edición activo. Arrastra los vértices para modificar el polígono.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={onStopPolygonEdit}
+                            className="w-full py-2 rounded-lg border border-emerald-600 bg-emerald-600/15
+                                       text-xs font-medium text-emerald-400 hover:bg-emerald-600/25
+                                       transition-colors"
+                          >
+                            Finalizar edición
+                          </button>
+                          <button
+                            type="button"
+                            onClick={onCancelPolygonEdit}
+                            className="w-full py-2 rounded-lg border border-gray-700 bg-gray-800
+                                       text-xs font-medium text-gray-400 hover:border-gray-600
+                                       hover:text-gray-200 transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      )}
+
+                      {polygonDrawMode === 'idle' && (
+                        <div className="space-y-1.5">
+                          <button
+                            type="button"
+                            onClick={onRequestPolygonDraw}
+                            className="w-full py-2 rounded-lg border border-brand-600 bg-brand-600/15
+                                       text-xs font-medium text-brand-400 hover:bg-brand-600/25
+                                       transition-colors"
+                          >
+                            {hasPolygon ? 'Redibujar polígono' : 'Dibujar polígono'}
+                          </button>
+                          {hasPolygon && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={onRequestPolygonEdit}
+                                className="w-full py-2 rounded-lg border border-gray-700 bg-gray-800
+                                           text-xs font-medium text-gray-300 hover:border-gray-600
+                                           transition-colors"
+                              >
+                                Editar polígono
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onChange({ activationPolygon: undefined })}
+                                className="w-full py-2 rounded-lg border border-red-900/60 bg-red-900/10
+                                           text-xs font-medium text-red-400 hover:bg-red-900/20
+                                           transition-colors"
+                              >
+                                Eliminar polígono
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+          </div>
+
+          {/* Coordenadas avanzadas */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setAdvancedOpen((o) => !o)}
+              className="flex items-center gap-1.5 text-xs font-medium text-gray-500
+                         hover:text-gray-300 uppercase tracking-wide transition-colors w-full text-left"
+            >
+              <svg
+                className={`h-3 w-3 transition-transform ${advancedOpen ? 'rotate-90' : ''}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              Configuración avanzada
+            </button>
+            {advancedOpen && (
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <Input
+                  label="Latitud*"
+                  type="number"
+                  step="0.000001"
+                  placeholder="-33.4489"
+                  value={point.latitude}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value)
+                    if (!isNaN(val)) onChange({ latitude: val })
+                  }}
+                />
+                <Input
+                  label="Longitud*"
+                  type="number"
+                  step="0.000001"
+                  placeholder="-70.6693"
+                  value={point.longitude}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value)
+                    if (!isNaN(val)) onChange({ longitude: val })
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Permanencia + Colección + Reglas (solo modo unlock) */}
+          {pointMode === 'unlock' && (
+            <div className="space-y-2">
+              {/* Permanencia */}
+              <div
+                className={`bg-gray-800/50 border rounded-lg p-3 space-y-3 ${
+                  canUseDwellTime && (point.requiresDwellTime ?? false) ? 'border-brand-500/30' : 'border-gray-800'
+                } ${!canUseDwellTime ? 'cursor-pointer' : ''}`}
+                onClick={!canUseDwellTime ? () => setUpgradeOpen(true) : undefined}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0" />
-                    <span className="text-sm text-gray-300">Zona de activación</span>
-                    <InfoTooltip text={RADIUS_TOOLTIP} />
+                    <span className={`text-sm ${canUseDwellTime ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Permanencia
+                    </span>
+                    <InfoTooltip text="El usuario debe permanecer dentro del área durante un tiempo mínimo para activar la experiencia." />
                   </div>
-                  <span className="text-xs text-brand-400 font-medium">
-                    {pointMode === 'informative' ? 'Siempre visible' : 'Siempre activo'}
-                  </span>
+                  {canUseDwellTime
+                    ? (
+                      <Toggle
+                        enabled={point.requiresDwellTime ?? false}
+                        onToggle={() => {
+                          const next = !(point.requiresDwellTime ?? false)
+                          onChange({
+                            requiresDwellTime: next,
+                            dwellTimeSeconds:  next ? (point.dwellTimeSeconds ?? 180) : 0,
+                          })
+                        }}
+                      />
+                    )
+                    : <span className="text-xs text-gray-600" title="Esta función no está disponible en tu plan actual.">🔒 No disponible</span>
+                  }
                 </div>
-
-                {/* Mode selector */}
-                <div className="grid grid-cols-2 gap-1.5">
-                  {([
-                    { value: 'radius',  label: 'Radio' },
-                    { value: 'polygon', label: 'Área personalizada' },
-                  ] as { value: 'radius' | 'polygon'; label: string }[]).map(({ value, label }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => {
-                        if (value === mode) return
-                        if (value === 'radius') {
-                          onChange({ activationMode: 'radius' })
-                        } else {
-                          onChange({ activationMode: 'polygon' })
-                        }
-                      }}
-                      className={[
-                        'py-1.5 rounded-md border text-xs font-medium transition-all',
-                        mode === value
-                          ? 'border-brand-500 bg-brand-500/15 text-brand-300'
-                          : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600 hover:text-gray-300',
-                      ].join(' ')}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Radius controls */}
-                {mode === 'radius' && (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="range"
-                      min={5} max={1000} step={5}
-                      value={point.activationRadius}
-                      onChange={(e) => onChange({ activationRadius: parseInt(e.target.value) })}
-                      className="flex-1 accent-brand-500"
-                    />
-                    <div className="flex items-center gap-1">
-                      <input
+                {canUseDwellTime && (point.requiresDwellTime ?? false) && (
+                  <>
+                    <p className="text-xs text-gray-500">
+                      El usuario deberá permanecer dentro del área para desbloquear el contenido.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        label="Minutos requeridos"
                         type="number"
                         min={1}
-                        value={point.activationRadius}
-                        onChange={(e) => onChange({ activationRadius: parseInt(e.target.value) || 10 })}
-                        className="w-16 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm
-                                   text-gray-100 text-center focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        max={240}
+                        value={Math.max(1, Math.round((point.dwellTimeSeconds ?? 180) / 60))}
+                        onChange={(e) => {
+                          const mins = Math.min(240, Math.max(1, parseInt(e.target.value, 10) || 1))
+                          onChange({ dwellTimeSeconds: mins * 60 })
+                        }}
                       />
-                      <span className="text-xs text-gray-500">m</span>
                     </div>
-                  </div>
-                )}
-
-                {/* Polygon controls */}
-                {mode === 'polygon' && (
-                  <div className="space-y-2">
-                    {/* Status indicator */}
-                    <div className="flex items-center gap-1.5">
-                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${hasPolygon ? 'bg-emerald-500' : 'bg-gray-600'}`} />
-                      <span className={`text-xs ${hasPolygon ? 'text-emerald-400' : 'text-gray-500'}`}>
-                        {hasPolygon ? 'Polígono creado' : 'Sin polígono dibujado'}
-                      </span>
-                    </div>
-
-                    {/* Drawing in progress */}
-                    {polygonDrawMode === 'drawing' && (
-                      <div className="space-y-2">
-                        <p className="text-xs text-brand-300 animate-pulse leading-relaxed">
-                          Dibujando… haz clic en el mapa para agregar vértices. Cierra el polígono haciendo clic en el primer punto o presionando Enter.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={onCancelPolygonDraw}
-                          className="w-full py-2 rounded-lg border border-gray-700 bg-gray-800
-                                     text-xs font-medium text-gray-400 hover:border-gray-600
-                                     hover:text-gray-200 transition-colors"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Editing in progress */}
-                    {polygonDrawMode === 'editing' && (
-                      <div className="space-y-1.5">
-                        <p className="text-xs text-amber-300">
-                          Modo edición activo. Arrastra los vértices para modificar el polígono.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={onStopPolygonEdit}
-                          className="w-full py-2 rounded-lg border border-emerald-600 bg-emerald-600/15
-                                     text-xs font-medium text-emerald-400 hover:bg-emerald-600/25
-                                     transition-colors"
-                        >
-                          Finalizar edición
-                        </button>
-                        <button
-                          type="button"
-                          onClick={onCancelPolygonEdit}
-                          className="w-full py-2 rounded-lg border border-gray-700 bg-gray-800
-                                     text-xs font-medium text-gray-400 hover:border-gray-600
-                                     hover:text-gray-200 transition-colors"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Action buttons (idle mode only) */}
-                    {polygonDrawMode === 'idle' && (
-                      <div className="space-y-1.5">
-                        <button
-                          type="button"
-                          onClick={onRequestPolygonDraw}
-                          className="w-full py-2 rounded-lg border border-brand-600 bg-brand-600/15
-                                     text-xs font-medium text-brand-400 hover:bg-brand-600/25
-                                     transition-colors"
-                        >
-                          {hasPolygon ? 'Redibujar polígono' : 'Dibujar polígono'}
-                        </button>
-                        {hasPolygon && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={onRequestPolygonEdit}
-                              className="w-full py-2 rounded-lg border border-gray-700 bg-gray-800
-                                         text-xs font-medium text-gray-300 hover:border-gray-600
-                                         transition-colors"
-                            >
-                              Editar polígono
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => onChange({ activationPolygon: undefined })}
-                              className="w-full py-2 rounded-lg border border-red-900/60 bg-red-900/10
-                                         text-xs font-medium text-red-400 hover:bg-red-900/20
-                                         transition-colors"
-                            >
-                              Eliminar polígono
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  </>
                 )}
               </div>
-            )
-          })()}
 
-        </div>
+              {/* Colección */}
+              <div className={`bg-gray-800/50 border rounded-lg p-3 space-y-3 ${
+                collectionEnabled ? 'border-brand-500/30' : 'border-gray-800'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm text-gray-300">Colección</span>
+                    <InfoTooltip text="Selecciona las ubicaciones que deben visitarse antes de desbloquear este contenido." />
+                  </div>
+                  <Toggle
+                    enabled={collectionEnabled}
+                    onToggle={() => {
+                      const next = !collectionEnabled
+                      setCollectionEnabled(next)
+                      if (!next) onChange({ requiredPointIds: [] })
+                    }}
+                  />
+                </div>
+                {collectionEnabled && (
+                  <>
+                    <p className="text-xs text-gray-500">
+                      Selecciona las ubicaciones que deben visitarse antes de desbloquear este contenido.
+                    </p>
+                    {otherPoints.length === 0 ? (
+                      <p className="text-xs text-gray-600 italic">No hay otros puntos en este proyecto.</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {otherPoints.map((p) => {
+                          const selected = (point.requiredPointIds ?? []).includes(p.id)
+                          return (
+                            <label key={p.id} className="flex items-center gap-2.5 cursor-pointer group">
+                              <input
+                                type="checkbox"
+                                checked={selected}
+                                onChange={() => {
+                                  const current = point.requiredPointIds ?? []
+                                  const next    = selected
+                                    ? current.filter((id) => id !== p.id)
+                                    : [...current, p.id]
+                                  onChange({ requiredPointIds: next })
+                                }}
+                                className="h-4 w-4 rounded border-gray-600 bg-gray-700
+                                           accent-brand-500 cursor-pointer flex-shrink-0"
+                              />
+                              <span className="text-sm text-gray-400 group-hover:text-gray-200
+                                               transition-colors truncate">
+                                {p.name}
+                              </span>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
 
-        {/* Coordenadas — dentro de sección colapsable */}
-        <div>
-          <button
-            type="button"
-            onClick={() => setAdvancedOpen((o) => !o)}
-            className="flex items-center gap-1.5 text-xs font-medium text-gray-500
-                       hover:text-gray-300 uppercase tracking-wide transition-colors w-full text-left"
-          >
-            <svg
-              className={`h-3 w-3 transition-transform ${advancedOpen ? 'rotate-90' : ''}`}
-              fill="none" stroke="currentColor" viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-            Configuración avanzada
-          </button>
-          {advancedOpen && (
-            <div className="mt-2 grid grid-cols-2 gap-3">
-              <Input
-                label="Latitud*"
-                type="number"
-                step="0.000001"
-                placeholder="-33.4489"
-                value={point.latitude}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value)
-                  if (!isNaN(val)) onChange({ latitude: val })
-                }}
+              <AvailabilityRules
+                showHeader={false}
+                availability={point.availability}
+                onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
+                canUseSchedule={canUseScheduleAvailability}
+                canUseQuota={canUseQuotaAvailability}
+                canUseLiveVisits={canUseLiveVisits}
+                onUpgradeClick={() => setUpgradeOpen(true)}
               />
-              <Input
-                label="Longitud*"
-                type="number"
-                step="0.000001"
-                placeholder="-70.6693"
-                value={point.longitude}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value)
-                  if (!isNaN(val)) onChange({ longitude: val })
-                }}
+            </div>
+          )}
+
+          {/* Horario de atención (solo modo informativo) */}
+          {pointMode === 'informative' && (
+            <div className="space-y-2">
+              <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                Horario
+              </span>
+              <p className="text-xs text-gray-500 leading-snug">
+                Horario visible públicamente. No restringe el acceso al contenido.
+              </p>
+              <AvailabilityRules
+                scheduleOnly
+                scheduleLabel="Horario de atención"
+                showHeader={false}
+                availability={point.availability}
+                onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
+                canUseSchedule={canUseScheduleAvailability}
+                onUpgradeClick={() => setUpgradeOpen(true)}
               />
             </div>
           )}
         </div>
 
-        {/* ── Tipo de contenido ──────────────────────────────────────────── */}
-        <div className="flex flex-col gap-2">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            {pointMode === 'informative' ? 'Tipo de contenido' : 'Tipo de contenido *'}
-          </span>
-          <div className="grid grid-cols-2 gap-2">
-            {CONTENT_TYPES.map(({ type, label, icon }) => {
-              const allowed = canUseContentType(type)
-              return (
-                <button
-                  key={type}
-                  type="button"
-                  disabled={!allowed}
-                  onClick={() => allowed && handleContentTypeChange(type)}
-                  title={allowed ? undefined : 'Esta función no está disponible en tu plan actual.'}
-                  className={[
-                    'flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all',
-                    !allowed
-                      ? 'border-gray-800 bg-gray-800/30 text-gray-600 cursor-not-allowed'
-                      : contentType === type
-                        ? 'border-brand-500 bg-brand-500/10 text-brand-400'
-                        : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:border-gray-600 hover:text-gray-300',
-                  ].join(' ')}
-                >
-                  <span className="text-base leading-none">{allowed ? icon : '🔒'}</span>
-                  <span className="truncate">{label}</span>
-                </button>
-              )
-            })}
+        {/* ════ SECCIÓN 3: ACCIONES ══════════════════════════════════════ */}
+        <div className="border-t border-gray-800 pt-5 space-y-3">
+          <div className="space-y-0.5">
+            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
+              Acciones
+            </p>
+            <p className="text-xs text-gray-600 leading-snug">
+              Configura lo que experimentará el usuario al ingresar al área.
+            </p>
           </div>
-        </div>
 
-        {/* ── Contenido: URL ─────────────────────────────────────────────── */}
-        {contentType === 'url' && (
-          <>
-            <div className="flex flex-col gap-1">
-              <Input
-                label={pointMode === 'informative' ? 'URL del contenido' : 'URL del contenido*'}
-                placeholder="Ej: https://tusitio.com"
-                value={lookiarUrl}
-                onChange={(e) => { setLookiarUrl(e.target.value); setUrlError(null) }}
-                onBlur={() => {
-                  const normalized = validateUrl()
-                  if (normalized !== null) {
-                    onChange({ lookiarUrl: normalized, contentData: { url: normalized } })
-                  }
-                }}
-                hint={urlError ? undefined : pointMode === 'informative'
-                  ? 'Opcional. Si se configura, el CTA aparecerá activo para el visitante.'
-                  : 'Agrega cualquier enlace: experiencias, promociones o contenido digital.'}
-              />
-              {urlError && <p className="text-xs text-red-400">{urlError}</p>}
+          {/* Acción 1: Botón de acción */}
+          <ActionCard
+            title="Botón de acción"
+            description="CTA principal que se muestra al desbloquear este punto."
+            enabled={ctaEnabled}
+            onToggle={() => setCtaEnabled((v) => !v)}
+          >
+            {/* Tipo */}
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                {pointMode === 'informative' ? 'Tipo' : 'Tipo *'}
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                {CONTENT_TYPES.map(({ type, label, icon }) => {
+                  const allowed = canUseContentType(type)
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      disabled={!allowed}
+                      onClick={() => allowed && handleContentTypeChange(type)}
+                      title={allowed ? undefined : 'Esta función no está disponible en tu plan actual.'}
+                      className={[
+                        'flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all',
+                        !allowed
+                          ? 'border-gray-800 bg-gray-800/30 text-gray-600 cursor-not-allowed'
+                          : contentType === type
+                            ? 'border-brand-500 bg-brand-500/10 text-brand-400'
+                            : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:border-gray-600 hover:text-gray-300',
+                      ].join(' ')}
+                    >
+                      <span className="text-base leading-none">{allowed ? icon : '🔒'}</span>
+                      <span className="truncate">{label}</span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                Botón principal
-              </span>
-              <p className="text-xs text-gray-500 leading-snug">
-                Los clics en este botón se registran automáticamente en Analytics.
-              </p>
+            {/* Contenido: URL */}
+            {contentType === 'url' && (
+              <>
+                <div className="flex flex-col gap-1">
+                  <Input
+                    label={pointMode === 'informative' ? 'URL del contenido' : 'URL del contenido*'}
+                    placeholder="Ej: https://tusitio.com"
+                    value={lookiarUrl}
+                    onChange={(e) => { setLookiarUrl(e.target.value); setUrlError(null) }}
+                    onBlur={() => {
+                      const normalized = validateUrl()
+                      if (normalized !== null) {
+                        onChange({ lookiarUrl: normalized, contentData: { url: normalized } })
+                      }
+                    }}
+                    hint={urlError ? undefined : pointMode === 'informative'
+                      ? 'Opcional. Si se configura, el CTA aparecerá activo para el visitante.'
+                      : 'Agrega cualquier enlace: experiencias, promociones o contenido digital.'}
+                  />
+                  {urlError && <p className="text-xs text-red-400">{urlError}</p>}
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                    Texto del botón
+                  </span>
+                  <p className="text-xs text-gray-500 leading-snug">
+                    Los clics en este botón se registran automáticamente en Analytics.
+                  </p>
+                  <Input
+                    placeholder="Ej: Acceder al contenido"
+                    value={buttonText}
+                    onChange={(e) => setButtonText(e.target.value)}
+                    onBlur={() => onChange({ buttonText: buttonText || undefined })}
+                    hint='Si se deja vacío, se usa "Acceder al contenido"'
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Contenido: Video / Audio / Archivo */}
+            {(contentType === 'video' || contentType === 'audio' || contentType === 'file') && (() => {
+              const cfg = FILE_CONFIG[contentType]
+              const isRequired = pointMode !== 'informative'
+              return (
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                    {contentType === 'video'
+                      ? (isRequired ? 'Video del contenido*' : 'Video del contenido')
+                      : contentType === 'audio'
+                        ? (isRequired ? 'Audio del contenido*' : 'Audio del contenido')
+                        : (isRequired ? 'Archivo descargable*' : 'Archivo descargable')}
+                  </span>
+
+                  {(uploadState === 'idle' || uploadState === 'error') && !mediaFile && (
+                    <div
+                      className="border-2 border-dashed border-gray-700 rounded-lg p-4 text-center
+                                 hover:border-gray-600 transition-colors cursor-pointer"
+                      onClick={() => mediaFileRef.current?.click()}
+                    >
+                      <p className="text-xs text-gray-400">{cfg.hint}</p>
+                      <p className="text-xs text-gray-600 mt-0.5">{cfg.maxLabel}</p>
+                      {uploadError && (
+                        <p className="text-xs text-red-400 mt-2">{uploadError}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {uploadState === 'uploading' && (
+                    <div className="border border-gray-700 rounded-lg px-4 py-3 flex items-center gap-3">
+                      <svg className="h-4 w-4 text-brand-400 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                      <span className="text-xs text-gray-400">Subiendo archivo…</span>
+                    </div>
+                  )}
+
+                  {mediaFile && uploadState !== 'uploading' && (
+                    <div className="border border-gray-700 rounded-lg px-3 py-2.5 flex items-start gap-2.5">
+                      <span className="text-base flex-shrink-0 mt-0.5">
+                        {contentType === 'video' ? '🎬' : contentType === 'audio' ? '🎵' : '📄'}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-gray-200 truncate">{mediaFile.fileName}</p>
+                        {mediaFile.size > 0 && (
+                          <p className="text-xs text-gray-500">{formatFileSize(mediaFile.size)}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => mediaFileRef.current?.click()}
+                          className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+                        >
+                          Reemplazar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleMediaRemove}
+                          className="text-xs text-gray-600 hover:text-red-400 transition-colors"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <input
+                    ref={mediaFileRef}
+                    type="file"
+                    accept={cfg.accept}
+                    className="hidden"
+                    onChange={handleMediaFileSelect}
+                  />
+                  {contentError && <p className="text-xs text-red-400">{contentError}</p>}
+                </div>
+              )
+            })()}
+
+            {(contentType === 'video' || contentType === 'audio' || contentType === 'file') && (
               <Input
+                label="Texto del botón"
                 placeholder="Ej: Acceder al contenido"
                 value={buttonText}
                 onChange={(e) => setButtonText(e.target.value)}
                 onBlur={() => onChange({ buttonText: buttonText || undefined })}
                 hint='Si se deja vacío, se usa "Acceder al contenido"'
               />
-            </div>
+            )}
+          </ActionCard>
 
-          </>
-        )}
-
-        {/* ── Contenido: Video / Audio / Archivo ─────────────────────────── */}
-        {(contentType === 'video' || contentType === 'audio' || contentType === 'file') && (() => {
-          const cfg = FILE_CONFIG[contentType]
-          const isRequired = pointMode !== 'informative'
-          return (
-            <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                {contentType === 'video'
-                  ? (isRequired ? 'Video del contenido*' : 'Video del contenido')
-                  : contentType === 'audio'
-                    ? (isRequired ? 'Audio del contenido*' : 'Audio del contenido')
-                    : (isRequired ? 'Archivo descargable*' : 'Archivo descargable')}
-              </span>
-
-              {/* Idle / Error: click to upload */}
-              {(uploadState === 'idle' || uploadState === 'error') && !mediaFile && (
-                <div
-                  className="border-2 border-dashed border-gray-700 rounded-lg p-4 text-center
-                             hover:border-gray-600 transition-colors cursor-pointer"
-                  onClick={() => mediaFileRef.current?.click()}
-                >
-                  <p className="text-xs text-gray-400">{cfg.hint}</p>
-                  <p className="text-xs text-gray-600 mt-0.5">{cfg.maxLabel}</p>
-                  {uploadError && (
-                    <p className="text-xs text-red-400 mt-2">{uploadError}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Uploading */}
-              {uploadState === 'uploading' && (
-                <div className="border border-gray-700 rounded-lg px-4 py-3 flex items-center gap-3">
-                  <svg className="h-4 w-4 text-brand-400 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                  <span className="text-xs text-gray-400">Subiendo archivo…</span>
-                </div>
-              )}
-
-              {/* Done: show file info */}
-              {mediaFile && uploadState !== 'uploading' && (
-                <div className="border border-gray-700 rounded-lg px-3 py-2.5 flex items-start gap-2.5">
-                  <span className="text-base flex-shrink-0 mt-0.5">
-                    {contentType === 'video' ? '🎬' : contentType === 'audio' ? '🎵' : '📄'}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-200 truncate">{mediaFile.fileName}</p>
-                    {mediaFile.size > 0 && (
-                      <p className="text-xs text-gray-500">{formatFileSize(mediaFile.size)}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => mediaFileRef.current?.click()}
-                      className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
-                    >
-                      Reemplazar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleMediaRemove}
-                      className="text-xs text-gray-600 hover:text-red-400 transition-colors"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <input
-                ref={mediaFileRef}
-                type="file"
-                accept={cfg.accept}
-                className="hidden"
-                onChange={handleMediaFileSelect}
-              />
-              {contentError && <p className="text-xs text-red-400">{contentError}</p>}
-            </div>
-          )
-        })()}
-
-        {(contentType === 'video' || contentType === 'audio' || contentType === 'file') && (
-          <Input
-            label="Texto del botón"
-            placeholder="Ej: Acceder al contenido"
-            value={buttonText}
-            onChange={(e) => setButtonText(e.target.value)}
-            onBlur={() => onChange({ buttonText: buttonText || undefined })}
-            hint='Si se deja vacío, se usa "Acceder al contenido"'
-          />
-        )}
-
-        {/* ── Disponibilidad (solo modo unlock) ──────────────────────────── */}
-        {pointMode === 'unlock' && <div className="space-y-2">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Disponibilidad
-          </span>
-
-          {/* Permanencia — always visible; locked when plan excludes the feature */}
-          <div
-            className={`bg-gray-800/50 border rounded-lg p-3 space-y-3 ${
-              canUseDwellTime && (point.requiresDwellTime ?? false) ? 'border-brand-500/30' : 'border-gray-800'
-            } ${!canUseDwellTime ? 'cursor-pointer' : ''}`}
-            onClick={!canUseDwellTime ? () => setUpgradeOpen(true) : undefined}
+          {/* Acción 2: Mensaje de bienvenida */}
+          <ActionCard
+            title="Mensaje de bienvenida"
+            description="Muestra un mensaje personalizado cuando el usuario ingresa al área."
+            enabled={welcomeEnabled}
+            onToggle={() => setWelcomeEnabled((v) => !v)}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className={`text-sm ${canUseDwellTime ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Permanencia
-                </span>
-                <InfoTooltip text="El usuario debe permanecer dentro del área durante un tiempo mínimo para activar la experiencia." />
-              </div>
-              {canUseDwellTime
-                ? (
-                  <Toggle
-                    enabled={point.requiresDwellTime ?? false}
-                    onToggle={() => {
-                      const next = !(point.requiresDwellTime ?? false)
-                      onChange({
-                        requiresDwellTime: next,
-                        dwellTimeSeconds:  next ? (point.dwellTimeSeconds ?? 180) : 0,
-                      })
-                    }}
-                  />
-                )
-                : <span className="text-xs text-gray-600" title="Esta función no está disponible en tu plan actual.">🔒 No disponible</span>
-              }
-            </div>
-            {canUseDwellTime && (point.requiresDwellTime ?? false) && (
-              <>
-                <p className="text-xs text-gray-500">
-                  El usuario deberá permanecer dentro del área para desbloquear el contenido.
+            <div className="space-y-3">
+              <Input
+                label="Título"
+                placeholder="Ej: ¡Bienvenido!"
+                value={welcomeTitle}
+                onChange={(e) => setWelcomeTitle(e.target.value)}
+              />
+              <div className="flex flex-col gap-1">
+                <Textarea
+                  label="Mensaje"
+                  placeholder="Escribe el mensaje de bienvenida..."
+                  value={welcomeMessage}
+                  onChange={(e) => setWelcomeMessage(e.target.value)}
+                  maxLength={300}
+                />
+                <p className={[
+                  'text-xs tabular-nums text-right',
+                  welcomeMessage.length >= 270 ? 'text-yellow-500' : 'text-gray-600',
+                ].join(' ')}>
+                  {welcomeMessage.length} / 300
                 </p>
-                <div className="flex items-center gap-2">
-                  <Input
-                    label="Minutos requeridos"
-                    type="number"
-                    min={1}
-                    max={240}
-                    value={Math.max(1, Math.round((point.dwellTimeSeconds ?? 180) / 60))}
-                    onChange={(e) => {
-                      const mins = Math.min(240, Math.max(1, parseInt(e.target.value, 10) || 1))
-                      onChange({ dwellTimeSeconds: mins * 60 })
-                    }}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* ── Colección ── */}
-          <div className={`bg-gray-800/50 border rounded-lg p-3 space-y-3 ${
-            collectionEnabled ? 'border-brand-500/30' : 'border-gray-800'
-          }`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm text-gray-300">
-                  Colección
-                </span>
-                <InfoTooltip text="Selecciona las ubicaciones que deben visitarse antes de desbloquear este contenido." />
               </div>
-              <Toggle
-                enabled={collectionEnabled}
-                onToggle={() => {
-                  const next = !collectionEnabled
-                  setCollectionEnabled(next)
-                  if (!next) onChange({ requiredPointIds: [] })
-                }}
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                  Imagen (opcional)
+                </span>
+                <p className="text-xs text-gray-600 leading-snug">
+                  Próximamente disponible.
+                </p>
+              </div>
+              <Input
+                label="Texto del botón (opcional)"
+                placeholder="Ej: Ver más"
+                value={welcomeButton}
+                onChange={(e) => setWelcomeButton(e.target.value)}
               />
             </div>
-            {collectionEnabled && (
-              <>
-                <p className="text-xs text-gray-500">
-                  Selecciona las ubicaciones que deben visitarse antes de desbloquear este contenido.
-                </p>
-                {otherPoints.length === 0 ? (
-                  <p className="text-xs text-gray-600 italic">No hay otros puntos en este proyecto.</p>
-                ) : (
-                  <div className="space-y-1.5">
-                    {otherPoints.map((p) => {
-                      const selected = (point.requiredPointIds ?? []).includes(p.id)
-                      return (
-                        <label key={p.id} className="flex items-center gap-2.5 cursor-pointer group">
-                          <input
-                            type="checkbox"
-                            checked={selected}
-                            onChange={() => {
-                              const current = point.requiredPointIds ?? []
-                              const next    = selected
-                                ? current.filter((id) => id !== p.id)
-                                : [...current, p.id]
-                              onChange({ requiredPointIds: next })
-                            }}
-                            className="h-4 w-4 rounded border-gray-600 bg-gray-700
-                                       accent-brand-500 cursor-pointer flex-shrink-0"
-                          />
-                          <span className="text-sm text-gray-400 group-hover:text-gray-200
-                                           transition-colors truncate">
-                            {p.name}
-                          </span>
-                        </label>
-                      )
-                    })}
-                  </div>
-                )}
-              </>
-            )}
+          </ActionCard>
+        </div>
+
+        {/* ════ INFORMACIÓN ADICIONAL ════════════════════════════════════ */}
+        <div className="border-t border-gray-800 pt-5 space-y-4">
+          <div>
+            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
+              Información adicional
+            </p>
           </div>
 
-          <AvailabilityRules
-            showHeader={false}
-            availability={point.availability}
-            onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
-            canUseSchedule={canUseScheduleAvailability}
-            canUseQuota={canUseQuotaAvailability}
-            canUseLiveVisits={canUseLiveVisits}
-            onUpgradeClick={() => setUpgradeOpen(true)}
-          />
-
-        </div>}
-
-
-        {/* ── Logo del punto GPS ────────────────────────────────────────── */}
-        <div className="flex flex-col gap-2">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Logo del punto
-          </span>
-          <LogoField
-            value={point.pointLogoUrl}
-            zoom={point.pointLogoZoom ?? 1}
-            posX={point.pointLogoPositionX ?? 0}
-            posY={point.pointLogoPositionY ?? 0}
-            label="Logo del punto"
-            description="Este logo se mostrará junto al contenido y la información de esta ubicación."
-            onUpload={(url) => onChange({ pointLogoUrl: url })}
-            onRemove={() => onChange({ pointLogoUrl: undefined, pointLogoZoom: undefined, pointLogoPositionX: undefined, pointLogoPositionY: undefined })}
-            onZoomChange={(z) => onChange({ pointLogoZoom: z })}
-            onPositionChange={(x, y) => onChange({ pointLogoPositionX: x, pointLogoPositionY: y })}
-            blocked={editorMode === 'demo'}
-          />
+          {/* ── Logo del punto GPS ──────────────────────────────────────── */}
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              Logo del punto
+            </span>
+            <LogoField
+              value={point.pointLogoUrl}
+              zoom={point.pointLogoZoom ?? 1}
+              posX={point.pointLogoPositionX ?? 0}
+              posY={point.pointLogoPositionY ?? 0}
+              label="Logo del punto"
+              description="Este logo se mostrará junto al contenido y la información de esta ubicación."
+              onUpload={(url) => onChange({ pointLogoUrl: url })}
+              onRemove={() => onChange({ pointLogoUrl: undefined, pointLogoZoom: undefined, pointLogoPositionX: undefined, pointLogoPositionY: undefined })}
+              onZoomChange={(z) => onChange({ pointLogoZoom: z })}
+              onPositionChange={(x, y) => onChange({ pointLogoPositionX: x, pointLogoPositionY: y })}
+              blocked={editorMode === 'demo'}
+            />
         </div>
 
         {/* ── Galería del punto ─────────────────────────────────────────── */}
@@ -1693,48 +1832,28 @@ export default function GeoPointForm({
           })()}
         </div>
 
-        {/* ── HORARIO (solo modo informativo) ──────────────────────────── */}
-        {pointMode === 'informative' && (
-          <div className="space-y-2">
-            <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-              Horario
-            </span>
-            <p className="text-xs text-gray-500 leading-snug">
-              Horario visible públicamente. No restringe el acceso al contenido.
-            </p>
-            <AvailabilityRules
-              scheduleOnly
-              scheduleLabel="Horario de atención"
-              showHeader={false}
-              availability={point.availability}
-              onChange={(updates) => onChange({ availability: { ...point.availability, ...updates } })}
-              canUseSchedule={canUseScheduleAvailability}
-              onUpgradeClick={() => setUpgradeOpen(true)}
-            />
-          </div>
-        )}
-
-        {/* Dirección (auto-geocodificada) */}
-        <Input
-          label="Dirección del punto"
-          placeholder={
-            addressFetching && !addressEditedRef.current
-              ? 'Obteniendo dirección…'
-              : (addressAuto ?? 'Ej: Entrada principal')
-          }
-          value={addressCustom}
-          onChange={(e) => {
-            const val = e.target.value
-            addressEditedRef.current = val.length > 0
-            setAddressCustom(val)
-          }}
-          onBlur={() => onChange({ instructions: addressCustom || undefined })}
-          hint={
-            !addressFetching && addressAuto && addressCustom && addressCustom !== addressAuto
-              ? `Auto: ${addressAuto}`
-              : undefined
-          }
-        />
+          {/* Dirección del punto */}
+          <Input
+            label="Dirección del punto"
+            placeholder={
+              addressFetching && !addressEditedRef.current
+                ? 'Obteniendo dirección…'
+                : (addressAuto ?? 'Ej: Entrada principal')
+            }
+            value={addressCustom}
+            onChange={(e) => {
+              const val = e.target.value
+              addressEditedRef.current = val.length > 0
+              setAddressCustom(val)
+            }}
+            onBlur={() => onChange({ instructions: addressCustom || undefined })}
+            hint={
+              !addressFetching && addressAuto && addressCustom && addressCustom !== addressAuto
+                ? `Auto: ${addressAuto}`
+                : undefined
+            }
+          />
+        </div>
 
       </div>
 

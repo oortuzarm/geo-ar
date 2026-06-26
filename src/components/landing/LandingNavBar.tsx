@@ -71,21 +71,22 @@ const SOLUTIONS = [
 function SolutionsMegaMenu({ onClose }: { onClose: () => void }) {
   return (
     <div
-      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[680px] max-w-[calc(100vw-2rem)]
+      className="absolute top-full left-0 mt-2
+                 w-[480px] lg:w-[600px] xl:w-[680px] max-w-[calc(100vw-2rem)]
                  rounded-2xl border border-white/[0.14]
                  bg-[#0b1020]
                  shadow-[0_4px_8px_rgba(0,0,0,0.5),0_20px_48px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.07),inset_0_1px_0_rgba(255,255,255,0.06)]
                  overflow-hidden z-[60]"
     >
       {/* Header */}
-      <div className="px-5 pt-4 pb-3 border-b border-white/[0.06]">
+      <div className="px-4 lg:px-5 pt-3.5 lg:pt-4 pb-2.5 lg:pb-3 border-b border-white/[0.06]">
         <p className="text-[10px] font-bold tracking-widest uppercase text-slate-500">
           Soluciones por industria
         </p>
       </div>
 
       {/* Grid */}
-      <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-1">
+      <div className="p-2 lg:p-3 grid grid-cols-1 md:grid-cols-2 gap-0.5 lg:gap-1">
         {SOLUTIONS.map(s => (
           <Link
             key={s.slug}
@@ -117,7 +118,7 @@ function SolutionsMegaMenu({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-white/[0.06] flex items-center justify-between">
+      <div className="px-4 lg:px-5 py-2.5 lg:py-3 border-t border-white/[0.06] flex items-center justify-between gap-4">
         <p className="text-[11px] text-slate-500">
           Ubyca funciona en cualquier industria donde la ubicación importe.
         </p>

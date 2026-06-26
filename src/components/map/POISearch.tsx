@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { searchMapQuery, looksLikeAddress } from '../../services/poiSearchService'
+import { lastSearchMeta } from '../../features/geolocation/chileAddressSearch'
 import { haversineDistance } from '../../features/geolocation/haversine'
 import Modal from '../ui/Modal'
 import type { PoiSearchResult, MapBounds, GeoPoint } from '../../types'
@@ -22,6 +23,7 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
   const [creatingIds, setCreatingIds] = useState<Set<string>>(new Set())
   const [confirmBulk, setConfirmBulk] = useState(false)
   const [creatingAll, setCreatingAll] = useState(false)
+  const [hasApproximate, setHasApproximate] = useState(false)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const latestRequestRef = useRef(0)
@@ -50,6 +52,7 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
     }
 
     setSearchState('searching')
+    setHasApproximate(false)
 
     debounceRef.current = setTimeout(async () => {
       const reqId = ++latestRequestRef.current
@@ -58,12 +61,14 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
         if (latestRequestRef.current !== reqId) return
         setResults(found)
         onResultsChangeRef.current(found)
+        setHasApproximate(looksLikeAddress(query) && lastSearchMeta.hasApproximate)
         setSearchState(found.length > 0 ? 'results' : 'no-results')
         setOpen(true)
       } catch {
         if (latestRequestRef.current !== reqId) return
         setResults([])
         onResultsChangeRef.current([])
+        setHasApproximate(false)
         setSearchState('error')
         setOpen(true)
       }
@@ -125,6 +130,7 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
     onResultsChangeRef.current([])
     setOpen(false)
     setSearchState('idle')
+    setHasApproximate(false)
   }
 
   // Prevent map from receiving pointer/keyboard events through the search widget
@@ -232,24 +238,35 @@ export default function POISearch({ mapBounds, existingPoints, onFlyTo, onCreate
                 })}
               </ul>
 
-              {/* Footer: summary + bulk action */}
-              <div className="border-t border-gray-800 px-3 py-2 flex items-center justify-between gap-2">
-                <span className="text-xs text-gray-600">
-                  {results.length} resultado{results.length !== 1 ? 's' : ''}
-                  {results.length - nonDuplicates.length > 0 &&
-                    ` · ${results.length - nonDuplicates.length} ya existente${results.length - nonDuplicates.length !== 1 ? 's' : ''}`}
-                </span>
-                {nonDuplicates.length > 1 && (
-                  <button
-                    onClick={() => setConfirmBulk(true)}
-                    disabled={creatingAll}
-                    className="text-xs font-medium text-brand-400 hover:text-brand-300
-                               disabled:opacity-40 disabled:cursor-wait transition-colors flex-shrink-0"
-                  >
-                    {creatingAll ? 'Creando…' : `Crear todos (${nonDuplicates.length})`}
-                  </button>
-                )}
-              </div>
+              {/* Approximate fallback notice */}
+              {hasApproximate && (
+                <div className="border-t border-gray-800 px-3 py-2">
+                  <p className="text-xs text-amber-400">
+                    No encontramos la numeración exacta. Puedes ajustar la búsqueda o seleccionar el punto manualmente en el mapa.
+                  </p>
+                </div>
+              )}
+
+              {/* Footer: summary + bulk action (hidden for address queries) */}
+              {!looksLikeAddress(query) && (
+                <div className="border-t border-gray-800 px-3 py-2 flex items-center justify-between gap-2">
+                  <span className="text-xs text-gray-600">
+                    {results.length} resultado{results.length !== 1 ? 's' : ''}
+                    {results.length - nonDuplicates.length > 0 &&
+                      ` · ${results.length - nonDuplicates.length} ya existente${results.length - nonDuplicates.length !== 1 ? 's' : ''}`}
+                  </span>
+                  {nonDuplicates.length > 1 && (
+                    <button
+                      onClick={() => setConfirmBulk(true)}
+                      disabled={creatingAll}
+                      className="text-xs font-medium text-brand-400 hover:text-brand-300
+                                 disabled:opacity-40 disabled:cursor-wait transition-colors flex-shrink-0"
+                    >
+                      {creatingAll ? 'Creando…' : `Crear todos (${nonDuplicates.length})`}
+                    </button>
+                  )}
+                </div>
+              )}
             </>
           )}
 

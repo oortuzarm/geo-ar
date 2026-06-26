@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { searchAddressChile } from '../../features/geolocation/chileAddressSearch'
+import { searchAddressChile, lastSearchMeta } from '../../features/geolocation/chileAddressSearch'
 import type { NominatimResult } from '../../types'
 
 type SearchState = 'idle' | 'searching' | 'results' | 'no-results' | 'error'
@@ -13,6 +13,7 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
   const [results, setResults] = useState<NominatimResult[]>([])
   const [searchState, setSearchState] = useState<SearchState>('idle')
   const [open, setOpen] = useState(false)
+  const [hasApproximate, setHasApproximate] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const latestRequestRef = useRef(0)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -28,6 +29,7 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
     }
 
     setSearchState('searching')
+    setHasApproximate(false)
 
     debounceRef.current = setTimeout(async () => {
       const reqId = ++latestRequestRef.current
@@ -35,11 +37,13 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
         const found = await searchAddressChile(query)
         if (latestRequestRef.current !== reqId) return
         setResults(found)
+        setHasApproximate(lastSearchMeta.hasApproximate)
         setSearchState(found.length > 0 ? 'results' : 'no-results')
         setOpen(true)
       } catch {
         if (latestRequestRef.current !== reqId) return
         setResults([])
+        setHasApproximate(false)
         setSearchState('error')
         setOpen(true)
       }
@@ -77,6 +81,7 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
     setResults([])
     setOpen(false)
     setSearchState('idle')
+    setHasApproximate(false)
   }
 
   const isSearching = searchState === 'searching'
@@ -125,26 +130,35 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
         <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-gray-700
                        rounded-lg shadow-2xl z-[1000] overflow-hidden">
           {searchState === 'results' && (
-            <ul className="max-h-60 overflow-y-auto">
-              {results.map((r) => (
-                <li key={r.place_id}>
-                  <button
-                    onClick={() => handleSelect(r)}
-                    className="w-full text-left px-3 py-2.5 text-sm text-gray-300
-                               hover:bg-gray-800 transition-colors flex items-start gap-2.5"
-                  >
-                    <svg className="h-4 w-4 text-gray-500 flex-shrink-0 mt-0.5"
-                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span className="leading-snug">{r.display_name}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="max-h-60 overflow-y-auto">
+                {results.map((r) => (
+                  <li key={r.place_id}>
+                    <button
+                      onClick={() => handleSelect(r)}
+                      className="w-full text-left px-3 py-2.5 text-sm text-gray-300
+                                 hover:bg-gray-800 transition-colors flex items-start gap-2.5"
+                    >
+                      <svg className="h-4 w-4 text-gray-500 flex-shrink-0 mt-0.5"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="leading-snug">{r.display_name}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {hasApproximate && (
+                <div className="border-t border-gray-700 px-3 py-2">
+                  <p className="text-xs text-amber-400">
+                    No encontramos la numeración exacta. Puedes ajustar la búsqueda o seleccionar el punto manualmente en el mapa.
+                  </p>
+                </div>
+              )}
+            </>
           )}
           {searchState === 'no-results' && (
             <div className="px-4 py-3">

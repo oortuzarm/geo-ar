@@ -14,12 +14,13 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
   const [searchState, setSearchState] = useState<SearchState>('idle')
   const [open, setOpen] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const latestRequestRef = useRef(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
 
-    if (query.length < 3) {
+    if (query.trim().length < 4) {
       setResults([])
       setOpen(false)
       setSearchState('idle')
@@ -29,12 +30,15 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
     setSearchState('searching')
 
     debounceRef.current = setTimeout(async () => {
+      const reqId = ++latestRequestRef.current
       try {
         const found = await searchAddressChile(query)
+        if (latestRequestRef.current !== reqId) return
         setResults(found)
         setSearchState(found.length > 0 ? 'results' : 'no-results')
         setOpen(true)
       } catch {
+        if (latestRequestRef.current !== reqId) return
         setResults([])
         setSearchState('error')
         setOpen(true)

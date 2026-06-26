@@ -146,7 +146,7 @@ export default function ManualLocationSheet({ onConfirm, onPickOnMap, onClose }:
             </div>
 
             <p className="text-xs text-gray-600 text-center">
-              Escribe al menos 3 caracteres para buscar
+              Escribe al menos 4 caracteres para buscar
             </p>
           </>
         )}

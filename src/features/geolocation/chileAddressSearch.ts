@@ -2,7 +2,7 @@ import { searchAddress } from './geocoding'
 import type { NominatimResult } from '../../types'
 
 // ── Abbreviation expansion ────────────────────────────────────────────────────
-// Applied in order: dot-versions first (more specific), then plain versions.
+// Dot-versions first (more specific); plain-versions after.
 
 const ABBR_EXPANSIONS: Array<[RegExp, string]> = [
   [/\bPdte\.\s*/gi, 'Presidente '],
@@ -15,7 +15,7 @@ const ABBR_EXPANSIONS: Array<[RegExp, string]> = [
   [/\bGral\b/gi, 'General'],
   [/\bSta\b/gi, 'Santa'],
   [/\bSto\b/gi, 'Santo'],
-  // \bAv\b is safe: \b after "v" fails inside "Avenida" since next char is "e" (word char)
+  // \bAv\b is safe: \b after "v" fails inside "Avenida" (next char "e" is a word char)
   [/\bAv\b/gi, 'Avenida'],
   [/\bR\.M\b\.?/g, 'Región Metropolitana'],
   [/\bRM\b/gi, 'Región Metropolitana'],
@@ -30,7 +30,7 @@ function expandAbbreviations(s: string): string {
   return r.replace(/\s{2,}/g, ' ').trim()
 }
 
-/** Converts Chilean dot-thousands notation: "17.000" → "17000" */
+/** Converts Chilean dot-thousands notation in street numbers: "17.000" → "17000" */
 function normalizeNumbers(s: string): string {
   return s.replace(/\b(\d{1,2})\.(\d{3})\b/g, '$1$2')
 }
@@ -40,7 +40,7 @@ function normalizeNumbers(s: string): string {
 interface RoadAliasGroup {
   /** All known name variants (used for matching and as query alternatives) */
   variants: string[]
-  /** Appended to alias queries when the user's query has no commune */
+  /** Added to alias queries when the user's query contains no commune */
   suggestedCommunes?: string[]
 }
 
@@ -72,8 +72,8 @@ function parseQuery(raw: string): ParsedQuery {
   const extras = parts.slice(1)
 
   // Street numbers in Chile: 3–6 digits.
-  // Non-greedy match ensures the LAST number in the main part is captured,
-  // avoiding route numbers like "5" in "Ruta 5 Norte 17000".
+  // Non-greedy (.+?) combined with $ anchor ensures the LAST number in main is captured,
+  // so "Ruta 5 Norte 17000" correctly yields roadName="Ruta 5 Norte", number="17000".
   const m = main.match(/^(.+?)\s+(\d{3,6})\s*$/)
   if (m) {
     return { roadName: m[1].trim(), number: m[2], extras }
@@ -94,7 +94,7 @@ function stripRegion(extras: string[]): string[] {
   return extras.filter(e => !/regi[oó]n|metropolitana|de santiago/i.test(e))
 }
 
-/** Returns an ordered list of query strings to try against Nominatim. */
+/** Returns an ordered list of query strings to try against the geocoder. */
 export function generateSearchVariants(rawQuery: string): string[] {
   const normalized = normalizeNumbers(rawQuery.trim())
   const expanded = expandAbbreviations(normalized)
@@ -116,7 +116,7 @@ export function generateSearchVariants(rawQuery: string): string[] {
     return false
   }
 
-  // Core variants: original, fully expanded, without region, without "Avenida" prefix
+  // Core variants: original → expanded → without region → without "Avenida" prefix
   add(buildVariant(parsed.roadName, parsed.number, parsed.extras))
   add(buildVariant(parsedExp.roadName, parsedExp.number, parsedExp.extras))
   if (coreExtras.length < parsedExp.extras.length) {
@@ -127,7 +127,7 @@ export function generateSearchVariants(rawQuery: string): string[] {
     add(buildVariant(roadNoAv, parsedExp.number, coreExtras))
   }
 
-  // Alias variants: triggered when any known alias name appears in the query
+  // Alias variants: triggered when any known road name appears in the query
   const lowerNorm = normalized.toLowerCase()
   const lowerExp = expanded.toLowerCase()
 
@@ -136,9 +136,7 @@ export function generateSearchVariants(rawQuery: string): string[] {
     const anyMatches = lowerVariants.some(v => lowerNorm.includes(v) || lowerExp.includes(v))
     if (!anyMatches) continue
 
-    // When no commune in query, use suggested ones so aliases target the right area
     const locationExtras = coreExtras.length > 0 ? coreExtras : (group.suggestedCommunes ?? [])
-
     let added = 0
     for (const alias of group.variants) {
       if (added >= 5) break
@@ -183,30 +181,118 @@ function scoreResult(r: NominatimResult, originalQuery: string): number {
   const numMatch = q.match(/\b(\d{3,6})\b/)
   if (numMatch && dn.includes(numMatch[1])) score += 3
 
-  // First part after the main address is usually the commune
   const commune = q.split(',')[1]?.trim()
   if (commune && commune.length > 2 && dn.includes(commune)) score += 2
 
   return score
 }
 
+// ── Early-stop criterion ──────────────────────────────────────────────────────
+
+/**
+ * Returns true when the accumulated results are good enough to stop querying
+ * further variants. Requires at least one Chilean result; softly requires
+ * number/commune match (but doesn't block if we already have 2+ Chilean results).
+ */
+function isSufficientBatch(
+  results: NominatimResult[],
+  number: string | null,
+  commune: string | null
+): boolean {
+  if (results.length === 0) return false
+
+  const inChile = results.filter(r => r.display_name.toLowerCase().includes('chile'))
+  if (inChile.length === 0) return false
+
+  if (number) {
+    const hasNumber = inChile.some(r => r.display_name.includes(number))
+    if (!hasNumber && inChile.length < 2) return false
+  }
+
+  if (commune && commune.length > 2) {
+    const lc = commune.toLowerCase()
+    const hasCommune = inChile.some(r => r.display_name.toLowerCase().includes(lc))
+    if (!hasCommune && inChile.length < 2) return false
+  }
+
+  return true
+}
+
+// ── In-memory session cache ───────────────────────────────────────────────────
+
+const MAX_CACHE_SIZE = 50
+const queryCache = new Map<string, NominatimResult[]>()
+
+function cacheKey(rawQuery: string): string {
+  // Two queries that expand to the same canonical form share a cache entry
+  return expandAbbreviations(normalizeNumbers(rawQuery.trim())).toLowerCase()
+}
+
+function setCache(key: string, results: NominatimResult[]): void {
+  if (queryCache.size >= MAX_CACHE_SIZE) {
+    // Evict oldest entry (FIFO)
+    const firstKey = queryCache.keys().next().value
+    if (firstKey !== undefined) queryCache.delete(firstKey)
+  }
+  queryCache.set(key, results)
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
+/** Maximum geocoder requests per search action (sequential, stops earlier on good results). */
+const MAX_VARIANTS_PER_SEARCH = 5
+
 export async function searchAddressChile(rawQuery: string): Promise<NominatimResult[]> {
+  const key = cacheKey(rawQuery)
+  const cached = queryCache.get(key)
+  if (cached) {
+    if (import.meta.env.DEV) console.log('[AddressSearch] cache hit:', key)
+    return cached
+  }
+
   const variants = generateSearchVariants(rawQuery)
+  const limit = Math.min(variants.length, MAX_VARIANTS_PER_SEARCH)
+  const parsed = parseQuery(normalizeNumbers(rawQuery.trim()))
+  const commune = parsed.extras[0] ?? null
 
   if (import.meta.env.DEV) {
-    console.log('[AddressSearch] variants:', variants)
+    console.log(
+      `[AddressSearch] trying ${limit}/${variants.length} variants:`,
+      variants.slice(0, limit)
+    )
   }
 
-  const settled = await Promise.allSettled(variants.map(v => searchAddress(v)))
+  const accumulated: NominatimResult[] = []
 
-  const allResults: NominatimResult[] = []
-  for (const r of settled) {
-    if (r.status === 'fulfilled') allResults.push(...r.value)
+  for (let i = 0; i < limit; i++) {
+    const variant = variants[i]
+    try {
+      const results = await searchAddress(variant)
+      accumulated.push(...results)
+
+      const deduped = deduplicateResults(accumulated)
+      if (isSufficientBatch(deduped, parsed.number, commune)) {
+        if (import.meta.env.DEV) {
+          console.log(`[AddressSearch] early stop at variant ${i + 1}/${limit}:`, variant, `→ ${deduped.length} results`)
+        }
+        deduped.sort((a, b) => scoreResult(b, rawQuery) - scoreResult(a, rawQuery))
+        const final = deduped.slice(0, 7)
+        setCache(key, final)
+        return final
+      }
+    } catch {
+      if (import.meta.env.DEV) console.warn('[AddressSearch] variant failed:', variant)
+    }
   }
 
-  const deduped = deduplicateResults(allResults)
+  if (import.meta.env.DEV) {
+    console.log(`[AddressSearch] exhausted ${limit} variants → ${accumulated.length} raw results`)
+  }
+
+  const deduped = deduplicateResults(accumulated)
   deduped.sort((a, b) => scoreResult(b, rawQuery) - scoreResult(a, rawQuery))
-  return deduped.slice(0, 7)
+  const final = deduped.slice(0, 7)
+
+  if (final.length > 0) setCache(key, final)
+  return final
 }

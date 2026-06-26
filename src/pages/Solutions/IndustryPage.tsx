@@ -4,113 +4,14 @@ import { motion } from 'framer-motion'
 import { Reveal, SectionLabel } from '../../components/landing/LandingPrimitives'
 import LandingNavBar from '../../components/landing/LandingNavBar'
 import SiteFooter from '../../components/landing/SiteFooter'
-import WhyUbycaSection from './WhyUbycaSection'
 import FinalCTASection from './FinalCTASection'
 import { getIndustry, type IndustryData, type FAQItem } from './solutionsData'
-
-// ─── Hero ─────────────────────────────────────────────────────────────────────
-
-function HeroSection({ data }: { data: IndustryData }) {
-  return (
-    <section className="relative bg-[#050810] overflow-hidden pt-24 pb-16 sm:pb-20 px-5">
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: `radial-gradient(ellipse 65% 70% at 70% 50%, ${data.accentColor}09 0%, transparent 65%)`,
-      }} />
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 40% 50% at 15% 85%, rgba(139,92,246,0.04) 0%, transparent 60%)',
-      }} />
-
-      <div className="max-w-6xl mx-auto">
-        <div className="max-w-3xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.05 }}
-          >
-            <div className="inline-flex items-center gap-2 mb-6">
-              <div
-                className="w-1.5 h-1.5 rounded-full"
-                style={{ backgroundColor: data.accentColor }}
-              />
-              <p className="text-[11px] font-bold tracking-widest uppercase"
-                 style={{ color: data.accentColor }}>
-                Soluciones — {data.hero.label}
-              </p>
-            </div>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-            className="font-black text-white tracking-tight leading-[1.05]
-                       text-[2.1rem] sm:text-[2.8rem] lg:text-[3.2rem] mb-6"
-          >
-            {data.hero.title}
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
-            className="text-lg text-slate-400 leading-relaxed mb-8 max-w-2xl"
-          >
-            {data.hero.subtitle}
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="flex items-center gap-3 flex-wrap"
-          >
-            <a
-              href="https://studio.ubyca.com/register"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
-                         text-white font-semibold text-sm transition-all duration-150
-                         active:scale-[0.98]"
-              style={{
-                backgroundColor: data.accentColor,
-                boxShadow: `0 4px 24px ${data.accentColor}40`,
-              }}
-              onMouseEnter={e => {
-                ;(e.currentTarget as HTMLElement).style.filter = 'brightness(1.1)'
-              }}
-              onMouseLeave={e => {
-                ;(e.currentTarget as HTMLElement).style.filter = ''
-              }}
-            >
-              Comenzar gratis
-              <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" clipRule="evenodd"
-                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
-              </svg>
-            </a>
-            <a
-              href="/contact"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl
-                         bg-white/[0.06] hover:bg-white/[0.10] active:scale-[0.98]
-                         border border-white/10 text-white font-semibold text-sm
-                         backdrop-blur-sm transition-all duration-150"
-            >
-              Hablar con el equipo
-            </a>
-          </motion.div>
-        </div>
-      </div>
-
-      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/[0.05] to-transparent" />
-    </section>
-  )
-}
 
 // ─── Intro ────────────────────────────────────────────────────────────────────
 
 function IntroSection({ data }: { data: IndustryData }) {
   return (
-    <section className="py-14 sm:py-20 px-5 bg-[#050810]">
+    <section className="pt-24 pb-14 sm:pb-20 px-5 bg-[#050810]">
       <div className="max-w-3xl mx-auto text-center">
         <Reveal>
           <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight mb-5">
@@ -329,11 +230,9 @@ export default function IndustryPage() {
   return (
     <div className="min-h-screen bg-[#050810] text-white">
       <LandingNavBar />
-      <HeroSection data={data} />
       <IntroSection data={data} />
       <UseCasesSection data={data} />
       <BenefitsSection data={data} />
-      <WhyUbycaSection />
       <FAQSection data={data} />
       <FinalCTASection />
       <SiteFooter />

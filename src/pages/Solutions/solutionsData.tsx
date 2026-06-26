@@ -278,7 +278,7 @@ const retail: IndustryData = {
   hero: {
     label: 'RETAIL',
     title: 'El cliente ya tomó la decisión de venir. ¿Estás aprovechando ese momento?',
-    subtitle: 'Ubyca detecta la presencia de cada cliente en tus puntos de venta y activa mensajes, beneficios o experiencias exactamente cuando están dentro del local y listos para comprar.',
+    subtitle: 'Ubyca detecta la presencia de cada cliente en tus puntos de venta y activa mensajes, beneficios o experiencias exactamente cuando están dentro de la tienda y listos para comprar.',
   },
   intro: {
     headline: 'El canal más efectivo para el retail no es digital. Es físico.',
@@ -288,7 +288,7 @@ const retail: IndustryData = {
     {
       category: 'MOMENTO DE ENTRADA',
       title: 'Reconoce a cada cliente cuando cruza la puerta',
-      description: 'En el momento en que un cliente entra al radio de tu tienda, Ubyca activa la experiencia que definiste: un saludo personalizado, una oferta activa solo en ese local, o el acceso a un beneficio exclusivo. El cliente siente que la tienda lo esperaba. Sin escanear nada. Sin abrir una app.',
+      description: 'En el momento en que un cliente entra al radio de tu tienda, Ubyca activa la experiencia que definiste: un saludo personalizado, una oferta activa solo en esa tienda, o el acceso a un beneficio exclusivo. El cliente siente que la tienda lo esperaba. Sin escanear nada. Sin abrir una app.',
       visual: <RetailEntryVisual />,
     },
     {
@@ -305,8 +305,8 @@ const retail: IndustryData = {
     },
     {
       category: 'INTELIGENCIA DE OPERACIONES',
-      title: 'Por fin, datos reales de lo que pasa en el local',
-      description: 'Cuánto tiempo permanece un cliente en cada zona, qué horarios concentran mayor afluencia, qué locales funcionan mejor y por qué. Ubyca transforma la presencia física en datos que informan desde la disposición del espacio hasta la planificación de personal y la inversión en campañas.',
+      title: 'Por fin, datos reales de lo que pasa en la tienda',
+      description: 'Cuánto tiempo permanece un cliente en cada zona, qué horarios concentran mayor afluencia, qué tiendas funcionan mejor y por qué. Ubyca transforma la presencia física en datos que informan desde la disposición del espacio hasta la planificación de personal y la inversión en campañas.',
       visual: <RetailAnalyticsVisual />,
     },
   ],
@@ -314,7 +314,7 @@ const retail: IndustryData = {
     {
       icon: <BenefitIcon.Chart />,
       title: 'Más conversión en el momento que más importa',
-      description: 'Un mensaje relevante en el instante de mayor intención. Ningún canal digital puede competir con el timing de la presencia física.',
+      description: 'Un mensaje relevante en el instante de mayor intención. Ningún canal digital puede competir con la precisión del momento físico.',
     },
     {
       icon: <BenefitIcon.Star />,
@@ -329,13 +329,13 @@ const retail: IndustryData = {
     {
       icon: <BenefitIcon.Clock />,
       title: 'Decisiones operacionales con datos reales',
-      description: 'Flujos de visita por local, zonas de mayor permanencia, comportamiento por horario. Información que hoy no tienes y que cambia cómo planificás el espacio y el equipo.',
+      description: 'Flujos de visita por tienda, zonas de mayor permanencia, comportamiento por horario. Información que hoy no tienes y que cambia cómo planificas el espacio y el equipo.',
     },
   ],
   faq: [
     {
       question: '¿Necesito instalar algo en la tienda?',
-      answer: 'No. No hay hardware, balizas ni dispositivos que instalar. Ubyca trabaja con el GPS del smartphone del cliente. Solo necesitás crear las zonas en Studio, lo cual toma minutos.',
+      answer: 'No. No hay hardware, balizas ni dispositivos que instalar. Ubyca trabaja con el GPS del smartphone del cliente. Solo necesitas crear las zonas en Studio, lo cual toma minutos.',
     },
     {
       question: '¿Tengo que cambiar mi app actual?',
@@ -343,19 +343,19 @@ const retail: IndustryData = {
     },
     {
       question: '¿El cliente necesita hacer algo para recibir la experiencia?',
-      answer: 'Solo necesita haber autorizado el acceso a su ubicación una vez. A partir de ahí, la experiencia se activa automáticamente cada vez que entra al local. Sin fricciones, sin escaneos.',
+      answer: 'Solo necesita haber autorizado el acceso a su ubicación una vez. A partir de ahí, la experiencia se activa automáticamente cada vez que entra a la tienda. Sin fricciones, sin escaneos.',
     },
     {
       question: '¿Cómo mido si las activaciones están funcionando?',
-      answer: 'Studio entrega métricas por activación y por local: clientes alcanzados, tiempo de permanencia en tienda y frecuencia de visita. Si integrás tu sistema de ventas vía API, también podés medir la conversión directa de cada campaña.',
+      answer: 'Studio entrega métricas por activación y por tienda: clientes alcanzados, tiempo de permanencia en tienda y frecuencia de visita. Si integras tu sistema de ventas vía API, también puedes medir la conversión directa de cada campaña.',
     },
     {
       question: '¿Funciona con múltiples sucursales?',
-      answer: 'Sí. Cada tienda tiene su propia configuración —radio, horario, reglas de activación— pero todas se gestionan desde un único proyecto en Studio. Podés ver el desempeño global o desglosado por local.',
+      answer: 'Sí. Cada tienda tiene su propia configuración —radio, horario, reglas de activación— pero todas se gestionan desde un único proyecto en Studio. Puedes ver el desempeño global o desglosado por tienda.',
     },
     {
       question: '¿Cuánto tarda en estar operativo?',
-      answer: 'El primer GeoPoint puede estar activo en menos de 10 minutos. Definís la zona, configurás la experiencia y comenzás a medir desde el mismo día. Sin semanas de integración ni equipos técnicos dedicados.',
+      answer: 'El primer GeoPoint puede estar activo en menos de 10 minutos. Defines la zona, configuras la experiencia y comienzas a medir desde el mismo día. Sin semanas de integración ni equipos técnicos dedicados.',
     },
   ],
 }

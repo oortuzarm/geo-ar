@@ -143,7 +143,7 @@ function LoyaltyAppScreen() {
       <div style={{ padding: '10px 12px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80' }} />
         <span style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.30)', fontFamily: 'system-ui' }}>
-          Presentá esta pantalla en caja · Válido hoy
+          Presenta esta pantalla en caja · Válido hoy
         </span>
       </div>
     </div>
@@ -216,7 +216,7 @@ export function RetailEntryVisual() {
           accentColor={ACCENT}
           brand="Nova Moda"
           title="Beneficio disponible en esta sucursal"
-          message="20% de descuento en nueva temporada. Mostrá esta pantalla en caja."
+          message="20% de descuento en nueva temporada. Muestra esta pantalla en caja."
           time="ahora"
         />
       </div>
@@ -299,7 +299,7 @@ export function RetailCompetitorVisual() {
           accentColor={ACCENT}
           brand="Nova Moda"
           title="Oferta disponible cerca de vos"
-          message="15% de descuento en sucursal hoy. Presentá esta pantalla para activarlo."
+          message="15% de descuento en sucursal hoy. Presenta esta pantalla para activarlo."
           time="ahora"
         />
       </div>

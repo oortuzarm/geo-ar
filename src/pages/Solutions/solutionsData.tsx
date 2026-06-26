@@ -286,27 +286,27 @@ const retail: IndustryData = {
   },
   useCases: [
     {
-      category: 'MOMENTO DE ENTRADA',
-      title: 'Reconoce a cada cliente cuando cruza la puerta',
-      description: 'En el momento en que un cliente entra al radio de tu tienda, Ubyca activa la experiencia que definiste: un saludo personalizado, una oferta activa solo en esa tienda, o el acceso a un beneficio exclusivo. El cliente siente que la tienda lo esperaba. Sin escanear nada. Sin abrir una app.',
+      category: 'ACTIVACIÓN DE ENTRADA',
+      title: 'Activa una experiencia en el momento exacto de la visita',
+      description: 'Define el radio de cobertura de tu tienda en Studio. Cada vez que un dispositivo entra en esa área, Ubyca activa automáticamente la experiencia que configuraste: un mensaje de bienvenida, un botón para ver la promoción del día, un acceso directo al menú o un enlace a WhatsApp. Sin hardware. Sin apps. Sin fricciones.',
       visual: <RetailEntryVisual />,
     },
     {
-      category: 'LEALTAD QUE SE CONSTRUYE EN TIENDA',
-      title: 'Suma puntos por venir, no solo por comprar',
-      description: 'La mayoría de los programas de fidelización premian la transacción. Ubyca te permite premiar la visita. Cada entrada física validada puede traducirse en puntos, un beneficio o un mensaje de reconocimiento. Los clientes que visitan más, reciben más. Y vuelven.',
+      category: 'PERMANENCIA MÍNIMA',
+      title: 'Activa la experiencia solo cuando el cliente realmente está en tienda',
+      description: 'Agrega una condición de permanencia mínima —por ejemplo, 5 minutos— y Ubyca solo dispara la experiencia si el cliente se queda el tiempo suficiente. Ideal para activar un beneficio cuando alguien está explorando, no al pasar de largo. Configura el botón de acción para abrir WhatsApp, un formulario o cualquier URL que elijas.',
       visual: <RetailLoyaltyVisual />,
     },
     {
-      category: 'CONQUISTA EN CAMPO',
-      title: 'Llega a tu cliente antes de que le compre a otro',
-      description: 'Define las zonas de tus principales competidores. Cuando un cliente tuyo ingresa en esa área, activa automáticamente una oferta comparativa o un beneficio diferencial. El mensaje llega en el único momento en que todavía puede cambiar de destino.',
+      category: 'ZONAS DE CONQUISTA',
+      title: 'Activa tu oferta cuando alguien está cerca de la competencia',
+      description: 'Define las áreas de tus principales competidores directamente en Studio. Cuando un dispositivo entra en esa zona, Ubyca dispara tu experiencia de forma automática: un mensaje con tu propuesta y un botón directo a tu tienda, tu oferta o tu WhatsApp. El momento de influir es antes de que decidan.',
       visual: <RetailCompetitorVisual />,
     },
     {
-      category: 'INTELIGENCIA DE OPERACIONES',
-      title: 'Por fin, datos reales de lo que pasa en la tienda',
-      description: 'Cuánto tiempo permanece un cliente en cada zona, qué horarios concentran mayor afluencia, qué tiendas funcionan mejor y por qué. Ubyca transforma la presencia física en datos que informan desde la disposición del espacio hasta la planificación de personal y la inversión en campañas.',
+      category: 'INTELIGENCIA DE VISITANTES',
+      title: 'Visualiza en tiempo real quién está en cada zona de tu tienda',
+      description: 'Studio muestra cuántos dispositivos están activos en cada zona, el tiempo de permanencia promedio y los horarios de mayor afluencia. Datos reales, actualizados en vivo, sin encuestas ni estimaciones. Información que hoy no tienes y que cambia cómo planificas el espacio, el equipo y las campañas.',
       visual: <RetailAnalyticsVisual />,
     },
   ],
@@ -319,7 +319,7 @@ const retail: IndustryData = {
     {
       icon: <BenefitIcon.Star />,
       title: 'Mayor frecuencia de visitas',
-      description: 'Los clientes que reciben reconocimiento al visitar una tienda vuelven más seguido. La visita pasa a ser parte del programa de fidelización, no solo la compra.',
+      description: 'Cuando una visita activa una experiencia, la tienda se vuelve memorable. El cliente vuelve porque sabe que hay algo esperándolo. Sin necesidad de apps ni tarjetas de fidelización.',
     },
     {
       icon: <BenefitIcon.Link />,

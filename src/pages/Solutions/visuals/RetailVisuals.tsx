@@ -1,150 +1,172 @@
-// ─── Retail use-case visual panels — v3 ──────────────────────────────────────
-// Four distinct visual identities. No chips, badges, or technical labels.
-// Case 1: map + geofence + phone  (entry trigger)
-// Case 2: phone dominant + map faint  (loyalty reward, in-app)
-// Case 3: two territories + phone  (competitor conquesting)
-// Case 4: analytics dashboard, no phone  (operational intelligence)
+// ─── Retail use-case visual panels — v4 ──────────────────────────────────────
+// All mockups represent real Ubyca capabilities.
+// Availability: GPS radius geofence. Actions: message + CTA button (URL / WhatsApp).
+// Case 1: map + geofence + phone  (entry trigger → open URL)
+// Case 2: phone dominant + map faint  (entry trigger → open WhatsApp)
+// Case 3: two territories + phone  (competitor zone trigger → open URL)
+// Case 4: analytics dashboard, no phone  (Studio operational view)
+
+import React from 'react'
 
 const ACCENT = '#0ea5e9'
 
-// ─── Shared: Lock-screen phone (Cases 1 & 3) ─────────────────────────────────
+// ─── Phone chrome ─────────────────────────────────────────────────────────────
 
-function PhoneMockup({
-  brand, title, message, time = 'ahora', accentColor,
-}: {
-  brand: string; title: string; message: string; time?: string; accentColor: string
+function StatusBar() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px 5px', background: '#07090f' }}>
+      <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.72)', fontFamily: 'system-ui' }}>9:41</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 1.5, height: 10 }}>
+          {[4, 6, 8, 10].map((h, i) => (
+            <div key={i} style={{ width: 2.5, height: h, borderRadius: 1, background: `rgba(255,255,255,${0.35 + i * 0.15})` }} />
+          ))}
+        </div>
+        <div style={{ width: 20, height: 10, border: '1px solid rgba(255,255,255,0.32)', borderRadius: 2.5, position: 'relative', marginLeft: 2 }}>
+          <div style={{ position: 'absolute', left: 1.5, top: 1.5, width: '65%', height: 'calc(100% - 3px)', background: 'rgba(255,255,255,0.65)', borderRadius: 1 }} />
+          <div style={{ position: 'absolute', right: -3.5, top: '50%', transform: 'translateY(-50%)', width: 2.5, height: 5, background: 'rgba(255,255,255,0.25)', borderRadius: 1 }} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BrowserBar({ url }: { url: string }) {
+  return (
+    <div style={{ background: '#0b0d1c', padding: '3px 10px 6px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <div style={{ background: 'rgba(255,255,255,0.055)', borderRadius: 7, padding: '4px 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
+        <svg width="7" height="8" viewBox="0 0 7 8" fill="none">
+          <rect x="0.8" y="3.8" width="5.4" height="3.8" rx="0.8" fill="rgba(255,255,255,0.30)" />
+          <path d="M1.8 3.8V2.8a1.7 1.7 0 013.4 0V3.8" stroke="rgba(255,255,255,0.28)" strokeWidth="0.9" strokeLinecap="round" fill="none" />
+        </svg>
+        <span style={{ fontSize: 6.5, color: 'rgba(255,255,255,0.25)', fontFamily: 'monospace', flex: 1, textAlign: 'center' }}>{url}</span>
+      </div>
+    </div>
+  )
+}
+
+function HomeIndicator() {
+  return (
+    <div style={{ height: 18, background: '#07090f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 38, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.18)' }} />
+    </div>
+  )
+}
+
+// ─── Phone shell: mobile browser ─────────────────────────────────────────────
+
+function PhoneWebShell({ children, url = 'exp.ubyca.com/nova-moda', width = 164 }: {
+  children: React.ReactNode
+  url?: string
+  width?: number
 }) {
   return (
     <div style={{
-      width: 152, borderRadius: 26,
-      border: '2px solid rgba(255,255,255,0.13)', background: '#07090f',
+      width,
+      borderRadius: 28,
+      border: '2px solid rgba(255,255,255,0.14)',
+      background: '#07090f',
       overflow: 'hidden',
       boxShadow: '0 24px 56px rgba(0,0,0,0.80), 0 2px 8px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)',
       flexShrink: 0,
     }}>
-      {/* Status bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px 5px', background: '#07090f' }}>
-        <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.72)', fontFamily: 'system-ui' }}>9:41</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 1.5, height: 10 }}>
-            {[4, 6, 8, 10].map((h, i) => (
-              <div key={i} style={{ width: 2.5, height: h, borderRadius: 1, background: `rgba(255,255,255,${0.35 + i * 0.15})` }} />
-            ))}
-          </div>
-          <div style={{ width: 20, height: 10, border: '1px solid rgba(255,255,255,0.32)', borderRadius: 2.5, position: 'relative', marginLeft: 2 }}>
-            <div style={{ position: 'absolute', left: 1.5, top: 1.5, width: '65%', height: 'calc(100% - 3px)', background: 'rgba(255,255,255,0.65)', borderRadius: 1 }} />
-            <div style={{ position: 'absolute', right: -3.5, top: '50%', transform: 'translateY(-50%)', width: 2.5, height: 5, background: 'rgba(255,255,255,0.25)', borderRadius: 1 }} />
-          </div>
-        </div>
-      </div>
-      {/* Lock screen */}
-      <div style={{ background: '#0a0c1a', padding: '5px 8px 10px' }}>
-        <div style={{ background: 'rgba(255,255,255,0.065)', borderRadius: 13, padding: '8px 10px', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4 }}>
-            <div style={{ width: 16, height: 16, borderRadius: 4, flexShrink: 0, background: `${accentColor}20`, border: `1px solid ${accentColor}45`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ width: 7, height: 7, borderRadius: '50%', background: accentColor }} />
-            </div>
-            <span style={{ fontSize: 8.5, fontWeight: 700, color: 'rgba(255,255,255,0.82)', flex: 1, fontFamily: 'system-ui' }}>{brand}</span>
-            <span style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.28)', fontFamily: 'system-ui' }}>{time}</span>
-          </div>
-          <p style={{ fontSize: 8.5, fontWeight: 600, color: 'rgba(255,255,255,0.82)', lineHeight: 1.3, marginBottom: 3, fontFamily: 'system-ui' }}>{title}</p>
-          <p style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.38)', lineHeight: 1.4, fontFamily: 'system-ui' }}>{message}</p>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 6, paddingLeft: 2, paddingRight: 2 }}>
-          {[0.75, 0.5].map((w, i) => (
-            <div key={i} style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.022)', width: `${w * 100}%` }} />
-          ))}
-        </div>
-      </div>
-      <div style={{ height: 18, background: '#07090f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 34, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.18)' }} />
-      </div>
+      <StatusBar />
+      <BrowserBar url={url} />
+      {children}
+      <HomeIndicator />
     </div>
   )
 }
 
-// ─── Shared: App-screen phone shell (Case 2) ──────────────────────────────────
+// ─── Ubyca experience card ────────────────────────────────────────────────────
+// Represents the actual product output: welcome message + action buttons.
 
-function PhoneAppShell({ children, width = 164 }: { children: React.ReactNode; width?: number }) {
+type BtnIcon = 'link' | 'whatsapp' | 'video' | 'audio'
+
+function ActionButton({ label, icon, accent, primary }: {
+  label: string; icon: BtnIcon; accent: string; primary: boolean
+}) {
+  const iconEls: Record<BtnIcon, React.ReactNode> = {
+    link: (
+      <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M1 7L7 1M7 1H4.5M7 1V3.5" />
+      </svg>
+    ),
+    whatsapp: (
+      <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4.5 1C2.6 1 1 2.6 1 4.5c0 .6.2 1.2.5 1.7L1 8l1.8-.5c.5.3 1.1.5 1.7.5C6.4 8 8 6.4 8 4.5S6.4 1 4.5 1z" />
+        <path d="M3.3 3.8c.1.2.3.6.5.8.2.2.5.5.8.6" />
+      </svg>
+    ),
+    video: (
+      <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="4.5" cy="4.5" r="3.5" />
+        <path d="M3.5 3L6.5 4.5L3.5 6V3Z" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+    audio: (
+      <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
+        <rect x="3.3" y="0.8" width="2.4" height="4.4" rx="1.2" />
+        <path d="M1.8 5c0 1.5 1.2 2.7 2.7 2.7S7.2 6.5 7.2 5M4.5 7.7V9" />
+      </svg>
+    ),
+  }
+
   return (
     <div style={{
-      width, borderRadius: 28,
-      border: '2px solid rgba(255,255,255,0.14)', background: '#07090f',
-      overflow: 'hidden',
-      boxShadow: '0 28px 64px rgba(0,0,0,0.85), 0 4px 16px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04)',
+      borderRadius: 9, padding: '7px 10px',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      background: primary ? accent : `${accent}12`,
+      border: primary ? 'none' : `1px solid ${accent}28`,
+      color: primary ? 'white' : accent,
     }}>
-      {/* Status bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px 6px', background: '#07090f' }}>
-        <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.72)', fontFamily: 'system-ui' }}>9:41</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 1.5, height: 10 }}>
-            {[4, 6, 8, 10].map((h, i) => (
-              <div key={i} style={{ width: 2.5, height: h, borderRadius: 1, background: `rgba(255,255,255,${0.35 + i * 0.15})` }} />
-            ))}
-          </div>
-          <div style={{ width: 20, height: 10, border: '1px solid rgba(255,255,255,0.32)', borderRadius: 2.5, position: 'relative', marginLeft: 2 }}>
-            <div style={{ position: 'absolute', left: 1.5, top: 1.5, width: '65%', height: 'calc(100% - 3px)', background: 'rgba(255,255,255,0.65)', borderRadius: 1 }} />
-            <div style={{ position: 'absolute', right: -3.5, top: '50%', transform: 'translateY(-50%)', width: 2.5, height: 5, background: 'rgba(255,255,255,0.25)', borderRadius: 1 }} />
-          </div>
-        </div>
-      </div>
-      {children}
-      <div style={{ height: 18, background: '#07090f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 38, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.18)' }} />
-      </div>
+      <span style={{ fontSize: 8.5, fontWeight: 700, fontFamily: 'system-ui' }}>{label}</span>
+      {iconEls[icon]}
     </div>
   )
 }
 
-// ─── App screen: Loyalty rewards (Case 2) ────────────────────────────────────
-
-function LoyaltyAppScreen() {
+function UbycaExperienceCard({ brand, message, accent, buttons }: {
+  brand: string
+  message: string
+  accent: string
+  buttons: Array<{ label: string; icon: BtnIcon; primary?: boolean }>
+}) {
   return (
-    <div style={{ background: '#07090f' }}>
-      {/* Brand header */}
+    <div style={{ background: '#08091a' }}>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 6,
-        padding: '8px 12px',
-        background: `${ACCENT}09`, borderBottom: `1px solid ${ACCENT}16`,
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '10px 12px',
+        background: `${accent}09`,
+        borderBottom: `1px solid ${accent}18`,
       }}>
-        <div style={{ width: 16, height: 16, borderRadius: 4.5, background: `${ACCENT}1a`, border: `1px solid ${ACCENT}38`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: ACCENT }} />
-        </div>
-        <span style={{ fontSize: 8.5, fontWeight: 700, color: 'rgba(255,255,255,0.85)', fontFamily: 'system-ui' }}>Nova Moda · Beneficios</span>
-      </div>
-
-      {/* Hero: points earned */}
-      <div style={{ padding: '22px 12px 18px', textAlign: 'center' }}>
         <div style={{
-          width: 48, height: 48, borderRadius: '50%',
-          background: `${ACCENT}0f`, border: `1.5px solid ${ACCENT}30`,
-          margin: '0 auto 12px',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 22, height: 22, borderRadius: 5.5,
+          background: `${accent}18`, border: `1px solid ${accent}38`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
         }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: accent }} />
         </div>
-        <div style={{ fontSize: 38, fontWeight: 900, color: ACCENT, lineHeight: 1, fontFamily: 'system-ui', letterSpacing: '-0.02em' }}>
-          +350
-        </div>
-        <div style={{ fontSize: 8, fontWeight: 700, color: `${ACCENT}70`, marginTop: 4, fontFamily: 'system-ui', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
-          puntos acreditados
-        </div>
-        <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', marginTop: 8, fontFamily: 'system-ui', lineHeight: 1.5 }}>
-          Beneficio disponible por visitar<br />esta sucursal.
+        <div>
+          <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.85)', fontFamily: 'system-ui', display: 'block', lineHeight: 1.2 }}>{brand}</span>
+          <span style={{ fontSize: 6.5, color: 'rgba(255,255,255,0.28)', fontFamily: 'system-ui' }}>Experiencia activada · ahora</span>
         </div>
       </div>
 
-      {/* Divider */}
-      <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '0 12px' }} />
+      <div style={{ padding: '12px 12px 10px' }}>
+        <p style={{ fontSize: 8.5, color: 'rgba(255,255,255,0.60)', lineHeight: 1.55, fontFamily: 'system-ui', margin: 0 }}>{message}</p>
+      </div>
 
-      {/* Validity */}
-      <div style={{ padding: '10px 12px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80' }} />
-        <span style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.30)', fontFamily: 'system-ui' }}>
-          Presenta esta pantalla en caja · Válido hoy
-        </span>
+      <div style={{ padding: '2px 10px 14px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {buttons.map((btn, i) => (
+          <ActionButton
+            key={i}
+            label={btn.label}
+            icon={btn.icon}
+            accent={accent}
+            primary={btn.primary ?? i === 0}
+          />
+        ))}
       </div>
     </div>
   )
@@ -192,7 +214,6 @@ function PersonDotSVG({ cx, cy, color }: { cx: number; cy: number; color: string
 }
 
 // ─── Visual 1: Entry ──────────────────────────────────────────────────────────
-// Story: person crosses the boundary → notification fires
 
 export function RetailEntryVisual() {
   return (
@@ -200,7 +221,6 @@ export function RetailEntryVisual() {
       <div className="absolute inset-0 pointer-events-none" style={{
         background: `radial-gradient(ellipse 55% 50% at 38% 52%, ${ACCENT}0d 0%, transparent 65%)`,
       }} />
-
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 480 340" preserveAspectRatio="xMidYMid slice">
         <StreetGrid />
         <circle cx={178} cy={175} r={88} fill={`${ACCENT}07`} />
@@ -210,51 +230,52 @@ export function RetailEntryVisual() {
         <line x1={292} y1={175} x2={260} y2={175} stroke={`${ACCENT}45`} strokeWidth={1.5} strokeDasharray="4 2.5" />
         <path d="M260,171 L252,175 L260,179" fill="none" stroke={`${ACCENT}55`} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
       </svg>
-
       <div className="absolute" style={{ bottom: 14, right: 14 }}>
-        <PhoneMockup
-          accentColor={ACCENT}
-          brand="Nova Moda"
-          title="Beneficio disponible en esta sucursal"
-          message="20% de descuento en nueva temporada. Muestra esta pantalla en caja."
-          time="ahora"
-        />
+        <PhoneWebShell url="exp.ubyca.com/nova-moda" width={152}>
+          <UbycaExperienceCard
+            brand="Nova Moda"
+            accent={ACCENT}
+            message="Esta sucursal tiene una promoción activa. Válida hoy hasta las 20:00."
+            buttons={[{ label: 'Ver promoción', icon: 'link' }]}
+          />
+        </PhoneWebShell>
       </div>
     </div>
   )
 }
 
-// ─── Visual 2: Loyalty — Phone dominant ──────────────────────────────────────
-// Story: detected presence in store → in-app reward credited instantly
+// ─── Visual 2: Visit benefit ──────────────────────────────────────────────────
 
 export function RetailLoyaltyVisual() {
   return (
     <div className="relative rounded-2xl overflow-hidden border border-white/[0.08]" style={{ height: 340, background: '#060910' }}>
-      {/* Glow centered on the phone */}
       <div className="absolute inset-0 pointer-events-none" style={{
         background: `radial-gradient(ellipse 80% 80% at 50% 48%, ${ACCENT}0a 0%, transparent 65%)`,
       }} />
-
-      {/* Map — ultra-faint, provides spatial context only */}
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 480 340" preserveAspectRatio="xMidYMid slice" style={{ opacity: 0.28 }}>
         <StreetGrid />
         <circle cx={240} cy={175} r={105} fill="none" stroke={ACCENT} strokeWidth={1} strokeDasharray="5 3" opacity={0.18} />
         <circle cx={240} cy={175} r={5} fill={`${ACCENT}20`} />
         <circle cx={240} cy={175} r={2.5} fill={`${ACCENT}40`} />
       </svg>
-
-      {/* Phone — protagonist, centered */}
-      <div className="absolute" style={{ top: 8, left: '50%', transform: 'translateX(-50%)' }}>
-        <PhoneAppShell width={164}>
-          <LoyaltyAppScreen />
-        </PhoneAppShell>
+      <div className="absolute" style={{ top: 10, left: '50%', transform: 'translateX(-50%)' }}>
+        <PhoneWebShell url="exp.ubyca.com/nova-moda" width={164}>
+          <UbycaExperienceCard
+            brand="Nova Moda"
+            accent={ACCENT}
+            message="Hay un beneficio disponible en esta tienda. Actívalo antes de salir."
+            buttons={[
+              { label: 'Reclamar en WhatsApp', icon: 'whatsapp', primary: true },
+              { label: 'Ver menú', icon: 'link', primary: false },
+            ]}
+          />
+        </PhoneWebShell>
       </div>
     </div>
   )
 }
 
 // ─── Visual 3: Competitor conquesting ─────────────────────────────────────────
-// Story: customer inside rival zone → your brand fires before they decide
 
 export function RetailCompetitorVisual() {
   return (
@@ -265,11 +286,8 @@ export function RetailCompetitorVisual() {
       <div className="absolute inset-0 pointer-events-none" style={{
         background: `radial-gradient(ellipse 30% 40% at 68% 52%, ${ACCENT}0a 0%, transparent 60%)`,
       }} />
-
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 480 340" preserveAspectRatio="xMidYMid slice">
         <StreetGrid />
-
-        {/* Competitor zone (left) */}
         <circle cx={142} cy={175} r={74} fill="rgba(148,163,184,0.055)" />
         <circle cx={142} cy={175} r={74} fill="none" stroke="rgba(148,163,184,0.45)" strokeWidth={1.5} strokeDasharray="5 2.5" />
         <rect x={133} y={165} width={18} height={16} rx={2.5} fill="rgba(148,163,184,0.12)" stroke="rgba(148,163,184,0.35)" strokeWidth={1} />
@@ -279,8 +297,6 @@ export function RetailCompetitorVisual() {
         <text x={142} y={117} textAnchor="middle" fill="rgba(148,163,184,0.45)" fontSize={7} fontWeight={700} letterSpacing={1} fontFamily="monospace">
           COMPETENCIA
         </text>
-
-        {/* Your store zone (right) */}
         <circle cx={336} cy={175} r={68} fill={`${ACCENT}07`} />
         <circle cx={336} cy={175} r={68} fill="none" stroke={ACCENT} strokeWidth={1.5} strokeDasharray="6 3" opacity={0.65} />
         <StorePinSVG cx={336} cy={175} color={ACCENT} />
@@ -288,27 +304,24 @@ export function RetailCompetitorVisual() {
         <text x={336} y={115} textAnchor="middle" fill={`${ACCENT}99`} fontSize={7} fontWeight={700} letterSpacing={1} fontFamily="monospace">
           TU TIENDA
         </text>
-
-        {/* Person inside competitor zone */}
         <PersonDotSVG cx={162} cy={175} color="rgba(148,163,184,0.9)" />
         <line x1={172} y1={175} x2={220} y2={175} stroke={`${ACCENT}35`} strokeWidth={1} strokeDasharray="3 2" />
       </svg>
-
       <div className="absolute" style={{ bottom: 14, right: 14 }}>
-        <PhoneMockup
-          accentColor={ACCENT}
-          brand="Nova Moda"
-          title="Oferta disponible cerca de vos"
-          message="15% de descuento en sucursal hoy. Presenta esta pantalla para activarlo."
-          time="ahora"
-        />
+        <PhoneWebShell url="exp.ubyca.com/nova-moda" width={152}>
+          <UbycaExperienceCard
+            brand="Nova Moda"
+            accent={ACCENT}
+            message="Hay una tienda Nova Moda a metros de aquí con una oferta activa hoy."
+            buttons={[{ label: 'Ver oferta', icon: 'link' }]}
+          />
+        </PhoneWebShell>
       </div>
     </div>
   )
 }
 
 // ─── Visual 4: Analytics dashboard ───────────────────────────────────────────
-// Story: what's happening inside the store right now — for the manager, not the customer
 
 export function RetailAnalyticsVisual() {
   const hotDots  = [{ cx: 278, cy: 126 }, { cx: 295, cy: 138 }, { cx: 308, cy: 128 }, { cx: 284, cy: 150 }, { cx: 318, cy: 142 }, { cx: 298, cy: 155 }, { cx: 274, cy: 144 }]
@@ -317,33 +330,19 @@ export function RetailAnalyticsVisual() {
 
   return (
     <div className="relative rounded-2xl overflow-hidden border border-white/[0.08]" style={{ height: 340, background: '#060910' }}>
-
-      {/* Map — the primary canvas */}
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 480 340" preserveAspectRatio="xMidYMid slice">
         <StreetGrid />
-
-        {/* Store perimeter */}
         <circle cx={215} cy={178} r={135} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={1} strokeDasharray="4 4" />
-
-        {/* Heat zone 1 — Entrance (orange / hot) */}
         <ellipse cx={292} cy={138} rx={88} ry={66} fill="rgba(251,146,60,0.05)" />
         <ellipse cx={292} cy={138} rx={62} ry={46} fill="rgba(251,146,60,0.09)" />
         <ellipse cx={292} cy={138} rx={38} ry={28} fill="rgba(251,146,60,0.15)" />
         <ellipse cx={292} cy={138} rx={18} ry={13} fill="rgba(251,146,60,0.25)" />
-
-        {/* Heat zone 2 — Seasonal section (blue / medium) */}
         <ellipse cx={185} cy={208} rx={72} ry={52} fill={`${ACCENT}06`} transform="rotate(-10 185 208)" />
         <ellipse cx={185} cy={208} rx={48} ry={34} fill={`${ACCENT}10`} transform="rotate(-10 185 208)" />
         <ellipse cx={185} cy={208} rx={26} ry={18} fill={`${ACCENT}17`} transform="rotate(-10 185 208)" />
-
-        {/* Heat zone 3 — Back area (purple / cool) */}
         <ellipse cx={124} cy={145} rx={50} ry={38} fill="rgba(139,92,246,0.06)" />
         <ellipse cx={124} cy={145} rx={30} ry={22} fill="rgba(139,92,246,0.11)" />
-
-        {/* Store pin */}
         <StorePinSVG cx={215} cy={178} color={ACCENT} />
-
-        {/* Person clusters — color-coded per zone */}
         {hotDots.map((d, i) => (
           <g key={`h${i}`}>
             <circle cx={d.cx} cy={d.cy} r={5.5} fill="rgba(251,146,60,0.16)" />
@@ -367,24 +366,20 @@ export function RetailAnalyticsVisual() {
         ))}
       </svg>
 
-      {/* Live indicator */}
       <div className="absolute top-0 left-0 right-0 flex items-center justify-between"
         style={{ padding: '11px 14px', background: 'linear-gradient(to bottom, #060910e8 55%, transparent)' }}>
         <div className="flex items-center gap-2">
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80' }} />
-          <span style={{ fontSize: 9, fontFamily: 'monospace', fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.06em' }}>
-            EN VIVO
-          </span>
+          <span style={{ fontSize: 9, fontFamily: 'monospace', fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.06em' }}>EN VIVO</span>
           <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.18)', fontFamily: 'monospace' }}>· 14:32</span>
         </div>
         <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.18)', fontFamily: 'system-ui' }}>Nova Moda · Av. Corrientes</span>
       </div>
 
-      {/* Metric cards — the data story */}
       {[
-        { label: 'Visitantes hoy',   value: '1.248', delta: '+18% vs ayer', valueColor: 'rgba(251,146,60,0.95)', deltaColor: 'rgba(251,146,60,0.55)' },
-        { label: 'Tiempo promedio',  value: '24 min', delta: '+6% vs ayer',  valueColor: ACCENT,                 deltaColor: `${ACCENT}55` },
-        { label: 'Zonas calientes',  value: '3',      delta: '+1 vs ayer',   valueColor: 'rgba(139,92,246,0.90)', deltaColor: 'rgba(139,92,246,0.48)' },
+        { label: 'Visitantes hoy',  value: '1.248', delta: '+18% vs ayer', valueColor: 'rgba(251,146,60,0.95)', deltaColor: 'rgba(251,146,60,0.55)' },
+        { label: 'Tiempo promedio', value: '24 min', delta: '+6% vs ayer',  valueColor: ACCENT,                 deltaColor: `${ACCENT}55` },
+        { label: 'Zonas calientes', value: '3',      delta: '+1 vs ayer',   valueColor: 'rgba(139,92,246,0.90)', deltaColor: 'rgba(139,92,246,0.48)' },
       ].map((card, i) => (
         <div key={i} className="absolute rounded-xl border" style={{
           top: 38 + i * 82, right: 14,

@@ -103,70 +103,48 @@ function LoyaltyAppScreen() {
     <div style={{ background: '#07090f' }}>
       {/* Brand header */}
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        display: 'flex', alignItems: 'center', gap: 6,
         padding: '8px 12px',
         background: `${ACCENT}09`, borderBottom: `1px solid ${ACCENT}16`,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <div style={{ width: 16, height: 16, borderRadius: 4.5, background: `${ACCENT}1a`, border: `1px solid ${ACCENT}38`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: ACCENT }} />
-          </div>
-          <span style={{ fontSize: 8.5, fontWeight: 700, color: 'rgba(255,255,255,0.85)', fontFamily: 'system-ui' }}>Nova Moda</span>
+        <div style={{ width: 16, height: 16, borderRadius: 4.5, background: `${ACCENT}1a`, border: `1px solid ${ACCENT}38`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: ACCENT }} />
         </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
-          <span style={{ fontSize: 9.5, fontWeight: 800, color: ACCENT, fontFamily: 'monospace' }}>1.850</span>
-          <span style={{ fontSize: 7, color: `${ACCENT}70`, fontFamily: 'system-ui' }}>pts</span>
-        </div>
+        <span style={{ fontSize: 8.5, fontWeight: 700, color: 'rgba(255,255,255,0.85)', fontFamily: 'system-ui' }}>Nova Moda · Beneficios</span>
       </div>
 
       {/* Hero: points earned */}
-      <div style={{ padding: '16px 12px 10px', textAlign: 'center' }}>
+      <div style={{ padding: '22px 12px 18px', textAlign: 'center' }}>
         <div style={{
-          width: 42, height: 42, borderRadius: '50%',
+          width: 48, height: 48, borderRadius: '50%',
           background: `${ACCENT}0f`, border: `1.5px solid ${ACCENT}30`,
-          margin: '0 auto 10px',
+          margin: '0 auto 12px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
-        <div style={{ fontSize: 34, fontWeight: 900, color: ACCENT, lineHeight: 1, fontFamily: 'system-ui', letterSpacing: '-0.02em' }}>
+        <div style={{ fontSize: 38, fontWeight: 900, color: ACCENT, lineHeight: 1, fontFamily: 'system-ui', letterSpacing: '-0.02em' }}>
           +350
         </div>
-        <div style={{ fontSize: 7.5, fontWeight: 700, color: `${ACCENT}70`, marginTop: 3, fontFamily: 'system-ui', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: 8, fontWeight: 700, color: `${ACCENT}70`, marginTop: 4, fontFamily: 'system-ui', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
           puntos acreditados
         </div>
-        <div style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.28)', marginTop: 6, fontFamily: 'system-ui', lineHeight: 1.4 }}>
-          Por tu visita de hoy · 12 min en tienda
+        <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', marginTop: 8, fontFamily: 'system-ui', lineHeight: 1.5 }}>
+          Beneficio disponible por visitar<br />esta sucursal.
         </div>
       </div>
 
       {/* Divider */}
       <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '0 12px' }} />
 
-      {/* Visit streak */}
-      <div style={{ padding: '10px 12px 8px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-          <span style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.28)', fontFamily: 'system-ui' }}>Racha de visitas</span>
-          <span style={{ fontSize: 7.5, fontWeight: 700, color: 'rgba(255,255,255,0.45)', fontFamily: 'system-ui' }}>7 / 8</span>
-        </div>
-        <div style={{ display: 'flex', gap: 2.5 }}>
-          {[...Array(8)].map((_, i) => (
-            <div key={i} style={{ flex: 1, height: 5.5, borderRadius: 2.5, background: i < 7 ? ACCENT : `${ACCENT}18`, opacity: i < 7 ? 0.55 + i * 0.07 : 1 }} />
-          ))}
-        </div>
-      </div>
-
-      {/* Progress to next benefit */}
-      <div style={{ margin: '0 12px 12px', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.055)', borderRadius: 8, padding: '6px 8px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-          <span style={{ fontSize: 7, color: 'rgba(255,255,255,0.22)', fontFamily: 'system-ui' }}>Próximo beneficio</span>
-          <span style={{ fontSize: 7, fontWeight: 700, color: `${ACCENT}65`, fontFamily: 'system-ui' }}>1 visita más</span>
-        </div>
-        <div style={{ height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
-          <div style={{ height: '100%', width: '87.5%', background: `linear-gradient(90deg, ${ACCENT}60, ${ACCENT})`, borderRadius: 2 }} />
-        </div>
+      {/* Validity */}
+      <div style={{ padding: '10px 12px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80' }} />
+        <span style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.30)', fontFamily: 'system-ui' }}>
+          Presentá esta pantalla en caja · Válido hoy
+        </span>
       </div>
     </div>
   )
@@ -237,8 +215,8 @@ export function RetailEntryVisual() {
         <PhoneMockup
           accentColor={ACCENT}
           brand="Nova Moda"
-          title="Hola, qué bueno que volviste"
-          message="Tu descuento de cliente frecuente está activo: 20% en la nueva temporada."
+          title="Beneficio disponible en esta sucursal"
+          message="20% de descuento en nueva temporada. Mostrá esta pantalla en caja."
           time="ahora"
         />
       </div>
@@ -320,8 +298,8 @@ export function RetailCompetitorVisual() {
         <PhoneMockup
           accentColor={ACCENT}
           brand="Nova Moda"
-          title="Estás cerca. Te esperamos hoy."
-          message="Envío gratis y 15% OFF en tu próxima compra si venís hoy al local."
+          title="Oferta disponible cerca de vos"
+          message="15% de descuento en sucursal hoy. Presentá esta pantalla para activarlo."
           time="ahora"
         />
       </div>

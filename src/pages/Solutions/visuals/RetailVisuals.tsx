@@ -244,27 +244,63 @@ export function RetailEntryVisual() {
   )
 }
 
-// ─── Visual 2: Visit benefit ──────────────────────────────────────────────────
+// ─── Visual 2: Dwell time trigger ────────────────────────────────────────────
+// Story: person is inside the zone → time passes (progress ring) → experience unlocks.
+// Contrast with Case 1: person was outside approaching; here they are already inside, dwelling.
 
 export function RetailLoyaltyVisual() {
+  const pX = 210
+  const pY = 160
+  const ringR = 24
+  const circ = 2 * Math.PI * ringR          // ≈ 150.8
+  const filled = 0.80 * circ                // ≈ 120.6  (80% dwell progress)
+
   return (
     <div className="relative rounded-2xl overflow-hidden border border-white/[0.08]" style={{ height: 340, background: '#060910' }}>
+      {/* Identical glow to Case 1 */}
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: `radial-gradient(ellipse 80% 80% at 50% 48%, ${ACCENT}0a 0%, transparent 65%)`,
+        background: `radial-gradient(ellipse 55% 50% at 38% 52%, ${ACCENT}0d 0%, transparent 65%)`,
       }} />
-      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 480 340" preserveAspectRatio="xMidYMid slice" style={{ opacity: 0.28 }}>
+
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 480 340" preserveAspectRatio="xMidYMid slice">
         <StreetGrid />
-        <circle cx={240} cy={175} r={105} fill="none" stroke={ACCENT} strokeWidth={1} strokeDasharray="5 3" opacity={0.18} />
-        <circle cx={240} cy={175} r={5} fill={`${ACCENT}20`} />
-        <circle cx={240} cy={175} r={2.5} fill={`${ACCENT}40`} />
+
+        {/* Store geofence — identical to Case 1 */}
+        <circle cx={178} cy={175} r={88} fill={`${ACCENT}07`} />
+        <circle cx={178} cy={175} r={88} fill="none" stroke={ACCENT} strokeWidth={1.5} strokeDasharray="6 3" opacity={0.65} />
+        <StorePinSVG cx={178} cy={175} color={ACCENT} />
+
+        {/* Dwell trail — person has been moving inside the zone for a while */}
+        <circle cx={188} cy={190} r={2.5} fill={`${ACCENT}22`} />
+        <circle cx={198} cy={177} r={3}   fill={`${ACCENT}38`} />
+        <circle cx={205} cy={167} r={3}   fill={`${ACCENT}52`} />
+
+        {/* Current position — inside the zone */}
+        <PersonDotSVG cx={pX} cy={pY} color={ACCENT} />
+
+        {/* Dwell timer: background track */}
+        <circle cx={pX} cy={pY} r={ringR} fill="none" stroke={`${ACCENT}18`} strokeWidth={2.5} />
+        {/* Dwell timer: progress arc (80% complete, starts at 12 o'clock) */}
+        <circle
+          cx={pX} cy={pY} r={ringR}
+          fill="none"
+          stroke={ACCENT}
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          strokeDasharray={`${filled.toFixed(1)} ${circ.toFixed(1)}`}
+          transform={`rotate(-90 ${pX} ${pY})`}
+          opacity={0.72}
+        />
       </svg>
-      <div className="absolute inset-x-0 flex justify-center" style={{ top: 18 }}>
-        <PhoneWebShell url="exp.ubyca.com/nova-moda" width={164}>
+
+      {/* Phone — identical position and size to Case 1 */}
+      <div className="absolute" style={{ bottom: 14, right: 14 }}>
+        <PhoneWebShell url="exp.ubyca.com/nova-moda" width={152}>
           <UbycaExperienceCard
             brand="Nova Moda"
             accent={ACCENT}
-            message="Hay un beneficio disponible en esta tienda. Actívalo antes de salir."
-            buttons={[{ label: 'Reclamar en WhatsApp', icon: 'whatsapp' }]}
+            message="Esta sucursal tiene una experiencia activa. Disponible en tienda ahora."
+            buttons={[{ label: 'Ver promoción', icon: 'link' }]}
           />
         </PhoneWebShell>
       </div>

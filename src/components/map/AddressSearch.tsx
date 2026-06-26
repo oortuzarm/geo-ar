@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { searchAddress } from '../../features/geolocation/geocoding'
+import { searchAddressChile } from '../../features/geolocation/chileAddressSearch'
 import type { NominatimResult } from '../../types'
 
 type SearchState = 'idle' | 'searching' | 'results' | 'no-results' | 'error'
@@ -30,7 +30,7 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
 
     debounceRef.current = setTimeout(async () => {
       try {
-        const found = await searchAddress(query)
+        const found = await searchAddressChile(query)
         setResults(found)
         setSearchState(found.length > 0 ? 'results' : 'no-results')
         setOpen(true)
@@ -143,9 +143,12 @@ export default function AddressSearch({ onSelect }: AddressSearchProps) {
             </ul>
           )}
           {searchState === 'no-results' && (
-            <p className="px-4 py-3 text-sm text-gray-500">
-              No encontramos esa dirección.
-            </p>
+            <div className="px-4 py-3">
+              <p className="text-sm text-gray-400">No encontramos una coincidencia exacta.</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Ajusta la búsqueda o selecciona el punto manualmente en el mapa.
+              </p>
+            </div>
           )}
           {searchState === 'error' && (
             <p className="px-4 py-3 text-sm text-red-400">

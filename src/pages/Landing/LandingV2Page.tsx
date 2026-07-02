@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Reveal, SectionLabel, BrowserChrome } from '../../components/landing/LandingPrimitives'
 import LandingNavBar from '../../components/landing/LandingNavBar'
@@ -1269,6 +1270,7 @@ const USE_CASES = [
   {
     icon: '🏪',
     accent: '#0ea5e9',
+    slug: 'retail',
     title: 'Retail',
     short: 'Activa promociones dinámicas en tiendas físicas.',
     detail: 'Descuentos, beneficios y contenido exclusivo para clientes que llegan a tus puntos de venta.',
@@ -1276,6 +1278,7 @@ const USE_CASES = [
   {
     icon: '🗺️',
     accent: '#8b5cf6',
+    slug: 'tourism',
     title: 'Turismo',
     short: 'Crea rutas interactivas y experiencias geolocalizadas.',
     detail: 'Guías de ciudad, rutas culturales o patrimoniales con contenido que se activa en cada parada.',
@@ -1283,6 +1286,7 @@ const USE_CASES = [
   {
     icon: '🎭',
     accent: '#10b981',
+    slug: 'events',
     title: 'Eventos',
     short: 'Desbloquea contenido, beneficios o dinámicas según la ubicación del asistente.',
     detail: 'Acceso a programas, gymkhanas, juegos urbanos o activaciones exclusivas en zonas delimitadas.',
@@ -1290,6 +1294,7 @@ const USE_CASES = [
   {
     icon: '🏛️',
     accent: '#06b6d4',
+    slug: 'sector-publico',
     title: 'Sector Público',
     short: 'Digitaliza espacios públicos y mejora la experiencia de ciudadanos y visitantes.',
     detail: 'Municipalidades, parques, playas y centros históricos con información contextual que se activa en cada ubicación.',
@@ -1297,6 +1302,7 @@ const USE_CASES = [
   {
     icon: '🏙️',
     accent: '#ef4444',
+    slug: 'real-estate',
     title: 'Real Estate',
     short: 'Entrega información interactiva sobre proyectos, salas de venta o ubicaciones.',
     detail: 'Fichas técnicas, renders o formularios que se activan al llegar al proyecto.',
@@ -1304,6 +1310,7 @@ const USE_CASES = [
   {
     icon: '📣',
     accent: '#f97316',
+    slug: 'brand-activations',
     title: 'Activaciones de Marca',
     short: 'Crea campañas físico-digitales conectadas a lugares reales.',
     detail: 'Experiencias interactivas, lanzamientos y dinámicas geolocalizadas para marcas y audiencias.',
@@ -1326,9 +1333,12 @@ function UseCasesSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {USE_CASES.map((uc, i) => (
             <Reveal key={uc.title} delay={i * 0.06}>
-              <div className="group relative rounded-2xl bg-gray-900/40 border border-white/[0.06]
-                              p-6 hover:border-white/[0.11] hover:bg-gray-900/60
-                              transition-all duration-200 overflow-hidden h-full">
+              <Link
+                to={`/solutions/${uc.slug}`}
+                className="group relative rounded-2xl bg-gray-900/40 border border-white/[0.06]
+                           p-6 hover:border-white/[0.11] hover:bg-gray-900/60
+                           transition-all duration-200 overflow-hidden h-full block"
+              >
                 {/* Hover accent glow */}
                 <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full
                                 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
@@ -1337,7 +1347,7 @@ function UseCasesSection() {
                 <h3 className="font-bold text-white text-base mb-2">{uc.title}</h3>
                 <p className="text-sm text-slate-400 leading-relaxed mb-3">{uc.short}</p>
                 <p className="text-xs text-slate-600 leading-relaxed">{uc.detail}</p>
-              </div>
+              </Link>
             </Reveal>
           ))}
         </div>

@@ -173,9 +173,8 @@ function AvailabilityRules({
   /** Override the label on the schedule toggle row. Default: 'Disponible por horario'. */
   scheduleLabel?:    string
 }) {
-  const scheduleEnabled = availability?.scheduleEnabled ?? false
-  // Use persisted scheduleRules when available; otherwise display the migrated legacy format.
-  const scheduleRules   = availability?.scheduleRules ?? migrateLegacySchedule(availability)
+  const scheduleEnabled    = availability?.scheduleEnabled ?? false
+  const scheduleRules      = availability?.scheduleRules ?? migrateLegacySchedule(availability)
   const quotaEnabled       = availability?.quotaEnabled ?? false
   const quotaLimit         = availability?.quotaLimit ?? 1
   const liveVisitsEnabled  = availability?.liveVisitsEnabled ?? false
@@ -183,6 +182,12 @@ function AvailabilityRules({
 
   // Remembers times of toggled-off days within this editing session (not persisted).
   const [inactiveTimes, setInactiveTimes] = useState<Record<string, { start: string; end: string }>>({})
+
+  // Copy-schedule panel state
+  const [copyOpen,  setCopyOpen]  = useState(false)
+  const [copyStart, setCopyStart] = useState('09:00')
+  const [copyEnd,   setCopyEnd]   = useState('18:00')
+  const [copyDays,  setCopyDays]  = useState<string[]>(['Lun', 'Mar', 'Mié', 'Jue', 'Vie'])
 
   function getRuleForDay(day: string) {
     return scheduleRules.find((r) => r.day === day)
@@ -204,6 +209,22 @@ function AvailabilityRules({
   function updateDayTime(day: string, field: 'start' | 'end', value: string) {
     onChange({ scheduleRules: scheduleRules.map((r) => r.day === day ? { ...r, [field]: value } : r) })
   }
+
+  function clearSchedule() {
+    setInactiveTimes({})
+    onChange({ scheduleRules: [] })
+  }
+
+  function applyCopy() {
+    const kept  = scheduleRules.filter((r) => !copyDays.includes(r.day))
+    const added = copyDays.map((day) => ({ day, start: copyStart, end: copyEnd }))
+    onChange({ scheduleRules: [...kept, ...added] })
+    setCopyOpen(false)
+  }
+
+  const timeInputCls =
+    'w-[82px] flex-shrink-0 bg-gray-800 border border-gray-700 rounded px-1.5 py-1 text-sm ' +
+    'text-gray-100 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors'
 
   return (
     <div className="space-y-2">
@@ -227,42 +248,115 @@ function AvailabilityRules({
         </div>
 
         {canUseSchedule && scheduleEnabled && (
-          <>
-            {/* Per-day rows: toggle + from/to time inputs */}
-            <div className="space-y-1.5">
+          <div className="space-y-2">
+            {/* ── Toolbar ── */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCopyOpen((v) => !v)}
+                className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+              >
+                Copiar horario
+              </button>
+              <span className="text-gray-700 select-none">·</span>
+              <button
+                type="button"
+                onClick={clearSchedule}
+                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                Limpiar
+              </button>
+            </div>
+
+            {/* ── Copy panel (inline, no floating popover to clip) ── */}
+            {copyOpen && (
+              <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 space-y-3">
+                <p className="text-xs font-medium text-gray-300">Horario</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400 w-10 flex-shrink-0">Desde</span>
+                  <input
+                    type="time"
+                    value={copyStart}
+                    onChange={(e) => setCopyStart(e.target.value)}
+                    className={timeInputCls}
+                  />
+                  <span className="text-gray-500 text-xs">—</span>
+                  <span className="text-xs text-gray-400 w-10 flex-shrink-0">Hasta</span>
+                  <input
+                    type="time"
+                    value={copyEnd}
+                    onChange={(e) => setCopyEnd(e.target.value)}
+                    className={timeInputCls}
+                  />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1.5">Aplicar a:</p>
+                  <div className="grid grid-cols-4 gap-y-1.5 gap-x-2">
+                    {WEEK_DAYS.map((day) => (
+                      <label key={day} className="flex items-center gap-1.5 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={copyDays.includes(day)}
+                          onChange={() =>
+                            setCopyDays((prev) =>
+                              prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+                            )
+                          }
+                          className="h-3.5 w-3.5 rounded border-gray-600 bg-gray-800 text-brand-600 focus:ring-brand-500 focus:ring-offset-0 cursor-pointer"
+                        />
+                        <span className="text-xs text-gray-300">{day}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={applyCopy}
+                  className="w-full py-1.5 text-xs font-medium bg-brand-600 hover:bg-brand-700 text-white rounded transition-colors"
+                >
+                  Aplicar
+                </button>
+              </div>
+            )}
+
+            {/* ── Per-day rows ── */}
+            <div className="space-y-0.5">
               {WEEK_DAYS.map((day) => {
-                const rule       = getRuleForDay(day)
-                const isActive   = !!rule
-                const remembered = inactiveTimes[day]
-                const isInvalid  = isActive && rule.start >= rule.end
-                const timeInputCls = [
-                  'flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs',
-                  'text-gray-100 focus:outline-none focus:ring-1 focus:ring-brand-500',
-                  'disabled:cursor-not-allowed transition-colors',
-                ].join(' ')
+                const rule      = getRuleForDay(day)
+                const isActive  = !!rule
+                const isInvalid = isActive && rule.start >= rule.end
                 return (
                   <div key={day}>
-                    <div className={`flex items-center gap-2 transition-opacity ${isActive ? '' : 'opacity-40'}`}>
-                      <span className="w-7 flex-shrink-0 text-xs font-medium text-gray-400 select-none">{day}</span>
-                      <Toggle enabled={isActive} onToggle={() => toggleDay(day)} />
+                    <div className="flex items-center gap-2 h-8">
                       <input
-                        type="time"
-                        disabled={!isActive}
-                        value={isActive ? rule.start : (remembered?.start ?? '')}
-                        onChange={(e) => updateDayTime(day, 'start', e.target.value)}
-                        className={timeInputCls}
+                        type="checkbox"
+                        checked={isActive}
+                        onChange={() => toggleDay(day)}
+                        className="h-4 w-4 flex-shrink-0 rounded border-gray-600 bg-gray-800 text-brand-600 focus:ring-brand-500 focus:ring-offset-0 cursor-pointer"
                       />
-                      <span className="text-gray-600 text-xs flex-shrink-0">—</span>
-                      <input
-                        type="time"
-                        disabled={!isActive}
-                        value={isActive ? rule.end : (remembered?.end ?? '')}
-                        onChange={(e) => updateDayTime(day, 'end', e.target.value)}
-                        className={timeInputCls}
-                      />
+                      <span className={`w-7 flex-shrink-0 text-sm ${isActive ? 'text-gray-200' : 'text-gray-500'}`}>
+                        {day}
+                      </span>
+                      {isActive && (
+                        <>
+                          <input
+                            type="time"
+                            value={rule.start}
+                            onChange={(e) => updateDayTime(day, 'start', e.target.value)}
+                            className={timeInputCls}
+                          />
+                          <span className="text-gray-500 text-xs flex-shrink-0">—</span>
+                          <input
+                            type="time"
+                            value={rule.end}
+                            onChange={(e) => updateDayTime(day, 'end', e.target.value)}
+                            className={timeInputCls}
+                          />
+                        </>
+                      )}
                     </div>
                     {isInvalid && (
-                      <p className="mt-0.5 ml-[60px] text-[10px] text-red-400">
+                      <p className="text-[10px] text-red-400 ml-[52px]">
                         La hora de cierre debe ser mayor a la de apertura.
                       </p>
                     )}
@@ -270,10 +364,7 @@ function AvailabilityRules({
                 )
               })}
             </div>
-            <p className="text-xs text-gray-500">
-              La experiencia solo estará disponible durante los días y horarios seleccionados.
-            </p>
-          </>
+          </div>
         )}
       </div>
 

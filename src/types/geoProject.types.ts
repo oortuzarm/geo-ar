@@ -35,16 +35,24 @@ export interface GeoProject {
   communityStatus?: 'pending' | 'approved' | 'rejected' | 'hidden'
 }
 
+export interface ScheduleRule {
+  day:   string  // 'Lun' | 'Mar' | 'Mié' | 'Jue' | 'Vie' | 'Sáb' | 'Dom'
+  start: string  // 'HH:MM'
+  end:   string  // 'HH:MM'
+}
+
 export interface GeoPointAvailability {
   scheduleEnabled?: boolean
-  scheduleDays?: string[]     // ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
-  scheduleStartTime?: string  // 'HH:MM'
-  scheduleEndTime?: string    // 'HH:MM'
+  /** Per-day rules (new format). Takes precedence over legacy flat fields when present. */
+  scheduleRules?: ScheduleRule[]
+  scheduleDays?: string[]      // legacy — kept for backward compat with existing points
+  scheduleStartTime?: string   // legacy — 'HH:MM'
+  scheduleEndTime?: string     // legacy — 'HH:MM'
   quotaEnabled?: boolean
   quotaLimit?: number
-  quotaUsed?: number          // reserved for future backend tracking
+  quotaUsed?: number           // reserved for future backend tracking
   liveVisitsEnabled?: boolean
-  liveVisitsMinimum?: number  // minimum active people required to unlock
+  liveVisitsMinimum?: number   // minimum active people required to unlock
 }
 
 // ── Content types ─────────────────────────────────────────────────────────────

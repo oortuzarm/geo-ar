@@ -141,6 +141,15 @@ function InfoTooltip({ text }: { text: string }) {
   )
 }
 
+// Converts legacy flat schedule (scheduleDays + shared start/end) to per-day rules.
+// Only used at render time for display when scheduleRules hasn't been written yet.
+function migrateLegacySchedule(av: GeoPointAvailability | undefined) {
+  if (!av?.scheduleDays?.length) return []
+  const start = av.scheduleStartTime ?? '09:00'
+  const end   = av.scheduleEndTime   ?? '18:00'
+  return av.scheduleDays.map((day) => ({ day, start, end }))
+}
+
 function AvailabilityRules({
   availability,
   onChange,
@@ -165,19 +174,35 @@ function AvailabilityRules({
   scheduleLabel?:    string
 }) {
   const scheduleEnabled = availability?.scheduleEnabled ?? false
-  const scheduleDays    = availability?.scheduleDays ?? []
-  const startTime       = availability?.scheduleStartTime ?? ''
-  const endTime         = availability?.scheduleEndTime ?? ''
+  // Use persisted scheduleRules when available; otherwise display the migrated legacy format.
+  const scheduleRules   = availability?.scheduleRules ?? migrateLegacySchedule(availability)
   const quotaEnabled       = availability?.quotaEnabled ?? false
   const quotaLimit         = availability?.quotaLimit ?? 1
   const liveVisitsEnabled  = availability?.liveVisitsEnabled ?? false
   const liveVisitsMinimum  = availability?.liveVisitsMinimum ?? 1
 
+  // Remembers times of toggled-off days within this editing session (not persisted).
+  const [inactiveTimes, setInactiveTimes] = useState<Record<string, { start: string; end: string }>>({})
+
+  function getRuleForDay(day: string) {
+    return scheduleRules.find((r) => r.day === day)
+  }
+
   function toggleDay(day: string) {
-    const next = scheduleDays.includes(day)
-      ? scheduleDays.filter((d) => d !== day)
-      : [...scheduleDays, day]
-    onChange({ scheduleDays: next })
+    const existing = getRuleForDay(day)
+    if (existing) {
+      setInactiveTimes((prev) => ({ ...prev, [day]: { start: existing.start, end: existing.end } }))
+      onChange({ scheduleRules: scheduleRules.filter((r) => r.day !== day) })
+    } else {
+      const remembered = inactiveTimes[day]
+      onChange({
+        scheduleRules: [...scheduleRules, { day, start: remembered?.start ?? '09:00', end: remembered?.end ?? '18:00' }],
+      })
+    }
+  }
+
+  function updateDayTime(day: string, field: 'start' | 'end', value: string) {
+    onChange({ scheduleRules: scheduleRules.map((r) => r.day === day ? { ...r, [field]: value } : r) })
   }
 
   return (
@@ -203,49 +228,48 @@ function AvailabilityRules({
 
         {canUseSchedule && scheduleEnabled && (
           <>
-            <div className="flex flex-wrap gap-1.5">
-              {WEEK_DAYS.map((day) => (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => toggleDay(day)}
-                  className={[
-                    'px-2 py-1 rounded text-xs font-medium transition-colors',
-                    scheduleDays.includes(day)
-                      ? 'bg-brand-600 text-white'
-                      : 'bg-gray-700 text-gray-400 hover:bg-gray-600',
-                  ].join(' ')}
-                >
-                  {day}
-                </button>
-              ))}
+            {/* Per-day rows: toggle + from/to time inputs */}
+            <div className="space-y-1.5">
+              {WEEK_DAYS.map((day) => {
+                const rule       = getRuleForDay(day)
+                const isActive   = !!rule
+                const remembered = inactiveTimes[day]
+                const isInvalid  = isActive && rule.start >= rule.end
+                const timeInputCls = [
+                  'flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs',
+                  'text-gray-100 focus:outline-none focus:ring-1 focus:ring-brand-500',
+                  'disabled:cursor-not-allowed transition-colors',
+                ].join(' ')
+                return (
+                  <div key={day}>
+                    <div className={`flex items-center gap-2 transition-opacity ${isActive ? '' : 'opacity-40'}`}>
+                      <span className="w-7 flex-shrink-0 text-xs font-medium text-gray-400 select-none">{day}</span>
+                      <Toggle enabled={isActive} onToggle={() => toggleDay(day)} />
+                      <input
+                        type="time"
+                        disabled={!isActive}
+                        value={isActive ? rule.start : (remembered?.start ?? '')}
+                        onChange={(e) => updateDayTime(day, 'start', e.target.value)}
+                        className={timeInputCls}
+                      />
+                      <span className="text-gray-600 text-xs flex-shrink-0">—</span>
+                      <input
+                        type="time"
+                        disabled={!isActive}
+                        value={isActive ? rule.end : (remembered?.end ?? '')}
+                        onChange={(e) => updateDayTime(day, 'end', e.target.value)}
+                        className={timeInputCls}
+                      />
+                    </div>
+                    {isInvalid && (
+                      <p className="mt-0.5 ml-[60px] text-[10px] text-red-400">
+                        La hora de cierre debe ser mayor a la de apertura.
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
             </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Desde</label>
-                <input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => onChange({ scheduleStartTime: e.target.value })}
-                  className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm
-                             text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500
-                             focus:border-transparent transition-colors"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">Hasta</label>
-                <input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => onChange({ scheduleEndTime: e.target.value })}
-                  className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm
-                             text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500
-                             focus:border-transparent transition-colors"
-                />
-              </div>
-            </div>
-
             <p className="text-xs text-gray-500">
               La experiencia solo estará disponible durante los días y horarios seleccionados.
             </p>

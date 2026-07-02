@@ -213,50 +213,93 @@ export function computePointAvailability(
   let scheduleEndTime:   string | undefined
 
   if (av?.scheduleEnabled) {
-    scheduleActive    = true
-    scheduleDays      = av.scheduleDays ?? []
-    scheduleStartTime = av.scheduleStartTime
-    scheduleEndTime   = av.scheduleEndTime
+    scheduleActive = true
 
     // All time comparisons use the device's local clock.
     const now   = new Date()
     const idx   = now.getDay()                          // 0 = Sunday … 6 = Saturday
     const today = WEEK_DAYS_INDEX[idx]
     const cur   = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-    const dayOk = scheduleDays.length === 0 || scheduleDays.includes(today)
 
-    // Returns "Disponible <when> [desde las HH:MM]" for the next open day.
-    function nextAvailableLabel(prefix: string): string {
-      for (let i = 1; i <= 7; i++) {
-        const nl = WEEK_DAYS_INDEX[(idx + i) % 7]
-        if (scheduleDays.length === 0 || scheduleDays.includes(nl)) {
-          const when = i === 1 ? 'mañana' : `el ${DAY_FULL[nl] ?? nl}`
-          return `${prefix} ${when}${scheduleStartTime ? ` desde las ${scheduleStartTime}` : ''}`
+    if (av.scheduleRules !== undefined) {
+      // ── Per-day rules (new format) ──────────────────────────────────────────
+      const rules     = av.scheduleRules
+      const todayRule = rules.find((r) => r.day === today)
+      scheduleDays      = rules.map((r) => r.day)
+      scheduleStartTime = todayRule?.start
+      scheduleEndTime   = todayRule?.end
+
+      function nextRuleLabel(prefix: string): string {
+        for (let i = 1; i <= 7; i++) {
+          const nl   = WEEK_DAYS_INDEX[(idx + i) % 7]
+          const rule = rules.find((r) => r.day === nl)
+          if (rule) {
+            const when = i === 1 ? 'mañana' : `el ${DAY_FULL[nl] ?? nl}`
+            return `${prefix} ${when}${rule.start ? ` desde las ${rule.start}` : ''}`
+          }
         }
+        return `Solo los ${formatDays(rules.map((r) => r.day))}`
       }
-      return `Solo los ${formatDays(scheduleDays)}`
-    }
 
-    if (!dayOk) {
-      scheduleAvailable = false
-      scheduleLabel     = nextAvailableLabel('Disponible')
-    } else if (scheduleStartTime && scheduleEndTime) {
-      if (cur < scheduleStartTime) {
+      if (rules.length === 0) {
+        // scheduleRules present but empty — no days configured.
         scheduleAvailable = false
-        scheduleLabel     = `Disponible desde las ${scheduleStartTime}`
-      } else if (cur >= scheduleEndTime) {
-        // At or past closing time — exclusive end: [start, end) is the open window.
+        scheduleLabel     = 'Sin horario configurado'
+      } else if (!todayRule) {
         scheduleAvailable = false
-        scheduleLabel     = nextAvailableLabel('Disponible')
+        scheduleLabel     = nextRuleLabel('Disponible')
+      } else if (todayRule.start && todayRule.end) {
+        if (cur < todayRule.start) {
+          scheduleAvailable = false
+          scheduleLabel     = `Disponible desde las ${todayRule.start}`
+        } else if (cur >= todayRule.end) {
+          scheduleAvailable = false
+          scheduleLabel     = nextRuleLabel('Disponible')
+        } else {
+          scheduleAvailable = true
+          scheduleLabel     = `Disponible hasta las ${todayRule.end}`
+        }
       } else {
-        // cur >= scheduleStartTime && cur < scheduleEndTime → open now.
+        // Rule exists but no time bounds — open all day.
         scheduleAvailable = true
-        scheduleLabel     = `Disponible hasta las ${scheduleEndTime}`
+        scheduleLabel     = 'Disponible hoy'
       }
     } else {
-      // Schedule enabled but no time window — open all day on allowed days.
-      scheduleAvailable = true
-      scheduleLabel     = 'Disponible hoy'
+      // ── Legacy flat format (backward compat for existing points) ─────────────
+      scheduleDays      = av.scheduleDays ?? []
+      scheduleStartTime = av.scheduleStartTime
+      scheduleEndTime   = av.scheduleEndTime
+      const dayOk       = scheduleDays.length === 0 || scheduleDays.includes(today)
+
+      function nextAvailableLabel(prefix: string): string {
+        for (let i = 1; i <= 7; i++) {
+          const nl = WEEK_DAYS_INDEX[(idx + i) % 7]
+          if (scheduleDays.length === 0 || scheduleDays.includes(nl)) {
+            const when = i === 1 ? 'mañana' : `el ${DAY_FULL[nl] ?? nl}`
+            return `${prefix} ${when}${scheduleStartTime ? ` desde las ${scheduleStartTime}` : ''}`
+          }
+        }
+        return `Solo los ${formatDays(scheduleDays)}`
+      }
+
+      if (!dayOk) {
+        scheduleAvailable = false
+        scheduleLabel     = nextAvailableLabel('Disponible')
+      } else if (scheduleStartTime && scheduleEndTime) {
+        if (cur < scheduleStartTime) {
+          scheduleAvailable = false
+          scheduleLabel     = `Disponible desde las ${scheduleStartTime}`
+        } else if (cur >= scheduleEndTime) {
+          scheduleAvailable = false
+          scheduleLabel     = nextAvailableLabel('Disponible')
+        } else {
+          scheduleAvailable = true
+          scheduleLabel     = `Disponible hasta las ${scheduleEndTime}`
+        }
+      } else {
+        scheduleAvailable = true
+        scheduleLabel     = 'Disponible hoy'
+      }
     }
   }
 

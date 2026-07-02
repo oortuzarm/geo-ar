@@ -1,2 +1,2 @@
-export type { GeoProject, GeoPoint, GeoPointAvailability, PointImage, NominatimResult, LocationStatus, UserLocation, MapBounds, PoiSearchResult, AddressConfidence, PublicInitialViewMode, ContentType, DestinationCategory, PointCategory, ContentData, UrlContentData, MediaContentData, AccessResponse, ActivationMode, ActivationPolygon } from './geoProject.types'
+export type { GeoProject, GeoPoint, GeoPointAvailability, ScheduleRule, PointImage, NominatimResult, LocationStatus, UserLocation, MapBounds, PoiSearchResult, AddressConfidence, PublicInitialViewMode, ContentType, DestinationCategory, PointCategory, ContentData, UrlContentData, MediaContentData, AccessResponse, ActivationMode, ActivationPolygon } from './geoProject.types'
 export type { User } from './auth.types'

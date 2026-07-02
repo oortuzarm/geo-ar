@@ -513,7 +513,7 @@ function PlatformSplitSection() {
 const CAPABILITIES = [
   {
     label: 'Detecta',
-    desc: 'Define ubicaciones sobre cualquier mapa y monitorea entradas, permanencia y salidas en cada zona. Sin hardware, balizas ni infraestructura física adicional.',
+    desc: 'Define ubicaciones sobre el mapa Studio y monitorea entradas, permanencia y salidas en cada zona.',
     visual: (
       <div className="w-full rounded-xl overflow-hidden border border-white/[0.08] bg-[#070a12] mb-5">
         <div className="relative h-28">

@@ -18,17 +18,23 @@ import {
   EventsAnalyticsVisual,
 } from './visuals/EventsVisuals'
 import {
-  MarketingActivationVisual,
-  MarketingDwellVisual,
-  MarketingCompetitorVisual,
-  MarketingAnalyticsVisual,
-} from './visuals/MarketingVisuals'
+  SectorPublicoInfoVisual,
+  SectorPublicoRouteVisual,
+  SectorPublicoDwellVisual,
+  SectorPublicoAnalyticsVisual,
+} from './visuals/SectorPublicoVisuals'
 import {
-  EducationAudioVisual,
-  EducationRouteVisual,
-  EducationDwellVisual,
-  EducationAnalyticsVisual,
-} from './visuals/EducationVisuals'
+  RealEstateEntryVisual,
+  RealEstateZoneVisual,
+  RealEstateDwellVisual,
+  RealEstateAnalyticsVisual,
+} from './visuals/RealEstateVisuals'
+import {
+  BrandActivationEntryVisual,
+  BrandActivationDwellVisual,
+  BrandActivationConquestVisual,
+  BrandActivationAnalyticsVisual,
+} from './visuals/ActivacionesMarcaVisuals'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -320,7 +326,7 @@ const events: IndustryData = {
     {
       category: 'ACTIVACIÓN AL INGRESAR AL RECINTO',
       title: 'Activa la bienvenida cuando el asistente llega al evento',
-      description: 'Define el perímetro del recinto en Studio. Cuando un dispositivo entra en esa área, Ubyca activa automáticamente la experiencia: el programa del día, un botón para abrir el mapa del recinto o un acceso directo al WhatsApp del equipo de producción. Sin registro en puerta. Sin QR.',
+      description: 'Define el perímetro del recinto en Studio. Cuando un dispositivo entra en esa área, Ubyca activa automáticamente la experiencia: el programa del día, un botón para abrir el mapa del recinto o un acceso directo al WhatsApp del equipo de producción.',
       visual: <EventsEntryVisual />,
     },
     {
@@ -388,179 +394,271 @@ const events: IndustryData = {
   ],
 }
 
-const marketing: IndustryData = {
-  slug: 'marketing',
-  name: 'Marketing',
-  shortDesc: 'Activa campañas en el lugar y momento exactos',
-  accentColor: '#f97316',
+const sectorPublico: IndustryData = {
+  slug: 'sector-publico',
+  name: 'Sector Público',
+  shortDesc: 'Digitaliza espacios públicos y entrega información contextual a ciudadanos y visitantes',
+  accentColor: '#06b6d4',
   meta: {
-    title: 'Ubyca para Marketing — Campañas activadas por ubicación física',
-    description: 'Alcanza a tu audiencia en el momento en que están físicamente en el lugar correcto. Campañas basadas en presencia real, con métricas de impacto verificables.',
+    title: 'Ubyca para Sector Público — Digitaliza espacios y experiencias ciudadanas',
+    description: 'Conecta municipalidades, parques, centros históricos y espacios públicos con experiencias digitales activadas por ubicación. Entrega información contextual y mide el comportamiento de ciudadanos y visitantes.',
   },
   intro: {
-    headline: 'La ubicación es el momento de mayor intención.',
-    body: 'No hay segmentación más precisa que saber que alguien está físicamente en un lugar en este momento. Ubyca te permite activar campañas cuando las personas están exactamente donde corresponde: en una activación de marca, cerca de un punto de venta o en la zona de un competidor.',
+    headline: 'Los espacios públicos tienen historia. Los ciudadanos no siempre saben cómo acceder a ella.',
+    body: 'Municipalidades, parques, centros históricos y oficinas de turismo generan contenido que los visitantes nunca llegan a consumir porque no saben que existe o llega sin contexto. Ubyca sincroniza la información con el lugar: el aviso correcto en la plaza que corresponde, la guía del centro histórico cuando el visitante está frente a él, la campaña pública en el espacio donde realmente importa.',
   },
   useCases: [
     {
-      category: 'ACTIVACIONES DE MARCA',
-      title: 'Activa tu campaña cuando las personas están en el lugar',
-      description: 'Define la zona de tu activación —un pop-up, un lanzamiento, un punto de venta— y Ubyca activa automáticamente tu campaña cuando un dispositivo entra en esa área. Un mensaje, un botón con tu oferta o un enlace directo a WhatsApp. Sin personal de activación en campo.',
-      visual: <MarketingActivationVisual />,
+      category: 'INFORMACIÓN EN EL LUGAR',
+      title: 'La información llega cuando el ciudadano está en el espacio',
+      description: 'Define el área de cada punto de interés —una plaza, un monumento, un acceso de parque— y configura el contenido que cada persona verá al llegar. Un mensaje de bienvenida, un mapa interactivo, las reglas del espacio o el programa de actividades. Sin aplicaciones adicionales. Sin señalética que actualizar.',
+      visual: <SectorPublicoInfoVisual />,
     },
     {
-      category: 'PERMANENCIA MÍNIMA',
-      title: 'Activa contenido exclusivo solo si el tiempo justifica el mensaje',
-      description: 'Configura una condición de permanencia mínima para separar quienes pasan de largo de quienes realmente se detienen. Solo cuando el dispositivo está el tiempo suficiente dentro de la zona, Ubyca activa el contenido exclusivo. Mayor relevancia, menor desperdicio de impacto.',
-      visual: <MarketingDwellVisual />,
+      category: 'RECORRIDOS PATRIMONIALES',
+      title: 'Cada parada del recorrido tiene su propio contenido',
+      description: 'Crea rutas con múltiples puntos de interés y asocia contenido diferente a cada uno: audio guía, historia del lugar, información visual, acceso a fichas patrimoniales. El visitante avanza por el recorrido y recibe lo que corresponde al llegar a cada punto. Sin instrucciones previas. Sin buscar en el teléfono.',
+      visual: <SectorPublicoRouteVisual />,
+    },
+    {
+      category: 'PERMANENCIA EN PUNTO DE INTERÉS',
+      title: 'El contenido completo se activa cuando el visitante realmente se detiene',
+      description: 'Algunos contenidos tienen más valor cuando el visitante ya lleva un tiempo en el lugar. Configura una permanencia mínima —por ejemplo, 3 minutos— y Ubyca activa el audio guía extendido, el video documental o el acceso al material descargable solo si la persona realmente se detuvo. No al pasar de largo.',
+      visual: <SectorPublicoDwellVisual />,
+    },
+    {
+      category: 'ANALÍTICA DE FLUJO CIUDADANO',
+      title: 'Entiende cómo se distribuyen los visitantes en el espacio público',
+      description: 'Studio muestra cuántos dispositivos están activos en cada zona, cuánto tiempo permanecen y en qué horarios se concentra la afluencia. Información para planificar recursos, optimizar la señalética y tomar decisiones sobre el uso del espacio sin encuestas ni conteos manuales.',
+      visual: <SectorPublicoAnalyticsVisual />,
+    },
+  ],
+  benefits: [
+    {
+      icon: <BenefitIcon.Expand />,
+      title: 'Sin inversión en infraestructura',
+      description: 'No se instalan pantallas, balizas ni dispositivos en el espacio. El contenido vive en la nube y se gestiona completamente desde Studio.',
+    },
+    {
+      icon: <BenefitIcon.Star />,
+      title: 'Cualquier tipo de contenido',
+      description: 'Audio, video, PDF, formularios o sitios web. Configura el formato que mejor se adapta a cada punto del recorrido o espacio público.',
+    },
+    {
+      icon: <BenefitIcon.Chart />,
+      title: 'Datos del comportamiento ciudadano',
+      description: 'Flujo de visitas por zona, horarios de mayor afluencia y tiempo promedio de permanencia para mejorar la planificación del espacio.',
+    },
+    {
+      icon: <BenefitIcon.NoApp />,
+      title: 'Sin apps que descargar',
+      description: 'Los ciudadanos y visitantes acceden desde el navegador de su teléfono. Sin instalaciones. Sin barreras de entrada para nadie.',
+    },
+  ],
+  faq: [
+    {
+      question: '¿Se necesita una app oficial del municipio para funcionar?',
+      answer: 'No. El ciudadano accede desde el navegador de su teléfono. Si ya existe una app municipal, Ubyca también puede integrarse en ella vía API para mantener la identidad institucional.',
+    },
+    {
+      question: '¿Cómo se garantiza la privacidad de los ciudadanos?',
+      answer: 'Ubyca solo valida si un dispositivo está dentro de una zona definida. No almacena trayectorias individuales ni historial de movimiento. Los datos de analytics son agregados y anónimos.',
+    },
+    {
+      question: '¿Funciona en espacios abiertos como parques y plazas?',
+      answer: 'Sí. Los espacios al aire libre ofrecen la mayor precisión GPS. El sistema puede definir zonas desde un pequeño kiosco hasta un parque completo o un centro histórico extenso.',
+    },
+    {
+      question: '¿Puede usarse en recorridos patrimoniales o culturales?',
+      answer: 'Sí, es uno de los casos más comunes. Puedes crear rutas con múltiples paradas, cada una con su propio contenido, sin instalar nada en el espacio ni en los monumentos.',
+    },
+    {
+      question: '¿Cuánto tiempo tarda en configurarse una nueva zona?',
+      answer: 'Un nuevo GeoPoint puede estar activo en minutos. Define el área en el mapa, configura el contenido y publica. No se requieren equipos técnicos ni permisos de instalación en el terreno.',
+    },
+  ],
+}
+
+const realEstate: IndustryData = {
+  slug: 'real-estate',
+  name: 'Real Estate',
+  shortDesc: 'Activa experiencias cuando el interesado llega al proyecto o sala de ventas',
+  accentColor: '#ef4444',
+  meta: {
+    title: 'Ubyca para Real Estate — Activa experiencias cuando el interesado está en el proyecto',
+    description: 'Entrega información del proyecto, fichas técnicas y materiales de venta cuando el interesado llega físicamente al lugar. Mide las visitas a cada sala de ventas y toma decisiones con datos reales.',
+  },
+  intro: {
+    headline: 'El interesado ya está en el proyecto. Es el momento más valioso de la venta.',
+    body: 'Cuando alguien se toma el tiempo de llegar físicamente a un proyecto inmobiliario, su intención de compra está activa. Ese momento —estar parado frente al edificio, recorrer una sala de ventas, visitar los departamentos modelo— es el de mayor receptividad. Ubyca lo aprovecha para entregar la información correcta en el lugar exacto, sin depender de que el asesor esté disponible o de que el interesado encuentre el material por su cuenta.',
+  },
+  useCases: [
+    {
+      category: 'ACTIVACIÓN EN EL PROYECTO',
+      title: 'La información del proyecto se activa cuando el interesado llega',
+      description: 'Define el área de la sala de ventas o del proyecto en Studio. Cuando un dispositivo entra en esa zona, Ubyca activa automáticamente la experiencia: la ficha técnica del proyecto, un botón para agendar una visita guiada o el acceso directo al asesor por WhatsApp. Sin que el interesado tenga que buscar nada.',
+      visual: <RealEstateEntryVisual />,
+    },
+    {
+      category: 'ZONAS DEL PROYECTO',
+      title: 'Cada área del proyecto activa su propio contenido',
+      description: 'Define zonas dentro del proyecto —sala de ventas, departamentos modelo, áreas comunes— y configura qué contenido se activa en cada una. Los renders del proyecto cuando el interesado está en la sala, las especificaciones técnicas cuando recorre la unidad modelo, el reglamento en las áreas comunes.',
+      visual: <RealEstateZoneVisual />,
+    },
+    {
+      category: 'PERMANENCIA EN SALA DE VENTAS',
+      title: 'Activa el material completo solo cuando el interesado realmente visitó',
+      description: 'Configura una permanencia mínima en la sala de ventas para distinguir a quienes realmente recorrieron el proyecto de quienes pasaron de largo. Cuando se cumple el tiempo, Ubyca activa automáticamente el material completo: cotizaciones, plantas o un formulario de contacto.',
+      visual: <RealEstateDwellVisual />,
+    },
+    {
+      category: 'ANALÍTICA DE VISITAS',
+      title: 'Conoce el comportamiento real de los interesados en el proyecto',
+      description: 'Studio entrega métricas reales de cada punto de venta: dispositivos que visitaron, tiempo promedio de permanencia y distribución horaria. Datos que hoy no tienes y que cambian cómo planificas el equipo de ventas, los horarios de atención y las campañas de captación.',
+      visual: <RealEstateAnalyticsVisual />,
+    },
+  ],
+  benefits: [
+    {
+      icon: <BenefitIcon.Clock />,
+      title: 'Información disponible las 24 horas',
+      description: 'La experiencia se activa cuando el interesado llega, incluso fuera del horario de atención. El proyecto nunca está cerrado para quien llega.',
+    },
+    {
+      icon: <BenefitIcon.Shield />,
+      title: 'Datos de visita verificados',
+      description: 'Cada entrada registrada corresponde a una presencia física real en el proyecto, no a un clic o una visualización de anuncio digital.',
+    },
+    {
+      icon: <BenefitIcon.Link />,
+      title: 'Integración con tu CRM',
+      description: 'Conecta los eventos de visita con tu sistema de gestión comercial vía API para enriquecer el seguimiento de cada interesado.',
+    },
+    {
+      icon: <BenefitIcon.NoApp />,
+      title: 'Sin hardware en el proyecto',
+      description: 'No se necesitan tablets, terminales ni dispositivos adicionales. Todo funciona con el GPS del smartphone del interesado.',
+    },
+  ],
+  faq: [
+    {
+      question: '¿Funciona para proyectos en preventa o en obra?',
+      answer: 'Sí. Puedes activar una experiencia desde el inicio de la venta, antes incluso de que exista una sala de ventas física. El GeoPoint puede definirse en el terreno del futuro proyecto.',
+    },
+    {
+      question: '¿Cómo accede el interesado a la información?',
+      answer: 'El equipo comercial comparte el enlace por cualquier canal previo a la visita —WhatsApp, email, avisos de campaña digital. El interesado lo abre al llegar y la experiencia comienza de forma automática.',
+    },
+    {
+      question: '¿El interesado necesita instalar algo?',
+      answer: 'No. Todo funciona desde el navegador del teléfono. Sin descargas, sin fricciones de onboarding previo a la visita.',
+    },
+    {
+      question: '¿Puedo gestionar múltiples proyectos desde el mismo panel?',
+      answer: 'Sí. Cada proyecto tiene su propia configuración en Studio, pero todos se administran desde la misma cuenta. Puedes ver métricas globales o desglosadas por proyecto.',
+    },
+    {
+      question: '¿Puedo conectar los datos de visita con mi CRM?',
+      answer: 'Sí, vía API. Los eventos de presencia pueden enviarse a tu sistema de gestión comercial para enriquecer el historial de cada interesado y disparar flujos de seguimiento automáticos.',
+    },
+  ],
+}
+
+const activacionesMarca: IndustryData = {
+  slug: 'brand-activations',
+  name: 'Activaciones de Marca',
+  shortDesc: 'Activa experiencias cuando el público llega a la zona de tu activación',
+  accentColor: '#f97316',
+  meta: {
+    title: 'Ubyca para Activaciones de Marca — Experiencias geolocalizadas en terreno',
+    description: 'Activa contenido, beneficios y experiencias cuando el público llega a tu zona. Mide la participación real de cada activación de marca, pop-up, lanzamiento o evento patrocinado.',
+  },
+  intro: {
+    headline: 'La activación ocurre en un lugar. La experiencia también debería hacerlo.',
+    body: 'Una activación de marca reúne personas en un espacio durante un tiempo definido. Cada segundo que alguien pasa en tu zona es una oportunidad de entregar algo memorable: contenido exclusivo, una dinámica de participación, un acceso a tu producto o simplemente información que el público no esperaba. Ubyca conecta el espacio físico con la experiencia digital sin que el equipo en terreno tenga que hacer nada adicional.',
+  },
+  useCases: [
+    {
+      category: 'ACTIVACIÓN DE ZONA',
+      title: 'La experiencia se activa cuando el público llega a tu zona',
+      description: 'Define el perímetro de tu activación en Studio —un pop-up, un stand, una zona de sampling, un lanzamiento— y configura la experiencia que se activa al entrar. Un mensaje de bienvenida, acceso a contenido exclusivo, un botón de participación o el enlace directo a tu plataforma. Sin que el equipo tenga que acercarse a cada persona.',
+      visual: <BrandActivationEntryVisual />,
+    },
+    {
+      category: 'CONTENIDO POR PERMANENCIA',
+      title: 'El contenido premium se desbloquea para quienes realmente se quedan',
+      description: 'Separa a quienes pasan de largo de quienes realmente participan de tu activación. Configura una permanencia mínima y activa el contenido exclusivo solo para quienes se quedaron el tiempo suficiente: un descuento especial, acceso a un material único o la participación en una dinámica. Mayor relevancia, menor dilución del impacto.',
+      visual: <BrandActivationDwellVisual />,
     },
     {
       category: 'ZONAS DE CONQUISTA',
-      title: 'Activa tu propuesta cuando alguien está en la zona de un competidor',
-      description: 'Define las áreas de tus principales competidores en Studio. Cuando un dispositivo entra en esa zona, Ubyca activa automáticamente tu experiencia: un mensaje con tu propuesta diferencial y un botón directo. El momento de influir es antes de que se tome la decisión.',
-      visual: <MarketingCompetitorVisual />,
+      title: 'Alcanza al público cuando está cerca de la competencia',
+      description: 'Define zonas en puntos de alta concentración de tu público objetivo o cerca de la competencia. Cuando un dispositivo entra en esa área, Ubyca activa tu experiencia: tu propuesta, tu oferta o una invitación directa a tu activación. El momento de influir es antes de que se forme la decisión.',
+      visual: <BrandActivationConquestVisual />,
     },
     {
-      category: 'MEDICIÓN DE PRESENCIA',
-      title: 'Mide el alcance real de cada activación en campo',
-      description: 'Studio muestra cuántos dispositivos estuvieron dentro de cada zona, durante cuánto tiempo y en qué horarios. Datos reales de presencia física para reportes de campaña sin depender de impresiones estimadas ni fuentes de terceros.',
-      visual: <MarketingAnalyticsVisual />,
+      category: 'MEDICIÓN DE PARTICIPACIÓN',
+      title: 'Mide el alcance real de cada activación con datos verificables',
+      description: 'Studio muestra cuántos dispositivos estuvieron en tu zona, durante cuánto tiempo y en qué momentos se concentró la afluencia. Datos reales de presencia para reportes de campaña sin depender de estimaciones. Comparte métricas concretas con tu cliente o el equipo de marketing.',
+      visual: <BrandActivationAnalyticsVisual />,
     },
   ],
   benefits: [
     {
       icon: <BenefitIcon.Shield />,
-      title: 'Alcance verificado',
-      description: 'Cada contacto registrado corresponde a una presencia física real en la zona, no a una estimación de audiencia basada en comportamiento digital.',
+      title: 'Participación verificada',
+      description: 'Cada contacto registrado corresponde a alguien que estuvo físicamente en la zona de la activación. No a una estimación de alcance ni a un impacto publicitario.',
     },
-    {
-      icon: <BenefitIcon.Map />,
-      title: 'Sin segmentación demográfica',
-      description: 'La ubicación es el criterio de activación. No se requieren cookies, datos de comportamiento digital ni información de terceros.',
-    },
-    {
-      icon: <BenefitIcon.Link />,
-      title: 'Integración con tu stack',
-      description: 'Conecta los eventos de presencia con tu CRM, plataforma de automatización o herramienta de reporting vía API.',
-    },
-    {
-      icon: <BenefitIcon.Clock />,
-      title: 'Activaciones con horario y cupo',
-      description: 'Configura ventanas de tiempo, permanencia mínima y cupos de activación para cada campaña desde Studio.',
-    },
-  ],
-  faq: [
-    {
-      question: '¿Es necesario tener una app propia para activar campañas?',
-      answer: 'No. Ubyca puede funcionar desde el navegador del dispositivo. Si ya tienes una app, también puedes integrar la API directamente en ella.',
-    },
-    {
-      question: '¿Cómo se gestiona el consentimiento del usuario?',
-      answer: 'El usuario autoriza explícitamente el acceso a su ubicación en el momento de activar la experiencia. Ubyca solo valida si el dispositivo está dentro de una zona definida y no almacena trayectorias ni historial de movimiento individual.',
-    },
-    {
-      question: '¿Puedo configurar una activación temporal, por ejemplo solo durante tres días?',
-      answer: 'Sí. Cada GeoPoint puede tener una fecha de inicio y término, días de la semana y horarios específicos de activación. Una campaña puede estar activa únicamente durante el período que defines.',
-    },
-    {
-      question: '¿Cuál es la diferencia con geofencing convencional?',
-      answer: 'El geofencing convencional valida en el dispositivo, lo que lo hace impreciso y evasible. Ubyca valida en el servidor, con mayor precisión y consistencia entre dispositivos y sistemas operativos.',
-    },
-    {
-      question: '¿Puedo medir conversiones de una campaña de presencia?',
-      answer: 'Si integras tu sistema de ventas o tu plataforma de marketing vía API, puedes cruzar los eventos de presencia con conversiones. Ubyca entrega los datos de presencia; la lógica de conversión vive en tu sistema.',
-    },
-  ],
-}
-
-const education: IndustryData = {
-  slug: 'education',
-  name: 'Educación',
-  shortDesc: 'Activa contenido educativo cuando el participante llega al lugar',
-  accentColor: '#f59e0b',
-  meta: {
-    title: 'Ubyca para Educación — Aprendizaje contextual geolocalizado',
-    description: 'Convierte museos, campus y sitios históricos en recorridos donde el contenido educativo se activa automáticamente en cada punto. Sin apps. Sin QR.',
-  },
-  intro: {
-    headline: 'El contenido educativo más efectivo ocurre donde tiene sentido.',
-    body: 'Hay una diferencia entre leer sobre un sitio histórico en un libro y estar parado frente a él mientras escuchas el contexto de lo que ocurrió ahí. Ubyca sincroniza el contenido educativo con el espacio físico, convirtiendo cada recorrido en una experiencia de aprendizaje contextual.',
-  },
-  useCases: [
-    {
-      category: 'CONTENIDO POR UBICACIÓN',
-      title: 'El contenido educativo se activa al llegar al lugar',
-      description: 'Define el radio de cada punto del recorrido en Studio. Cuando el dispositivo llega al área, Ubyca activa automáticamente el contenido asignado: audio, video, documento o un enlace. Sin escanear códigos. Sin buscar en el teléfono. El lugar es el activador.',
-      visual: <EducationAudioVisual />,
-    },
-    {
-      category: 'RECORRIDOS POR PARADAS',
-      title: 'Cada parada del recorrido tiene su propio módulo de contenido',
-      description: 'Crea un recorrido con múltiples puntos y asocia contenido educativo diferente a cada parada. Museos, campus, sitios históricos o barrios convertidos en rutas de aprendizaje donde el contenido llega en el momento y el lugar exactos.',
-      visual: <EducationRouteVisual />,
-    },
-    {
-      category: 'PERMANENCIA EN EL LUGAR',
-      title: 'El material se desbloquea después de estar el tiempo suficiente',
-      description: 'Configura una permanencia mínima para asegurar que la persona realmente estuvo en el espacio antes de recibir el material. El recurso se activa solo si el dispositivo permaneció el tiempo definido dentro del área. No al pasar.',
-      visual: <EducationDwellVisual />,
-    },
-    {
-      category: 'SEGUIMIENTO DEL RECORRIDO',
-      title: 'Sabe cuántos participantes están activos y cuánto dedican a cada parada',
-      description: 'Studio muestra cuántos dispositivos están activos en el recorrido y el tiempo promedio de permanencia en cada punto. Datos para mejorar el diseño del recorrido, identificar las paradas de mayor interés y optimizar el tiempo total.',
-      visual: <EducationAnalyticsVisual />,
-    },
-  ],
-  benefits: [
     {
       icon: <BenefitIcon.NoApp />,
-      title: 'Sin apps ni hardware',
-      description: 'El participante accede desde el navegador de su teléfono. Sin instalaciones. Sin dispositivos prestados. Sin infraestructura en el espacio.',
+      title: 'Sin personal de activación permanente',
+      description: 'La experiencia se activa automáticamente. El equipo en terreno puede enfocarse en la interacción directa con el público, no en distribuir materiales.',
     },
     {
       icon: <BenefitIcon.Star />,
       title: 'Cualquier tipo de contenido',
-      description: 'Audio, video, PDF, sitio web. Asocia el formato que mejor se adapta a cada punto del recorrido.',
+      description: 'Video, audio, enlace, formulario o acceso directo a WhatsApp. Configura la acción que mejor funciona para tu activación y tu público.',
     },
     {
       icon: <BenefitIcon.Chart />,
-      title: 'Datos del recorrido',
-      description: 'Permanencia por parada, dispositivos activos y distribución horaria para optimizar el diseño educativo del espacio.',
-    },
-    {
-      icon: <BenefitIcon.Expand />,
-      title: 'Sin infraestructura física',
-      description: 'Agrega o modifica puntos del recorrido sin instalar balizas ni pantallas en el espacio. Todo desde Studio.',
+      title: 'Reportes de campaña con datos reales',
+      description: 'Comparte métricas de presencia verificadas con el cliente o el equipo de marketing. Alcance real, tiempo en zona y comportamiento horario, no proyecciones.',
     },
   ],
   faq: [
     {
-      question: '¿Cómo accede el participante al recorrido?',
-      answer: 'El organizador genera un enlace desde Studio y lo comparte por cualquier canal —WhatsApp, email, código QR impreso. El participante lo abre en su navegador, autoriza la ubicación y comienza el recorrido.',
+      question: '¿Funciona para activaciones de un solo día?',
+      answer: 'Sí. Cada GeoPoint puede configurarse con fechas específicas de activación. Un lanzamiento de un día, una sampling de fin de semana o una campaña de un mes: el período de activación lo defines tú desde Studio.',
     },
     {
-      question: '¿Funciona para grupos grandes, como grupos escolares?',
-      answer: 'Sí. No hay límite de participantes simultáneos en un mismo recorrido. Cada dispositivo es independiente y recibe el contenido de forma individual al llegar a cada punto.',
+      question: '¿Se requiere personal en la zona para que funcione?',
+      answer: 'No. La experiencia se activa de forma automática cuando el dispositivo entra en la zona. El equipo en terreno puede concentrarse en la interacción directa con el público.',
     },
     {
-      question: '¿Puede usarse en espacios cerrados como museos?',
-      answer: 'Sí, con precisión variable según la estructura del edificio. Para la mayoría de museos y espacios cubiertos, el GPS ofrece la precisión suficiente para distinguir entre zonas o salas adyacentes.',
+      question: '¿Cómo accede el público a la experiencia?',
+      answer: 'A través de un enlace que se comparte antes o durante la activación: en redes sociales, por WhatsApp, impreso en el material de la activación o mediante un QR en el espacio.',
     },
     {
-      question: '¿Funciona sin conexión a internet?',
-      answer: 'La validación de presencia requiere conexión. El contenido puede pre-cargarse cuando hay señal para funcionar en zonas con conectividad limitada.',
+      question: '¿Puedo medir la diferencia entre quienes entraron a la zona y quienes interactuaron?',
+      answer: 'Sí. Studio distingue dispositivos que entraron en la zona, tiempo de permanencia e interacciones con la experiencia. Métricas que separan el alcance geográfico del compromiso real con la activación.',
     },
     {
-      question: '¿Cuántos puntos puede tener un recorrido?',
-      answer: 'No hay un límite técnico en la cantidad de GeoPoints por proyecto. Puedes crear recorridos cortos de 3 paradas o rutas extensas con decenas de puntos.',
+      question: '¿Ubyca reemplaza las plataformas de gestión de eventos?',
+      answer: 'No necesariamente. Ubyca se enfoca en la capa de presencia y activación geolocalizada. Puede funcionar de forma complementaria a cualquier plataforma de gestión de eventos o CRM vía API.',
     },
   ],
 }
 
 // ─── Registry ─────────────────────────────────────────────────────────────────
 
-export const INDUSTRIES: IndustryData[] = [retail, tourism, events, marketing, education]
+export const INDUSTRIES: IndustryData[] = [
+  retail,
+  tourism,
+  events,
+  sectorPublico,
+  realEstate,
+  activacionesMarca,
+]
 
 export function getIndustry(slug: string): IndustryData | undefined {
   return INDUSTRIES.find(i => i.slug === slug)

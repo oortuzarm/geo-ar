@@ -31,7 +31,7 @@ const SOLUTIONS = [
   {
     name: 'Eventos',
     slug: 'events',
-    desc: 'Conecta con los asistentes durante el evento',
+    desc: 'Conecta con los asistentes en cada zona del recinto',
     color: '#10b981',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,26 +41,38 @@ const SOLUTIONS = [
     ),
   },
   {
-    name: 'Marketing',
-    slug: 'marketing',
-    desc: 'Activa campañas en el lugar y momento exactos',
-    color: '#f97316',
+    name: 'Sector Público',
+    slug: 'sector-publico',
+    desc: 'Digitaliza espacios y entrega información contextual a ciudadanos',
+    color: '#06b6d4',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-          d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+          d="M3 21h18M4 21V8l8-5 8 5v13M9 21V12h6v9" />
       </svg>
     ),
   },
   {
-    name: 'Educación',
-    slug: 'education',
-    desc: 'Transforma espacios en experiencias de aprendizaje',
-    color: '#f59e0b',
+    name: 'Real Estate',
+    slug: 'real-estate',
+    desc: 'Activa experiencias cuando el interesado llega al proyecto',
+    color: '#ef4444',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-          d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0H5m0 0H3m7-14h4m-4 4h4m-4 4h4" />
+      </svg>
+    ),
+  },
+  {
+    name: 'Activaciones de Marca',
+    slug: 'brand-activations',
+    desc: 'Conecta tu marca con el público cuando está en tu zona',
+    color: '#f97316',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+          d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
       </svg>
     ),
   },

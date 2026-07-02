@@ -1288,11 +1288,11 @@ const USE_CASES = [
     detail: 'Acceso a programas, gymkhanas, juegos urbanos o activaciones exclusivas en zonas delimitadas.',
   },
   {
-    icon: '🏫',
-    accent: '#f59e0b',
-    title: 'Educación',
-    short: 'Transforma espacios reales en experiencias de aprendizaje contextual.',
-    detail: 'Museos, campus y centros históricos con contenido interactivo que se activa en cada zona.',
+    icon: '🏛️',
+    accent: '#06b6d4',
+    title: 'Sector Público',
+    short: 'Digitaliza espacios públicos y mejora la experiencia de ciudadanos y visitantes.',
+    detail: 'Municipalidades, parques, playas y centros históricos con información contextual que se activa en cada ubicación.',
   },
   {
     icon: '🏙️',

@@ -183,12 +183,6 @@ function AvailabilityRules({
   // Remembers times of toggled-off days within this editing session (not persisted).
   const [inactiveTimes, setInactiveTimes] = useState<Record<string, { start: string; end: string }>>({})
 
-  // Copy-schedule panel state
-  const [copyOpen,  setCopyOpen]  = useState(false)
-  const [copyStart, setCopyStart] = useState('09:00')
-  const [copyEnd,   setCopyEnd]   = useState('18:00')
-  const [copyDays,  setCopyDays]  = useState<string[]>(['Lun', 'Mar', 'Mié', 'Jue', 'Vie'])
-
   function getRuleForDay(day: string) {
     return scheduleRules.find((r) => r.day === day)
   }
@@ -215,16 +209,10 @@ function AvailabilityRules({
     onChange({ scheduleRules: [] })
   }
 
-  function applyCopy() {
-    const kept  = scheduleRules.filter((r) => !copyDays.includes(r.day))
-    const added = copyDays.map((day) => ({ day, start: copyStart, end: copyEnd }))
-    onChange({ scheduleRules: [...kept, ...added] })
-    setCopyOpen(false)
-  }
-
   const timeInputCls =
     'w-[82px] flex-shrink-0 bg-gray-800 border border-gray-700 rounded px-1.5 py-1 text-sm ' +
-    'text-gray-100 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors'
+    'text-gray-100 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors ' +
+    '[&::-webkit-calendar-picker-indicator]:hidden'
 
   return (
     <div className="space-y-2">
@@ -249,76 +237,6 @@ function AvailabilityRules({
 
         {canUseSchedule && scheduleEnabled && (
           <div className="space-y-2">
-            {/* ── Toolbar ── */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setCopyOpen((v) => !v)}
-                className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
-              >
-                Copiar horario
-              </button>
-              <span className="text-gray-700 select-none">·</span>
-              <button
-                type="button"
-                onClick={clearSchedule}
-                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-              >
-                Limpiar
-              </button>
-            </div>
-
-            {/* ── Copy panel (inline, no floating popover to clip) ── */}
-            {copyOpen && (
-              <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 space-y-3">
-                <p className="text-xs font-medium text-gray-300">Horario</p>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 w-10 flex-shrink-0">Desde</span>
-                  <input
-                    type="time"
-                    value={copyStart}
-                    onChange={(e) => setCopyStart(e.target.value)}
-                    className={timeInputCls}
-                  />
-                  <span className="text-gray-500 text-xs">—</span>
-                  <span className="text-xs text-gray-400 w-10 flex-shrink-0">Hasta</span>
-                  <input
-                    type="time"
-                    value={copyEnd}
-                    onChange={(e) => setCopyEnd(e.target.value)}
-                    className={timeInputCls}
-                  />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 mb-1.5">Aplicar a:</p>
-                  <div className="grid grid-cols-4 gap-y-1.5 gap-x-2">
-                    {WEEK_DAYS.map((day) => (
-                      <label key={day} className="flex items-center gap-1.5 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={copyDays.includes(day)}
-                          onChange={() =>
-                            setCopyDays((prev) =>
-                              prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-                            )
-                          }
-                          className="h-3.5 w-3.5 rounded border-gray-600 bg-gray-800 text-brand-600 focus:ring-brand-500 focus:ring-offset-0 cursor-pointer"
-                        />
-                        <span className="text-xs text-gray-300">{day}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={applyCopy}
-                  className="w-full py-1.5 text-xs font-medium bg-brand-600 hover:bg-brand-700 text-white rounded transition-colors"
-                >
-                  Aplicar
-                </button>
-              </div>
-            )}
-
             {/* ── Per-day rows ── */}
             <div className="space-y-0.5">
               {WEEK_DAYS.map((day) => {
@@ -364,6 +282,13 @@ function AvailabilityRules({
                 )
               })}
             </div>
+            <button
+              type="button"
+              onClick={clearSchedule}
+              className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              Limpiar
+            </button>
           </div>
         )}
       </div>

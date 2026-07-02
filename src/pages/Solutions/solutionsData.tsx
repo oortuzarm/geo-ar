@@ -142,7 +142,7 @@ const retail: IndustryData = {
   accentColor: '#0ea5e9',
   meta: {
     title: 'Ubyca para Retail — Activa experiencias cuando tus clientes están en tienda',
-    description: 'Detecta la presencia de tus clientes en el punto de venta y activa mensajes, beneficios y experiencias en el momento de mayor intención de compra. Sin hardware. Sin apps.',
+    description: 'Detecta cuándo un cliente entra a tu tienda y activa promociones, contenido y experiencias personalizadas según su ubicación. Convierte cada visita en una nueva oportunidad de venta.',
   },
   intro: {
     headline: 'El canal más efectivo para el retail no es digital. Es físico.',
@@ -486,7 +486,7 @@ const realEstate: IndustryData = {
   accentColor: '#ef4444',
   meta: {
     title: 'Ubyca para Real Estate — Activa experiencias cuando el interesado está en el proyecto',
-    description: 'Entrega información del proyecto, fichas técnicas y materiales de venta cuando el interesado llega físicamente al lugar. Mide las visitas a cada sala de ventas y toma decisiones con datos reales.',
+    description: 'Entrega información, material comercial y experiencias interactivas cuando un potencial comprador visita tu proyecto inmobiliario. Acompaña el recorrido y acelera la decisión de compra.',
   },
   intro: {
     headline: 'El interesado ya está en el proyecto. Es el momento más valioso de la venta.',
@@ -570,8 +570,8 @@ const activacionesMarca: IndustryData = {
   shortDesc: 'Activa experiencias cuando el público llega a la zona de tu activación',
   accentColor: '#f97316',
   meta: {
-    title: 'Ubyca para Activaciones de Marca — Experiencias geolocalizadas en terreno',
-    description: 'Activa contenido, beneficios y experiencias cuando el público llega a tu zona. Mide la participación real de cada activación de marca, pop-up, lanzamiento o evento patrocinado.',
+    title: 'Ubyca para Activaciones de Marca — Activa experiencias en el momento y lugar adecuados',
+    description: 'Convierte espacios físicos en experiencias memorables mediante contenido geolocalizado, promociones y dinámicas interactivas que se activan cuando tu audiencia llega al lugar indicado.',
   },
   intro: {
     headline: 'La activación ocurre en un lugar. La experiencia también debería hacerlo.',

@@ -22,7 +22,7 @@ const OG_IMAGE = `${BASE_URL}/og-image.svg`
 const ROUTES = {
   '/solutions/retail': {
     title: 'Ubyca para Retail — Activa experiencias cuando tus clientes están en tienda',
-    description: 'Detecta la presencia de tus clientes en el punto de venta y activa mensajes, beneficios y experiencias en el momento de mayor intención de compra. Sin hardware. Sin apps.',
+    description: 'Detecta cuándo un cliente entra a tu tienda y activa promociones, contenido y experiencias personalizadas según su ubicación. Convierte cada visita en una nueva oportunidad de venta.',
   },
   '/solutions/events': {
     title: 'Ubyca para Eventos — Experiencias geolocalizadas por zona del recinto',
@@ -30,7 +30,7 @@ const ROUTES = {
   },
   '/solutions/real-estate': {
     title: 'Ubyca para Real Estate — Activa experiencias cuando el interesado está en el proyecto',
-    description: 'Entrega información del proyecto, fichas técnicas y materiales de venta cuando el interesado llega físicamente al lugar. Mide las visitas a cada sala de ventas con datos reales.',
+    description: 'Entrega información, material comercial y experiencias interactivas cuando un potencial comprador visita tu proyecto inmobiliario. Acompaña el recorrido y acelera la decisión de compra.',
   },
   '/solutions/tourism': {
     title: 'Ubyca para Turismo — Experiencias geolocalizadas para destinos y rutas',
@@ -41,8 +41,8 @@ const ROUTES = {
     description: 'Conecta municipalidades, parques, centros históricos y espacios públicos con experiencias digitales activadas por ubicación. Entrega información contextual a ciudadanos y visitantes.',
   },
   '/solutions/brand-activations': {
-    title: 'Ubyca para Activaciones de Marca — Experiencias geolocalizadas en terreno',
-    description: 'Activa contenido, beneficios y experiencias cuando el público llega a tu zona. Mide la participación real de cada activación, pop-up, lanzamiento o evento patrocinado.',
+    title: 'Ubyca para Activaciones de Marca — Activa experiencias en el momento y lugar adecuados',
+    description: 'Convierte espacios físicos en experiencias memorables mediante contenido geolocalizado, promociones y dinámicas interactivas que se activan cuando tu audiencia llega al lugar indicado.',
   },
   '/studio': {
     title: 'Ubyca Studio — Crea y gestiona experiencias geolocalizadas',

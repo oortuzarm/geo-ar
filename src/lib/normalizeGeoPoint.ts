@@ -1,4 +1,29 @@
-import type { GeoPoint } from '../types'
+import type { GeoPoint, GeoPointAvailability } from '../types'
+
+// Normalises the availability nested object, handling both camelCase (frontend)
+// and snake_case (Rails) key names so scheduleRules is never silently undefined.
+function normalizeAvailability(raw: unknown): GeoPointAvailability | undefined {
+  if (!raw || typeof raw !== 'object') return undefined
+  const av                = raw as Record<string, unknown>
+  const scheduleEnabled   = av.scheduleEnabled   ?? av.schedule_enabled
+  const quotaEnabled      = av.quotaEnabled      ?? av.quota_enabled
+  const quotaLimit        = av.quotaLimit        ?? av.quota_limit
+  const quotaUsed         = av.quotaUsed         ?? av.quota_used
+  const liveVisitsEnabled = av.liveVisitsEnabled ?? av.live_visits_enabled
+  const liveVisitsMinimum = av.liveVisitsMinimum ?? av.live_visits_minimum
+  return {
+    scheduleEnabled:   scheduleEnabled   != null ? Boolean(scheduleEnabled)   : undefined,
+    scheduleRules:    (av.scheduleRules  ?? av.schedule_rules)                as GeoPointAvailability['scheduleRules'],
+    scheduleDays:     (av.scheduleDays   ?? av.schedule_days)                 as GeoPointAvailability['scheduleDays'],
+    scheduleStartTime:(av.scheduleStartTime ?? av.schedule_start_time)        as string | undefined,
+    scheduleEndTime:  (av.scheduleEndTime   ?? av.schedule_end_time)          as string | undefined,
+    quotaEnabled:      quotaEnabled      != null ? Boolean(quotaEnabled)      : undefined,
+    quotaLimit:        quotaLimit        != null ? Number(quotaLimit)         : undefined,
+    quotaUsed:         quotaUsed         != null ? Number(quotaUsed)          : undefined,
+    liveVisitsEnabled: liveVisitsEnabled != null ? Boolean(liveVisitsEnabled) : undefined,
+    liveVisitsMinimum: liveVisitsMinimum != null ? Number(liveVisitsMinimum)  : undefined,
+  }
+}
 
 /**
  * Maps an API response object (potentially snake_case) to a typed GeoPoint.
@@ -41,7 +66,7 @@ export function normalizeGeoPoint(raw: Record<string, unknown>): GeoPoint {
     // ── Access / mode ──────────────────────────────────────────────────────
     accessMode: (raw.accessMode ?? raw.access_mode) as GeoPoint['accessMode'],
     pointMode:  (raw.pointMode  ?? raw.point_mode)  as GeoPoint['pointMode'],
-    availability: raw.availability                  as GeoPoint['availability'],
+    availability: normalizeAvailability(raw.availability),
 
     // ── Dwell ─────────────────────────────────────────────────────────────
     requiresDwellTime: requiresDwellTime != null ? Boolean(requiresDwellTime) : undefined,

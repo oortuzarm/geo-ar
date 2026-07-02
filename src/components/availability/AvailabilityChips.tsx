@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { formatDays } from '../../features/geolocation/availability'
 import type { PointAvailability } from '../../features/geolocation/availability'
+import type { ScheduleRule } from '../../types'
 
 // ─── Types & styles ──────────────────────────────────────────────────────────
 
@@ -69,7 +70,31 @@ export function StatusChip({
 
 // ─── Detail sub-components ────────────────────────────────────────────────────
 
-export function ScheduleDetail({ avail }: { avail: PointAvailability }) {
+export function ScheduleDetail({
+  avail,
+  scheduleRules,
+}: {
+  avail: PointAvailability
+  scheduleRules?: ScheduleRule[]
+}) {
+  if (scheduleRules !== undefined) {
+    // Per-day format: group days that share the same time range.
+    if (scheduleRules.length === 0) return <p>Sin días configurados</p>
+    const groups = new Map<string, string[]>()
+    for (const rule of scheduleRules) {
+      const key = `${rule.start}–${rule.end}`
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key)!.push(rule.day)
+    }
+    return (
+      <>
+        {Array.from(groups.entries()).map(([timeRange, days]) => (
+          <p key={timeRange}>{formatDays(days)}: {timeRange}</p>
+        ))}
+      </>
+    )
+  }
+  // Legacy flat format
   return (
     <>
       {avail.scheduleDays.length > 0 && <p>{formatDays(avail.scheduleDays)}</p>}

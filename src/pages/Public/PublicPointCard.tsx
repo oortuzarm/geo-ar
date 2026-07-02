@@ -186,7 +186,8 @@ export default function PublicPointCard({
       avail.quotaRemaining !== undefined && avail.quotaRemaining <= 10)
     secondaryLabels.push('last-slots')
   if (primaryBadge === 'unavailable' && avail.scheduleActive && point.availability) {
-    const days = point.availability.scheduleDays ?? []
+    const sr   = point.availability.scheduleRules
+    const days = sr !== undefined ? sr.map((r) => r.day) : (point.availability.scheduleDays ?? [])
     if (days.length === 0 || days.length === 7) {
       secondaryLabels.push('every-day')
     } else {
@@ -530,7 +531,7 @@ export default function PublicPointCard({
                 label={avail.scheduleLabel}
                 variant={avail.scheduleAvailable ? 'ok' : 'block'}
                 expandLabel="Ver horarios"
-                detail={<ScheduleDetail avail={avail} />}
+                detail={<ScheduleDetail avail={avail} scheduleRules={point.availability?.scheduleRules} />}
               />
             )}
 

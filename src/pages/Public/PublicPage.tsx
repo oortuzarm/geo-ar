@@ -285,9 +285,18 @@ function isPointAvailableNow(point: GeoPoint, liveVisitCounts: Record<string, nu
     const mm       = String(now.getMinutes()).padStart(2, '0')
     const time     = `${hh}:${mm}`
 
-    if (avail.scheduleDays?.length && !avail.scheduleDays.includes(localDay)) return false
-    if (avail.scheduleStartTime && time < avail.scheduleStartTime)             return false
-    if (avail.scheduleEndTime   && time >= avail.scheduleEndTime)              return false
+    if (avail.scheduleRules !== undefined) {
+      // Per-day rules (new format) — mirrors computePointAvailability logic
+      const todayRule = avail.scheduleRules.find((r) => r.day === localDay)
+      if (!todayRule)                                  return false
+      if (todayRule.start && time < todayRule.start)   return false
+      if (todayRule.end   && time >= todayRule.end)    return false
+    } else {
+      // Legacy flat format
+      if (avail.scheduleDays?.length && !avail.scheduleDays.includes(localDay)) return false
+      if (avail.scheduleStartTime && time < avail.scheduleStartTime)             return false
+      if (avail.scheduleEndTime   && time >= avail.scheduleEndTime)              return false
+    }
   }
 
   if (avail.quotaEnabled && avail.quotaLimit != null) {

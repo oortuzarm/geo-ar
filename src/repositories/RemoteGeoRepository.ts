@@ -114,6 +114,11 @@ export class RemoteGeoRepository implements IGeoRepository {
       point_video_type:      p.pointVideoType       ?? null,
       required_point_ids:    p.requiredPointIds     ?? [],
       point_category:        p.pointCategory        ?? null,
+      cta_enabled:           p.ctaEnabled           ?? null,
+      welcome_enabled:       p.welcomeEnabled       ?? null,
+      welcome_title:         p.welcomeTitle         ?? null,
+      welcome_message:       p.welcomeMessage       ?? null,
+      welcome_button:        p.welcomeButton        ?? null,
     }))
     const raw = await apiFetch<Record<string, unknown>>(this.url(`/api/geo_projects/${id}/sync`), {
       method: 'PATCH',

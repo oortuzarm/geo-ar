@@ -162,6 +162,11 @@ export interface GeoPoint {
   pointVideoType?: 'youtube' | 'mp4'
   requiredPointIds?: string[]
   socialLinks?: SocialLinks
+  ctaEnabled?: boolean
+  welcomeEnabled?: boolean
+  welcomeTitle?: string
+  welcomeMessage?: string
+  welcomeButton?: string
 }
 
 export type AddressConfidence = 'exact' | 'approximate' | 'low_confidence'

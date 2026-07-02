@@ -69,5 +69,13 @@ export function normalizeGeoPoint(raw: Record<string, unknown>): GeoPoint {
 
     // ── Featured ──────────────────────────────────────────────────────────
     featured: Boolean(raw.featured),
+
+    // ── Actions (cta / welcome) ───────────────────────────────────────────
+    // undefined means "no stored value" — form falls back to its own default.
+    ctaEnabled:     (() => { const v = raw.ctaEnabled     ?? raw.cta_enabled;     return v != null ? Boolean(v) : undefined })(),
+    welcomeEnabled: (() => { const v = raw.welcomeEnabled ?? raw.welcome_enabled; return v != null ? Boolean(v) : undefined })(),
+    welcomeTitle:   (raw.welcomeTitle   ?? raw.welcome_title)   as GeoPoint['welcomeTitle'],
+    welcomeMessage: (raw.welcomeMessage ?? raw.welcome_message) as GeoPoint['welcomeMessage'],
+    welcomeButton:  (raw.welcomeButton  ?? raw.welcome_button)  as GeoPoint['welcomeButton'],
   }
 }

@@ -500,11 +500,18 @@ export default function GeoPointForm({
   }, [point.id])
 
   // ── Acciones section state ────────────────────────────────────────────────
-  const [ctaEnabled,      setCtaEnabled]      = useState(true)
-  const [welcomeEnabled,  setWelcomeEnabled]  = useState(false)
-  const [welcomeTitle,    setWelcomeTitle]    = useState('')
-  const [welcomeMessage,  setWelcomeMessage]  = useState('')
-  const [welcomeButton,   setWelcomeButton]   = useState('')
+  const [ctaEnabled,      setCtaEnabled]      = useState(() => point.ctaEnabled     ?? true)
+  const [welcomeEnabled,  setWelcomeEnabled]  = useState(() => point.welcomeEnabled ?? false)
+  const [welcomeTitle,    setWelcomeTitle]    = useState(() => point.welcomeTitle   ?? '')
+  const [welcomeMessage,  setWelcomeMessage]  = useState(() => point.welcomeMessage ?? '')
+  const [welcomeButton,   setWelcomeButton]   = useState(() => point.welcomeButton  ?? '')
+  useEffect(() => {
+    setCtaEnabled(point.ctaEnabled       ?? true)
+    setWelcomeEnabled(point.welcomeEnabled ?? false)
+    setWelcomeTitle(point.welcomeTitle     ?? '')
+    setWelcomeMessage(point.welcomeMessage ?? '')
+    setWelcomeButton(point.welcomeButton   ?? '')
+  }, [point.id])
 
   const geoTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -685,11 +692,16 @@ export default function GeoPointForm({
         pointCategory,
         contentType,
         contentData,
-        lookiarUrl:  contentType === 'url' ? normalizedUrl as string : undefined,
-        description: description    || undefined,
-        instructions:        addressCustom  || undefined,
-        buttonText:          buttonText     || undefined,
-        socialLinks:         buildSocialLinks(),
+        lookiarUrl:    contentType === 'url' ? normalizedUrl as string : undefined,
+        description:   description    || undefined,
+        instructions:  addressCustom  || undefined,
+        buttonText:    buttonText     || undefined,
+        socialLinks:   buildSocialLinks(),
+        ctaEnabled,
+        welcomeEnabled,
+        welcomeTitle:   welcomeTitle   || undefined,
+        welcomeMessage: welcomeMessage || undefined,
+        welcomeButton:  welcomeButton  || undefined,
       })
     } else {
       // Informative mode: name required; content optional — validate only when configured
@@ -729,13 +741,18 @@ export default function GeoPointForm({
         name,
         pointMode,
         pointCategory,
-        contentType: resolvedContentType,
-        contentData: resolvedContentData,
-        lookiarUrl:  resolvedLookiarUrl,
-        description: description || undefined,
-        instructions:        addressCustom || undefined,
-        buttonText:          buttonText || undefined,
-        socialLinks:         buildSocialLinks(),
+        contentType:   resolvedContentType,
+        contentData:   resolvedContentData,
+        lookiarUrl:    resolvedLookiarUrl,
+        description:   description || undefined,
+        instructions:  addressCustom || undefined,
+        buttonText:    buttonText || undefined,
+        socialLinks:   buildSocialLinks(),
+        ctaEnabled,
+        welcomeEnabled,
+        welcomeTitle:   welcomeTitle   || undefined,
+        welcomeMessage: welcomeMessage || undefined,
+        welcomeButton:  welcomeButton  || undefined,
       })
     }
 

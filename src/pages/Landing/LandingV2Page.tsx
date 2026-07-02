@@ -256,7 +256,7 @@ function HeroSection() {
             className="font-black text-white tracking-tight leading-[1.04]
                        text-[2.2rem] sm:text-[2.8rem] lg:text-[3rem]"
           >
-            Conoce en tiempo real dónde están tus <RotatingWord />
+            Conecta el mundo físico con experiencias digitales.
           </motion.h1>
 
           <motion.p
@@ -264,9 +264,9 @@ function HeroSection() {
             transition={{ duration: 0.7, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
             className="mt-5 text-base md:text-lg text-slate-400 leading-relaxed"
           >
-            Presencia GPS verificada en el servidor, con reglas de negocio aplicadas en
-            cada validación. Studio para visualizar y operar.
-            La API para integrar en cualquier sistema.
+            Crea zonas GPS inteligentes que desbloquean contenido, promociones, beneficios,
+            mensajes y acciones exactamente cuando una persona llega al lugar indicado.
+            Todo medible en tiempo real desde un único panel.
           </motion.p>
 
           <motion.div

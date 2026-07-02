@@ -2,6 +2,16 @@
   "routes": [
     { "src": "/proxy/(.*)", "dest": "https://geo-ar-api-production.up.railway.app/proxy/$1" },
     { "src": "/public/([^/]+)", "dest": "/api/og?id=$1" },
+    { "src": "^/solutions/retail$",            "dest": "/api/meta?route=/solutions/retail" },
+    { "src": "^/solutions/events$",            "dest": "/api/meta?route=/solutions/events" },
+    { "src": "^/solutions/real-estate$",       "dest": "/api/meta?route=/solutions/real-estate" },
+    { "src": "^/solutions/tourism$",           "dest": "/api/meta?route=/solutions/tourism" },
+    { "src": "^/solutions/sector-publico$",    "dest": "/api/meta?route=/solutions/sector-publico" },
+    { "src": "^/solutions/brand-activations$", "dest": "/api/meta?route=/solutions/brand-activations" },
+    { "src": "^/studio$",                      "dest": "/api/meta?route=/studio" },
+    { "src": "^/docs$",                        "dest": "/api/meta?route=/docs" },
+    { "src": "^/precios$",                     "dest": "/api/meta?route=/precios" },
+    { "src": "^/contact$",                     "dest": "/api/meta?route=/contact" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]

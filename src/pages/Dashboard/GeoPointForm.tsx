@@ -141,6 +141,60 @@ function InfoTooltip({ text }: { text: string }) {
   )
 }
 
+// Text-based time input that avoids WebKit's reserved space for the native clock control.
+// Accepts HH:MM typing, auto-inserts the colon after two digits, and normalises on blur.
+function TimeInput({
+  value,
+  onChange,
+  className,
+}: {
+  value: string
+  onChange: (v: string) => void
+  className?: string
+}) {
+  const [draft, setDraft] = useState(value)
+
+  useEffect(() => {
+    if (/^\d{2}:\d{2}$/.test(value)) setDraft(value)
+  }, [value])
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    let v = e.target.value.replace(/[^0-9:]/g, '')
+    const deleting = v.length < draft.length
+    if (!deleting && v.length === 2 && !v.includes(':')) v = v + ':'
+    if (v.length > 5) v = v.slice(0, 5)
+    setDraft(v)
+    if (/^\d{2}:\d{2}$/.test(v)) onChange(v)
+  }
+
+  function handleBlur() {
+    const digits = draft.replace(/\D/g, '')
+    if (digits.length === 4) {
+      const hh = Math.min(parseInt(digits.slice(0, 2)), 23).toString().padStart(2, '0')
+      const mm = Math.min(parseInt(digits.slice(2, 4)), 59).toString().padStart(2, '0')
+      const normalized = `${hh}:${mm}`
+      setDraft(normalized)
+      onChange(normalized)
+    } else if (/^\d{2}:\d{2}$/.test(value)) {
+      setDraft(value)
+    }
+  }
+
+  return (
+    <input
+      type="text"
+      value={draft}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      placeholder="--:--"
+      maxLength={5}
+      inputMode="numeric"
+      autoComplete="off"
+      className={className}
+    />
+  )
+}
+
 // Converts legacy flat schedule (scheduleDays + shared start/end) to per-day rules.
 // Only used at render time for display when scheduleRules hasn't been written yet.
 function migrateLegacySchedule(av: GeoPointAvailability | undefined) {
@@ -210,9 +264,8 @@ function AvailabilityRules({
   }
 
   const timeInputCls =
-    'w-[82px] flex-shrink-0 bg-gray-800 border border-gray-700 rounded px-1.5 py-1 text-sm ' +
-    'text-gray-100 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors ' +
-    '[&::-webkit-calendar-picker-indicator]:hidden'
+    'w-[62px] flex-shrink-0 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm ' +
+    'text-center text-gray-100 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors'
 
   return (
     <div className="space-y-2">
@@ -257,17 +310,15 @@ function AvailabilityRules({
                       </span>
                       {isActive && (
                         <>
-                          <input
-                            type="time"
+                          <TimeInput
                             value={rule.start}
-                            onChange={(e) => updateDayTime(day, 'start', e.target.value)}
+                            onChange={(v) => updateDayTime(day, 'start', v)}
                             className={timeInputCls}
                           />
                           <span className="text-gray-500 text-xs flex-shrink-0">—</span>
-                          <input
-                            type="time"
+                          <TimeInput
                             value={rule.end}
-                            onChange={(e) => updateDayTime(day, 'end', e.target.value)}
+                            onChange={(v) => updateDayTime(day, 'end', v)}
                             className={timeInputCls}
                           />
                         </>
